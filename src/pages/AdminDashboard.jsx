@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import '../admin.css';
 import { generateMerkleCredentials, verifyStudentCredential, hashStudent } from '../utils/merkleHelper';
 import { runCryptoBenchmark } from '../services/merkleTree';
+import { saveCredentialToStorage } from '../utils/credentialStorage';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -145,6 +146,15 @@ export default function AdminDashboard() {
       // Lưu trữ credentials và root mới nhất vào localStorage để ví sinh viên truy cập ngay
       localStorage.setItem('uth_issued_credentials', JSON.stringify(studentCredentials));
       localStorage.setItem('uth_latest_merkle_root', rootHash);
+
+      // Lưu trữ an toàn đối tượng kèm Merkle Proofs vào IndexedDB (Két lưu trữ PWA)
+      for (const sc of studentCredentials) {
+        try {
+          await saveCredentialToStorage(sc);
+        } catch (idbErr) {
+          console.warn('IDB save warning:', idbErr);
+        }
+      }
 
       // 2. Gửi đồng bộ lên backend để lưu vết On-Chain
       let txHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');

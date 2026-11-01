@@ -72,3 +72,4 @@ export function verifyStudentCredential(student, proof, rootHash) {
   const leaf = hashStudent(student);
   return MerkleTree.verify(proof, leaf, rootHash, keccak256, { sortPairs: true });
 }
+

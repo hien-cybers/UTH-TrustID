@@ -18,6 +18,14 @@ import {
 } from '../services/did';
 import { verifyGpsIntegrity } from '../utils/antiSpoofGps';
 import { getDeviceFingerprint, verifyDeviceBinding } from '../utils/deviceFingerprint';
+import {
+  saveCredentialToStorage,
+  getCredentialByStudentId,
+  getActiveCredential,
+  getAllCredentialsFromStorage,
+  deleteCredentialFromStorage
+} from '../utils/credentialStorage';
+import { generateMerkleCredentials } from '../utils/merkleHelper';
 import Scanner from './Scanner';
 import {
   ShieldCheck,
@@ -42,6 +50,9 @@ import {
   EyeOff,
   Cpu,
   Flame,
+  Database,
+  UploadCloud,
+  HardDrive,
 } from 'lucide-react';
 
 export default function StudentWallet() {
@@ -98,12 +109,111 @@ export default function StudentWallet() {
   const [showTamperSelfDestructModal, setShowTamperSelfDestructModal] = useState(false);
   const [currentDeviceId, setCurrentDeviceId] = useState('');
 
+  // Quản lý két lưu trữ chứng chỉ số IndexedDB (idb Browser Origin Sandbox)
+  const [activeVcStorage, setActiveVcStorage] = useState(null);
+  const [storedVcList, setStoredVcList] = useState([]);
+  const [isStorageLoading, setIsStorageLoading] = useState(false);
+
+  const loadStoredVCs = async (id = identity) => {
+    try {
+      setIsStorageLoading(true);
+      const list = await getAllCredentialsFromStorage();
+      setStoredVcList(list);
+
+      const targetMssv = id?.student?.mssv || id?.student?.studentId || '2251120000';
+      let active = await getActiveCredential(targetMssv);
+
+      // Nếu IndexedDB chưa có bản ghi nào, tự động nạp thẻ số kèm Merkle Proof cho sinh viên
+      if (!active && list.length === 0) {
+        const defaultSample = [
+          {
+            studentId: targetMssv,
+            fullName: id?.student?.fullName || 'Nguyễn Đức Hiển',
+            major: id?.student?.major || 'An toàn Thông tin',
+            address: id?.address || '0x1D9b6938A3f073e3426052C7016155D85040Ed1D'
+          },
+          {
+            studentId: '2251120001',
+            fullName: 'Trần Thị Bích',
+            major: 'Khoa học Dữ liệu',
+            address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'
+          }
+        ];
+        const { studentCredentials } = generateMerkleCredentials(defaultSample);
+        for (const sc of studentCredentials) {
+          await saveCredentialToStorage(sc);
+        }
+        const updatedList = await getAllCredentialsFromStorage();
+        setStoredVcList(updatedList);
+        active = await getActiveCredential(targetMssv);
+      }
+
+      setActiveVcStorage(active);
+    } catch (err) {
+      console.warn("Lỗi đọc IndexedDB:", err);
+    } finally {
+      setIsStorageLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadAppData();
+    loadStoredVCs();
     getDeviceFingerprint().then(hash => {
       if (hash) setCurrentDeviceId(hash);
     }).catch(() => {});
+
+    const handleStorageChange = () => {
+      loadStoredVCs();
+    };
+    window.addEventListener('uth-vc-storage-updated', handleStorageChange);
+    return () => {
+      window.removeEventListener('uth-vc-storage-updated', handleStorageChange);
+    };
   }, []);
+
+  const handleImportVC = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const parsedVC = JSON.parse(e.target.result);
+        if (Array.isArray(parsedVC)) {
+          for (const item of parsedVC) {
+            await saveCredentialToStorage(item);
+          }
+        } else {
+          await saveCredentialToStorage(parsedVC);
+        }
+        await loadStoredVCs();
+        alert("✅ Đã nhập và lưu trữ Thẻ Sinh Viên Số vào IndexedDB thành công!");
+      } catch (err) {
+        alert("Lỗi cấu trúc tệp chứng chỉ: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
+  const handleDeleteVC = async (sId) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa Thẻ sinh viên MSSV ${sId} khỏi két lưu trữ IndexedDB của thiết bị?`)) return;
+    await deleteCredentialFromStorage(sId);
+    await loadStoredVCs();
+    alert(`Đã xóa thẻ sinh viên ${sId} khỏi IndexedDB.`);
+  };
+
+  const handleExportVC = (vc) => {
+    if (!vc) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vc, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `UTH_VC_${vc.studentId || 'credential'}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
 
   const syncIdentityToBackend = async (id) => {
     if (!id?.address) return;
@@ -132,6 +242,7 @@ export default function StudentWallet() {
       setCredentials(getSavedCredentials());
       setLogs(getAuditLogs());
       syncIdentityToBackend(saved);
+      loadStoredVCs(saved);
     }
   };
 
@@ -434,24 +545,48 @@ export default function StudentWallet() {
         return;
       }
 
+      // Rút chứng chỉ và Merkle Proof từ IndexedDB (idb)
+      let idbVC = null;
       try {
+        const targetMssv = identity?.student?.mssv || identity?.student?.studentId || '2251120000';
+        idbVC = await getActiveCredential(targetMssv);
+      } catch (err) {
+        console.warn('Lỗi đọc IndexedDB khi điểm danh:', err);
+      }
+
+      try {
+        const attendancePayload = {
+          sessionId,
+          challengeNonce: nonce || qrData,
+          signature: signResult.signature,
+          deviceId: currentDevId,
+          studentCoords: userCoords,
+          sessionCoords: { lat: sessionLat, lon: sessionLon },
+          allowedRadius: 35,
+          networkPolicy: policy || 'HYBRID_4G_5G'
+        };
+
+        // Gửi kèm dữ liệu chứng chỉ và mảng Merkle Proof từ IndexedDB
+        if (idbVC && idbVC.merkleProof && idbVC.merkleRoot) {
+          attendancePayload.studentData = {
+            studentId: idbVC.studentId,
+            fullName: idbVC.fullName,
+            major: idbVC.major,
+            address: idbVC.address || identity.address
+          };
+          attendancePayload.merkleProof = idbVC.merkleProof;
+          attendancePayload.merkleRoot = idbVC.merkleRoot;
+        }
+
         const res = await fetch('/api/attendance/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            challengeNonce: nonce || qrData,
-            signature: signResult.signature,
-            deviceId: currentDevId,
-            studentCoords: userCoords,
-            sessionCoords: { lat: sessionLat, lon: sessionLon },
-            allowedRadius: 35,
-            networkPolicy: policy || 'HYBRID_4G_5G'
-          })
+          body: JSON.stringify(attendancePayload)
         });
         const result = await res.json();
         if (res.ok && result.success) {
-          alert(`✅ ĐIỂM DANH THÀNH CÔNG!\nSinh viên: ${result.student || 'Sinh viên UTH'}\nKhoảng cách: ${result.data?.distance || distance}m\nThiết bị: Gắn kết phần cứng ✓ (${currentDevId.slice(0, 10)}...)\nMạng: ${result.data?.isCampusWifi ? 'UTH Campus Wi-Fi' : 'Di Động 4G/5G'}\nDữ liệu đã truyền thời gian thực về máy chiếu giảng viên!`);
+          const merkleTag = result.data?.merkleVerified ? '\nChứng chỉ: Merkle Proof O(log N) ✓ (IndexedDB)' : '';
+          alert(`✅ ĐIỂM DANH THÀNH CÔNG!\nSinh viên: ${result.student || 'Sinh viên UTH'}\nKhoảng cách: ${result.data?.distance || distance}m\nThiết bị: Gắn kết phần cứng ✓ (${currentDevId.slice(0, 10)}...)\nMạng: ${result.data?.isCampusWifi ? 'UTH Campus Wi-Fi' : 'Di Động 4G/5G'}${merkleTag}\nDữ liệu đã truyền thời gian thực về máy chiếu giảng viên!`);
         } else {
           alert(`❌ ĐIỂM DANH THẤT BẠI: ${result.message}`);
         }
@@ -779,6 +914,97 @@ export default function StudentWallet() {
                 <span className="text-[11px] text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/30">
                   W3C VC Spec
                 </span>
+              </div>
+
+              {/* KÉT LƯU TRỮ CHỨNG CHỈ SỐ INDEXEDDB (BROWSER ORIGIN SANDBOX) */}
+              <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-lg relative overflow-hidden">
+                <div className="flex justify-between items-start border-b border-slate-800 pb-2.5">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                      <Database size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white">Két Lưu Trữ IndexedDB (idb)</h4>
+                      <p className="text-[10px] text-slate-400 font-mono">DB: UTH_TrustID_DB • Origin Sandbox Storage</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-cyan-300 font-mono bg-cyan-950/70 border border-cyan-700/50 px-2 py-0.5 rounded-full flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span>{storedVcList.length} Thẻ lưu trữ</span>
+                  </span>
+                </div>
+
+                {activeVcStorage ? (
+                  <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800/80 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-xs font-bold text-cyan-300">{activeVcStorage.fullName}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">MSSV: {activeVcStorage.studentId} • {activeVcStorage.major}</div>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-md font-semibold">
+                        Két máy cá nhân ✓
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/60 text-[11px] font-mono">
+                      <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                        <span className="text-slate-500 block text-[10px]">Merkle Root:</span>
+                        <span className="text-amber-400 truncate block">
+                          {activeVcStorage.merkleRoot ? `${activeVcStorage.merkleRoot.slice(0, 14)}...` : 'Chưa có'}
+                        </span>
+                      </div>
+                      <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                        <span className="text-slate-500 block text-[10px]">Độ sâu Merkle Proof:</span>
+                        <span className="text-emerald-400 font-bold block">
+                          {activeVcStorage.merkleProof?.length || 0} nốt hash O(log N)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 text-[10px] text-slate-500">
+                      <span>Lưu: {new Date(activeVcStorage.storedAt || Date.now()).toLocaleDateString('vi-VN')}</span>
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={() => handleExportVC(activeVcStorage)}
+                          className="text-cyan-400 hover:text-cyan-300 px-2 py-1 rounded bg-cyan-950/40 border border-cyan-800/40 transition flex items-center space-x-1"
+                          title="Tải tệp JSON chứng chỉ về máy"
+                        >
+                          <Download size={11} />
+                          <span>Xuất JSON</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteVC(activeVcStorage.studentId)}
+                          className="text-rose-400 hover:text-rose-300 px-2 py-1 rounded bg-rose-950/40 border border-rose-800/40 transition flex items-center space-x-1"
+                          title="Xóa chứng chỉ khỏi máy"
+                        >
+                          <Trash2 size={11} />
+                          <span>Xóa</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-3 bg-slate-950/40 rounded-xl border border-slate-800/60 text-xs text-slate-400">
+                    Chưa có Thẻ Sinh Viên Số nào trong két IndexedDB.
+                  </div>
+                )}
+
+                {/* Nút nạp tệp JSON chứng chỉ vào IndexedDB */}
+                <div className="flex gap-2 pt-1">
+                  <label className="flex-1 bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-2 cursor-pointer transition font-semibold shadow-md shadow-cyan-950/40">
+                    <UploadCloud size={14} />
+                    <span>Nạp Tệp Thẻ Số (.json)</span>
+                    <input type="file" accept=".json" onChange={handleImportVC} className="hidden" />
+                  </label>
+                  <button
+                    onClick={() => loadStoredVCs()}
+                    disabled={isStorageLoading}
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition"
+                    title="Đồng bộ lại két IndexedDB"
+                  >
+                    <RefreshCw size={14} className={isStorageLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
               </div>
 
               {/* Chế độ xuất trình có chọn lọc (Selective Disclosure) */}
