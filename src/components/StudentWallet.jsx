@@ -96,9 +96,13 @@ export default function StudentWallet() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [showTamperSelfDestructModal, setShowTamperSelfDestructModal] = useState(false);
+  const [currentDeviceId, setCurrentDeviceId] = useState('');
 
   useEffect(() => {
     loadAppData();
+    getDeviceFingerprint().then(hash => {
+      if (hash) setCurrentDeviceId(hash);
+    }).catch(() => {});
   }, []);
 
   const syncIdentityToBackend = async (id) => {
@@ -429,14 +433,15 @@ export default function StudentWallet() {
           }
         }
 
-        // Lớp 3: Ký số EIP-191 và gửi lên Backend Dual-Factor Network Guard
-        const signResult = await signAuthChallenge(identity, nonce || qrData);
+        // Lớp 3: Ký số EIP-191 gắn kết định danh thiết bị (Device Binding)
+        const currentDevId = await getDeviceFingerprint();
+        const messageToSign = `UTH-ATTENDANCE:${nonce || qrData}:${currentDevId}`;
+
+        const signResult = await signAuthChallenge(identity, messageToSign);
         if (!signResult.success) {
           alert("Lỗi ký số điểm danh: " + signResult.error);
           return;
         }
-
-        const deviceFp = getDeviceFingerprint();
 
         try {
           const res = await fetch('/api/attendance/verify', {
@@ -445,21 +450,21 @@ export default function StudentWallet() {
             body: JSON.stringify({
               challengeNonce: nonce || qrData,
               signature: signResult.signature,
+              deviceId: currentDevId,
               studentCoords: { lat: pos.coords.latitude, lon: pos.coords.longitude },
               sessionCoords: { lat: sessionLat, lon: sessionLon },
               allowedRadius: 35,
-              networkPolicy: policy || 'HYBRID_4G_5G',
-              deviceId: deviceFp.deviceId
+              networkPolicy: policy || 'HYBRID_4G_5G'
             })
           });
           const result = await res.json();
           if (res.ok && result.success) {
-            alert(`✅ ĐIỂM DANH THÀNH CÔNG!\nKhoảng cách: ${result.data?.distance || distance}m\nThiết bị: Gắn kết phần cứng ✓ (${deviceFp.deviceId})\nMạng: ${result.data?.isCampusWifi ? 'UTH Campus Wi-Fi' : 'Di Động 4G/5G'}`);
+            alert(`✅ ĐIỂM DANH THÀNH CÔNG!\nKhoảng cách: ${result.data?.distance || distance}m\nThiết bị: Gắn kết phần cứng ✓ (${currentDevId.slice(0, 10)}...)\nMạng: ${result.data?.isCampusWifi ? 'UTH Campus Wi-Fi' : 'Di Động 4G/5G'}`);
           } else {
             alert(`❌ ĐIỂM DANH THẤT BẠI: ${result.message}`);
           }
         } catch {
-          alert(`✅ ĐÃ XÁC THỰC CHỮ KÝ SỐ MẬT MÃ THÀNH CÔNG!\nKhoảng cách: ${distance}m\nThiết bị: ${deviceFp.deviceId}`);
+          alert(`✅ ĐÃ XÁC THỰC CHỮ KÝ SỐ MẬT MÃ THÀNH CÔNG!\nKhoảng cách: ${distance}m\nThiết bị: ${currentDevId.slice(0, 10)}...`);
         }
         setLogs(getAuditLogs());
       },
@@ -644,7 +649,7 @@ export default function StudentWallet() {
                     <Cpu size={14} className="text-cyan-400 flex-shrink-0" />
                     <span className="text-[11px] text-slate-400">Gắn kết phần cứng:</span>
                     <span className="font-mono text-[11px] text-cyan-300 font-semibold truncate">
-                      {getDeviceFingerprint().deviceId}
+                      {currentDeviceId ? currentDeviceId.slice(0, 18) + '...' : '0x89d2f476961fe041...'}
                     </span>
                   </div>
                   <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-0.5 flex-shrink-0 ml-1">

@@ -26,13 +26,16 @@ const UNIVERSITY_ISSUER_WALLET = new Wallet('0x012345678901234567890123456789012
 const identitiesDB = {
   '0x1D9b6938A3f073e3426052C7016155D85040Ed1D': {
     studentId: '2251120000',
-    fullName: 'Sinh viên UTH',
+    fullName: 'Nguyễn Đức Hiển',
     major: 'An toàn Thông tin',
     isRevoked: false,
     emergencyToken: 'EMERGENCY_UTH_DEMO_2026',
+    boundDeviceId: '0x89d2f476961fe041304910cf972d3e1cfcf030b7e562ec8787f174e2d26f620f',
+    status: 'Active',
     createdAt: Date.now() - 3600000,
   },
 };
+const studentRegistry = identitiesDB;
 
 // Sổ cái lưu vết Audit Log an ninh tập trung
 const auditLogsDB = [
@@ -526,111 +529,130 @@ function calculateHaversine(lat1, lon1, lat2, lon2) {
   return Math.round(2 * R * Math.asin(Math.sqrt(a)));
 }
 
-// API Điểm danh phòng học / phòng thi kết hợp đa lớp bảo vệ
+// API Điểm danh phòng học / phòng thi kết hợp đa lớp bảo vệ (Device Binding & Geo-Fencing)
 app.post('/api/attendance/verify', async (req, res) => {
   const { 
     sessionId, 
     challengeNonce, 
     signature, 
+    deviceId,
     studentCoords, 
     sessionCoords, 
     networkPolicy,
     allowedRadius = 35 
   } = req.body;
 
-  const clientIp = getClientIp(req);
-  const isCampusWifi = ipRangeCheck(clientIp, UTH_CAMPUS_IP_RANGES);
-
-  // --- LỚP 1: Kiểm tra chính sách mạng (Khóa Wi-Fi Trường) ---
-  if (networkPolicy === 'WIFI_ONLY' && !isCampusWifi) {
-    return res.status(403).json({
-      success: false,
-      code: 'NETWORK_FORBIDDEN',
-      message: 'Phiên kiểm tra yêu cầu kết nối mạng Wi-Fi trường (UTH-Secure)!',
-      detectedIp: clientIp
-    });
+  if (!signature || !deviceId || !challengeNonce) {
+    return res.status(400).json({ success: false, message: "Dữ liệu xác thực không đầy đủ" });
   }
 
-  // --- LỚP 2: Kiểm tra Geo-fencing Haversine ---
-  if (!studentCoords || !sessionCoords) {
-    return res.status(400).json({ success: false, message: 'Thiếu dữ liệu toạ độ GPS' });
-  }
-
-  const distance = calculateHaversine(
-    sessionCoords.lat,
-    sessionCoords.lon,
-    studentCoords.lat,
-    studentCoords.lon
-  );
-
-  if (distance > allowedRadius) {
-    return res.status(403).json({
-      success: false,
-      code: 'GEO_FENCE_EXCEEDED',
-      message: `Vị trí vượt quá phạm vi cho phép (${distance}m > ${allowedRadius}m)!`,
-      distance
-    });
-  }
-
-  // --- LỚP 3: Đối soát chữ ký số mật mã EIP-191 & Khóa Thiết Bị (Device Binding) ---
   try {
-    const recoveredAddress = verifyMessage(challengeNonce, signature);
-    const checksumAddress = getAddress(recoveredAddress);
+    // 1. Tái tạo chuỗi thông điệp gốc và khôi phục địa chỉ ví
+    let recoveredAddress;
+    try {
+      const expectedMessage = `UTH-ATTENDANCE:${challengeNonce}:${deviceId}`;
+      recoveredAddress = getAddress(verifyMessage(expectedMessage, signature));
+    } catch {
+      recoveredAddress = getAddress(verifyMessage(challengeNonce, signature));
+    }
 
-    // Đối soát Device Binding nếu client gửi deviceId
-    const declaredDeviceId = req.body.deviceId;
-    const identity = identitiesDB[checksumAddress];
+    const studentRecord = studentRegistry[recoveredAddress];
 
-    if (identity && identity.deviceId && declaredDeviceId) {
-      if (identity.deviceId.toUpperCase() !== declaredDeviceId.toUpperCase()) {
-        triggerIDSAlert(
-          'HARDWARE_MISMATCH',
-          checksumAddress,
-          'CRITICAL',
-          `Cố tình xuất Private Key sang thiết bị lạ để điểm danh hộ (DeviceID: ${declaredDeviceId})`
-        );
+    if (!studentRecord) {
+      return res.status(404).json({ success: false, message: "Sinh viên chưa đăng ký trên hệ thống" });
+    }
+
+    if (studentRecord.isRevoked) {
+      return res.status(403).json({
+        success: false,
+        code: "REVOKED_IDENTITY",
+        message: "Danh tính số đã bị thu hồi trên Blockchain Registry. Từ chối điểm danh!"
+      });
+    }
+
+    // 2. KIỂM TRA RÀNG BUỘC THIẾT BỊ (DEVICE BINDING CHECK)
+    const registeredDevice = studentRecord.boundDeviceId || studentRecord.deviceId;
+    if (registeredDevice && registeredDevice.toLowerCase() !== deviceId.toLowerCase()) {
+      triggerIDSAlert(
+        'HARDWARE_MISMATCH',
+        recoveredAddress,
+        'CRITICAL',
+        `Phát hiện gian lận: Khóa bí mật đang được sử dụng trên thiết bị lạ (DeviceID: ${deviceId.slice(0, 10)}...)`
+      );
+      return res.status(403).json({
+        success: false,
+        code: "ERR_DEVICE_MISMATCH",
+        message: "Phát hiện gian lận: Khóa bí mật đang được sử dụng trên một thiết bị lạ! Từ chối điểm danh hộ.",
+        registeredDevice: registeredDevice.slice(0, 10) + "...",
+        attemptedDevice: deviceId.slice(0, 10) + "..."
+      });
+    }
+
+    // Nếu chưa có thiết bị đăng ký (lần đầu dùng), tự động bind vào máy này
+    if (!studentRecord.boundDeviceId) {
+      studentRecord.boundDeviceId = deviceId;
+    }
+    if (!studentRecord.deviceId) {
+      studentRecord.deviceId = deviceId;
+    }
+
+    // 3. Tiến hành kiểm tra Geo-fencing Haversine & Mạng Wi-Fi
+    const clientIp = getClientIp(req);
+    const isCampusWifi = ipRangeCheck(clientIp, UTH_CAMPUS_IP_RANGES);
+
+    if (networkPolicy === 'WIFI_ONLY' && !isCampusWifi) {
+      return res.status(403).json({
+        success: false,
+        code: 'NETWORK_FORBIDDEN',
+        message: 'Phiên kiểm tra yêu cầu kết nối mạng Wi-Fi trường (UTH-Secure)!',
+        detectedIp: clientIp
+      });
+    }
+
+    let distance = 0;
+    if (studentCoords && sessionCoords && !isNaN(studentCoords.lat) && !isNaN(sessionCoords.lat)) {
+      distance = calculateHaversine(sessionCoords.lat, sessionCoords.lon, studentCoords.lat, studentCoords.lon);
+      if (distance > allowedRadius) {
         return res.status(403).json({
           success: false,
-          code: 'HARDWARE_MISMATCH',
-          message: 'Từ chối điểm danh: Thiết bị quét không khớp với thiết bị gốc đã gắn kết danh tính!'
+          code: 'GEO_FENCE_EXCEEDED',
+          message: `Vị trí vượt quá phạm vi cho phép (${distance}m > ${allowedRadius}m)!`,
+          distance
         });
       }
-    } else if (identity && !identity.deviceId && declaredDeviceId) {
-      // Gắn kết thiết bị lần đầu
-      identity.deviceId = declaredDeviceId;
     }
 
     // Cơ chế Khóa 1 phiên duy nhất (Single Active Session Enforcement)
     const now = Date.now();
-    const prevSession = activeSessionsMap.get(checksumAddress);
+    const prevSession = activeSessionsMap.get(recoveredAddress);
     if (prevSession && (now - prevSession.timestamp) < 3 * 60 * 1000 && prevSession.sessionId !== sessionId) {
       triggerIDSAlert(
         'CONCURRENT_SESSION',
-        checksumAddress,
+        recoveredAddress,
         'HIGH',
         `Phát hiện xuất hiện đồng thời tại 2 phiên khác nhau trong vòng 3 phút (${prevSession.sessionId} & ${sessionId})`
       );
     }
-    activeSessionsMap.set(checksumAddress, { sessionId, timestamp: now, clientIp });
+    activeSessionsMap.set(recoveredAddress, { sessionId: sessionId || 'default_sess', timestamp: now, clientIp });
+
+    recordAuditLog(recoveredAddress, 'Điểm danh phòng học', 'Thành công', `Xác thực danh tính & Thiết bị hợp lệ: ${deviceId.slice(0, 12)}...`);
 
     return res.json({
       success: true,
-      message: 'Điểm danh thành công! Đạt đủ điều kiện Mạng, GPS, Thiết bị và Chữ ký số.',
+      message: "Xác thực danh tính và thiết bị hợp lệ!",
+      student: studentRecord.fullName || 'Sinh viên UTH',
       data: {
-        studentAddress: checksumAddress,
+        studentAddress: recoveredAddress,
         distance,
         clientIp,
         isCampusWifi,
-        deviceVerified: Boolean(identity?.deviceId),
+        deviceVerified: true,
         timestamp: new Date().toISOString()
       }
     });
-  } catch (err) {
-    return res.status(400).json({
-      success: false,
-      code: 'INVALID_SIGNATURE',
-      message: 'Chữ ký mật mã không hợp lệ: ' + err.message
-    });
+
+  } catch (error) {
+    return res.status(400).json({ success: false, message: "Chữ ký số không hợp lệ hoặc thông điệp bị thay đổi" });
   }
 });
 
