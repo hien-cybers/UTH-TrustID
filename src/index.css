@@ -1,44 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg-dark: #080a08;
-  --bg-surface: #0e120e;
-  --card-bg: #131613;
-  --card-bg-subtle: #171b17;
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-border-hover: rgba(212, 249, 56, 0.25);
-  --lime: #d4f938;
-  --lime-hover: #c5ea2d;
-  --lime-glow: rgba(212, 249, 56, 0.35);
-  --amber-flame: #f59e0b;
-  --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #52525b;
-  --primary: #d4f938;
-  --border: #1f241f;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg-pure: #0a0a0a;
+  --card-charcoal: #141414;
+  --card-charcoal-light: #1c1c1c;
+  --border-subtle: #242424;
+  --lime-accent: #a3e635;
+  --lime-dim: rgba(163, 230, 53, 0.12);
+  --text-primary: #f4f4f5;
+  --text-secondary: #85858e;
+  --danger: #ef4444;
+  
+  /* Aliases for backwards compatibility */
+  --bg-dark: #0a0a0a;
+  --card-bg: #141414;
+  --lime: #a3e635;
+  --primary: #a3e635;
+  --border: #242424;
 }
 
 * {
   box-sizing: border-box;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--bg-dark);
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(212, 249, 56, 0.04) 0%, transparent 60%),
-    radial-gradient(circle at 100% 100%, rgba(245, 158, 11, 0.03) 0%, transparent 50%);
-  background-attachment: fixed;
+  background-color: var(--bg-pure);
   color: var(--text-primary);
-  min-height: 100vh;
-  min-height: 100dvh;
-  font-size: 14px;
+  font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -46,124 +39,61 @@ code, .font-mono {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Thẻ chuẩn Kalo Dark Style */
-.kalo-card, .panel, .glass-panel {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 20px;
-  padding: 18px;
-  transition: all 0.2s ease;
+/* Card than phẳng, viền sắc nét, không blur */
+.card-flat, .panel, .glass-panel, .kalo-card {
+  background: var(--card-charcoal);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px;
 }
 
-.kalo-card:hover {
-  border-color: var(--card-border-hover);
-}
-
-/* Nút dạng viên thuốc (Filter Pills) */
-.kalo-pill {
-  padding: 6px 16px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  transition: all 0.15s ease;
-}
-
-.kalo-pill:hover {
-  color: #fff;
-}
-
-.kalo-pill.active {
-  background: var(--lime);
-  color: #080a08;
-  font-weight: 700;
-  box-shadow: 0 2px 12px rgba(212, 249, 56, 0.25);
-}
-
-/* Nút bấm Lime Neon */
-.kalo-btn-primary, .btn-primary {
-  background: var(--lime);
-  color: #080a08;
-  font-weight: 700;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.15s ease;
-  box-shadow: 0 4px 16px rgba(212, 249, 56, 0.2);
-}
-
-.kalo-btn-primary:hover, .btn-primary:hover {
-  background: var(--lime-hover);
-  transform: translateY(-1px);
-}
-
-.kalo-btn-primary:active, .btn-primary:active {
-  transform: scale(0.98);
-}
-
-/* Ô nhập liệu */
-.kalo-input, .input-sm, .custom-input {
+.input-flat, .kalo-input, .input-sm, .custom-input {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #0b0e0b;
-  border: 1px solid var(--card-border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #0d0d0d;
+  border: 1px solid var(--border-subtle);
   color: #fff;
   font-size: 13px;
   outline: none;
-  transition: border-color 0.15s;
 }
 
-.kalo-input:focus, .input-sm:focus, .custom-input:focus {
-  border-color: var(--lime);
+.input-flat:focus, .kalo-input:focus, .input-sm:focus, .custom-input:focus {
+  border-color: var(--lime-accent);
 }
 
-/* Nút nhỏ gọn */
+.btn-lime, .kalo-btn-primary, .btn-primary {
+  background: var(--lime-accent);
+  color: #000;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+}
+
+.btn-lime:active, .kalo-btn-primary:active, .btn-primary:active {
+  opacity: 0.85;
+}
+
 .btn-sm {
   padding: 7px 14px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  background: var(--lime);
-  color: #080a08;
+  background: var(--lime-accent);
+  color: #000;
   transition: opacity 0.15s;
 }
 
-.btn-sm:hover {
-  opacity: 0.9;
-}
-
-/* Modal toàn màn hình */
-.fullscreen-qr-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background-color: #050705;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Chặn double tap zoom trên mobile */
 button, input, select {
   touch-action: manipulation;
 }
