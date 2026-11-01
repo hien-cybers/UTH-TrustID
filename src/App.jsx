@@ -18,6 +18,7 @@ import {
 } from './services/did';
 import Scanner from './components/Scanner';
 import LoginPortal from './components/LoginPortal';
+import AdminGateway from './components/AdminGateway';
 import {
   ShieldCheck,
   Key,
@@ -92,6 +93,24 @@ export default function App() {
     if (block) setBlockNumber(block);
   };
 
+  const syncIdentityToBackend = async (id) => {
+    if (!id?.address) return;
+    try {
+      await fetch('/api/identity/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: id.address,
+          studentId: '2251120000',
+          fullName: 'Sinh viên UTH',
+          major: 'An toàn Thông tin',
+        }),
+      });
+    } catch {
+      // offline fallback
+    }
+  };
+
   const loadAppData = () => {
     const saved = getSavedIdentity();
     if (saved) {
@@ -99,6 +118,7 @@ export default function App() {
       setIsRevoked(isIdentityRevoked());
       setCredentials(getSavedCredentials());
       setLogs(getAuditLogs());
+      syncIdentityToBackend(saved);
     }
   };
 
@@ -106,6 +126,20 @@ export default function App() {
     const newId = await generateNewIdentity();
     setIdentity(newId);
     loadAppData();
+    syncIdentityToBackend(newId);
+  };
+
+  const handleResetIdentity = async () => {
+    if (!confirm('Bạn có chắc chắn muốn tạo cặp khóa mới? Danh tính cũ sẽ được thay thế bằng danh tính W3C DID mới.')) {
+      return;
+    }
+    removeIdentity();
+    const newId = await generateNewIdentity();
+    setIdentity(newId);
+    setIsRevoked(false);
+    loadAppData();
+    syncIdentityToBackend(newId);
+    alert(`Đã khởi tạo danh tính mới thành công!\nĐịa chỉ ví: ${newId.address}`);
   };
 
   const handleRestoreSubmit = async (e) => {
@@ -126,6 +160,7 @@ export default function App() {
       setShowRestoreModal(false);
       setImportPhraseInput('');
       loadAppData();
+      syncIdentityToBackend(restored);
     } catch (err) {
       setRestoreError('Khôi phục thất bại: ' + (err.message || 'Cụm từ không hợp lệ'));
     }
@@ -140,11 +175,20 @@ export default function App() {
     }
   };
 
-  const handleRevoke = () => {
+  const handleRevoke = async () => {
     if (confirm('CẢNH BÁO: Thu hồi danh tính sẽ ghi nhận trạng thái Revoked trên Smart Contract Polygon Amoy. Tiếp tục?')) {
       revokeCurrentIdentity();
       setIsRevoked(true);
       setLogs(getAuditLogs());
+      if (identity) {
+        try {
+          await fetch('/api/identity/revoke', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: identity.address }),
+          });
+        } catch {}
+      }
     }
   };
 
@@ -220,6 +264,20 @@ export default function App() {
         time: new Date().toLocaleTimeString(),
       });
       setLogs(getAuditLogs());
+
+      // Gửi chữ ký mật mã lên Backend để kích hoạt WebSocket tự động đăng nhập trên Web
+      try {
+        await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challenge,
+            signature: signResult.signature,
+          }),
+        });
+      } catch (e) {
+        console.warn('Backend verify call failed:', e);
+      }
     } else {
       alert('Lỗi: ' + signResult.error);
       setLogs(getAuditLogs());
@@ -243,16 +301,16 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center p-4 selection:bg-cyan-500 selection:text-white pb-24">
       {/* Header */}
-      <header className="w-full max-w-md flex justify-between items-center py-3 border-b border-slate-800">
+      <header className={`w-full ${viewMode === 'admin' ? 'max-w-4xl' : 'max-w-md'} flex flex-wrap justify-between items-center py-3 border-b border-slate-800 gap-3`}>
         <div className="flex items-center space-x-2">
           <div className="bg-cyan-500/10 p-2 rounded-xl border border-cyan-500/20 text-cyan-400">
             <ShieldCheck size={26} />
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
-              <h1 className="font-bold text-base leading-tight">DID Identity</h1>
+              <h1 className="font-bold text-base leading-tight">UTH TrustID</h1>
               <span className="text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-400 px-1.5 py-0.2 rounded font-mono">
-                W3C
+                W3C DID
               </span>
             </div>
             {/* Live On-chain RPC Indicator */}
@@ -266,27 +324,45 @@ export default function App() {
           </div>
         </div>
 
-        <button
-          onClick={() => setViewMode(viewMode === 'wallet' ? 'portal' : 'wallet')}
-          className="flex items-center space-x-1.5 text-xs bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition"
-        >
-          {viewMode === 'wallet' ? (
-            <>
-              <Monitor size={14} className="text-cyan-400" />
-              <span>Chế độ Web</span>
-            </>
-          ) : (
-            <>
-              <Smartphone size={14} className="text-cyan-400" />
-              <span>Chế độ Ví</span>
-            </>
-          )}
-        </button>
+        {/* 3-Mode View Switcher */}
+        <div className="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs space-x-1">
+          <button
+            onClick={() => setViewMode('wallet')}
+            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg transition ${
+              viewMode === 'wallet' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Smartphone size={14} />
+            <span>Ví Mobile</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('portal')}
+            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg transition ${
+              viewMode === 'portal' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Monitor size={14} />
+            <span>Cổng Web</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('admin')}
+            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg transition ${
+              viewMode === 'admin' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Lock size={14} />
+            <span>Quản Trị</span>
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}
-      <main className="w-full max-w-md flex-1 py-4 flex flex-col">
-        {viewMode === 'portal' ? (
+      <main className={`w-full ${viewMode === 'admin' ? 'max-w-4xl' : 'max-w-md'} flex-1 py-4 flex flex-col items-center`}>
+        {viewMode === 'admin' ? (
+          <AdminGateway />
+        ) : viewMode === 'portal' ? (
           <LoginPortal />
         ) : !identity ? (
           // MÀN HÌNH KHI CHƯA CÓ DANH TÍNH
@@ -341,11 +417,10 @@ export default function App() {
                         W3C Identifier
                       </span>
                       <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
-                          isRevoked
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${isRevoked
                             ? 'text-rose-400 bg-rose-950/60 border-rose-800/60'
                             : 'text-emerald-400 bg-emerald-950/60 border-emerald-800/60'
-                        }`}
+                          }`}
                       >
                         {isRevoked ? 'REVOKED' : 'ACTIVE ON-CHAIN'}
                       </span>
@@ -402,11 +477,10 @@ export default function App() {
                   <button
                     onClick={handleScanClick}
                     disabled={isRevoked}
-                    className={`border p-4 rounded-xl flex flex-col items-center justify-center space-y-2 transition ${
-                      isRevoked
+                    className={`border p-4 rounded-xl flex flex-col items-center justify-center space-y-2 transition ${isRevoked
                         ? 'opacity-40 bg-slate-900 border-slate-800 cursor-not-allowed'
                         : 'bg-slate-900 hover:bg-slate-800 border-slate-800 active:scale-[0.98]'
-                    }`}
+                      }`}
                   >
                     <div className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
                       <QrCode size={22} />
@@ -446,8 +520,8 @@ export default function App() {
                   </a>
                 </div>
 
-                {/* Nút Thu hồi khẩn cấp */}
-                {!isRevoked && (
+                {/* Nút Thu hồi khẩn cấp hoặc Khởi tạo lại */}
+                {!isRevoked ? (
                   <button
                     onClick={handleRevoke}
                     className="w-full bg-rose-950/30 hover:bg-rose-900/40 border border-rose-900/50 text-rose-400 py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 transition font-medium"
@@ -455,6 +529,19 @@ export default function App() {
                     <AlertTriangle size={15} />
                     <span>Thu hồi danh tính khẩn cấp (Incident Revocation)</span>
                   </button>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="p-3 bg-rose-950/50 border border-rose-800/70 rounded-xl text-xs text-rose-300 text-center leading-relaxed">
+                      Danh tính số này đã bị thu hồi khẩn cấp. Không thể tiếp tục ký số trên hệ thống.
+                    </div>
+                    <button
+                      onClick={handleResetIdentity}
+                      className="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 transition font-medium shadow-lg shadow-cyan-900/30"
+                    >
+                      <RefreshCw size={15} />
+                      <span>Khởi tạo cặp khóa danh tính mới</span>
+                    </button>
+                  </div>
                 )}
 
                 {/* Kết quả ký số gần nhất */}
@@ -544,11 +631,10 @@ export default function App() {
                         className="bg-slate-900/80 border border-slate-800/80 p-3 rounded-xl flex items-start space-x-3 text-xs"
                       >
                         <div
-                          className={`p-1.5 rounded-lg flex-shrink-0 ${
-                            log.action === 'REVOCATION' || log.action === 'AUTH_FAIL'
+                          className={`p-1.5 rounded-lg flex-shrink-0 ${log.action === 'REVOCATION' || log.action === 'AUTH_FAIL'
                               ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
                               : 'bg-cyan-950/60 text-cyan-400 border border-cyan-800/40'
-                          }`}
+                            }`}
                         >
                           <History size={16} />
                         </div>
@@ -574,9 +660,8 @@ export default function App() {
         <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 flex justify-around py-3 max-w-md mx-auto z-40">
           <button
             onClick={() => setActiveSubTab('wallet')}
-            className={`flex flex-col items-center space-y-1 text-xs ${
-              activeSubTab === 'wallet' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
-            }`}
+            className={`flex flex-col items-center space-y-1 text-xs ${activeSubTab === 'wallet' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
+              }`}
           >
             <Key size={18} />
             <span>Ví DID</span>
@@ -584,9 +669,8 @@ export default function App() {
 
           <button
             onClick={() => setActiveSubTab('credentials')}
-            className={`flex flex-col items-center space-y-1 text-xs ${
-              activeSubTab === 'credentials' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
-            }`}
+            className={`flex flex-col items-center space-y-1 text-xs ${activeSubTab === 'credentials' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
+              }`}
           >
             <Award size={18} />
             <span>Chứng chỉ VC</span>
@@ -594,9 +678,8 @@ export default function App() {
 
           <button
             onClick={() => setActiveSubTab('logs')}
-            className={`flex flex-col items-center space-y-1 text-xs ${
-              activeSubTab === 'logs' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
-            }`}
+            className={`flex flex-col items-center space-y-1 text-xs ${activeSubTab === 'logs' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
+              }`}
           >
             <History size={18} />
             <span>Audit Log</span>
