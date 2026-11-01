@@ -378,11 +378,11 @@ export default function FacultyPortal() {
     <div className="responsive-page-container">
       
       {/* 1. Tiêu đề phân mục */}
-      <div style={{ marginBottom: '16px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 800, margin: '0 0 4px', color: '#ffffff', letterSpacing: '-0.4px' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <h1 style={{ fontSize: 'clamp(16px, 3.8vw, 22px)', fontWeight: 800, margin: '0 0 4px', color: '#ffffff', letterSpacing: '-0.4px', lineHeight: '1.3' }}>
           Cổng Giảng Viên & Quản Lý Thi Cử (Verifier Portal)
         </h1>
-        <p style={{ margin: 0, fontSize: '12px', color: '#8492a6' }}>
+        <p style={{ margin: 0, fontSize: '11.5px', color: '#8492a6', lineHeight: '1.45' }}>
           Tạo phiên điểm danh (≤ 35m) vs Phòng thi (≤ 15m), Tra cứu thí sinh, Tái kiểm tra đột xuất & Đồng bộ SIS Đào tạo
         </p>
       </div>
@@ -498,7 +498,7 @@ export default function FacultyPortal() {
               </div>
 
               {/* Thiết lập tham số phòng & Tự khóa */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', gap: '8px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Học phần</label>
                   <input
@@ -563,13 +563,13 @@ export default function FacultyPortal() {
           {/* Card 2: Khung QR Code xoay vòng 15s */}
           {session && (
             <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                <div style={{ background: '#ffffff', padding: '6px', borderRadius: '10px', display: 'inline-block', boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ background: '#ffffff', padding: '6px', borderRadius: '10px', display: 'inline-block', boxShadow: '0 4px 14px rgba(0,0,0,0.5)', flexShrink: 0, margin: '0 auto' }}>
                   <img src={qrUrl} alt="Dynamic QR" style={{ width: '110px', height: '110px', display: 'block' }} />
                 </div>
-                <div style={{ flex: 1, fontSize: '11.5px', lineHeight: '1.65' }}>
-                  <div>Mã Phiên: <code style={{ color: '#38bdf8', fontWeight: 700 }}>{session.id}</code></div>
-                  <div>Nonce Token: <code style={{ color: '#00f2fe', fontWeight: 800 }}>{dynamicNonce}</code></div>
+                <div style={{ flex: '1 1 180px', minWidth: 0, fontSize: '11.5px', lineHeight: '1.65' }}>
+                  <div style={{ wordBreak: 'break-all' }}>Mã Phiên: <code style={{ color: '#38bdf8', fontWeight: 700 }}>{session.id}</code></div>
+                  <div style={{ wordBreak: 'break-all' }}>Nonce Token: <code style={{ color: '#00f2fe', fontWeight: 800 }}>{dynamicNonce}</code></div>
                   <div style={{ color: '#8492a6' }}>Xoay mã sau: <strong style={{ color: countdown <= 5 ? '#ff5252' : '#00e676', fontSize: '13px' }}>{countdown}s</strong></div>
                   <div style={{ color: '#8492a6' }}>Bán kính: ≤ {session.radius}m • {session.networkPolicy === 'WIFI_STRICT' ? 'Wi-Fi UTH' : 'Tự do'}</div>
 
@@ -920,7 +920,7 @@ export default function FacultyPortal() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', textAlign: 'center', fontFamily: 'JetBrains Mono' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(70px, 1fr))', gap: '6px', textAlign: 'center', fontFamily: 'JetBrains Mono' }}>
                 <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
                   <div style={{ fontSize: '10px', color: '#8492a6' }}>Tổng SV</div>
                   <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginTop: '2px' }}>{totalScans}</div>

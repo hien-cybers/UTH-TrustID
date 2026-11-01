@@ -675,15 +675,15 @@ export default function StudentWallet() {
                 </div>
 
                 {/* Device Hardware Footprint Badge */}
-                <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800/80 rounded-xl px-2.5 py-1.5 mb-3 text-xs">
-                  <div className="flex items-center space-x-1.5 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 bg-slate-950/70 border border-slate-800/80 rounded-xl px-2.5 py-1.5 mb-3 text-xs">
+                  <div className="flex items-center space-x-1.5 min-w-0 flex-1">
                     <Cpu size={14} className="text-cyan-400 flex-shrink-0" />
-                    <span className="text-[11px] text-slate-400">Gắn kết phần cứng:</span>
-                    <span className="font-mono text-[11px] text-cyan-300 font-semibold truncate">
-                      {currentDeviceId ? currentDeviceId.slice(0, 18) + '...' : '0x89d2f476961fe041...'}
+                    <span className="text-[10.5px] text-slate-400 whitespace-nowrap">Gắn kết:</span>
+                    <span className="font-mono text-[10.5px] text-cyan-300 font-semibold truncate">
+                      {currentDeviceId ? currentDeviceId.slice(0, 16) + '...' : '0x89d2f476961fe041...'}
                     </span>
                   </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-0.5 flex-shrink-0 ml-1">
+                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-0.5 flex-shrink-0">
                     <CheckCircle2 size={11} /> Đã khóa thiết bị
                   </span>
                 </div>

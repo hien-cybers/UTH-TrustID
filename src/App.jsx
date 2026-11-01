@@ -10,9 +10,10 @@ import WebPortal from './components/WebPortal';
 export default function App() {
   const getNavClass = ({ isActive }) => ({
     flex: 1,
-    padding: '8px 4px',
+    minWidth: 0,
+    padding: '6px 2px',
     textDecoration: 'none',
-    fontSize: '11.5px',
+    fontSize: '11px',
     fontWeight: 700,
     color: isActive ? '#38bdf8' : '#8492a6',
     background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
@@ -20,8 +21,10 @@ export default function App() {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '4px',
-    transition: 'all 0.15s ease'
+    justifyContent: 'center',
+    gap: '3px',
+    transition: 'all 0.15s ease',
+    whiteSpace: 'nowrap'
   });
 
   return (
@@ -31,13 +34,19 @@ export default function App() {
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: 'rgba(7, 11, 20, 0.85)',
+        background: 'rgba(7, 11, 20, 0.88)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        padding: '10px 16px'
+        paddingTop: 'calc(10px + env(safe-area-inset-top, 0px))',
+        paddingBottom: '10px',
+        paddingLeft: 'calc(14px + env(safe-area-inset-left, 0px))',
+        paddingRight: 'calc(14px + env(safe-area-inset-right, 0px))',
+        width: '100%',
+        maxWidth: '100vw',
+        boxSizing: 'border-box'
       }}>
-        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
           
           {/* Logo Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -50,32 +59,43 @@ export default function App() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '17px',
-              boxShadow: '0 0 15px rgba(56, 189, 248, 0.35)'
+              boxShadow: '0 0 15px rgba(56, 189, 248, 0.35)',
+              flexShrink: 0
             }}>
               🛡️
             </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '15px', letterSpacing: '-0.3px', color: '#fff' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: '15px', letterSpacing: '-0.3px', color: '#fff', whiteSpace: 'nowrap' }}>
                 UTH-TrustID
               </div>
-              <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px', whiteSpace: 'nowrap' }}>
                 Passwordless DID System
               </div>
             </div>
           </div>
 
           {/* Huy hiệu trạng thái kết nối mạng trường */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00e676', display: 'inline-block', boxShadow: '0 0 8px #00e676' }} />
             <span style={{ fontSize: '11px', color: '#8492a6', fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
-              Polygon Amoy
+              Amoy
             </span>
           </div>
         </div>
       </header>
 
       {/* Main Content Area co giãn động theo chiều cao thiết bị */}
-      <main style={{ minHeight: 'calc(100dvh - 65px)', paddingBottom: '75px', background: '#070b14' }}>
+      <main style={{
+        minHeight: 'calc(100dvh - 65px)',
+        paddingBottom: 'calc(85px + env(safe-area-inset-bottom, 0px))',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+        background: '#070b14',
+        width: '100%',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+        boxSizing: 'border-box'
+      }}>
         <Routes>
           <Route path="/" element={<Navigate to="/wallet" replace />} />
           <Route path="/wallet" element={<StudentWallet />} />
@@ -98,7 +118,13 @@ export default function App() {
         WebkitBackdropFilter: 'blur(20px)',
         borderTop: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
-        padding: '6px 8px calc(6px + var(--safe-bottom)) 8px',
+        paddingTop: '6px',
+        paddingBottom: 'calc(6px + env(safe-area-inset-bottom, 0px))',
+        paddingLeft: 'calc(6px + env(safe-area-inset-left, 0px))',
+        paddingRight: 'calc(6px + env(safe-area-inset-right, 0px))',
+        width: '100%',
+        maxWidth: '100vw',
+        boxSizing: 'border-box',
         gap: '4px'
       }}>
         <NavLink to="/wallet" style={getNavClass}>

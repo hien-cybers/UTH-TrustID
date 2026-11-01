@@ -190,21 +190,23 @@ export default function LoginPortal() {
   };
 
   return (
-    <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 mt-2 sm:mt-4 shadow-2xl flex flex-col items-center relative overflow-hidden animate-in fade-in duration-300">
+    <div className="w-full max-w-md sm:max-w-lg bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 mt-1 sm:mt-3 shadow-2xl flex flex-col items-center relative overflow-hidden box-border animate-in fade-in duration-300">
       {/* Background neon glow */}
       <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Header Portal */}
       <div className="flex items-center space-x-2 text-cyan-400 mb-2">
-        <Monitor size={20} className="sm:w-[22px] sm:h-[22px]" />
-        <h3 className="font-semibold text-sm sm:text-base text-slate-100 text-center">Cổng Dịch Vụ - Xác Thực Không Mật Khẩu</h3>
+        <Monitor size={18} className="sm:w-[22px] sm:h-[22px] flex-shrink-0" />
+        <h3 className="font-semibold text-xs sm:text-base text-slate-100 text-center">Cổng Dịch Vụ - Xác Thực Không Mật Khẩu</h3>
       </div>
 
-      <div className="flex items-center space-x-2 text-[10px] sm:text-[11px] text-slate-400 mb-4 bg-slate-950/70 border border-slate-800 px-2.5 sm:px-3 py-1 rounded-full max-w-full">
-        <Lock size={12} className="text-emerald-400 flex-shrink-0" />
-        <span className="truncate">Domain Ràng Buộc: <strong className="text-cyan-300 font-mono">uth.edu.vn</strong></span>
-        <span className="text-slate-600">|</span>
-        <span className="text-purple-400 font-medium whitespace-nowrap">Polygon Amoy (80002)</span>
+      <div className="flex flex-wrap items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 mb-4 bg-slate-950/70 border border-slate-800 px-2.5 sm:px-3 py-1 rounded-xl max-w-full text-center">
+        <div className="flex items-center space-x-1">
+          <Lock size={12} className="text-emerald-400 flex-shrink-0" />
+          <span className="truncate">Domain: <strong className="text-cyan-300 font-mono">uth.edu.vn</strong></span>
+        </div>
+        <span className="text-slate-600 hidden sm:inline">|</span>
+        <span className="text-purple-400 font-medium">Polygon Amoy (80002)</span>
       </div>
 
       {authenticatedSession ? (
@@ -305,13 +307,13 @@ export default function LoginPortal() {
           </div>
 
           {challengeData && !isExpired ? (
-            <div className="p-3 sm:p-4 bg-white rounded-2xl sm:rounded-3xl shadow-2xl relative group transition transform hover:scale-[1.01] flex items-center justify-center">
+            <div className="p-3 bg-white rounded-2xl sm:rounded-3xl shadow-2xl relative group transition transform hover:scale-[1.01] flex items-center justify-center max-w-[210px] max-h-[210px] mx-auto">
               <QRCodeSVG
                 value={JSON.stringify(challengeData)}
-                size={180}
+                size={165}
                 level="M"
                 includeMargin={false}
-                className="w-44 h-44 sm:w-48 sm:h-48"
+                className="w-36 h-36 sm:w-44 sm:h-44"
               />
             </div>
           ) : (

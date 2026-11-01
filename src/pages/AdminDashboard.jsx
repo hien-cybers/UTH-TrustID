@@ -308,26 +308,27 @@ export default function AdminDashboard() {
       {/* 1. KHỐI TIÊU ĐỀ TRUNG TÂM QUẢN TRỊ */}
       <div className="navy-card" style={{ marginBottom: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: '1 1 260px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
               background: 'rgba(0, 242, 254, 0.1)',
               border: '1px solid rgba(0, 242, 254, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '20px'
+              fontSize: '18px',
+              flexShrink: 0
             }}>
               🔒
             </div>
-            <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 800, margin: '0 0 2px', color: '#fff' }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ fontSize: 'clamp(14px, 3.5vw, 16px)', fontWeight: 800, margin: '0 0 2px', color: '#fff' }}>
                 Trung Tâm Quản Trị Danh Tính & Giám Sát An Ninh
               </h2>
-              <p style={{ margin: 0, fontSize: '11.5px', color: '#8492a6' }}>
-                Quản trị W3C DID, Smart Contract Polygon Registry & Đo lường hiệu năng NCKH
+              <p style={{ margin: 0, fontSize: '11px', color: '#8492a6' }}>
+                Quản trị W3C DID, Smart Contract Polygon Registry & Đo lường NCKH
               </p>
             </div>
           </div>
@@ -336,7 +337,7 @@ export default function AdminDashboard() {
             onClick={handleRefresh} 
             disabled={isRefreshing}
             className="btn-refresh" 
-            style={{ width: 'auto', minWidth: '150px' }}
+            style={{ width: 'auto', minWidth: '130px', flex: '1 1 auto', maxWidth: '100%' }}
           >
             <span style={{ fontSize: '13px' }}>🔄</span> 
             {isRefreshing ? "Đang đồng bộ..." : "Làm mới On-chain"}
@@ -519,17 +520,17 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 Object.entries(identitiesList).map(([addr, idItem], idx) => (
-                  <div key={idx} style={{ padding: '8px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '8px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div key={idx} style={{ padding: '8px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '8px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ minWidth: 0, flex: '1 1 160px' }}>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>
                         {idItem.fullName || 'Sinh viên UTH'} <span style={{ fontSize: '11px', color: '#8492a6' }}>({idItem.studentId})</span>
                       </div>
-                      <div style={{ fontSize: '10.5px', color: '#38bdf8', fontFamily: 'JetBrains Mono' }}>
-                        {addr.slice(0, 14)}...{addr.slice(-6)}
+                      <div style={{ fontSize: '10.5px', color: '#38bdf8', fontFamily: 'JetBrains Mono', wordBreak: 'break-all' }}>
+                        {addr.slice(0, 10)}...{addr.slice(-6)}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <span style={{
                         fontSize: '9.5px',
                         fontWeight: 700,
