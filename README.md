@@ -116,11 +116,10 @@ npm run build
 ---
 
 ## 🧭 Điều Hướng Các Phân Hệ
-* **Trang Chủ Đề Tài (Landing Page)**: `/`
+* **Cổng Giảng Viên (Mặc định: Điểm danh / Thi cử & Geo-Fencing)**: `/faculty` (hoặc `/`)
 * **Ví Sinh Viên (Mobile PWA)**: `/wallet`
-* **Cổng Giảng Viên (Điểm danh / Thi & Geo-Fencing)**: `/faculty`
-* **Cổng Quản Trị Viên (Admin & Issuer)**: `/admin`
 * **Cổng Dịch Vụ Web (Đăng nhập không mật khẩu)**: `/portal`
+* **Cổng Quản Trị Viên (Admin & Issuer)**: `/admin`
 
 ---
 
