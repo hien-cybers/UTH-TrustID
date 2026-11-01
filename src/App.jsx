@@ -4,6 +4,7 @@ import { INITIAL_STUDENTS, calculateDistance } from './data/studentsData';
 import FacultyPortal from './pages/FacultyPortal';
 import AdminDashboard from './pages/AdminDashboard';
 import Scanner from './components/Scanner';
+import { verifyGpsIntegrity } from './utils/antiSpoofGps';
 import {
   performStrictWebAuthn,
   createSelectiveDisclosureProof,
@@ -106,35 +107,57 @@ export default function App() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        // 1. Chạy thuật toán đối soát chống Fake GPS & Anomaly Detection
+        const gpsAudit = verifyGpsIntegrity(pos);
+
+        if (!gpsAudit.isValid) {
+          setIsScanning(false);
+          const reasonMsg = gpsAudit.reasons.join(", ");
+          setScanResult({
+            course: 'An toàn Mạng Không Dây',
+            room: 'Phòng Lab ATTT',
+            distance: 0,
+            accuracy: gpsAudit.coords.accuracy,
+            flagged: true,
+            valid: false,
+            reason: `[CẢNH BÁO AN NINH FAKE GPS (Risk: ${gpsAudit.riskScore}/100)]: ${reasonMsg}`,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          setActivityLogs((prev) => [
+            {
+              id: Date.now(),
+              type: 'CHECKIN_BLOCKED',
+              title: `Gian lận GPS: An toàn Mạng`,
+              location: 'Phòng Lab ATTT',
+              distance: 0,
+              accuracy: gpsAudit.coords.accuracy,
+              security: `FAKE GPS (Score: ${gpsAudit.riskScore})`,
+              status: 'FAILED',
+              time: 'Vừa xong'
+            },
+            ...prev
+          ]);
+          alert(`[CẢNH BÁO AN NINH]\nPhát hiện gian lận toạ độ GPS (Risk Score: ${gpsAudit.riskScore}/100)!\nLý do: ${reasonMsg}`);
+          return;
+        }
+
         const studentLat = pos.coords.latitude;
         const studentLon = pos.coords.longitude;
         const facultyLat = 10.7992;
         const facultyLon = 106.7056;
 
-        // Phân tích chống Fake GPS & Dịch chuyển tức thời (Teleport)
-        const antiSpoofCheck = detectMockLocationAndTeleport(pos.coords, lastScanCoords.current);
-        lastScanCoords.current = { lat: studentLat, lon: studentLon, timestamp: Date.now() };
-
         const distance = calculateDistance(facultyLat, facultyLon, studentLat, studentLon);
-        const isValid = distance <= 35 && currentStudent.status === 'Active' && !antiSpoofCheck.flagged;
+        const isValid = distance <= 35 && currentStudent.status === 'Active';
 
         setTimeout(() => {
           setIsScanning(false);
-          let reasonText = 'Hợp lệ';
-          if (antiSpoofCheck.flagged) {
-            reasonText = antiSpoofCheck.reason;
-          } else if (currentStudent.status === 'Revoked') {
-            reasonText = 'Thẻ sinh viên đã bị thu hồi';
-          } else if (distance > 35) {
-            reasonText = `Ngoài phạm vi phòng thi (${distance}m > 35m)`;
-          }
-
+          let reasonText = isValid ? 'Hợp lệ' : (distance > 35 ? `Ngoài phạm vi phòng thi (${distance}m > 35m)` : 'Thẻ bị thu hồi');
           const result = {
             course: 'An toàn Mạng Không Dây',
             room: 'Phòng Lab ATTT',
             distance,
-            accuracy: antiSpoofCheck.accuracy,
-            flagged: antiSpoofCheck.flagged,
+            accuracy: gpsAudit.coords.accuracy,
+            flagged: false,
             valid: isValid,
             reason: reasonText,
             timestamp: new Date().toLocaleTimeString()
@@ -148,8 +171,8 @@ export default function App() {
               title: `Điểm danh: ${result.course}`,
               location: result.room,
               distance,
-              accuracy: antiSpoofCheck.accuracy,
-              security: antiSpoofCheck.flagged ? 'CẢNH BÁO FAKE GPS' : `GPS Real (±${antiSpoofCheck.accuracy}m)`,
+              accuracy: gpsAudit.coords.accuracy,
+              security: `GPS Real (±${gpsAudit.coords.accuracy}m)`,
               status: isValid ? 'SUCCESS' : 'FAILED',
               time: 'Vừa xong'
             },
@@ -160,7 +183,7 @@ export default function App() {
       () => {
         fallbackScan();
       },
-      { timeout: 6000 }
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
     );
   };
 

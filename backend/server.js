@@ -3,8 +3,11 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 import { verifyMessage, getAddress, Wallet, keccak256, toUtf8Bytes } from 'ethers';
+import ipRangeCheck from 'ip-range-check';
+import { getClientIp, UTH_CAMPUS_IP_RANGES } from './middlewares/networkGuard.js';
 
 const app = express();
+app.set('trust proxy', true);
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
@@ -504,6 +507,93 @@ app.get('/api/did/:address', (req, res) => {
     return res.json(didDoc);
   } catch {
     return res.status(400).json({ error: 'Địa chỉ ví không hợp lệ' });
+  }
+});
+
+// ==========================================
+// 9. ĐỐI SOÁT ĐIỂM DANH ĐA LỚP: MẠNG TRƯỜNG + GEO-FENCING + CHỮ KÝ EIP-191
+// ==========================================
+
+function calculateHaversine(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const toRad = (x) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+}
+
+// API Điểm danh phòng học / phòng thi kết hợp đa lớp bảo vệ
+app.post('/api/attendance/verify', async (req, res) => {
+  const { 
+    sessionId, 
+    challengeNonce, 
+    signature, 
+    studentCoords, 
+    sessionCoords, 
+    networkPolicy,
+    allowedRadius = 35 
+  } = req.body;
+
+  const clientIp = getClientIp(req);
+  const isCampusWifi = ipRangeCheck(clientIp, UTH_CAMPUS_IP_RANGES);
+
+  // --- LỚP 1: Kiểm tra chính sách mạng (Khóa Wi-Fi Trường) ---
+  if (networkPolicy === 'WIFI_ONLY' && !isCampusWifi) {
+    return res.status(403).json({
+      success: false,
+      code: 'NETWORK_FORBIDDEN',
+      message: 'Phiên kiểm tra yêu cầu kết nối mạng Wi-Fi trường (UTH-Secure)!',
+      detectedIp: clientIp
+    });
+  }
+
+  // --- LỚP 2: Kiểm tra Geo-fencing Haversine ---
+  if (!studentCoords || !sessionCoords) {
+    return res.status(400).json({ success: false, message: 'Thiếu dữ liệu toạ độ GPS' });
+  }
+
+  const distance = calculateHaversine(
+    sessionCoords.lat,
+    sessionCoords.lon,
+    studentCoords.lat,
+    studentCoords.lon
+  );
+
+  if (distance > allowedRadius) {
+    return res.status(403).json({
+      success: false,
+      code: 'GEO_FENCE_EXCEEDED',
+      message: `Vị trí vượt quá phạm vi cho phép (${distance}m > ${allowedRadius}m)!`,
+      distance
+    });
+  }
+
+  // --- LỚP 3: Đối soát chữ ký số mật mã EIP-191 ---
+  try {
+    const recoveredAddress = verifyMessage(challengeNonce, signature);
+    const checksumAddress = getAddress(recoveredAddress);
+
+    return res.json({
+      success: true,
+      message: 'Điểm danh thành công! Đạt đủ điều kiện Mạng, GPS và Chữ ký số.',
+      data: {
+        studentAddress: checksumAddress,
+        distance,
+        clientIp,
+        isCampusWifi,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_SIGNATURE',
+      message: 'Chữ ký mật mã không hợp lệ: ' + err.message
+    });
   }
 });
 
