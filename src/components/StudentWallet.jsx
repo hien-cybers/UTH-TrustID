@@ -544,7 +544,7 @@ export default function StudentWallet() {
   };
 
   return (
-    <div className={`w-full max-w-md mx-auto flex flex-col items-center ${identity ? 'pb-24 sm:pb-28' : 'pb-6'}`}>
+    <div className="w-full max-w-lg mx-auto px-3 sm:px-4 pt-2 pb-24 flex flex-col items-center">
       {!identity ? (
         // MÀN HÌNH KHI CHƯA CÓ DANH TÍNH
         <div className="flex-1 w-full flex flex-col justify-center items-center text-center px-2 py-6 sm:py-8">
@@ -575,7 +575,38 @@ export default function StudentWallet() {
           </div>
         </div>
       ) : (
-        <div className="w-full space-y-3.5 sm:space-y-4">
+        <div className="w-full space-y-3 sm:space-y-3.5">
+          {/* Top Segmented Sub-Tab Switcher: Ví DID | Chứng Chỉ VC | Nhật Ký Audit Log */}
+          <div className="w-full flex items-center p-1 bg-slate-900/90 border border-slate-800 rounded-xl mb-1 backdrop-blur-md">
+            <button
+              onClick={() => setActiveSubTab('wallet')}
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition ${
+                activeSubTab === 'wallet' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Key size={14} />
+              <span>Ví DID</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('credentials')}
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition ${
+                activeSubTab === 'credentials' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Award size={14} />
+              <span>Chứng chỉ VC</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('logs')}
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition ${
+                activeSubTab === 'logs' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <History size={14} />
+              <span>Audit Log</span>
+            </button>
+          </div>
+
           {/* Cảnh báo nếu danh tính đã bị thu hồi khẩn cấp */}
           {isRevoked && (
             <div className="bg-rose-950/50 border border-rose-800 rounded-2xl p-3.5 sm:p-4 flex items-center space-x-3 text-rose-300">
@@ -942,38 +973,6 @@ export default function StudentWallet() {
             </div>
           )}
         </div>
-      )}
-
-      {/* Bottom Navigation Bar */}
-      {identity && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] max-w-md mx-auto z-40 px-2 shadow-2xl">
-          <button
-            onClick={() => setActiveSubTab('wallet')}
-            className={`flex flex-col items-center space-y-1 py-1 px-3 text-[11px] sm:text-xs transition ${activeSubTab === 'wallet' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
-              }`}
-          >
-            <Key size={17} />
-            <span>Ví DID</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('credentials')}
-            className={`flex flex-col items-center space-y-1 py-1 px-3 text-[11px] sm:text-xs transition ${activeSubTab === 'credentials' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
-              }`}
-          >
-            <Award size={17} />
-            <span>Chứng chỉ VC</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('logs')}
-            className={`flex flex-col items-center space-y-1 py-1 px-3 text-[11px] sm:text-xs transition ${activeSubTab === 'logs' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
-              }`}
-          >
-            <History size={17} />
-            <span>Audit Log</span>
-          </button>
-        </nav>
       )}
 
       {/* MODAL 1: HỘP THOẠI PHÊ DUYỆT ĐĂNG NHẬP */}

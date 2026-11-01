@@ -1,10 +1,10 @@
-// src/pages/FacultyPortal.jsx - Cổng Giảng Viên (SIS Webhook, Mid-Session Challenge, Peer Mesh & Anomaly Analytics)
+// src/pages/FacultyPortal.jsx - Cổng Giảng Viên & Quản Lý Thi Cử (Responsive Multi-Device & Quick Candidate Lookup)
 import React, { useState, useEffect } from 'react';
 import { INITIAL_STUDENTS } from '../data/studentsData';
 
 export default function FacultyPortal() {
   const [students] = useState(INITIAL_STUDENTS);
-  const [mode, setMode] = useState('attendance'); // 'attendance' | 'exam'
+  const [mode, setMode] = useState('attendance'); // 'attendance' (≤ 35m) | 'exam' (≤ 15m)
   const [networkPolicy, setNetworkPolicy] = useState('HYBRID_4G_5G'); // 'HYBRID_4G_5G' | 'WIFI_STRICT'
   const [roomName, setRoomName] = useState('Phòng A3-204');
   const [courseName, setCourseName] = useState('An Toàn Mạng');
@@ -18,6 +18,9 @@ export default function FacultyPortal() {
   const [isFullscreenQR, setIsFullscreenQR] = useState(false);
   const [isSessionLocked, setIsSessionLocked] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+
+  // Tra cứu hồ sơ & Token mã hóa (Candidate & Token Quick Lookup)
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   // Điểm danh ngẫu nhiên giữa giờ (Mid-Session Random Verification)
   const [midSessionChallenge, setMidSessionChallenge] = useState(null);
@@ -127,7 +130,6 @@ export default function FacultyPortal() {
     setSisSyncStatus(null);
   };
 
-  // Kích hoạt Tái Kiểm Tra Đột Xuất Giữa Giờ
   const handleTriggerMidSessionChallenge = () => {
     if (!session) return;
     const challengeCode = 'MID_' + Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -158,7 +160,7 @@ export default function FacultyPortal() {
     }
 
     const fakeSig = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    const hardwareFp = `DEV_FP_${Math.random().toString(16).substring(2, 10).toUpperCase()}`;
+    const hardwareFp = `0x89d2${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`;
 
     const newRecord = {
       mssv: st.mssv,
@@ -172,7 +174,7 @@ export default function FacultyPortal() {
       isMockGps,
       isOffline,
       deviceId: hardwareFp,
-      peerWitnesses: enablePeerMesh && valid ? ['SV Bích (2251120002)', 'SV Cường (2251120003)'] : [],
+      peerWitnesses: enablePeerMesh && valid ? ['SV Bích (2251120001)', 'SV Đức (2251120003)'] : [],
       network: session.networkPolicy === 'WIFI_STRICT' ? 'Wi-Fi UTH-Secure' : '4G/5G Viettel',
       coordsStr: `${(session.coords.lat + (Math.random() - 0.5) * 0.0002).toFixed(5)}, ${(session.coords.lon + (Math.random() - 0.5) * 0.0002).toFixed(5)}`,
       statusText,
@@ -187,7 +189,6 @@ export default function FacultyPortal() {
     }
   };
 
-  // Đồng bộ kết quả sang hệ thống đào tạo SIS Đào Tạo UTH qua Webhook
   const handleSyncToAcademicSIS = async () => {
     if (records.length === 0) {
       alert('Không có bản ghi điểm danh nào để đồng bộ!');
@@ -229,7 +230,6 @@ export default function FacultyPortal() {
     }
   };
 
-  // Xuất file CSV kiểm toán
   const handleExportCSV = () => {
     if (records.length === 0) {
       alert("Chưa có bản ghi điểm danh nào để xuất báo cáo!");
@@ -283,7 +283,6 @@ export default function FacultyPortal() {
     document.body.removeChild(link);
   };
 
-  // Xác thực vé ngoại tuyến
   const handleVerifyOfflineToken = () => {
     try {
       if (!offlineTokenInput.trim()) {
@@ -356,6 +355,16 @@ export default function FacultyPortal() {
     setOfflineQueue([]);
   };
 
+  // Tra cứu lọc danh sách thí sinh
+  const filteredCandidates = searchKeyword.trim()
+    ? students.filter(s => 
+        s.mssv.includes(searchKeyword.trim()) ||
+        s.fullName.toLowerCase().includes(searchKeyword.toLowerCase().trim()) ||
+        (s.sbd && s.sbd.toLowerCase().includes(searchKeyword.toLowerCase().trim())) ||
+        (s.qrCodeToken && s.qrCodeToken.toLowerCase().includes(searchKeyword.toLowerCase().trim()))
+      )
+    : [];
+
   const totalScans = records.length;
   const validScans = records.filter(r => r.valid).length;
   const mockGpsScans = records.filter(r => r.isMockGps).length;
@@ -366,310 +375,468 @@ export default function FacultyPortal() {
     : '';
 
   return (
-    <div style={{ padding: '16px 14px', maxWidth: '480px', margin: '0 auto' }}>
+    <div className="responsive-page-container">
       
       {/* 1. Tiêu đề phân mục */}
       <div style={{ marginBottom: '16px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 4px', color: '#ffffff', letterSpacing: '-0.4px' }}>
-          Cổng Giảng Viên & Khảo Thí
+        <h1 style={{ fontSize: '22px', fontWeight: 800, margin: '0 0 4px', color: '#ffffff', letterSpacing: '-0.4px' }}>
+          Cổng Giảng Viên & Quản Lý Thi Cử (Verifier Portal)
         </h1>
-        <p style={{ margin: 0, fontSize: '12.5px', color: '#8492a6' }}>
-          Quản lý phòng thi, Tái kiểm tra giữa giờ & Đồng bộ Đào tạo SIS UTH
+        <p style={{ margin: 0, fontSize: '12px', color: '#8492a6' }}>
+          Tạo phiên điểm danh (≤ 35m) vs Phòng thi (≤ 15m), Tra cứu thí sinh, Tái kiểm tra đột xuất & Đồng bộ SIS Đào tạo
         </p>
       </div>
 
-      {/* 2. Khối Cấu Hình Phiên Làm Việc */}
-      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#ffffff' }}>
-            Cấu hình phiên làm việc
-          </div>
-          {session && (
-            <span style={{
-              fontSize: '11px',
-              padding: '3px 8px',
-              borderRadius: '6px',
-              background: isSessionLocked ? 'rgba(239, 68, 68, 0.2)' : (session.mode === 'exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)'),
-              color: isSessionLocked ? '#ff5252' : (session.mode === 'exam' ? '#ff5252' : '#38bdf8'),
-              fontWeight: 700,
-              border: '1px solid currentColor'
-            }}>
-              {isSessionLocked ? '🔒 PHÒNG ĐÃ KHÓA' : (session.mode === 'exam' ? 'PHÒNG THI CHÍNH THỨC' : 'ĐIỂM DANH LỚP HỌC')}
-            </span>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Nút chọn hình thức */}
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '4px', fontWeight: 600 }}>Mục đích tổ chức</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => setMode('attendance')}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  fontSize: '12px',
-                  borderRadius: '8px',
-                  border: mode === 'attendance' ? '1px solid #38bdf8' : '1px solid #1e293b',
-                  background: mode === 'attendance' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
-                  color: mode === 'attendance' ? '#38bdf8' : '#8492a6',
+      {/* 2. BỐ CỤC 2 CỘT RESPONSIVE (1 Cột Mobile, 2 Cột Desktop Web) */}
+      <div className="responsive-dashboard-grid">
+        
+        {/* === CỘT TRÁI: CẤU HÌNH, MÃ QR & TRA CỨU === */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Card 1: Khối Cấu Hình Phiên Làm Việc */}
+          <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#ffffff' }}>
+                Cấu hình phiên làm việc
+              </div>
+              {session && (
+                <span style={{
+                  fontSize: '11px',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  background: isSessionLocked ? 'rgba(239, 68, 68, 0.2)' : (session.mode === 'exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)'),
+                  color: isSessionLocked ? '#ff5252' : (session.mode === 'exam' ? '#ff5252' : '#38bdf8'),
                   fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                🏫 Điểm danh lớp (≤ 35m)
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('exam')}
-                style={{
-                  flex: 1,
-                  padding: '8px',
-                  fontSize: '12px',
-                  borderRadius: '8px',
-                  border: mode === 'exam' ? '1px solid #ff5252' : '1px solid #1e293b',
-                  background: mode === 'exam' ? 'rgba(255, 82, 82, 0.15)' : '#0b1329',
-                  color: mode === 'exam' ? '#ff5252' : '#8492a6',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                📝 Phòng thi gắt (≤ 15m)
-              </button>
-            </div>
-          </div>
-
-          {/* Ràng buộc mạng Wi-Fi trường & P2P Mesh */}
-          <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '4px', fontWeight: 600 }}>Chính sách mạng (Dual-Factor Guard)</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => setNetworkPolicy('HYBRID_4G_5G')}
-                style={{
-                  flex: 1,
-                  padding: '7px',
-                  fontSize: '11.5px',
-                  borderRadius: '8px',
-                  border: networkPolicy === 'HYBRID_4G_5G' ? '1px solid #38bdf8' : '1px solid #1e293b',
-                  background: networkPolicy === 'HYBRID_4G_5G' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
-                  color: networkPolicy === 'HYBRID_4G_5G' ? '#38bdf8' : '#8492a6',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                📡 4G/5G + Geo-fencing
-              </button>
-              <button
-                type="button"
-                onClick={() => setNetworkPolicy('WIFI_STRICT')}
-                style={{
-                  flex: 1,
-                  padding: '7px',
-                  fontSize: '11.5px',
-                  borderRadius: '8px',
-                  border: networkPolicy === 'WIFI_STRICT' ? '1px solid #38bdf8' : '1px solid #1e293b',
-                  background: networkPolicy === 'WIFI_STRICT' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
-                  color: networkPolicy === 'WIFI_STRICT' ? '#38bdf8' : '#8492a6',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                🔒 Khóa Wi-Fi UTH-Secure
-              </button>
-            </div>
-          </div>
-
-          {/* Thiết lập tham số phòng & P2P Mesh */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Học phần</label>
-              <input
-                type="text"
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
-                className="custom-input"
-                style={{ padding: '8px 10px', fontSize: '12px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Phòng</label>
-              <input
-                type="text"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                className="custom-input"
-                style={{ padding: '8px 10px', fontSize: '12px' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Tự khóa sau</label>
-              <select
-                value={autoLockMinutes}
-                onChange={(e) => setAutoLockMinutes(parseInt(e.target.value))}
-                className="custom-input"
-                style={{ padding: '8px 6px', fontSize: '12px' }}
-              >
-                <option value={15}>15 phút</option>
-                <option value={30}>30 phút</option>
-                <option value={45}>45 phút</option>
-                <option value={0}>Không khóa</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Tùy chọn P2P Mesh Witness */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#0b1329', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <input
-              type="checkbox"
-              id="p2pMeshToggle"
-              checked={enablePeerMesh}
-              onChange={(e) => setEnablePeerMesh(e.target.checked)}
-              style={{ cursor: 'pointer', accentColor: '#38bdf8' }}
-            />
-            <label htmlFor="p2pMeshToggle" style={{ fontSize: '11.5px', color: '#c0ccda', cursor: 'pointer' }}>
-              Đối soát chéo P2P Mesh (Yêu cầu ít nhất 2 SV lân cận cùng lớp xác thực)
-            </label>
-          </div>
-
-          <button
-            onClick={handleStart}
-            disabled={isLocating}
-            className="btn-primary"
-            style={{ width: '100%', marginTop: '4px' }}
-          >
-            {isLocating ? 'Đang chốt toạ độ GPS giảng đường...' : '📍 Chốt GPS & Kích Hoạt Mã QR'}
-          </button>
-        </div>
-
-        {/* Khung QR Code xoay vòng 15s */}
-        {session && (
-          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-              <div style={{ background: '#ffffff', padding: '6px', borderRadius: '10px', display: 'inline-block', boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
-                <img src={qrUrl} alt="Dynamic QR" style={{ width: '100px', height: '100px', display: 'block' }} />
-              </div>
-              <div style={{ flex: 1, fontSize: '11.5px', lineHeight: '1.65' }}>
-                <div>Mã Phiên: <code style={{ color: '#38bdf8', fontWeight: 700 }}>{session.id}</code></div>
-                <div>Nonce Token: <code style={{ color: '#00f2fe', fontWeight: 800 }}>{dynamicNonce}</code></div>
-                <div style={{ color: '#8492a6' }}>Xoay mã sau: <strong style={{ color: countdown <= 5 ? '#ff5252' : '#00e676', fontSize: '13px' }}>{countdown}s</strong></div>
-                <div style={{ color: '#8492a6' }}>Bán kính: ≤ {session.radius}m • Mạng: {session.networkPolicy === 'WIFI_STRICT' ? 'Wi-Fi UTH' : 'Tự do'}</div>
-
-                {/* Các nút điều khiển phiên */}
-                <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
-                  <button
-                    onClick={() => setIsFullscreenQR(true)}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(56, 189, 248, 0.4)',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      color: '#38bdf8',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🖥️ Phóng to máy chiếu
-                  </button>
-                  <button
-                    onClick={handleTriggerMidSessionChallenge}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid #ffab00',
-                      background: 'rgba(255, 171, 0, 0.15)',
-                      color: '#ffab00',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ⚡ Tái kiểm tra đột xuất
-                  </button>
-                  <button
-                    onClick={() => setIsSessionLocked(!isSessionLocked)}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      border: isSessionLocked ? '1px solid #00e676' : '1px solid #ff5252',
-                      background: isSessionLocked ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 82, 82, 0.1)',
-                      color: isSessionLocked ? '#00e676' : '#ff5252',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {isSessionLocked ? '🔓 Mở khóa lại' : '🔒 Khóa phòng ngay'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Khối Cảnh Báo Tái Kiểm Tra Đột Xuất (Mid-Session Banner) */}
-            {midSessionChallenge && (
-              <div style={{ marginTop: '12px', padding: '10px 12px', background: 'rgba(255, 171, 0, 0.12)', border: '1px solid #ffab00', borderRadius: '8px', fontSize: '11.5px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffab00', fontWeight: 700 }}>
-                  <span>🚨 ĐANG TÁI KIỂM TRA ĐỘT XUẤT GIỮA GIỜ</span>
-                  <span style={{ fontFamily: 'JetBrains Mono' }}>Còn lại: {midSessionCountdown}s</span>
-                </div>
-                <div style={{ color: '#c0ccda', marginTop: '4px' }}>
-                  Yêu cầu sinh viên xác nhận vân tay FaceID/TouchID để chứng minh không bỏ về sớm.
-                </div>
-              </div>
-            )}
-
-            {/* Các nút mô phỏng kiểm thử an ninh */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '14px' }}>
-              <button
-                onClick={() => simulateCheckin(8, '2251120000', false)}
-                style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #00e676', background: 'rgba(0, 230, 118, 0.12)', color: '#00e676', cursor: 'pointer', fontWeight: 600 }}
-              >
-                + SV An (8m) ✓
-              </button>
-              <button
-                onClick={() => simulateCheckin(0, '2251120001', true)}
-                style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #ff5252', background: 'rgba(255, 82, 82, 0.12)', color: '#ff5252', cursor: 'pointer', fontWeight: 600 }}
-              >
-                + Fake GPS (0m) ✗
-              </button>
-              <button
-                onClick={() => simulateCheckin(90, '2251120002', false)}
-                style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #ffab00', background: 'rgba(255, 171, 0, 0.12)', color: '#ffab00', cursor: 'pointer', fontWeight: 600 }}
-              >
-                + SV Xa (90m) ✗
-              </button>
-            </div>
-
-            {/* Danh sách sinh viên đã quét & Nút xem ảnh thẻ đối soát */}
-            <div style={{ marginTop: '14px', maxHeight: '160px', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', color: '#8492a6', fontWeight: 700, letterSpacing: '0.3px' }}>
-                  DANH SÁCH ĐỐI SOÁT TỨC THỜI ({records.length})
+                  border: '1px solid currentColor'
+                }}>
+                  {isSessionLocked ? '🔒 PHÒNG ĐÃ KHÓA' : (session.mode === 'exam' ? 'PHÒNG THI CHÍNH THỨC' : 'ĐIỂM DANH LỚP HỌC')}
                 </span>
-                {records.length > 0 && (
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Nút chọn hình thức */}
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '4px', fontWeight: 600 }}>Mục đích tổ chức</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
-                    onClick={handleExportCSV}
+                    type="button"
+                    onClick={() => setMode('attendance')}
                     style={{
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      border: '1px solid rgba(0, 230, 118, 0.4)',
-                      background: 'rgba(0, 230, 118, 0.12)',
-                      color: '#00e676',
-                      fontSize: '10.5px',
+                      flex: 1,
+                      padding: '8px',
+                      fontSize: '12px',
+                      borderRadius: '8px',
+                      border: mode === 'attendance' ? '1px solid #38bdf8' : '1px solid #1e293b',
+                      background: mode === 'attendance' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
+                      color: mode === 'attendance' ? '#38bdf8' : '#8492a6',
                       fontWeight: 700,
                       cursor: 'pointer'
                     }}
                   >
-                    📥 Xuất CSV Minh Chứng
+                    🏫 Điểm danh lớp (≤ 35m)
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('exam')}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      fontSize: '12px',
+                      borderRadius: '8px',
+                      border: mode === 'exam' ? '1px solid #ff5252' : '1px solid #1e293b',
+                      background: mode === 'exam' ? 'rgba(255, 82, 82, 0.15)' : '#0b1329',
+                      color: mode === 'exam' ? '#ff5252' : '#8492a6',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📝 Phòng thi gắt (≤ 15m)
+                  </button>
+                </div>
+              </div>
+
+              {/* Ràng buộc mạng Wi-Fi trường & P2P Mesh */}
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '4px', fontWeight: 600 }}>Chính sách mạng (Dual-Factor Guard)</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setNetworkPolicy('HYBRID_4G_5G')}
+                    style={{
+                      flex: 1,
+                      padding: '7px',
+                      fontSize: '11.5px',
+                      borderRadius: '8px',
+                      border: networkPolicy === 'HYBRID_4G_5G' ? '1px solid #38bdf8' : '1px solid #1e293b',
+                      background: networkPolicy === 'HYBRID_4G_5G' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
+                      color: networkPolicy === 'HYBRID_4G_5G' ? '#38bdf8' : '#8492a6',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    📡 4G/5G + Geo-fencing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNetworkPolicy('WIFI_STRICT')}
+                    style={{
+                      flex: 1,
+                      padding: '7px',
+                      fontSize: '11.5px',
+                      borderRadius: '8px',
+                      border: networkPolicy === 'WIFI_STRICT' ? '1px solid #38bdf8' : '1px solid #1e293b',
+                      background: networkPolicy === 'WIFI_STRICT' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
+                      color: networkPolicy === 'WIFI_STRICT' ? '#38bdf8' : '#8492a6',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    🔒 Khóa Wi-Fi UTH-Secure
+                  </button>
+                </div>
+              </div>
+
+              {/* Thiết lập tham số phòng & Tự khóa */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Học phần</label>
+                  <input
+                    type="text"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    className="custom-input"
+                    style={{ padding: '8px 10px', fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Phòng</label>
+                  <input
+                    type="text"
+                    value={roomName}
+                    onChange={(e) => setRoomName(e.target.value)}
+                    className="custom-input"
+                    style={{ padding: '8px 10px', fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Tự khóa sau</label>
+                  <select
+                    value={autoLockMinutes}
+                    onChange={(e) => setAutoLockMinutes(parseInt(e.target.value))}
+                    className="custom-input"
+                    style={{ padding: '8px 6px', fontSize: '12px' }}
+                  >
+                    <option value={15}>15 phút</option>
+                    <option value={30}>30 phút</option>
+                    <option value={45}>45 phút</option>
+                    <option value={0}>Không khóa</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tùy chọn P2P Mesh Witness */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: '#0b1329', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <input
+                  type="checkbox"
+                  id="p2pMeshToggle"
+                  checked={enablePeerMesh}
+                  onChange={(e) => setEnablePeerMesh(e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: '#38bdf8' }}
+                />
+                <label htmlFor="p2pMeshToggle" style={{ fontSize: '11.5px', color: '#c0ccda', cursor: 'pointer' }}>
+                  Đối soát chéo P2P Mesh (Yêu cầu ít nhất 2 SV lân cận cùng lớp xác thực)
+                </label>
+              </div>
+
+              <button
+                onClick={handleStart}
+                disabled={isLocating}
+                className="btn-primary"
+                style={{ width: '100%', marginTop: '4px' }}
+              >
+                {isLocating ? 'Đang chốt toạ độ GPS giảng đường...' : '📍 Chốt GPS & Kích Hoạt Mã QR'}
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Khung QR Code xoay vòng 15s */}
+          {session && (
+            <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+              <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                <div style={{ background: '#ffffff', padding: '6px', borderRadius: '10px', display: 'inline-block', boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
+                  <img src={qrUrl} alt="Dynamic QR" style={{ width: '110px', height: '110px', display: 'block' }} />
+                </div>
+                <div style={{ flex: 1, fontSize: '11.5px', lineHeight: '1.65' }}>
+                  <div>Mã Phiên: <code style={{ color: '#38bdf8', fontWeight: 700 }}>{session.id}</code></div>
+                  <div>Nonce Token: <code style={{ color: '#00f2fe', fontWeight: 800 }}>{dynamicNonce}</code></div>
+                  <div style={{ color: '#8492a6' }}>Xoay mã sau: <strong style={{ color: countdown <= 5 ? '#ff5252' : '#00e676', fontSize: '13px' }}>{countdown}s</strong></div>
+                  <div style={{ color: '#8492a6' }}>Bán kính: ≤ {session.radius}m • {session.networkPolicy === 'WIFI_STRICT' ? 'Wi-Fi UTH' : 'Tự do'}</div>
+
+                  {/* Các nút điều khiển phiên */}
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setIsFullscreenQR(true)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(56, 189, 248, 0.4)',
+                        background: 'rgba(56, 189, 248, 0.1)',
+                        color: '#38bdf8',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🖥️ Máy chiếu
+                    </button>
+                    <button
+                      onClick={handleTriggerMidSessionChallenge}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid #ffab00',
+                        background: 'rgba(255, 171, 0, 0.15)',
+                        color: '#ffab00',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ⚡ Tái kiểm tra
+                    </button>
+                    <button
+                      onClick={() => setIsSessionLocked(!isSessionLocked)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: isSessionLocked ? '1px solid #00e676' : '1px solid #ff5252',
+                        background: isSessionLocked ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 82, 82, 0.1)',
+                        color: isSessionLocked ? '#00e676' : '#ff5252',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {isSessionLocked ? '🔓 Mở khóa' : '🔒 Khóa phòng'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner Tái Kiểm Tra Đột Xuất */}
+              {midSessionChallenge && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', background: 'rgba(255, 171, 0, 0.12)', border: '1px solid #ffab00', borderRadius: '8px', fontSize: '11.5px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ffab00', fontWeight: 700 }}>
+                    <span>🚨 ĐANG TÁI KIỂM TRA ĐỘT XUẤT</span>
+                    <span style={{ fontFamily: 'JetBrains Mono' }}>Còn lại: {midSessionCountdown}s</span>
+                  </div>
+                  <div style={{ color: '#c0ccda', marginTop: '4px' }}>
+                    Sinh viên mở app quét mã Nonce mini để xác thực FaceID/TouchID chứng minh không bỏ về sớm.
+                  </div>
+                </div>
+              )}
+
+              {/* Nút mô phỏng nhanh */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '14px' }}>
+                <button
+                  onClick={() => simulateCheckin(8, '2251120000', false)}
+                  style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #00e676', background: 'rgba(0, 230, 118, 0.12)', color: '#00e676', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  + SV Hiển (8m) ✓
+                </button>
+                <button
+                  onClick={() => simulateCheckin(0, '2251120001', true)}
+                  style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #ff5252', background: 'rgba(255, 82, 82, 0.12)', color: '#ff5252', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  + Fake GPS (0m) ✗
+                </button>
+                <button
+                  onClick={() => simulateCheckin(90, '2251120003', false)}
+                  style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #ffab00', background: 'rgba(255, 171, 0, 0.12)', color: '#ffab00', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  + SV Xa (90m) ✗
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Card 3: KHỐI TRA CỨU HỒ SƠ & TOKEN THÍ SINH (LOOKUP CANDIDATE BY MSSV/SBD/TOKEN) */}
+          <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '16px', color: '#38bdf8' }}>🔍</span>
+                <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: 0, color: '#fff' }}>
+                  Tra Cứu Hồ Sơ & Token Thí Sinh
+                </h3>
+              </div>
+              <span style={{ fontSize: '10.5px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'JetBrains Mono' }}>
+                Đối soát SBD / Thẻ
+              </span>
+            </div>
+            
+            <p style={{ margin: '0 0 10px', fontSize: '11.5px', color: '#8492a6', lineHeight: '1.45' }}>
+              Giám thị gõ MSSV, Số báo danh (SBD) hoặc Token in trên thẻ để kiểm tra ngay lập tức sinh viên có thuộc danh sách phòng thi hay không.
+            </p>
+
+            <div style={{ position: 'relative', marginBottom: '10px' }}>
+              <input
+                type="text"
+                placeholder="Gõ MSSV (vd: 2251120000), Số báo danh (SBD-042) hoặc Token..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className="custom-input"
+                style={{ padding: '9px 12px', fontSize: '12px' }}
+              />
+              {searchKeyword && (
+                <button
+                  onClick={() => setSearchKeyword('')}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#8492a6', cursor: 'pointer', fontSize: '14px' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Gợi ý bấm nhanh */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '10.5px', color: '#8492a6' }}>Gợi ý:</span>
+              {students.map((s, idx) => (
+                <span
+                  key={idx}
+                  onClick={() => setSearchKeyword(s.mssv)}
+                  style={{
+                    fontSize: '10.5px',
+                    padding: '2px 7px',
+                    borderRadius: '5px',
+                    background: '#0b1329',
+                    border: '1px solid #1e293b',
+                    color: '#38bdf8',
+                    cursor: 'pointer',
+                    fontFamily: 'JetBrains Mono'
+                  }}
+                >
+                  {s.mssv} ({s.sbd})
+                </span>
+              ))}
+            </div>
+
+            {/* Kết quả tìm kiếm */}
+            {searchKeyword.trim() && (
+              <div>
+                {filteredCandidates.length === 0 ? (
+                  <div style={{ padding: '12px', background: 'rgba(255, 82, 82, 0.1)', border: '1px solid #ff5252', borderRadius: '8px', fontSize: '11.5px', color: '#ff5252', textAlign: 'center' }}>
+                    ⚠️ Không tìm thấy sinh viên nào khớp với "{searchKeyword}" trong danh sách phòng thi này!
+                  </div>
+                ) : (
+                  filteredCandidates.map((cand, idx) => {
+                    const checkedIn = records.find(r => r.mssv === cand.mssv);
+                    return (
+                      <div key={idx} style={{ padding: '12px', background: '#070b14', border: `1px solid ${cand.status === 'Active' ? '#162032' : 'rgba(255, 82, 82, 0.4)'}`, borderRadius: '10px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <img src={cand.avatar} alt="avatar" style={{ width: '42px', height: '42px', borderRadius: '50%', border: '2px solid #38bdf8' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <strong style={{ color: '#fff', fontSize: '13px' }}>{cand.fullName}</strong>
+                                <div style={{ fontSize: '11px', color: '#8492a6' }}>Lớp: {cand.classId} • {cand.major}</div>
+                              </div>
+                              <span style={{
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                background: cand.status === 'Active' ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 82, 82, 0.15)',
+                                color: cand.status === 'Active' ? '#00e676' : '#ff5252',
+                                border: `1px solid ${cand.status === 'Active' ? '#00e676' : '#ff5252'}`
+                              }}>
+                                {cand.status === 'Active' ? 'Đủ ĐK Dự Thi' : 'THẺ BỊ KHÓA'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '6px', fontSize: '11px', fontFamily: 'JetBrains Mono' }}>
+                              <div>MSSV: <span style={{ color: '#38bdf8' }}>{cand.mssv}</span></div>
+                              <div>SBD: <span style={{ color: '#ffab00' }}>{cand.sbd}</span></div>
+                            </div>
+
+                            <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <button
+                                onClick={() => setSelectedStudentForPhoto({
+                                  name: cand.fullName,
+                                  mssv: cand.mssv,
+                                  sbd: cand.sbd,
+                                  avatar: cand.avatar,
+                                  classId: cand.classId,
+                                  valid: cand.status === 'Active',
+                                  statusText: cand.status === 'Active' ? 'Hợp lệ' : 'Thẻ bị thu hồi'
+                                })}
+                                style={{ padding: '4px 8px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', cursor: 'pointer', fontWeight: 600 }}
+                              >
+                                📷 Xem Ảnh Thẻ Đối Soát
+                              </button>
+
+                              {session && cand.status === 'Active' && !checkedIn && (
+                                <button
+                                  onClick={() => simulateCheckin(5, cand.mssv, false)}
+                                  style={{ padding: '4px 8px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #00e676', background: 'rgba(0, 230, 118, 0.12)', color: '#00e676', cursor: 'pointer', fontWeight: 600 }}
+                                >
+                                  ✓ Điểm Danh
+                                </button>
+                              )}
+
+                              {checkedIn && (
+                                <span style={{ fontSize: '10.5px', color: '#00e676', fontWeight: 700 }}>
+                                  ✓ Đã có mặt ({checkedIn.dist}m)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* === CỘT PHẢI: DANH SÁCH ĐỐI SOÁT, SIS WEBHOOK & OFFLINE === */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* Card 4: Danh Sách Sinh Viên Đã Quét / Đối Soát */}
+          <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div>
+                <span style={{ fontSize: '12.5px', color: '#fff', fontWeight: 700, letterSpacing: '0.3px' }}>
+                  DANH SÁCH ĐỐI SOÁT TỨC THỜI ({records.length})
+                </span>
+                <div style={{ fontSize: '11px', color: '#8492a6' }}>Bấm vào tên để đối chiếu khuôn mặt thẻ sinh viên</div>
+              </div>
+              {records.length > 0 && (
+                <button
+                  onClick={handleExportCSV}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(0, 230, 118, 0.4)',
+                    background: 'rgba(0, 230, 118, 0.12)',
+                    color: '#00e676',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  📥 Xuất CSV
+                </button>
+              )}
+            </div>
+
+            <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
               {records.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '14px', color: '#8492a6', fontSize: '11.5px', background: '#070b14', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.06)' }}>
-                  Chờ sinh viên quét mã điểm danh...
+                <div style={{ textAlign: 'center', padding: '24px 14px', color: '#8492a6', fontSize: '11.5px', background: '#070b14', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.06)' }}>
+                  Chờ sinh viên quét mã điểm danh hoặc đối soát phòng thi...
                 </div>
               ) : (
                 records.map((r, i) => (
@@ -680,148 +847,150 @@ export default function FacultyPortal() {
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      padding: '8px 10px',
+                      padding: '9px 12px',
                       borderRadius: '8px',
                       background: '#070b14',
                       border: '1px solid rgba(255, 255, 255, 0.06)',
-                      marginBottom: '5px',
+                      marginBottom: '6px',
                       fontSize: '11.5px',
                       cursor: 'pointer'
                     }}
                     title="Bấm để xem ảnh thẻ đối soát phòng thi"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <img src={r.avatar} alt="thumb" style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#162032' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img src={r.avatar} alt="thumb" style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#162032' }} />
                       <div>
                         <strong style={{ color: '#fff' }}>{r.name}</strong> <span style={{ color: '#8492a6' }}>({r.sbd})</span>
-                        {r.peerWitnesses?.length > 0 && (
-                          <div style={{ fontSize: '10px', color: '#38bdf8' }}>P2P Mesh: 2 SV cùng lớp ✓</div>
-                        )}
+                        <div style={{ fontSize: '10.5px', color: '#8492a6', fontFamily: 'JetBrains Mono' }}>
+                          MSSV: {r.mssv} • {r.dist}m {r.peerWitnesses?.length > 0 && '• P2P Witness ✓'}
+                        </div>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <span style={{ color: r.valid ? '#00e676' : '#ff5252', fontWeight: 700 }}>
                         {r.statusText}
                       </span>
+                      <div style={{ fontSize: '10px', color: '#8492a6' }}>{r.time}</div>
                     </div>
                   </div>
                 ))
               )}
             </div>
           </div>
-        )}
-      </div>
 
-      {/* 3. Khối Thống Kê Bất Thường & Đồng Bộ Webhook SIS Đào Tạo */}
-      {records.length > 0 && (
-        <div className="glass-panel" style={{ padding: '14px', marginBottom: '14px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>
-              📊 PHÂN TÍCH BẤT THƯỜNG & SIS WEBHOOK
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                onClick={handleSyncToAcademicSIS}
-                disabled={isSyncingSis}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(56, 189, 248, 0.4)',
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  color: '#38bdf8',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                {isSyncingSis ? 'Đang đẩy...' : '🚀 Đẩy Sang SIS UTH'}
-              </button>
-              <button
-                onClick={handleExportCSV}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-                  color: '#fff',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                📥 Xuất CSV
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', textAlign: 'center', fontFamily: 'JetBrains Mono' }}>
-            <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
-              <div style={{ fontSize: '10px', color: '#8492a6' }}>Tổng SV</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginTop: '2px' }}>{totalScans}</div>
-            </div>
-            <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
-              <div style={{ fontSize: '10px', color: '#8492a6' }}>Hợp Lệ</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: '#00e676', marginTop: '2px' }}>
-                {validScans} ({totalScans > 0 ? Math.round((validScans / totalScans) * 100) : 0}%)
+          {/* Card 5: Khối Thống Kê Bất Thường & Đồng Bộ Webhook SIS Đào Tạo */}
+          {records.length > 0 && (
+            <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>
+                  📊 PHÂN TÍCH BẤT THƯỜNG & SIS WEBHOOK
+                </span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    onClick={handleSyncToAcademicSIS}
+                    disabled={isSyncingSis}
+                    style={{
+                      padding: '5px 10px',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(56, 189, 248, 0.4)',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      color: '#38bdf8',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {isSyncingSis ? 'Đang đẩy...' : '🚀 Đẩy Sang SIS UTH'}
+                  </button>
+                  <button
+                    onClick={handleExportCSV}
+                    style={{
+                      padding: '5px 10px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
+                      color: '#fff',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📥 Xuất CSV
+                  </button>
+                </div>
               </div>
-            </div>
-            <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
-              <div style={{ fontSize: '10px', color: '#8492a6' }}>Fake GPS</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: '#ff5252', marginTop: '2px' }}>{mockGpsScans}</div>
-            </div>
-            <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
-              <div style={{ fontSize: '10px', color: '#8492a6' }}>Xa Phòng</div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffab00', marginTop: '2px' }}>{distanceViolations}</div>
-            </div>
-          </div>
 
-          {/* Trạng thái xác nhận SIS */}
-          {sisSyncStatus && (
-            <div style={{ marginTop: '10px', padding: '8px 10px', background: 'rgba(0, 230, 118, 0.1)', border: '1px solid #00e676', borderRadius: '6px', fontSize: '11px', color: '#00e676' }}>
-              ✓ Đã đồng bộ sang Cổng Đào Tạo: <strong>{sisSyncStatus.sisTransactionId}</strong> ({sisSyncStatus.syncedRecordsCount} SV)
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', textAlign: 'center', fontFamily: 'JetBrains Mono' }}>
+                <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
+                  <div style={{ fontSize: '10px', color: '#8492a6' }}>Tổng SV</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#fff', marginTop: '2px' }}>{totalScans}</div>
+                </div>
+                <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
+                  <div style={{ fontSize: '10px', color: '#8492a6' }}>Hợp Lệ</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#00e676', marginTop: '2px' }}>
+                    {validScans} ({totalScans > 0 ? Math.round((validScans / totalScans) * 100) : 0}%)
+                  </div>
+                </div>
+                <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
+                  <div style={{ fontSize: '10px', color: '#8492a6' }}>Fake GPS</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#ff5252', marginTop: '2px' }}>{mockGpsScans}</div>
+                </div>
+                <div style={{ background: '#070b14', padding: '8px 4px', borderRadius: '6px', border: '1px solid #162032' }}>
+                  <div style={{ fontSize: '10px', color: '#8492a6' }}>Xa Phòng</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#ffab00', marginTop: '2px' }}>{distanceViolations}</div>
+                </div>
+              </div>
+
+              {sisSyncStatus && (
+                <div style={{ marginTop: '10px', padding: '8px 10px', background: 'rgba(0, 230, 118, 0.1)', border: '1px solid #00e676', borderRadius: '6px', fontSize: '11px', color: '#00e676' }}>
+                  ✓ Đã đồng bộ sang Cổng Đào Tạo: <strong>{sisSyncStatus.sisTransactionId}</strong> ({sisSyncStatus.syncedRecordsCount} SV)
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* 4. Phân Hệ Ngoại Tuyến (Offline VC Verification & Sync Queue) */}
-      <div className="glass-panel" style={{ padding: '16px', marginBottom: '24px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '13px', color: '#ffffff' }}>Xác thực ngoại tuyến (Tầng hầm B1)</div>
-            <div style={{ fontSize: '11px', color: '#8492a6' }}>Đối soát chữ ký số không cần 4G / Wi-Fi</div>
+          {/* Card 6: Phân Hệ Ngoại Tuyến (Offline VC Verification & Queue) */}
+          <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: '#ffffff' }}>Xác thực ngoại tuyến (Tầng hầm B1)</div>
+                <div style={{ fontSize: '11px', color: '#8492a6' }}>Đối soát chữ ký số không cần 4G / Wi-Fi</div>
+              </div>
+              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#0b1329', color: '#38bdf8', fontFamily: 'JetBrains Mono', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                Queue: {offlineQueue.length} vé
+              </span>
+            </div>
+
+            <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#8492a6', lineHeight: '1.5' }}>
+              Khi phòng thi không có sóng, giám thị quét mã Verifiable Presentation sinh ra từ ví sinh viên để đối soát chữ ký số ECDSA cục bộ.
+            </p>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={() => setShowOfflineVerifyModal(true)}
+                style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', cursor: 'pointer', fontWeight: 600 }}
+              >
+                🔍 Đối Soát Vé Offline
+              </button>
+              <button 
+                onClick={handleAddOfflineTicket}
+                style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid #1e293b', background: '#0b1329', color: '#f8fafc', cursor: 'pointer', fontWeight: 600 }}
+              >
+                + Nhận vé mẫu
+              </button>
+              <button 
+                onClick={handleSyncOfflineQueue}
+                disabled={offlineQueue.length === 0}
+                className="btn-primary"
+                style={{ flex: 1, padding: '8px', fontSize: '11px' }}
+              >
+                Đồng bộ
+              </button>
+            </div>
           </div>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#0b1329', color: '#38bdf8', fontFamily: 'JetBrains Mono', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-            Queue: {offlineQueue.length} vé
-          </span>
+
         </div>
 
-        <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#8492a6', lineHeight: '1.5' }}>
-          Khi phòng thi không có mạng, giám thị quét mã Verifiable Presentation (VP) sinh ra từ ví sinh viên để đối soát chữ ký số ECDSA cục bộ.
-        </p>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            onClick={() => setShowOfflineVerifyModal(true)}
-            style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', cursor: 'pointer', fontWeight: 600 }}
-          >
-            🔍 Đối Soát Vé Offline
-          </button>
-          <button 
-            onClick={handleAddOfflineTicket}
-            style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid #1e293b', background: '#0b1329', color: '#f8fafc', cursor: 'pointer', fontWeight: 600 }}
-          >
-            + Nhận vé mẫu
-          </button>
-          <button 
-            onClick={handleSyncOfflineQueue}
-            disabled={offlineQueue.length === 0}
-            className="btn-primary"
-            style={{ flex: 1, padding: '8px', fontSize: '11px' }}
-          >
-            Đồng bộ
-          </button>
-        </div>
       </div>
 
       {/* MODAL XÁC THỰC VÉ NGOẠI TUYẾN (OFFLINE VC VERIFICATION MODAL) */}
@@ -958,13 +1127,12 @@ export default function FacultyPortal() {
               </button>
             </div>
 
-            {/* Ảnh thẻ sinh viên chính thức */}
             <div style={{ width: '110px', height: '110px', borderRadius: '50%', border: '3px solid #38bdf8', padding: '3px', margin: '0 auto 12px', background: '#070b14' }}>
               <img src={selectedStudentForPhoto.avatar} alt="Official Photo" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
             </div>
 
             <div style={{ fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
-              {selectedStudentForPhoto.name}
+              {selectedStudentForPhoto.name || selectedStudentForPhoto.fullName}
             </div>
             <div style={{ fontSize: '12px', color: '#38bdf8', fontWeight: 700, margin: '2px 0 8px' }}>
               SỐ BÁO DANH: {selectedStudentForPhoto.sbd}

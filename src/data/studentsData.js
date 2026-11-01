@@ -38,6 +38,19 @@ export const INITIAL_STUDENTS = [
     status: "Revoked",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Cuong",
     registeredAt: "2024-09-02"
+  },
+  {
+    mssv: "2251120003",
+    fullName: "Phạm Minh Đức",
+    major: "Mạng Máy tính & TT",
+    cohort: "2022 - 2026",
+    classId: "MMT2022.1",
+    sbd: "SBD-102",
+    didAddress: "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+    qrCodeToken: "UTH_HASH_SEC_3310fe99b",
+    status: "Active",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Duc",
+    registeredAt: "2024-09-02"
   }
 ];
 

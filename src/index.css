@@ -262,3 +262,57 @@ button, input, select {
   background: rgba(51, 65, 85, 0.8);
   border-radius: 4px;
 }
+
+/* ==========================================================
+   Responsive Grid & Container Optimization (iOS, Android, Web)
+   ========================================================== */
+.responsive-page-container {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 16px 16px calc(24px + var(--safe-bottom)) 16px;
+}
+
+@media (max-width: 640px) {
+  .responsive-page-container {
+    padding: 12px 10px calc(20px + var(--safe-bottom)) 10px;
+  }
+}
+
+.responsive-dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .responsive-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+}
+
+.responsive-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 768px) {
+  .responsive-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+
+/* Tối ưu nút bấm cảm ứng trên điện thoại (Touch target >= 44px) */
+.touch-btn {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
