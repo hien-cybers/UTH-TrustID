@@ -1,4 +1,4 @@
-// src/App.jsx - UTH-TrustID Original Deep Blue-Navy Interface
+// src/App.jsx - UTH-TrustID Deep Blue-Navy Interface (Bottom Nav Only)
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
@@ -15,7 +15,7 @@ export default function App() {
     fontSize: '11.5px',
     fontWeight: 700,
     color: isActive ? '#38bdf8' : '#8492a6',
-    background: isActive ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
+    background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
     borderRadius: '10px',
     display: 'flex',
     flexDirection: 'column',
@@ -24,24 +24,9 @@ export default function App() {
     transition: 'all 0.15s ease'
   });
 
-  const getHeaderNavClass = ({ isActive }) => ({
-    padding: '6px 14px',
-    borderRadius: '8px',
-    textDecoration: 'none',
-    fontSize: '13px',
-    fontWeight: 600,
-    color: isActive ? '#38bdf8' : '#8492a6',
-    background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
-    border: isActive ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid transparent',
-    transition: 'all 0.15s ease',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  });
-
   return (
     <BrowserRouter>
-      {/* Header Sticky Glassmorphism (Desktop & Tablet) */}
+      {/* Header chỉ hiển thị Logo & Trạng thái mạng, KHÔNG để thanh điều hướng bên trên */}
       <header style={{
         position: 'sticky',
         top: 0,
@@ -52,7 +37,7 @@ export default function App() {
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         padding: '10px 16px'
       }}>
-        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
           
           {/* Logo Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -79,21 +64,13 @@ export default function App() {
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden sm:flex" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <NavLink to="/faculty" style={getHeaderNavClass}>
-              <span>👨‍🏫</span> Cổng Giảng Viên
-            </NavLink>
-            <NavLink to="/wallet" style={getHeaderNavClass}>
-              <span>📱</span> Ví Sinh Viên
-            </NavLink>
-            <NavLink to="/portal" style={getHeaderNavClass}>
-              <span>💻</span> Cổng Dịch Vụ
-            </NavLink>
-            <NavLink to="/admin" style={getHeaderNavClass}>
-              <span>🔒</span> Quản Trị
-            </NavLink>
-          </nav>
+          {/* Huy hiệu trạng thái kết nối mạng trường */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00e676', display: 'inline-block', boxShadow: '0 0 8px #00e676' }} />
+            <span style={{ fontSize: '11px', color: '#8492a6', fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
+              Polygon Amoy
+            </span>
+          </div>
         </div>
       </header>
 
@@ -109,7 +86,7 @@ export default function App() {
         </Routes>
       </main>
 
-      {/* Thanh Bottom Navigation Bar cố định dưới đáy chuẩn Mobile */}
+      {/* Thanh Bottom Navigation Bar duy nhất cố định dưới đáy */}
       <nav style={{
         position: 'fixed',
         bottom: 0,

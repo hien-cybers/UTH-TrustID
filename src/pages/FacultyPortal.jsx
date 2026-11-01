@@ -1,10 +1,9 @@
-// src/pages/FacultyPortal.jsx
+// src/pages/FacultyPortal.jsx - Cổng Giảng Viên (Deep Blue-Navy Glassmorphism)
 import React, { useState, useEffect } from 'react';
 import { INITIAL_STUDENTS } from '../data/studentsData';
 
 export default function FacultyPortal() {
   const [students] = useState(INITIAL_STUDENTS);
-  const [activeTimeframe, setActiveTimeframe] = useState('Week');
   const [mode, setMode] = useState('attendance'); // 'attendance' | 'exam'
   const [networkPolicy, setNetworkPolicy] = useState('HYBRID_4G_5G'); // 'HYBRID_4G_5G' | 'WIFI_STRICT'
   const [roomName, setRoomName] = useState('Phòng A3-204');
@@ -14,6 +13,7 @@ export default function FacultyPortal() {
   const [countdown, setCountdown] = useState(15);
   const [records, setRecords] = useState([]);
   const [isLocating, setIsLocating] = useState(false);
+  const [isFullscreenQR, setIsFullscreenQR] = useState(false);
 
   // Đối soát ảnh nhận diện sinh viên (Photo Credential Verification)
   const [selectedStudentForPhoto, setSelectedStudentForPhoto] = useState(null);
@@ -133,115 +133,37 @@ export default function FacultyPortal() {
   };
 
   const qrUrl = session
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`UTH:${session.id}:${dynamicNonce}:${session.coords.lat}:${session.coords.lon}:${session.networkPolicy}`)}`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`UTH:${session.id}:${dynamicNonce}:${session.coords.lat}:${session.coords.lon}:${session.networkPolicy}`)}`
     : '';
 
-  // Dữ liệu mẫu biểu đồ 7 ngày
-  const weekDays = [
-    { day: 'M', height: 55, active: false },
-    { day: 'T', height: 48, active: false },
-    { day: 'W', height: 60, active: false },
-    { day: 'T', height: 52, active: false },
-    { day: 'F', height: 85, active: true },
-    { day: 'S', height: 58, active: false },
-    { day: 'S', height: 45, active: false },
-  ];
-
   return (
-    <div style={{ padding: '16px 20px', maxWidth: '480px', margin: '0 auto' }}>
+    <div style={{ padding: '16px 14px', maxWidth: '480px', margin: '0 auto' }}>
       
       {/* 1. Tiêu đề phân mục */}
       <div style={{ marginBottom: '16px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 800, margin: '0 0 4px', color: '#ffffff', letterSpacing: '-0.5px' }}>
-          Cổng Giảng Viên
+        <h1 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 4px', color: '#ffffff', letterSpacing: '-0.4px' }}>
+          Cổng Giảng Viên & Khảo Thí
         </h1>
-        <p style={{ margin: 0, fontSize: '13px', color: '#85858e' }}>
-          Khảo thí & Điểm danh chuẩn W3C DID • Chống Fake GPS
+        <p style={{ margin: 0, fontSize: '12.5px', color: '#8492a6' }}>
+          Quản lý phòng thi & Điểm danh lớp học chuẩn W3C DID • Chống Fake GPS
         </p>
       </div>
 
-      {/* 2. Filter Pills */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '18px' }}>
-        {['Week', 'Month', '3 Months', 'Year'].map((pill) => (
-          <button
-            key={pill}
-            onClick={() => setActiveTimeframe(pill)}
-            className={`kalo-pill ${activeTimeframe === pill ? 'active' : ''}`}
-          >
-            {pill}
-          </button>
-        ))}
-      </div>
-
-      {/* 3. Card 1: Calories intake / Thống kê điểm danh */}
-      <div className="card-flat" style={{ marginBottom: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-          <div>
-            <div style={{ fontSize: '11px', color: '#85858e', fontWeight: 600 }}>TẦN SUẤT ĐIỂM DANH LỚP</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '4px' }}>
-              <span style={{ fontSize: '26px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.5px' }}>
-                1,420
-              </span>
-              <span style={{ fontSize: '12px', color: '#85858e' }}>lượt/tuần</span>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12px', color: '#a3e635', fontWeight: 700 }}>
-              ↓ 8%
-            </div>
-            <div style={{ fontSize: '10px', color: '#85858e' }}>so với tuần trước</div>
-          </div>
-        </div>
-
-        {/* Biểu đồ cột */}
-        <div style={{ position: 'relative', marginTop: '14px', height: '120px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingRight: '32px' }}>
-          <div style={{ position: 'absolute', right: 0, top: 0, bottom: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: '9px', color: '#52525b', textAlign: 'right' }}>
-            <span>2,100</span>
-            <span>1,400</span>
-            <span>700</span>
-            <span>0</span>
-          </div>
-
-          <div style={{ position: 'absolute', left: 0, right: '32px', top: '10%', borderTop: '1px dashed rgba(255,255,255,0.06)' }} />
-          <div style={{ position: 'absolute', left: 0, right: '32px', top: '50%', borderTop: '1px dashed rgba(255,255,255,0.06)' }} />
-
-          {weekDays.map((item, idx) => (
-            <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '26px', zIndex: 1 }}>
-              <div
-                style={{
-                  width: '9px',
-                  height: `${item.height}px`,
-                  borderRadius: '9999px',
-                  background: item.active
-                    ? 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)'
-                    : 'linear-gradient(180deg, #a3e635 0%, #65a30d 100%)',
-                  boxShadow: item.active ? '0 0 10px rgba(245, 158, 11, 0.4)' : 'none',
-                  transition: 'height 0.3s ease'
-                }}
-              />
-              <span style={{ fontSize: '10px', color: '#85858e', marginTop: '6px', fontWeight: 600 }}>
-                {item.day}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. Khối Cấu Hình Phiên Điểm Danh & Phòng Thi */}
-      <div className="card-flat" style={{ marginBottom: '14px' }}>
+      {/* 2. Khối Cấu Hình Phiên Làm Việc */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '14px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ fontWeight: 700, fontSize: '13px', color: '#f4f4f5' }}>
+          <div style={{ fontWeight: 700, fontSize: '13.5px', color: '#ffffff' }}>
             Cấu hình phiên làm việc
           </div>
           {session && (
             <span style={{
               fontSize: '11px',
               padding: '3px 8px',
-              borderRadius: '4px',
-              background: session.mode === 'exam' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(163, 230, 53, 0.12)',
-              color: session.mode === 'exam' ? '#ef4444' : '#a3e635',
-              fontWeight: 700
+              borderRadius: '6px',
+              background: session.mode === 'exam' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+              color: session.mode === 'exam' ? '#ff5252' : '#38bdf8',
+              fontWeight: 700,
+              border: session.mode === 'exam' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)'
             }}>
               {session.mode === 'exam' ? 'PHÒNG THI CHÍNH THỨC' : 'ĐIỂM DANH LỚP HỌC'}
             </span>
@@ -251,101 +173,107 @@ export default function FacultyPortal() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {/* Nút chọn hình thức */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#85858e', marginBottom: '4px' }}>Mục đích</label>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '4px', fontWeight: 600 }}>Mục đích tổ chức</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 type="button"
                 onClick={() => setMode('attendance')}
                 style={{
                   flex: 1,
-                  padding: '7px',
+                  padding: '8px',
                   fontSize: '12px',
-                  borderRadius: '6px',
-                  border: mode === 'attendance' ? '1px solid #a3e635' : '1px solid #242424',
-                  background: mode === 'attendance' ? 'rgba(163, 230, 53, 0.12)' : '#0d0d0d',
-                  color: mode === 'attendance' ? '#a3e635' : '#85858e',
+                  borderRadius: '8px',
+                  border: mode === 'attendance' ? '1px solid #38bdf8' : '1px solid #1e293b',
+                  background: mode === 'attendance' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
+                  color: mode === 'attendance' ? '#38bdf8' : '#8492a6',
                   fontWeight: 700,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                Điểm danh lớp
+                🏫 Điểm danh lớp (≤ 35m)
               </button>
               <button
                 type="button"
                 onClick={() => setMode('exam')}
                 style={{
                   flex: 1,
-                  padding: '7px',
+                  padding: '8px',
                   fontSize: '12px',
-                  borderRadius: '6px',
-                  border: mode === 'exam' ? '1px solid #ef4444' : '1px solid #242424',
-                  background: mode === 'exam' ? 'rgba(239, 68, 68, 0.12)' : '#0d0d0d',
-                  color: mode === 'exam' ? '#ef4444' : '#85858e',
+                  borderRadius: '8px',
+                  border: mode === 'exam' ? '1px solid #ff5252' : '1px solid #1e293b',
+                  background: mode === 'exam' ? 'rgba(255, 82, 82, 0.15)' : '#0b1329',
+                  color: mode === 'exam' ? '#ff5252' : '#8492a6',
                   fontWeight: 700,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                Phòng thi (Gắt)
+                📝 Phòng thi gắt (≤ 15m)
               </button>
             </div>
           </div>
 
           {/* Ràng buộc mạng Wi-Fi trường */}
           <div>
-            <label style={{ display: 'block', fontSize: '11px', color: '#85858e', marginBottom: '4px' }}>Chính sách mạng (Anti-Relay)</label>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '4px', fontWeight: 600 }}>Chính sách mạng (Dual-Factor Guard)</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 type="button"
                 onClick={() => setNetworkPolicy('HYBRID_4G_5G')}
                 style={{
                   flex: 1,
-                  padding: '6px',
-                  fontSize: '11px',
-                  borderRadius: '6px',
-                  border: networkPolicy === 'HYBRID_4G_5G' ? '1px solid #a3e635' : '1px solid #242424',
-                  background: networkPolicy === 'HYBRID_4G_5G' ? '#1c1c1c' : '#0d0d0d',
-                  color: networkPolicy === 'HYBRID_4G_5G' ? '#a3e635' : '#85858e',
-                  cursor: 'pointer'
+                  padding: '7px',
+                  fontSize: '11.5px',
+                  borderRadius: '8px',
+                  border: networkPolicy === 'HYBRID_4G_5G' ? '1px solid #38bdf8' : '1px solid #1e293b',
+                  background: networkPolicy === 'HYBRID_4G_5G' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
+                  color: networkPolicy === 'HYBRID_4G_5G' ? '#38bdf8' : '#8492a6',
+                  cursor: 'pointer',
+                  fontWeight: 600
                 }}
               >
-                4G/5G + Geo-fence
+                📡 4G/5G + Geo-fencing
               </button>
               <button
                 type="button"
                 onClick={() => setNetworkPolicy('WIFI_STRICT')}
                 style={{
                   flex: 1,
-                  padding: '6px',
-                  fontSize: '11px',
-                  borderRadius: '6px',
-                  border: networkPolicy === 'WIFI_STRICT' ? '1px solid #a3e635' : '1px solid #242424',
-                  background: networkPolicy === 'WIFI_STRICT' ? '#1c1c1c' : '#0d0d0d',
-                  color: networkPolicy === 'WIFI_STRICT' ? '#a3e635' : '#85858e',
-                  cursor: 'pointer'
+                  padding: '7px',
+                  fontSize: '11.5px',
+                  borderRadius: '8px',
+                  border: networkPolicy === 'WIFI_STRICT' ? '1px solid #38bdf8' : '1px solid #1e293b',
+                  background: networkPolicy === 'WIFI_STRICT' ? 'rgba(56, 189, 248, 0.15)' : '#0b1329',
+                  color: networkPolicy === 'WIFI_STRICT' ? '#38bdf8' : '#8492a6',
+                  cursor: 'pointer',
+                  fontWeight: 600
                 }}
               >
-                Khóa Wi-Fi UTH-Secure
+                🔒 Khóa Wi-Fi UTH-Secure
               </button>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#85858e', marginBottom: '3px' }}>Môn học</label>
+              <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Học phần</label>
               <input
                 type="text"
                 value={courseName}
                 onChange={(e) => setCourseName(e.target.value)}
-                className="input-flat"
+                className="custom-input"
+                style={{ padding: '8px 12px', fontSize: '12.5px' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', color: '#85858e', marginBottom: '3px' }}>Phòng</label>
+              <label style={{ display: 'block', fontSize: '11px', color: '#8492a6', marginBottom: '3px' }}>Phòng</label>
               <input
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
-                className="input-flat"
+                className="custom-input"
+                style={{ padding: '8px 12px', fontSize: '12.5px' }}
               />
             </div>
           </div>
@@ -353,75 +281,107 @@ export default function FacultyPortal() {
           <button
             onClick={handleStart}
             disabled={isLocating}
-            className="btn-lime"
-            style={{ width: '100%', marginTop: '4px' }}
+            className="btn-primary"
+            style={{ width: '100%', marginTop: '6px' }}
           >
-            {isLocating ? 'Đang chốt toạ độ GPS...' : '📍 Chốt GPS & Tạo Mã QR'}
+            {isLocating ? 'Đang chốt toạ độ GPS giảng đường...' : '📍 Chốt GPS & Kích Hoạt Mã QR'}
           </button>
         </div>
 
-        {/* Khung QR Code xoay vòng */}
+        {/* Khung QR Code xoay vòng 15s */}
         {session && (
-          <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #1c1c1c' }}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <div style={{ background: '#ffffff', padding: '6px', borderRadius: '8px', display: 'inline-block' }}>
-                <img src={qrUrl} alt="QR" style={{ width: '95px', height: '95px', display: 'block' }} />
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <div style={{ background: '#ffffff', padding: '6px', borderRadius: '10px', display: 'inline-block', boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
+                <img src={qrUrl} alt="Dynamic QR" style={{ width: '100px', height: '100px', display: 'block' }} />
               </div>
-              <div style={{ flex: 1, fontSize: '11px', lineHeight: '1.6' }}>
-                <div>Phiên: <code style={{ color: '#a3e635', fontWeight: 700 }}>{session.id}</code></div>
-                <div>Nonce Token: <code style={{ color: '#a3e635', fontWeight: 800 }}>{dynamicNonce}</code></div>
-                <div style={{ color: '#85858e' }}>Đổi sau: <strong style={{ color: countdown <= 5 ? '#ef4444' : '#a3e635' }}>{countdown}s</strong></div>
-                <div style={{ color: '#85858e' }}>Bán kính: ≤ {session.radius}m • Mạng: {session.networkPolicy === 'WIFI_STRICT' ? 'Wi-Fi UTH' : 'Tự do'}</div>
+              <div style={{ flex: 1, fontSize: '11.5px', lineHeight: '1.65' }}>
+                <div>Mã Phiên: <code style={{ color: '#38bdf8', fontWeight: 700 }}>{session.id}</code></div>
+                <div>Nonce Token: <code style={{ color: '#00f2fe', fontWeight: 800 }}>{dynamicNonce}</code></div>
+                <div style={{ color: '#8492a6' }}>Xoay mã sau: <strong style={{ color: countdown <= 5 ? '#ff5252' : '#00e676', fontSize: '13px' }}>{countdown}s</strong></div>
+                <div style={{ color: '#8492a6' }}>Bán kính: ≤ {session.radius}m • Mạng: {session.networkPolicy === 'WIFI_STRICT' ? 'Wi-Fi UTH' : 'Tự do'}</div>
+
+                {/* Nút bật toàn màn hình máy chiếu */}
+                <button
+                  onClick={() => setIsFullscreenQR(true)}
+                  style={{
+                    marginTop: '6px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    color: '#38bdf8',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🖥️ Phóng to máy chiếu
+                </button>
               </div>
             </div>
 
             {/* Các nút mô phỏng kiểm thử an ninh */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '14px' }}>
               <button
                 onClick={() => simulateCheckin(8, '2251120000', false)}
-                style={{ padding: '6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #22c55e', background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', cursor: 'pointer', fontWeight: 600 }}
+                style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #00e676', background: 'rgba(0, 230, 118, 0.12)', color: '#00e676', cursor: 'pointer', fontWeight: 600 }}
               >
-                + SV An (8m)
+                + SV An (8m) ✓
               </button>
               <button
                 onClick={() => simulateCheckin(0, '2251120001', true)}
-                style={{ padding: '6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}
+                style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #ff5252', background: 'rgba(255, 82, 82, 0.12)', color: '#ff5252', cursor: 'pointer', fontWeight: 600 }}
               >
-                + Fake GPS (0m)
+                + Fake GPS (0m) ✗
               </button>
               <button
                 onClick={() => simulateCheckin(90, '2251120002', false)}
-                style={{ padding: '6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #f59e0b', background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', cursor: 'pointer', fontWeight: 600 }}
+                style={{ padding: '7px 4px', fontSize: '10.5px', borderRadius: '6px', border: '1px solid #ffab00', background: 'rgba(255, 171, 0, 0.12)', color: '#ffab00', cursor: 'pointer', fontWeight: 600 }}
               >
-                + SV Xa (90m)
+                + SV Xa (90m) ✗
               </button>
             </div>
 
             {/* Danh sách sinh viên đã quét & Nút xem ảnh thẻ đối soát */}
-            <div style={{ marginTop: '12px', maxHeight: '140px', overflowY: 'auto' }}>
-              <div style={{ fontSize: '11px', color: '#85858e', fontWeight: 600, marginBottom: '6px' }}>
-                NHẬT KÝ ĐỐI SOÁT TỨC THỜI ({records.length})
+            <div style={{ marginTop: '14px', maxHeight: '160px', overflowY: 'auto' }}>
+              <div style={{ fontSize: '11px', color: '#8492a6', fontWeight: 700, marginBottom: '6px', letterSpacing: '0.3px' }}>
+                DANH SÁCH ĐỐI SOÁT TỨC THỜI ({records.length})
               </div>
               {records.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '12px', color: '#85858e', fontSize: '11px' }}>
-                  Chờ sinh viên quét mã...
+                <div style={{ textAlign: 'center', padding: '14px', color: '#8492a6', fontSize: '11.5px', background: '#070b14', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.06)' }}>
+                  Chờ sinh viên quét mã điểm danh...
                 </div>
               ) : (
                 records.map((r, i) => (
                   <div 
                     key={i} 
                     onClick={() => setSelectedStudentForPhoto(r)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderRadius: '4px', background: '#0d0d0d', border: '1px solid #1c1c1c', marginBottom: '4px', fontSize: '11px', cursor: 'pointer' }}
-                    title="Bấm để xem ảnh thẻ đối soát"
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      background: '#070b14',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      marginBottom: '5px',
+                      fontSize: '11.5px',
+                      cursor: 'pointer'
+                    }}
+                    title="Bấm để xem ảnh thẻ đối soát phòng thi"
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <img src={r.avatar} alt="thumb" style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#1c1c1c' }} />
+                      <img src={r.avatar} alt="thumb" style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#162032' }} />
                       <div>
-                        <strong>{r.name}</strong> <span style={{ color: '#85858e' }}>({r.sbd})</span>
+                        <strong style={{ color: '#fff' }}>{r.name}</strong> <span style={{ color: '#8492a6' }}>({r.sbd})</span>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ color: r.valid ? '#a3e635' : '#ef4444', fontWeight: 700 }}>
+                      <span style={{ color: r.valid ? '#00e676' : '#ff5252', fontWeight: 700 }}>
                         {r.statusText}
                       </span>
                     </div>
@@ -433,39 +393,92 @@ export default function FacultyPortal() {
         )}
       </div>
 
-      {/* 5. Phân Hệ Ngoại Tuyến (Offline Attendance Sync Queue) */}
-      <div className="card-flat" style={{ marginBottom: '24px' }}>
+      {/* 3. Phân Hệ Ngoại Tuyến (Offline Attendance Sync Queue) */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '24px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <div>
-            <div style={{ fontWeight: 700, fontSize: '13px' }}>Điểm danh ngoại tuyến (Tầng hầm B1)</div>
-            <div style={{ fontSize: '11px', color: '#85858e' }}>Chế độ không có sóng 4G / Wi-Fi</div>
+            <div style={{ fontWeight: 700, fontSize: '13px', color: '#ffffff' }}>Điểm danh ngoại tuyến (Tầng hầm B1)</div>
+            <div style={{ fontSize: '11px', color: '#8492a6' }}>Chế độ không có sóng 4G / Wi-Fi</div>
           </div>
-          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#1c1c1c', color: '#a3e635', fontFamily: 'JetBrains Mono' }}>
+          <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#0b1329', color: '#38bdf8', fontFamily: 'JetBrains Mono', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
             Queue: {offlineQueue.length} vé
           </span>
         </div>
 
-        <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#85858e', lineHeight: '1.5' }}>
-          Sinh viên đưa mã vé Offline Attendance Token đã ký số trước. Giám thị quét offline lưu vào máy, khi có mạng trở lại sẽ đẩy lên server.
+        <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#8492a6', lineHeight: '1.5' }}>
+          Sinh viên đưa mã vé Offline Attendance Token đã ký số trước. Giám thị lưu offline vào thiết bị, khi có mạng sẽ đồng bộ lên server.
         </p>
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button 
             onClick={handleAddOfflineTicket}
-            style={{ flex: 1, padding: '7px', fontSize: '11px', borderRadius: '6px', border: '1px solid #242424', background: '#0d0d0d', color: '#f4f4f5', cursor: 'pointer' }}
+            style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid #1e293b', background: '#0b1329', color: '#f8fafc', cursor: 'pointer', fontWeight: 600 }}
           >
-            + Giả lập nhận vé offline
+            + Nhận vé offline
           </button>
           <button 
             onClick={handleSyncOfflineQueue}
             disabled={offlineQueue.length === 0}
-            className="btn-lime"
-            style={{ flex: 1, padding: '7px', fontSize: '11px' }}
+            className="btn-primary"
+            style={{ flex: 1, padding: '8px', fontSize: '11px' }}
           >
             Đồng bộ lên Server
           </button>
         </div>
       </div>
+
+      {/* MODAL FULLSCREEN QR CHO MÁY CHIẾU GIẢNG ĐƯỜNG */}
+      {isFullscreenQR && session && (
+        <div className="fullscreen-qr-overlay">
+          <button 
+            onClick={() => setIsFullscreenQR(false)}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: 'none',
+              color: '#fff',
+              fontSize: '24px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            ✕
+          </button>
+
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
+              {session.courseName} - {session.roomName}
+            </h2>
+            <div style={{ fontSize: '14px', color: '#38bdf8', fontFamily: 'JetBrains Mono' }}>
+              Mã phiên: {session.id} • Nonce: {dynamicNonce}
+            </div>
+          </div>
+
+          <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', boxShadow: '0 0 50px rgba(56, 189, 248, 0.35)' }}>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(`UTH:${session.id}:${dynamicNonce}:${session.coords.lat}:${session.coords.lon}:${session.networkPolicy}`)}`} 
+              alt="Projector QR" 
+              style={{ width: 'min(70vw, 320px)', height: 'min(70vw, 320px)', display: 'block' }} 
+            />
+          </div>
+
+          <div style={{ marginTop: '24px', textAlign: 'center' }}>
+            <div style={{ fontSize: '18px', color: countdown <= 5 ? '#ff5252' : '#00e676', fontWeight: 800, fontFamily: 'JetBrains Mono' }}>
+              Đổi mã xoay vòng sau: {countdown}s
+            </div>
+            <div style={{ fontSize: '12.5px', color: '#8492a6', marginTop: '6px' }}>
+              Bán kính: ≤ {session.radius}m • Chống gian lận Replay & Chụp ảnh
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL ĐỐI SOÁT ẢNH THẺ SINH VIÊN (PHOTO CREDENTIAL VERIFICATION) */}
       {selectedStudentForPhoto && (
@@ -479,39 +492,39 @@ export default function FacultyPortal() {
           justifyContent: 'center',
           padding: '20px'
         }}>
-          <div className="card-flat" style={{ maxWidth: '340px', width: '100%', textAlign: 'center', border: '1px solid #a3e635' }}>
+          <div className="glass-panel" style={{ maxWidth: '340px', width: '100%', textAlign: 'center', border: '1px solid #38bdf8', padding: '18px', background: '#0d131f' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '11px', color: '#85858e', fontWeight: 700 }}>ĐỐI SOÁT ẢNH THẺ PHÒNG THI</span>
+              <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 700 }}>ĐỐI SOÁT ẢNH THẺ PHÒNG THI</span>
               <button 
                 onClick={() => setSelectedStudentForPhoto(null)}
-                style={{ background: 'none', border: 'none', color: '#85858e', fontSize: '16px', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#8492a6', fontSize: '16px', cursor: 'pointer' }}
               >
                 ✕
               </button>
             </div>
 
             {/* Ảnh thẻ sinh viên chính thức */}
-            <div style={{ width: '110px', height: '110px', borderRadius: '50%', border: '3px solid #a3e635', padding: '3px', margin: '0 auto 12px', background: '#0d0d0d' }}>
+            <div style={{ width: '110px', height: '110px', borderRadius: '50%', border: '3px solid #38bdf8', padding: '3px', margin: '0 auto 12px', background: '#070b14' }}>
               <img src={selectedStudentForPhoto.avatar} alt="Official Photo" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
             </div>
 
-            <div style={{ fontSize: '16px', fontWeight: 800, color: '#f4f4f5' }}>
+            <div style={{ fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
               {selectedStudentForPhoto.name}
             </div>
-            <div style={{ fontSize: '12px', color: '#a3e635', fontWeight: 700, margin: '2px 0 8px' }}>
+            <div style={{ fontSize: '12px', color: '#38bdf8', fontWeight: 700, margin: '2px 0 8px' }}>
               SỐ BÁO DANH: {selectedStudentForPhoto.sbd}
             </div>
 
-            <div style={{ background: '#0d0d0d', padding: '10px', borderRadius: '6px', fontSize: '11px', textAlign: 'left', lineHeight: '1.6', color: '#85858e', marginBottom: '14px' }}>
+            <div style={{ background: '#070b14', padding: '10px', borderRadius: '8px', fontSize: '11.5px', textAlign: 'left', lineHeight: '1.65', color: '#8492a6', marginBottom: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div>MSSV: <strong style={{ color: '#fff' }}>{selectedStudentForPhoto.mssv}</strong></div>
               <div>Lớp: <strong style={{ color: '#fff' }}>{selectedStudentForPhoto.classId}</strong></div>
-              <div>Trạng thái: <strong style={{ color: '#a3e635' }}>{selectedStudentForPhoto.statusText}</strong></div>
-              <div>Chữ ký số VC: <span style={{ color: '#a3e635', fontFamily: 'JetBrains Mono' }}>ECDSA Verified ✓</span></div>
+              <div>Trạng thái: <strong style={{ color: selectedStudentForPhoto.valid ? '#00e676' : '#ff5252' }}>{selectedStudentForPhoto.statusText}</strong></div>
+              <div>Chữ ký số VC: <span style={{ color: '#00e676', fontFamily: 'JetBrains Mono' }}>ECDSA Verified ✓</span></div>
             </div>
 
             <button
               onClick={() => setSelectedStudentForPhoto(null)}
-              className="btn-lime"
+              className="btn-primary"
               style={{ width: '100%' }}
             >
               ✓ Xác Nhận Đúng Thí Sinh
