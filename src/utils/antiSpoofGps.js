@@ -68,3 +68,4 @@ export function verifyGpsIntegrity(position) {
     coords: { latitude, longitude, accuracy: Math.round(accuracy) }
   };
 }
+

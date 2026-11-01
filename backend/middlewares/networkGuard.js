@@ -43,3 +43,4 @@ export function requireCampusNetwork(req, res, next) {
   req.isCampusNetwork = true;
   next();
 }
+

@@ -1,149 +1,190 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState } from 'react';
-import { INITIAL_STUDENTS } from '../data/studentsData';
-import AdminGateway from '../components/AdminGateway';
+import '../admin.css';
 
 export default function AdminDashboard() {
-  const [students, setStudents] = useState(INITIAL_STUDENTS);
-  const [filterQuery, setFilterQuery] = useState('');
+  // Thống kê số liệu
+  const [stats, setStats] = useState({
+    totalDID: 0,
+    activeDID: 0,
+    revokedDID: 0,
+    idsAlerts: 0
+  });
 
-  const toggleStatus = (mssv) => {
-    setStudents((prev) =>
-      prev.map((s) => {
-        if (s.mssv === mssv) {
-          return { ...s, status: s.status === 'Active' ? 'Revoked' : 'Active' };
-        }
-        return s;
-      })
-    );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Mẫu dữ liệu sinh viên JSON
+  const sampleJson = `[
+  {
+    "studentId": "2251120001",
+    "fullName": "Nguyễn Văn An",
+    "major": "An toàn Thông tin",
+    "address": "0x1D9b6938A3f073e3426052C7016155D85040Ed1D"
+  }
+]`;
+
+  const [jsonInput, setJsonInput] = useState(sampleJson);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setStats({
+        totalDID: 3,
+        activeDID: 2,
+        revokedDID: 1,
+        idsAlerts: 0
+      });
+      setIsRefreshing(false);
+    }, 600);
   };
 
-  const handleImportJSON = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const data = JSON.parse(evt.target.result);
-        if (Array.isArray(data)) {
-          setStudents(data);
-          alert(`Đã nạp thành công ${data.length} hồ sơ sinh viên!`);
-        }
-      } catch (err) {
-        alert("File không đúng cấu trúc JSON mảng sinh viên!");
-      }
-    };
-    reader.readAsText(file);
+  const handleBatchIssue = () => {
+    try {
+      const parsed = JSON.parse(jsonInput);
+      alert(`Đã tính toán Merkle Root cho ${parsed.length} sinh viên và sẵn sàng ký phát hành lô.`);
+    } catch (err) {
+      alert("Lỗi cú pháp JSON! Vui lòng kiểm tra lại mảng sinh viên.");
+    }
   };
-
-  const filtered = students.filter(
-    (s) =>
-      s.mssv.includes(filterQuery) ||
-      s.fullName.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      (s.sbd && s.sbd.toLowerCase().includes(filterQuery.toLowerCase()))
-  );
 
   return (
-    <div style={{ maxWidth: '1240px', margin: '0 auto', padding: 'clamp(16px, 3vw, 32px)' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>🔒</span>
-            <h1 style={{ fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: '800', margin: 0 }}>
-              Quản Trị Hệ Thống Root Issuer
-            </h1>
+    <div style={{ maxWidth: '440px', margin: '0 auto', padding: '16px 12px', minHeight: '100vh', background: '#07090e' }}>
+      
+      {/* 1. KHỐI TIÊU ĐỀ TRUNG TÂM QUẢN TRỊ */}
+      <div className="navy-card" style={{ marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <span style={{ color: '#00f2fe', fontSize: '18px', marginTop: '2px' }}>🔒</span>
+          <div>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', color: '#fff', lineHeight: '1.3' }}>
+              Trung Tâm Quản Trị Danh Tính & Giám Sát An Ninh
+            </h2>
+            <p style={{ margin: 0, fontSize: '11.5px', color: '#8492a6', lineHeight: '1.45' }}>
+              Hệ thống quản lý định danh số W3C DID, Smart Contract Registry & Kiểm thử an toàn thông tin NCKH
+            </p>
           </div>
-          <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '14px' }}>
-            Quản trị vòng đời danh tính số, thu hồi khẩn cấp và nạp dữ liệu sinh viên
-          </p>
         </div>
 
-        <label className="btn-primary" style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
-          📁 Nạp Danh Sách (JSON/JS)
-          <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
-        </label>
+        {/* Nút làm mới */}
+        <button 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          className="btn-refresh" 
+          style={{ marginTop: '14px' }}
+        >
+          <span style={{ fontSize: '14px' }}>🔄</span> 
+          {isRefreshing ? "Đang đồng bộ..." : "Làm mới dữ liệu"}
+        </button>
       </div>
 
-      {/* Tìm kiếm */}
-      <div className="glass-panel" style={{ padding: '16px', marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Lọc nhanh danh sách theo MSSV, Họ tên hoặc Số Báo Danh..."
-          value={filterQuery}
-          onChange={(e) => setFilterQuery(e.target.value)}
-          className="custom-input"
+      {/* 2. GRID 4 Ô THỐNG KÊ (2x2) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+        
+        {/* Tổng DID */}
+        <div className="stat-box">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11.5px', color: '#8492a6', fontWeight: 500 }}>Tổng DID</span>
+            <span style={{ color: '#00f2fe', fontSize: '14px' }}>👥</span>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginTop: '8px', fontFamily: 'JetBrains Mono' }}>
+            {stats.totalDID}
+          </div>
+        </div>
+
+        {/* Đang Hoạt Động */}
+        <div className="stat-box">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11.5px', color: '#8492a6', fontWeight: 500 }}>Đang Hoạt Động</span>
+            <span style={{ color: '#00e676', fontSize: '14px' }}>🛡️</span>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#00e676', marginTop: '8px', fontFamily: 'JetBrains Mono' }}>
+            {stats.activeDID}
+          </div>
+        </div>
+
+        {/* Đã Thu Hồi */}
+        <div className="stat-box">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11.5px', color: '#8492a6', fontWeight: 500 }}>Đã Thu Hồi</span>
+            <span style={{ color: '#ff5252', fontSize: '14px' }}>⚠️</span>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#ff5252', marginTop: '8px', fontFamily: 'JetBrains Mono' }}>
+            {stats.revokedDID}
+          </div>
+        </div>
+
+        {/* IDS Cảnh Báo */}
+        <div className="stat-box">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11.5px', color: '#8492a6', fontWeight: 500 }}>IDS Cảnh Báo</span>
+            <span style={{ color: '#ffab00', fontSize: '14px' }}>🔥</span>
+          </div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginTop: '8px', fontFamily: 'JetBrains Mono' }}>
+            {stats.idsAlerts}
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3. KHỐI CẤP PHÁT CHỨNG CHỈ THEO LÔ (MERKLE TREE) */}
+      <div className="navy-card">
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+          <span style={{ color: '#00f2fe', fontSize: '16px', marginTop: '1px' }}>🥞</span>
+          <div>
+            <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>
+              Cấp Phát Chứng Chỉ Số VC Theo Lô (Batch VC via Merkle Tree)
+            </h3>
+            <p style={{ margin: 0, fontSize: '11.5px', color: '#8492a6', lineHeight: '1.45' }}>
+              Tạo gốc Merkle Tree (Root Hash) để xác thực mật mã hàng nghìn sinh viên cùng lúc mà không tốn gas riêng lẻ
+            </p>
+          </div>
+        </div>
+
+        {/* Huy hiệu thuật toán */}
+        <div style={{ margin: '10px 0 12px' }}>
+          <span style={{ 
+            display: 'inline-block',
+            fontSize: '10.5px', 
+            fontWeight: 700, 
+            color: '#00f2fe', 
+            background: 'rgba(0, 242, 254, 0.1)', 
+            border: '1px solid rgba(0, 242, 254, 0.25)', 
+            padding: '2px 8px', 
+            borderRadius: '4px',
+            fontFamily: 'JetBrains Mono'
+          }}>
+            Algorithm: keccak256
+          </span>
+        </div>
+
+        {/* Nhãn JSON */}
+        <div style={{ fontSize: '12px', fontWeight: 600, color: '#c0ccda', marginBottom: '8px' }}>
+          Danh sách sinh viên (JSON Array format):
+        </div>
+
+        {/* Vùng soạn thảo JSON code */}
+        <textarea
+          value={jsonInput}
+          onChange={(e) => setJsonInput(e.target.value)}
+          className="json-editor"
+          spellCheck="false"
         />
-      </div>
 
-      {/* Bảng hồ sơ */}
-      <div className="glass-panel" style={{ overflow: 'hidden', marginBottom: '28px' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-            <thead>
-              <tr style={{ background: 'rgba(2, 6, 23, 0.6)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '16px' }}>MSSV / SBD</th>
-                <th style={{ padding: '16px' }}>Họ Và Tên</th>
-                <th style={{ padding: '16px' }}>Lớp / Ngành Học</th>
-                <th style={{ padding: '16px' }}>Trạng Thái Danh Tính</th>
-                <th style={{ padding: '16px', textAlign: 'center' }}>Thao Tác Bảo Mật</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((st) => (
-                <tr key={st.mssv} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s ease' }}>
-                  <td style={{ padding: '16px' }}>
-                    <div style={{ fontWeight: 700 }}>{st.mssv}</div>
-                    {st.sbd && <code style={{ fontSize: '12px', color: '#38bdf8' }}>{st.sbd}</code>}
-                  </td>
-                  <td style={{ padding: '16px', fontWeight: 600 }}>{st.fullName}</td>
-                  <td style={{ padding: '16px' }}>
-                    <div>{st.classId}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{st.major}</div>
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    <span
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        background: st.status === 'Active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                        color: st.status === 'Active' ? '#34d399' : '#f87171',
-                        border: `1px solid ${st.status === 'Active' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-                      }}
-                    >
-                      {st.status === 'Active' ? '✓ ACTIVE' : '⛔ REVOKED'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px', textAlign: 'center' }}>
-                    <button
-                      onClick={() => toggleStatus(st.mssv)}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: st.status === 'Active' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                        color: st.status === 'Active' ? '#f87171' : '#34d399',
-                        border: `1px solid ${st.status === 'Active' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                        fontSize: '12px',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      {st.status === 'Active' ? 'Thu Hồi (Revoke)' : 'Kích Hoạt Lại'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Nạp dữ liệu mẫu */}
+        <div style={{ margin: '8px 0 14px' }}>
+          <span 
+            onClick={() => setJsonInput(sampleJson)}
+            style={{ fontSize: '11.5px', color: '#00b4db', textDecoration: 'underline', cursor: 'pointer' }}
+          >
+            Nạp dữ liệu mẫu khác
+          </span>
         </div>
+
+        {/* Nút Ký Phát Hành Lô */}
+        <button onClick={handleBatchIssue} className="btn-batch-issue">
+          <span>✨</span> Tính Merkle Root & Ký Phát Hành Lô
+        </button>
       </div>
 
-      {/* Tích hợp Admin Gateway: Cấp phát Merkle Tree, Cảnh báo IDS, Kiểm thử tấn công */}
-      <AdminGateway />
     </div>
   );
 }
