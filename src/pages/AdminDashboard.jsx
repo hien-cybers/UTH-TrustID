@@ -44,73 +44,102 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: 'clamp(12px, 3vw, 24px)', color: '#f8fafc' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+    <div style={{ maxWidth: '1240px', margin: '0 auto', padding: 'clamp(16px, 3vw, 32px)' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
-          <h2 style={{ fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)', margin: 0, fontWeight: 700, color: '#f43f5e' }}>
-            🔒 Quản Trị Cấp Cao (Root Issuer / Admin)
-          </h2>
-          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
-            Cấp phát Bằng chứng số (VC), nạp dữ liệu và kiểm soát thu hồi khóa mật mã
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '24px' }}>🔒</span>
+            <h1 style={{ fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: '800', margin: 0 }}>
+              Quản Trị Hệ Thống Root Issuer
+            </h1>
+          </div>
+          <p style={{ margin: '6px 0 0', color: 'var(--text-muted)', fontSize: '14px' }}>
+            Quản trị vòng đời danh tính số, thu hồi khẩn cấp và nạp dữ liệu sinh viên
           </p>
         </div>
 
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#059669', color: '#fff', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>
-          📂 Nạp Danh Sách (JSON/JS)
+        <label className="btn-primary" style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+          📁 Nạp Danh Sách (JSON/JS)
           <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
         </label>
       </div>
 
-      <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '16px' }}>
-        <input 
-          type="text" 
-          placeholder="Lọc nhanh theo MSSV, Họ tên hoặc Số Báo Danh..."
+      {/* Tìm kiếm */}
+      <div className="glass-panel" style={{ padding: '16px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Lọc nhanh danh sách theo MSSV, Họ tên hoặc Số Báo Danh..."
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569', fontSize: '14px' }}
+          className="custom-input"
         />
       </div>
 
-      <div style={{ background: '#1e293b', borderRadius: '12px', border: '1px solid #334155', overflowX: 'auto', marginBottom: '24px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ background: '#0f172a', borderBottom: '1px solid #334155', color: '#94a3b8' }}>
-              <th style={{ padding: '12px' }}>MSSV / SBD</th>
-              <th style={{ padding: '12px' }}>Họ và Tên</th>
-              <th style={{ padding: '12px' }}>Lớp / Ngành</th>
-              <th style={{ padding: '12px' }}>Trạng Thái DID</th>
-              <th style={{ padding: '12px' }}>Thao Tác Bảo Mật</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((st) => (
-              <tr key={st.mssv} style={{ borderBottom: '1px solid #334155' }}>
-                <td style={{ padding: '12px' }}>
-                  <strong>{st.mssv}</strong>
-                  {st.sbd && <div style={{ fontSize: '11px', color: '#38bdf8' }}>{st.sbd}</div>}
-                </td>
-                <td style={{ padding: '12px' }}>{st.fullName}</td>
-                <td style={{ padding: '12px' }}>
-                  {st.classId}
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{st.major}</div>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <span style={{ padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, background: st.status === 'Active' ? '#064e3b' : '#7f1d1d', color: st.status === 'Active' ? '#34d399' : '#f87171' }}>
-                    {st.status}
-                  </span>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <button 
-                    onClick={() => toggleStatus(st.mssv)}
-                    style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: st.status === 'Active' ? '#ef4444' : '#10b981', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                  >
-                    {st.status === 'Active' ? 'Thu hồi (Revoke)' : 'Kích hoạt lại'}
-                  </button>
-                </td>
+      {/* Bảng hồ sơ */}
+      <div className="glass-panel" style={{ overflow: 'hidden', marginBottom: '28px' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
+            <thead>
+              <tr style={{ background: 'rgba(2, 6, 23, 0.6)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                <th style={{ padding: '16px' }}>MSSV / SBD</th>
+                <th style={{ padding: '16px' }}>Họ Và Tên</th>
+                <th style={{ padding: '16px' }}>Lớp / Ngành Học</th>
+                <th style={{ padding: '16px' }}>Trạng Thái Danh Tính</th>
+                <th style={{ padding: '16px', textAlign: 'center' }}>Thao Tác Bảo Mật</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((st) => (
+                <tr key={st.mssv} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s ease' }}>
+                  <td style={{ padding: '16px' }}>
+                    <div style={{ fontWeight: 700 }}>{st.mssv}</div>
+                    {st.sbd && <code style={{ fontSize: '12px', color: '#38bdf8' }}>{st.sbd}</code>}
+                  </td>
+                  <td style={{ padding: '16px', fontWeight: 600 }}>{st.fullName}</td>
+                  <td style={{ padding: '16px' }}>
+                    <div>{st.classId}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{st.major}</div>
+                  </td>
+                  <td style={{ padding: '16px' }}>
+                    <span
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        background: st.status === 'Active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        color: st.status === 'Active' ? '#34d399' : '#f87171',
+                        border: `1px solid ${st.status === 'Active' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                      }}
+                    >
+                      {st.status === 'Active' ? '✓ ACTIVE' : '⛔ REVOKED'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <button
+                      onClick={() => toggleStatus(st.mssv)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: st.status === 'Active' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                        color: st.status === 'Active' ? '#f87171' : '#34d399',
+                        border: `1px solid ${st.status === 'Active' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {st.status === 'Active' ? 'Thu Hồi (Revoke)' : 'Kích Hoạt Lại'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Tích hợp Admin Gateway: Cấp phát Merkle Tree, Cảnh báo IDS, Kiểm thử tấn công */}

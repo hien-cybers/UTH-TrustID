@@ -4,48 +4,71 @@ import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-do
 
 import FacultyPortal from './pages/FacultyPortal';
 import AdminDashboard from './pages/AdminDashboard';
-import StudentWallet from './components/StudentWallet'; // Giao diện ví PWA của bạn
-import WebPortal from './components/WebPortal';         // Cổng QR đăng nhập web của bạn
+import StudentWallet from './components/StudentWallet';
+import WebPortal from './components/WebPortal';
 
 export default function App() {
-  const navStyle = ({ isActive }) => ({
-    padding: '8px 14px',
-    borderRadius: '6px',
+  const getNavClass = ({ isActive }) => ({
+    padding: '8px 16px',
+    borderRadius: '10px',
     textDecoration: 'none',
     fontSize: '13px',
     fontWeight: 600,
-    color: isActive ? '#38bdf8' : '#94a3b8',
-    background: isActive ? '#1e293b' : 'transparent',
+    color: isActive ? '#38bdf8' : 'var(--text-muted)',
+    background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+    border: isActive ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid transparent',
     transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
     whiteSpace: 'nowrap'
   });
 
   return (
     <BrowserRouter>
-      {/* Thanh điều hướng co giãn linh hoạt */}
-      <nav style={{ background: '#090d16', padding: '10px clamp(12px, 3vw, 24px)', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '20px' }}>🛡️</span>
-          <span style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '0.5px', color: '#f8fafc' }}>
-            UTH-TrustID
-          </span>
-        </div>
+      {/* Header Sticky Glassmorphism */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 11, 20, 0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid var(--border-color)', padding: '12px clamp(16px, 4vw, 32px)' }}>
+        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #0284c7, #38bdf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', boxShadow: '0 0 15px rgba(56, 189, 248, 0.4)' }}>
+              🛡️
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '-0.3px', color: '#fff' }}>
+                UTH-TrustID
+              </div>
+              <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                Passwordless DID System
+              </div>
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-          <NavLink to="/wallet" style={navStyle}>📱 Ví Sinh Viên</NavLink>
-          <NavLink to="/faculty" style={navStyle}>👨‍🏫 Cổng Giảng Viên</NavLink>
-          <NavLink to="/portal" style={navStyle}>💻 Đăng Nhập Web</NavLink>
-          <NavLink to="/admin" style={navStyle}>🔒 Quản Trị</NavLink>
+          {/* Navigation Links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <NavLink to="/faculty" style={getNavClass}>
+              <span>👨‍🏫</span> Cổng Giảng Viên
+            </NavLink>
+            <NavLink to="/wallet" style={getNavClass}>
+              <span>📱</span> Ví Sinh Viên
+            </NavLink>
+            <NavLink to="/portal" style={getNavClass}>
+              <span>💻</span> Cổng Dịch Vụ
+            </NavLink>
+            <NavLink to="/admin" style={getNavClass}>
+              <span>🔒</span> Quản Trị
+            </NavLink>
+          </nav>
         </div>
-      </nav>
+      </header>
 
-      {/* Vùng hiển thị nội dung chính */}
-      <main style={{ minHeight: 'calc(100vh - 58px)', background: '#0b1120' }}>
+      {/* Main Content Area */}
+      <main>
         <Routes>
-          {/* Mặc định chuyển thẳng vào Cổng Giảng Viên hoặc Ví */}
           <Route path="/" element={<Navigate to="/faculty" replace />} />
-          <Route path="/wallet" element={<StudentWallet />} />
           <Route path="/faculty" element={<FacultyPortal />} />
+          <Route path="/wallet" element={<StudentWallet />} />
           <Route path="/portal" element={<WebPortal />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<Navigate to="/faculty" replace />} />
