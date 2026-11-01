@@ -20,8 +20,13 @@ Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity
 - **Tẩy bộ nhớ đệm RAM (Memory Sanitization)**: Tự động ghi đè (`0x00...`) và hủy biến khóa riêng ngay sau khi hoàn tất ký số EIP-191.
 
 ### 3. Phân Hệ Giảng Viên (Faculty & Verifier Portal - `/faculty`)
-- **Dynamic Rotating QR Code (Xoay mã 15s)**: Cơ chế xoay mã QR tự động sau mỗi 15 giây kèm thanh đếm lùi trực quan chuyển màu xanh $\to$ đỏ cảnh báo, chống việc sinh viên chụp ảnh mã gửi ra ngoài phòng thi / lớp học.
-- **Geo-fencing & Campus Wi-Fi Subnet Check**: Giảng viên có thể kích hoạt tùy chọn kiểm tra tọa độ GPS sinh viên ($\le 200\text{m}$ quanh UTH Bình Thạnh: $10.8016^\circ\text{N}, 106.7118^\circ\text{E}$) hoặc ràng buộc IP thuộc dải Subnet Wi-Fi nội bộ trường.
+- **Giao Diện Thẩm Mỹ Cao Cấp (Kalo Dark & Neon Lime Aesthetic)**: Thiết kế chuẩn Mobile-first theo ngôn ngữ Dark OLED hiện đại kết hợp điểm nhấn màu Lime neon (`#d4f938`) và ngọn lửa hổ phách (`#f59e0b`).
+  - **Activity Bar Chart**: Biểu đồ cột 7 ngày trong tuần trực quan theo dõi lượng điểm danh/xác thực với ngày cao điểm nổi bật.
+  - **Geo-fencing Accuracy Trend**: Biểu đồ đường cong uốn lượn sắc nét biểu diễn khoảng cách và độ chính xác định vị.
+  - **Streak & Daily Goal Cards**: Thẻ theo dõi chuỗi điểm danh kèm vòng lửa `🔥` và thanh tiến độ mục tiêu ngày.
+  - **Insights Analytics**: Thẻ phân tích nhanh gồm cơ cấu mạng kết nối (Donut chart), trung bình lượt xác thực và ngày hoạt động hiệu quả nhất (`⭐`).
+- **Dynamic Rotating QR Code (Xoay mã 15s)**: Cơ chế xoay mã QR tự động sau mỗi 15 giây kèm thanh đếm lùi trực quan, chống việc sinh viên chụp ảnh mã gửi ra ngoài phòng thi / lớp học.
+- **Geo-fencing & Campus Wi-Fi Subnet Check**: Tùy chọn kiểm tra tọa độ GPS sinh viên qua công thức Haversine hoặc ràng buộc mạng Wi-Fi nội bộ trường.
 - **Bảng điểm danh & khảo thí thời gian thực**: Thống kê danh sách sinh viên đã đối soát on-chain kèm khoảng cách GPS và trạng thái mạng kết nối.
 
 ### 4. Phân Hệ Quản Trị Viên (Admin & Issuer Portal - `/admin`)
