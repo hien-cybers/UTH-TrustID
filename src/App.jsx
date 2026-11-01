@@ -77,12 +77,12 @@ export default function App() {
       {/* Main Content Area co giãn động theo chiều cao thiết bị */}
       <main style={{ minHeight: 'calc(100dvh - 65px)', paddingBottom: '75px', background: '#070b14' }}>
         <Routes>
-          <Route path="/" element={<Navigate to="/faculty" replace />} />
-          <Route path="/faculty" element={<FacultyPortal />} />
+          <Route path="/" element={<Navigate to="/wallet" replace />} />
           <Route path="/wallet" element={<StudentWallet />} />
           <Route path="/portal" element={<WebPortal />} />
+          <Route path="/faculty" element={<FacultyPortal />} />
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="*" element={<Navigate to="/faculty" replace />} />
+          <Route path="*" element={<Navigate to="/wallet" replace />} />
         </Routes>
       </main>
 
@@ -101,10 +101,6 @@ export default function App() {
         padding: '6px 8px calc(6px + var(--safe-bottom)) 8px',
         gap: '4px'
       }}>
-        <NavLink to="/faculty" style={getNavClass}>
-          <span style={{ fontSize: '17px' }}>👨‍🏫</span>
-          <span>Giảng Viên</span>
-        </NavLink>
         <NavLink to="/wallet" style={getNavClass}>
           <span style={{ fontSize: '17px' }}>📱</span>
           <span>Ví Sinh Viên</span>
@@ -112,6 +108,10 @@ export default function App() {
         <NavLink to="/portal" style={getNavClass}>
           <span style={{ fontSize: '17px' }}>💻</span>
           <span>Cổng Dịch Vụ</span>
+        </NavLink>
+        <NavLink to="/faculty" style={getNavClass}>
+          <span style={{ fontSize: '17px' }}>👨‍🏫</span>
+          <span>Giảng Viên</span>
         </NavLink>
         <NavLink to="/admin" style={getNavClass}>
           <span style={{ fontSize: '17px' }}>🔒</span>
