@@ -2,66 +2,52 @@
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { INITIAL_STUDENTS, calculateDistance } from '../data/studentsData';
-import {
-  GraduationCap,
-  MapPin,
-  Search,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Radio,
-  QrCode,
-  ShieldCheck,
-  RotateCcw,
-  Sparkles,
-  AlertTriangle,
-  Users,
-  Fingerprint
-} from 'lucide-react';
-import { NETWORK_CONFIG } from '../services/did';
 
 export default function FacultyPortal() {
-  const [studentsList, setStudentsList] = useState(INITIAL_STUDENTS);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [students] = useState(INITIAL_STUDENTS);
+  const [activeTab, setActiveTab] = useState('session'); // 'session' | 'search'
+  
+  // Cấu hình phiên
+  const [mode, setMode] = useState('attendance'); // 'attendance' | 'exam'
+  const [roomName, setRoomName] = useState('Phòng Lab B302 - Cơ sở Bình Thạnh');
+  const [courseName, setCourseName] = useState('An Toàn Mạng & Mật Mã Ứng Dụng');
+  const [networkPolicy, setNetworkPolicy] = useState('HYBRID_4G_5G'); // 'WIFI_ONLY' | 'HYBRID_4G_5G'
+  const [allowedRadius, setAllowedRadius] = useState(35);
+
+  // Trạng thái phiên chạy thực tế
+  const [session, setSession] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [dynamicNonce, setDynamicNonce] = useState('');
+  const [countdown, setCountdown] = useState(15);
+  const [records, setRecords] = useState([]);
+
+  // Tra cứu hồ sơ
+  const [searchKey, setSearchKey] = useState('');
   const [searchResult, setSearchResult] = useState(null);
 
-  // Trạng thái phiên lớp học / thi cử
-  const [sessionType, setSessionType] = useState('Điểm danh lớp'); // 'Điểm danh lớp' | 'Phòng thi kết thúc học phần'
-  const [courseCode, setCourseCode] = useState('ATTT01');
-  const [activeSession, setActiveSession] = useState(null);
-  const [gpsLocation, setGpsLocation] = useState(null);
-  const [isGettingGps, setIsGettingGps] = useState(false);
-
-  // Dynamic Rotating QR Code Settings (Xoay mã 15s)
-  const ROTATION_PERIOD = 15;
-  const [timeLeft, setTimeLeft] = useState(ROTATION_PERIOD);
-  const [autoRotate, setAutoRotate] = useState(true);
-
-  // Chu kỳ xoay mã QR tự động
+  // Sinh mã xoay vòng Dynamic Token mỗi 15 giây chống chụp ảnh gửi điểm danh hộ
   useEffect(() => {
-    if (!activeSession || !autoRotate) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Xoay session id mới
-          const refreshedId = `SES_${Date.now().toString(36).toUpperCase()}_${Math.random().toString(36).substring(2, 6)}`;
-          setActiveSession((cur) => cur ? { ...cur, sessionId: refreshedId } : null);
-          return ROTATION_PERIOD;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
+    let timer;
+    if (session) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            setDynamicNonce(Math.random().toString(36).substring(2, 9).toUpperCase());
+            return 15;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
     return () => clearInterval(timer);
-  }, [activeSession, autoRotate]);
+  }, [session]);
 
-  // 1. Chức năng lấy định vị chính xác của Giảng viên qua navigator.geolocation
-  const handleGetLocationAndCreateSession = () => {
-    setIsGettingGps(true);
+  // Giữ nguyên cơ chế lấy định vị chính xác của phần trước
+  const handleCreateSession = () => {
+    setIsLocating(true);
     if (!navigator.geolocation) {
-      alert("Trình duyệt không hỗ trợ Geolocation!");
-      setIsGettingGps(false);
+      alert("Thiết bị không hỗ trợ định vị GPS! Đang dùng toạ độ cơ sở UTH Bình Thạnh.");
+      useFallbackLocation();
       return;
     }
 
@@ -70,377 +56,400 @@ export default function FacultyPortal() {
         const coords = {
           lat: pos.coords.latitude,
           lon: pos.coords.longitude,
-          accuracy: Math.round(pos.coords.accuracy)
+          acc: Math.round(pos.coords.accuracy)
         };
-        setGpsLocation(coords);
-        setIsGettingGps(false);
-        setTimeLeft(ROTATION_PERIOD);
-
-        // Tạo phiên phòng học mới
-        const newSession = {
-          sessionId: `SES_${Date.now().toString(36).toUpperCase()}`,
-          courseCode,
-          type: sessionType,
-          lat: coords.lat,
-          lon: coords.lon,
-          accuracy: coords.accuracy,
-          allowedRadius: 50, // Bán kính mặc định 50m trong lớp / phòng thi
-          createdAt: new Date().toLocaleTimeString('vi-VN'),
-          attendees: []
-        };
-        setActiveSession(newSession);
+        setIsLocating(false);
+        const newNonce = Math.random().toString(36).substring(2, 9).toUpperCase();
+        setDynamicNonce(newNonce);
+        setCountdown(15);
+        setSession({
+          id: `${mode === 'exam' ? 'EXAM' : 'ATT'}_${Date.now().toString(36).toUpperCase()}`,
+          mode,
+          roomName,
+          courseName,
+          networkPolicy,
+          allowedRadius: Number(allowedRadius),
+          coords,
+          createdAt: new Date().toLocaleTimeString('vi-VN')
+        });
+        setRecords([]);
       },
       (err) => {
-        // Fallback to default UTH Campus coordinates if GPS denied or unavailable
-        console.warn("Lỗi truy cập toạ độ GPS: " + err.message + ". Dùng toạ độ UTH cơ sở Bình Thạnh.");
-        const fallbackCoords = {
-          lat: 10.8016,
-          lon: 106.7118,
-          accuracy: 10
-        };
-        setGpsLocation(fallbackCoords);
-        setIsGettingGps(false);
-        setTimeLeft(ROTATION_PERIOD);
-
-        const newSession = {
-          sessionId: `SES_${Date.now().toString(36).toUpperCase()}`,
-          courseCode,
-          type: sessionType,
-          lat: fallbackCoords.lat,
-          lon: fallbackCoords.lon,
-          accuracy: fallbackCoords.accuracy,
-          allowedRadius: 50,
-          createdAt: new Date().toLocaleTimeString('vi-VN'),
-          attendees: []
-        };
-        setActiveSession(newSession);
-        alert("Đã khởi tạo phiên tại toạ độ cơ sở UTH Bình Thạnh (GPS Fallback)!");
+        console.warn("Lỗi truy cập GPS: " + err.message + ". Đang dùng toạ độ cơ sở UTH Bình Thạnh.");
+        useFallbackLocation();
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  // 2. Chức năng tra cứu thông tin sinh viên bằng MSSV hoặc Mã hóa Token
+  const useFallbackLocation = () => {
+    setIsLocating(false);
+    // Toạ độ thực tế UTH Cơ sở chính (Bình Thạnh: 10.8016, 106.7118)
+    const fallbackCoords = { lat: 10.8016, lon: 106.7118, acc: 10 };
+    const newNonce = Math.random().toString(36).substring(2, 9).toUpperCase();
+    setDynamicNonce(newNonce);
+    setCountdown(15);
+    setSession({
+      id: `${mode === 'exam' ? 'EXAM' : 'ATT'}_${Date.now().toString(36).toUpperCase()}`,
+      mode,
+      roomName,
+      courseName,
+      networkPolicy,
+      allowedRadius: Number(allowedRadius),
+      coords: fallbackCoords,
+      createdAt: new Date().toLocaleTimeString('vi-VN')
+    });
+    setRecords([]);
+    alert("Đã kích hoạt phiên tại toạ độ cơ sở UTH Bình Thạnh (GPS Fallback)!");
+  };
+
+  // Giả lập luồng sinh viên quét mã kèm mạng & toạ độ
+  const handleSimulateCheckin = (distMeter, netType, mssv) => {
+    if (!session) return;
+    const student = students.find((s) => s.mssv === mssv);
+    if (!student) return;
+
+    // 1. Kiểm tra trạng thái thẻ
+    if (student.status === 'Revoked') {
+      alert(`[CẢNH BÁO AN NINH] Sinh viên ${student.fullName} có thẻ bị THU HỒI (Revoked)! Từ chối truy cập!`);
+      setRecords((prev) => [
+        {
+          mssv,
+          name: student.fullName,
+          sbd: student.sbd,
+          dist: distMeter,
+          net: netType,
+          status: 'REJECTED_REVOKED',
+          time: new Date().toLocaleTimeString('vi-VN')
+        },
+        ...prev
+      ]);
+      return;
+    }
+
+    // 2. Kiểm tra chính sách mạng
+    if (session.networkPolicy === 'WIFI_ONLY' && netType !== 'WiFi_UTH_SECURE') {
+      alert(`[TỪ CHỐI MẠNG] Phòng yêu cầu kết nối WiFi trường (UTH-Secure), phát hiện sinh viên đang dùng ${netType}!`);
+      setRecords((prev) => [
+        {
+          mssv,
+          name: student.fullName,
+          sbd: student.sbd,
+          dist: distMeter,
+          net: netType,
+          status: 'REJECTED_NETWORK',
+          time: new Date().toLocaleTimeString('vi-VN')
+        },
+        ...prev
+      ]);
+      return;
+    }
+
+    // 3. Kiểm tra toạ độ Geo-fencing
+    const isInside = distMeter <= session.allowedRadius;
+    setRecords((prev) => [
+      {
+        mssv,
+        name: student.fullName,
+        sbd: student.sbd,
+        dist: distMeter,
+        net: netType,
+        status: isInside ? 'VALID' : 'REJECTED_DISTANCE',
+        time: new Date().toLocaleTimeString('vi-VN')
+      },
+      ...prev
+    ]);
+  };
+
+  // Tra cứu hồ sơ sinh viên
   const handleSearch = () => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchKey.trim().toLowerCase();
     if (!q) {
       setSearchResult(null);
       return;
     }
-    const found = studentsList.find(
-      (s) => s.mssv.toLowerCase() === q || s.qrCodeToken.toLowerCase() === q
+    const found = students.find(
+      (s) => s.mssv.toLowerCase() === q || s.qrCodeToken.toLowerCase() === q || s.sbd.toLowerCase() === q
     );
     setSearchResult(found || "NOT_FOUND");
   };
 
-  // 3. Hàm mô phỏng sinh viên quét mã và gửi toạ độ đối soát (Haversine Formula)
-  const simulateStudentCheckin = (testLatOffset, testLonOffset, studentMssv) => {
-    if (!activeSession) return;
-    const studentLat = activeSession.lat + testLatOffset;
-    const studentLon = activeSession.lon + testLonOffset;
-
-    // Tính khoảng cách Haversine chính xác theo mét
-    const dist = calculateDistance(activeSession.lat, activeSession.lon, studentLat, studentLon);
-    const isValid = dist <= activeSession.allowedRadius;
-
-    // Tìm thông tin SV trong DB
-    const studentInfo = studentsList.find(s => s.mssv === studentMssv) || {
-      fullName: 'Sinh viên ' + studentMssv,
-      major: 'An toàn Thông tin'
-    };
-
-    const attendeeRecord = {
-      mssv: studentMssv,
-      fullName: studentInfo.fullName,
-      major: studentInfo.major,
-      dist,
-      isValid,
-      timestamp: new Date().toLocaleTimeString('vi-VN')
-    };
-
-    setActiveSession((prev) => ({
-      ...prev,
-      attendees: [attendeeRecord, ...prev.attendees]
-    }));
-  };
-
-  const qrPayload = activeSession ? {
-    action: 'faculty_checkin',
+  const qrPayloadString = session ? JSON.stringify({
+    action: 'uth_checkin',
+    id: session.id,
+    mode: session.mode,
+    nonce: dynamicNonce,
+    lat: session.coords.lat,
+    lon: session.coords.lon,
+    netPolicy: session.networkPolicy,
+    radius: session.allowedRadius,
     domain: 'uth.edu.vn',
-    courseCode: activeSession.courseCode,
-    type: activeSession.type,
-    sessionId: activeSession.sessionId,
-    lat: activeSession.lat,
-    lon: activeSession.lon,
-    allowedRadius: activeSession.allowedRadius,
-    timestamp: Date.now()
-  } : null;
+    ts: Date.now()
+  }) : '';
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-3 sm:px-6 py-6 space-y-6 text-slate-100 animate-in fade-in duration-300">
-      {/* Top Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-            <GraduationCap size={22} />
-          </div>
-          <div>
-            <h2 className="font-bold text-base sm:text-xl text-slate-100">
-              Cổng Giảng Viên - Quản Lý Lớp Học, Buổi Thi & Điểm Danh
-            </h2>
-            <p className="text-xs text-slate-400">
-              Điểm danh số bảo mật cao: Định vị Geo-Fencing (Haversine &le; 50m) & Mã QR xoay vòng 15s
-            </p>
-          </div>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: 'clamp(12px, 3vw, 24px)', color: '#f8fafc' }}>
+      
+      {/* Header chuyển đổi tính năng */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+        <div>
+          <h2 style={{ fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)', margin: 0, fontWeight: 700, color: '#38bdf8' }}>
+            👨‍🏫 Quản Trị Lớp Học & Phòng Thi
+          </h2>
+          <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
+            Cơ chế điểm danh không mật khẩu, Geo-Fencing & Thẻ sinh viên số chuẩn W3C
+          </p>
         </div>
-
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
-          <span className="text-[11px] font-mono bg-purple-950/60 border border-purple-800/40 text-purple-300 px-3 py-1 rounded-full">
-            Haversine Radius: 50m
-          </span>
+        <div style={{ display: 'flex', gap: '8px', background: '#0f172a', padding: '4px', borderRadius: '8px', border: '1px solid #1e293b' }}>
+          <button 
+            onClick={() => setActiveTab('session')} 
+            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: activeTab === 'session' ? '#0284c7' : 'transparent', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+          >
+            Tạo & Chốt Phòng
+          </button>
+          <button 
+            onClick={() => setActiveTab('search')} 
+            style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: activeTab === 'search' ? '#0284c7' : 'transparent', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+          >
+            Tra Cứu Hồ Sơ
+          </button>
         </div>
       </div>
 
-      {/* KHỐI 1: TẠO PHÒNG VÀ ĐỊNH VỊ GPS */}
-      <section className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h3 className="font-bold text-sm sm:text-base text-slate-200 flex items-center space-x-2">
-            <MapPin size={18} className="text-cyan-400" />
-            <span>1. Thiết lập Phòng Điểm Danh / Buổi Thi & Định Vị Toạ Độ GPS</span>
-          </h3>
-          <span className="text-xs text-slate-400">GPS Geo-Fencing Module</span>
-        </div>
-
-        <div className="flex flex-wrap gap-3 items-center">
-          <select
-            value={sessionType}
-            onChange={(e) => setSessionType(e.target.value)}
-            className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-cyan-500"
-          >
-            <option value="Điểm danh lớp">Điểm danh lớp học định kỳ</option>
-            <option value="Phòng thi kết thúc học phần">Phòng thi kết thúc học phần</option>
-          </select>
-
-          <input
-            type="text"
-            value={courseCode}
-            onChange={(e) => setCourseCode(e.target.value)}
-            placeholder="Mã lớp / Môn học"
-            className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-cyan-500 min-w-[160px]"
-          />
-
-          <button
-            onClick={handleGetLocationAndCreateSession}
-            disabled={isGettingGps}
-            className="bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center space-x-1.5 shadow-lg shadow-cyan-900/30 disabled:opacity-50"
-          >
-            <MapPin size={15} />
-            <span>{isGettingGps ? "Đang dò toạ độ chính xác..." : "📍 Lấy Toạ Độ & Tạo Phiên"}</span>
-          </button>
-        </div>
-
-        {/* Thông tin phiên lớp học khi đã tạo */}
-        {activeSession && (
-          <div className="mt-4 bg-slate-950/90 rounded-2xl p-4 sm:p-5 border-l-4 border-emerald-500 border border-slate-800 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Cột trái: Thông số toạ độ & Bán kính */}
-              <div className="space-y-2 text-xs font-mono">
-                <div>
-                  <span className="text-slate-400 font-sans">Mã phiên:</span>{" "}
-                  <code className="text-cyan-400 font-bold text-sm">{activeSession.sessionId}</code>{" "}
-                  <span className="text-slate-400 font-sans">({activeSession.type})</span>
+      {activeTab === 'session' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+          
+          {/* CỘT CẤU HÌNH TẠO PHÒNG */}
+          <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '16px', color: '#e2e8f0' }}>Thiết Lập Phiên Kiểm Tra</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>Mục đích phiên</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    type="button"
+                    onClick={() => { setMode('attendance'); setAllowedRadius(35); }}
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #475569', background: mode === 'attendance' ? '#3b82f6' : '#0f172a', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    📝 Điểm Danh Lớp
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { setMode('exam'); setAllowedRadius(15); }}
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #475569', background: mode === 'exam' ? '#f43f5e' : '#0f172a', color: '#fff', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    🎯 Phòng Thi Cử
+                  </button>
                 </div>
-                <div>
-                  <span className="text-slate-400 font-sans">Toạ độ Giảng viên (Chốt phòng):</span>{" "}
-                  <span className="text-slate-200">
-                    Vĩ độ: <code>{activeSession.lat.toFixed(6)}</code>, Kinh độ: <code>{activeSession.lon.toFixed(6)}</code>
-                  </span>{" "}
-                  <span className="text-emerald-400">(±{activeSession.accuracy}m)</span>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>Tên môn học / Học phần</label>
+                <input 
+                  type="text" 
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>Vị trí phòng học</label>
+                <input 
+                  type="text" 
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>Chính sách mạng quét mã</label>
+                <select 
+                  value={networkPolicy}
+                  onChange={(e) => setNetworkPolicy(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }}
+                >
+                  <option value="HYBRID_4G_5G">🌐 Cho phép 4G / 5G + Bắt buộc GPS trong phòng</option>
+                  <option value="WIFI_ONLY">🔒 Khóa mạng: Bắt buộc Wi-Fi trường (UTH-Secure)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#94a3b8', marginBottom: '6px' }}>
+                  Bán kính Geo-Fencing cho phép: <strong>{allowedRadius} mét</strong> ({mode === 'exam' ? 'Phòng thi ≤ 20m' : 'Lớp học ≤ 50m'})
+                </label>
+                <input 
+                  type="range" 
+                  min="10" 
+                  max="100" 
+                  value={allowedRadius}
+                  onChange={(e) => setAllowedRadius(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: '#38bdf8' }}
+                />
+              </div>
+
+              <button 
+                onClick={handleCreateSession}
+                disabled={isLocating}
+                style={{ marginTop: '8px', padding: '12px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #0284c7, #2563eb)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+              >
+                {isLocating ? "⏳ Đang lấy toạ độ GPS chính xác..." : "📍 Lấy Toạ Độ & Kích Hoạt Phiên"}
+              </button>
+            </div>
+          </div>
+
+          {/* CỘT MÀN HÌNH MÃ QR VÀ DANH SÁCH ĐỐI SOÁT */}
+          <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', flexDirection: 'column' }}>
+            {session ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', background: session.mode === 'exam' ? '#f43f5e' : '#0284c7', color: '#fff', fontWeight: 700 }}>
+                      {session.mode === 'exam' ? 'PHÒNG THI CHÍNH THỨC' : 'ĐIỂM DANH LỚP'}
+                    </span>
+                    <h4 style={{ margin: '6px 0 0', color: '#fff', fontSize: '16px' }}>{session.courseName} - {session.roomName}</h4>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>Đổi mã sau:</span>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: countdown <= 5 ? '#f43f5e' : '#38bdf8' }}>{countdown}s</div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-400 font-sans">Bán kính cho phép (Haversine Radius):</span>{" "}
-                  <span className="text-emerald-300 font-bold bg-emerald-950/70 border border-emerald-800/60 px-2 py-0.5 rounded">
-                    &le; {activeSession.allowedRadius} mét
+
+                {/* Khối hiển thị mã QR và Nonce */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', margin: '16px 0', padding: '12px', background: '#0f172a', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                  <div style={{ width: '96px', height: '96px', background: '#fff', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <QRCodeSVG 
+                      value={qrPayloadString}
+                      size={84}
+                      level="M"
+                      includeMargin={false}
+                    />
+                  </div>
+                  <div style={{ flex: 1, fontSize: '13px', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}><strong>Token xoay vòng:</strong> <code style={{ color: '#38bdf8', fontWeight: 'bold' }}>{dynamicNonce}</code></p>
+                    <p style={{ margin: 0, color: '#94a3b8' }}>GPS chốt: {session.coords.lat.toFixed(4)}, {session.coords.lon.toFixed(4)} (±{session.coords.acc}m)</p>
+                    <p style={{ margin: 0, color: '#94a3b8' }}>Chế độ: {session.networkPolicy === 'WIFI_ONLY' ? 'Chỉ Wi-Fi trường (UTH-Secure)' : '4G/5G + Geo-Fencing'}</p>
+                    <p style={{ margin: 0, color: '#34d399', fontSize: '12px' }}>Bán kính: &le; {session.allowedRadius}m</p>
+                  </div>
+                </div>
+
+                {/* Các nút bấm mô phỏng test nhanh */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                  <button 
+                    onClick={() => handleSimulateCheckin(8, '4G_Viettel', '2251120000')}
+                    style={{ padding: '6px 10px', fontSize: '12px', background: '#059669', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Simulate: SV An (4G, cách 8m - Hợp lệ)
+                  </button>
+                  <button 
+                    onClick={() => handleSimulateCheckin(120, '5G_Vinaphone', '2251120001')}
+                    style={{ padding: '6px 10px', fontSize: '12px', background: '#b91c1c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Simulate: SV Bích (Cách 120m - Quá xa)
+                  </button>
+                  <button 
+                    onClick={() => handleSimulateCheckin(10, 'WiFi_UTH_SECURE', '2251120002')}
+                    style={{ padding: '6px 10px', fontSize: '12px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Simulate: SV Cường (Thẻ bị Revoked)
+                  </button>
+                </div>
+
+                {/* Bảng ghi nhận kết quả điểm danh */}
+                <div style={{ flex: 1, overflowY: 'auto', maxHeight: '240px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+                    Nhật ký đối soát thời gian thực ({records.length})
+                  </div>
+                  {records.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '24px', color: '#64748b', fontSize: '13px' }}>
+                      Chờ sinh viên quét mã...
+                    </div>
+                  ) : (
+                    records.map((r, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', borderRadius: '6px', background: '#0f172a', marginBottom: '6px', fontSize: '13px' }}>
+                        <div>
+                          <strong>{r.name}</strong> <span style={{ color: '#94a3b8' }}>({r.mssv}{r.sbd ? ` - ${r.sbd}` : ''})</span>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>Cách {r.dist}m | {r.net} | {r.time}</div>
+                        </div>
+                        <div>
+                          {r.status === 'VALID' && <span style={{ color: '#34d399', fontWeight: 700 }}>✓ HỢP LỆ</span>}
+                          {r.status === 'REJECTED_DISTANCE' && <span style={{ color: '#f87171', fontWeight: 700 }}>❌ XA PHÒNG</span>}
+                          {r.status === 'REJECTED_NETWORK' && <span style={{ color: '#fbbf24', fontWeight: 700 }}>⚠️ SAI MẠNG</span>}
+                          {r.status === 'REJECTED_REVOKED' && <span style={{ color: '#ef4444', fontWeight: 700 }}>⛔ BỊ THU HỒI</span>}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', color: '#64748b' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📡</div>
+                <p style={{ margin: 0, fontWeight: 600 }}>Chưa kích hoạt phiên nào.</p>
+                <p style={{ margin: '4px 0 0', fontSize: '13px' }}>Bấm nút "Lấy Toạ Độ & Kích Hoạt Phiên" để mở phòng học / phòng thi.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* TAB TRA CỨU HỒ SƠ SINH VIÊN */
+        <div style={{ background: '#1e293b', padding: '24px', borderRadius: '12px', border: '1px solid #334155' }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: '16px' }}>Tra Cứu Hồ Sơ & Bằng Chứng Xác Thực (VC)</h3>
+          <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 16px' }}>
+            Tra cứu bằng Mã Số Sinh Viên (MSSV), Số Báo Danh (SBD) hoặc Token mã hoá in trên thẻ QR:
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <input 
+              type="text" 
+              placeholder="Nhập MSSV (2251120000) hoặc SBD (SBD-042) hoặc Token..."
+              value={searchKey}
+              onChange={(e) => setSearchKey(e.target.value)}
+              style={{ flex: 1, minWidth: '240px', padding: '10px 14px', borderRadius: '6px', background: '#0f172a', color: '#fff', border: '1px solid #475569' }}
+            />
+            <button 
+              onClick={handleSearch}
+              style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', background: '#38bdf8', color: '#090d16', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Tra Cứu
+            </button>
+          </div>
+
+          {searchResult === 'NOT_FOUND' && (
+            <div style={{ padding: '16px', background: '#450a0a', border: '1px solid #ef4444', borderRadius: '8px', color: '#fca5a5' }}>
+              Không tìm thấy hồ sơ sinh viên nào phù hợp với từ khóa này.
+            </div>
+          )}
+
+          {searchResult && searchResult !== 'NOT_FOUND' && (
+            <div style={{ background: '#0f172a', borderRadius: '12px', padding: '20px', border: '1px solid #38bdf8', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <img 
+                src={searchResult.avatar} 
+                alt="Student Avatar" 
+                style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#1e293b', border: '2px solid #38bdf8' }}
+              />
+              <div style={{ flex: 1, minWidth: '240px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <h4 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>{searchResult.fullName}</h4>
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', fontWeight: 700, background: searchResult.status === 'Active' ? '#059669' : '#b91c1c', color: '#fff' }}>
+                    {searchResult.status === 'Active' ? '✓ VERIFIED' : '⛔ REVOKED'}
                   </span>
                 </div>
-                <div className="flex items-center space-x-2 text-slate-400 font-sans pt-1">
-                  <Clock size={13} className="text-cyan-400" />
-                  <span>Xoay mã QR bảo mật sau: <strong className="text-cyan-300 font-mono">{timeLeft}s</strong></span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px', fontSize: '13px', color: '#cbd5e1' }}>
+                  <div><strong>MSSV:</strong> {searchResult.mssv}</div>
+                  <div><strong>Số Báo Danh:</strong> {searchResult.sbd}</div>
+                  <div><strong>Lớp:</strong> {searchResult.classId}</div>
+                  <div><strong>Chuyên ngành:</strong> {searchResult.major}</div>
+                  <div style={{ gridColumn: '1 / -1' }}><strong>Mã DID W3C:</strong> <code style={{ color: '#38bdf8' }}>{searchResult.didAddress}</code></div>
+                  <div style={{ gridColumn: '1 / -1' }}><strong>Token Mã Hóa:</strong> <code>{searchResult.qrCodeToken}</code></div>
                 </div>
               </div>
-
-              {/* Cột phải: Mã QR Động phục vụ chiếu máy chiếu */}
-              <div className="flex flex-col items-center justify-center bg-slate-900 p-3 rounded-xl border border-slate-800">
-                <div className="p-2 bg-white rounded-xl shadow-lg mb-2">
-                  <QRCodeSVG
-                    value={JSON.stringify(qrPayload)}
-                    size={140}
-                    level="M"
-                    includeMargin={false}
-                    className="w-32 h-32"
-                  />
-                </div>
-                <span className="text-[10px] text-slate-400 font-sans">
-                  Sinh viên quét QR để nộp toạ độ đối soát
-                </span>
-              </div>
             </div>
-
-            {/* Thanh test nhanh mô phỏng cho buổi báo cáo NCKH */}
-            <div className="pt-2 border-t border-slate-800/80">
-              <span className="text-xs text-slate-400 block mb-2 font-medium">
-                🧪 Thanh thử nghiệm thực nghiệm (NCKH Live Simulator):
-              </span>
-              <div className="flex flex-wrap gap-2.5">
-                <button
-                  onClick={() => simulateStudentCheckin(0.0001, 0.0001, "2251120000")}
-                  className="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs px-3 py-1.5 rounded-lg transition font-medium flex items-center space-x-1"
-                >
-                  <CheckCircle2 size={13} />
-                  <span>Simulate: SV đứng trong lớp (~15m, Hợp lệ)</span>
-                </button>
-                <button
-                  onClick={() => simulateStudentCheckin(0.002, 0.002, "2251120001")}
-                  className="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs px-3 py-1.5 rounded-lg transition font-medium flex items-center space-x-1"
-                >
-                  <XCircle size={13} />
-                  <span>Simulate: SV ở ngoài trường (~300m, Từ chối)</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Danh sách SV đã điểm danh đối soát toạ độ */}
-            <div className="pt-3">
-              <h4 className="text-xs sm:text-sm font-semibold text-slate-200 mb-2 flex items-center space-x-1.5">
-                <Users size={15} className="text-cyan-400" />
-                <span>Danh sách đối soát tức thời ({activeSession.attendees.length} lượt quét):</span>
-              </h4>
-
-              {activeSession.attendees.length === 0 ? (
-                <p className="text-xs text-slate-500 py-3 text-center">Chưa có sinh viên nào quét mã.</p>
-              ) : (
-                <div className="overflow-x-auto max-h-56 overflow-y-auto">
-                  <ul className="space-y-1.5 font-mono text-xs">
-                    {activeSession.attendees.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className={`p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 transition ${
-                          item.isValid
-                            ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-200'
-                            : 'bg-rose-950/30 border-rose-800/40 text-rose-200'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <span className="font-bold text-cyan-300">MSSV: {item.mssv}</span>
-                          <span className="text-slate-400">({item.fullName})</span>
-                          <span className="text-slate-500">|</span>
-                          <span className="text-slate-300">Cách phòng: <strong>{item.dist} m</strong></span>
-                        </div>
-                        <div className="flex items-center space-x-2 text-right">
-                          <span className="text-[10px] text-slate-400">{item.timestamp}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-sans font-bold border ${
-                              item.isValid
-                                ? 'bg-emerald-900/60 text-emerald-300 border-emerald-700'
-                                : 'bg-rose-900/60 text-rose-300 border-rose-700'
-                            }`}
-                          >
-                            {item.isValid ? "✓ HỢP LỆ" : "❌ TỪ CHỐI (VƯỢT KHOẢNG CÁCH)"}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* KHỐI 2: TÌM KIẾM SINH VIÊN BẰNG MSSV HOẶC CODE MÃ HÓA */}
-      <section className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-        <div className="border-b border-slate-800 pb-3">
-          <h3 className="font-bold text-sm sm:text-base text-slate-200 flex items-center space-x-2">
-            <Search size={18} className="text-purple-400" />
-            <span>2. Tra Cứu Hồ Sơ Sinh Viên (Bằng MSSV hoặc Token Mã Hóa)</span>
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">
-            Nhập mã số sinh viên hoặc chuỗi hash QR code được in / hiển thị trên Thẻ Sinh Viên Số:
-          </p>
+          )}
         </div>
-
-        <div className="flex gap-2.5">
-          <input
-            type="text"
-            placeholder="Ví dụ: 2251120000 hoặc UTH_HASH_SEC_9921a8f01"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-purple-500 font-mono"
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shadow-lg shadow-purple-900/30 flex items-center space-x-1"
-          >
-            <Search size={14} />
-            <span>Tìm kiếm</span>
-          </button>
-        </div>
-
-        {searchResult === "NOT_FOUND" && (
-          <div className="p-3 bg-rose-950/40 border border-rose-900/60 rounded-xl text-xs text-rose-300 flex items-center space-x-2">
-            <XCircle size={15} />
-            <span>Không tìm thấy hồ sơ sinh viên phù hợp với từ khóa này.</span>
-          </div>
-        )}
-
-        {searchResult && searchResult !== "NOT_FOUND" && (
-          <div className="bg-slate-950 rounded-2xl p-4 sm:p-5 border border-cyan-500/40 shadow-xl space-y-3 animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <h4 className="font-bold text-xs sm:text-sm text-cyan-400 flex items-center space-x-2">
-                <CheckCircle2 size={16} />
-                <span>Kết quả xác thực thông tin sinh viên</span>
-              </h4>
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                  searchResult.status === 'Active'
-                    ? 'bg-emerald-950 text-emerald-400 border-emerald-800'
-                    : 'bg-rose-950 text-rose-400 border-rose-800'
-                }`}
-              >
-                Trạng thái: {searchResult.status}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-0.5">
-                <span className="text-slate-500 text-[11px] block">Họ và Tên:</span>
-                <span className="font-semibold text-slate-100">{searchResult.fullName}</span>
-              </div>
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-0.5">
-                <span className="text-slate-500 text-[11px] block">Mã số sinh viên (MSSV):</span>
-                <span className="font-mono font-bold text-cyan-300">{searchResult.mssv}</span>
-              </div>
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-0.5">
-                <span className="text-slate-500 text-[11px] block">Lớp & Chuyên ngành:</span>
-                <span className="text-slate-200">{searchResult.classId} - {searchResult.major}</span>
-              </div>
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-0.5">
-                <span className="text-slate-500 text-[11px] block">Niên khóa:</span>
-                <span className="text-slate-200">{searchResult.cohort || '2022 - 2026'}</span>
-              </div>
-              <div className="sm:col-span-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-0.5 font-mono text-[11px]">
-                <span className="text-slate-500 font-sans block">Địa chỉ DID On-chain:</span>
-                <span className="text-cyan-300 break-all">{searchResult.didAddress}</span>
-              </div>
-              <div className="sm:col-span-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-0.5 font-mono text-[11px]">
-                <span className="text-slate-500 font-sans block">Code Token mã hóa định danh:</span>
-                <span className="text-emerald-300 break-all font-bold">{searchResult.qrCodeToken}</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
+      )}
     </div>
   );
 }

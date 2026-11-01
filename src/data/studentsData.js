@@ -1,15 +1,16 @@
 // src/data/studentsData.js
-
 export const INITIAL_STUDENTS = [
   {
     mssv: "2251120000",
-    fullName: "Nguyễn Văn An",
+    fullName: "Nguyễn Đức Hiển",
     major: "An toàn Thông tin",
     cohort: "2022 - 2026",
     classId: "ATTT2022.1",
+    sbd: "SBD-042",
     didAddress: "0x1D9b6938A3f073e3426052C7016155D85040Ed1D",
-    qrCodeToken: "UTH_HASH_SEC_9921a8f01", // Code mã hoá định danh
+    qrCodeToken: "UTH_HASH_SEC_9921a8f01",
     status: "Active",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Hien",
     registeredAt: "2024-09-01"
   },
   {
@@ -18,9 +19,11 @@ export const INITIAL_STUDENTS = [
     major: "An toàn Thông tin",
     cohort: "2022 - 2026",
     classId: "ATTT2022.1",
+    sbd: "SBD-015",
     didAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     qrCodeToken: "UTH_HASH_SEC_1102b4c77",
     status: "Active",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Bich",
     registeredAt: "2024-09-01"
   },
   {
@@ -29,24 +32,25 @@ export const INITIAL_STUDENTS = [
     major: "Khoa học Máy tính",
     cohort: "2022 - 2026",
     classId: "KHMT2022.2",
+    sbd: "SBD-088",
     didAddress: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
     qrCodeToken: "UTH_HASH_SEC_7723dd88a",
     status: "Revoked",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Cuong",
     registeredAt: "2024-09-02"
   }
 ];
 
-// Hàm phụ trợ tính khoảng cách Haversine (mét) giữa 2 toạ độ GPS
+// Tính khoảng cách giữa 2 toạ độ GPS bằng công thức Haversine (trả về mét)
 export function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Bán kính Trái Đất theo mét (6,371,000 m)
-  const rad = Math.PI / 180;
-  const dLat = (lat2 - lat1) * rad;
-  const dLon = (lon2 - lon1) * rad;
+  const R = 6371e3;
+  const toRad = (x) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c); // Trả về số mét nguyên
+  return Math.round(R * c);
 }
-
