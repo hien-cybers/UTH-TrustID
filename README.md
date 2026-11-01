@@ -1,6 +1,6 @@
 # UTH-TrustID: Decentralized Identity (W3C DID) & Passwordless Authentication Wallet
 
-Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity**) và xác thực không mật khẩu (**Passwordless Authentication**) tích hợp công nghệ Blockchain (**Polygon Amoy**), Sinh trắc học phần cứng (**WebAuthn**), Cây Merkle (**Merkle Tree Batch VC**) và Hệ thống Giám sát An ninh Dị thường (**IDS**), phục vụ đề tài Nghiên cứu Khoa học (NCKH) - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
+Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity**) và xác thực không mật khẩu (**Passwordless Authentication**) tích hợp công nghệ Blockchain (**Polygon Amoy**), Sinh trắc học phần cứng (**WebAuthn**), Cây Merkle (**Merkle Tree Batch VC**), Phát hiện GPS giả mạo (**Anti-Mock GPS Anomaly Detection**) và Hệ thống Giám sát An ninh Dị thường (**IDS**), phục vụ đề tài Nghiên cứu Khoa học (NCKH) - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
 
 ---
 
@@ -14,23 +14,23 @@ Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity
 - **Cryptographic Proof of Association**: Ràng buộc mật mã chặt chẽ giữa Khóa Ví và Thẻ Sinh Viên Số $(MSSV, studentAddress, issueDate, expiryDate)$ thông qua chữ ký số ECDSA từ University Root Issuer.
 
 ### 2. Phân Hệ Sinh Viên (Student Wallet PWA - `/wallet`)
+- **Giao Diện Deep Blue-Navy Glassmorphism**: Thẻ Sinh Viên Số thiết kế chuẩn kính mờ hiện đại, hiển thị trực quan thông tin định danh W3C DID, mã khóa và mã QR định danh.
 - **Xuất trình có chọn lọc (Selective Disclosure / Privacy Mode)**: Cho phép sinh viên bật chế độ riêng tư ẩn MSSV và thông tin cá nhân (`••••••••`), chỉ xuất trình bằng chứng mật mã xác nhận sinh viên UTH hợp lệ (Zero-Knowledge/Selective Disclosure cho Thư viện, Nhà xe).
 - **Cơ chế Thu hồi Nội bộ Chủ động (Self-Revocation via Emergency Token)**: Cấp mã khẩn cấp bí mật (`EMERGENCY_UTH_...`) khi tạo ví. Khi bị mất thiết bị, sinh viên có thể dùng mã này để tự khóa/thu hồi danh tính từ xa trên bất kỳ trình duyệt nào.
 - **Mã hóa Cục bộ AES-GCM-256 & WebAuthn**: Khóa riêng (Private Key) và cụm 12 từ khôi phục (BIP-39 Mnemonic) được mã hóa bằng AES-GCM kết hợp PBKDF2 (100.000 vòng lặp) và bảo vệ bằng TouchID/FaceID.
 - **Tẩy bộ nhớ đệm RAM (Memory Sanitization)**: Tự động ghi đè (`0x00...`) và hủy biến khóa riêng ngay sau khi hoàn tất ký số EIP-191.
 
 ### 3. Phân Hệ Giảng Viên (Faculty & Verifier Portal - `/faculty`)
-- **Giao Diện Thẩm Mỹ Cao Cấp (Kalo Dark & Neon Lime Aesthetic)**: Thiết kế chuẩn Mobile-first theo ngôn ngữ Dark OLED hiện đại kết hợp điểm nhấn màu Lime neon (`#d4f938`) và ngọn lửa hổ phách (`#f59e0b`).
-  - **Activity Bar Chart**: Biểu đồ cột 7 ngày trong tuần trực quan theo dõi lượng điểm danh/xác thực với ngày cao điểm nổi bật.
-  - **Geo-fencing Accuracy Trend**: Biểu đồ đường cong uốn lượn sắc nét biểu diễn khoảng cách và độ chính xác định vị.
-  - **Streak & Daily Goal Cards**: Thẻ theo dõi chuỗi điểm danh kèm vòng lửa `🔥` và thanh tiến độ mục tiêu ngày.
-  - **Insights Analytics**: Thẻ phân tích nhanh gồm cơ cấu mạng kết nối (Donut chart), trung bình lượt xác thực và ngày hoạt động hiệu quả nhất (`⭐`).
-- **Dynamic Rotating QR Code (Xoay mã 15s)**: Cơ chế xoay mã QR tự động sau mỗi 15 giây kèm thanh đếm lùi trực quan, chống việc sinh viên chụp ảnh mã gửi ra ngoài phòng thi / lớp học.
-- **Geo-fencing & Campus Wi-Fi Subnet Check**: Tùy chọn kiểm tra tọa độ GPS sinh viên qua công thức Haversine hoặc ràng buộc mạng Wi-Fi nội bộ trường.
-- **Bảng điểm danh & khảo thí thời gian thực**: Thống kê danh sách sinh viên đã đối soát on-chain kèm khoảng cách GPS và trạng thái mạng kết nối.
+- **Giao Diện Thẩm Mỹ Cao Cấp (Deep Blue-Navy Glassmorphism Aesthetic)**: Thiết kế chuẩn Mobile-first theo ngôn ngữ Dark Glassmorphism hiện đại kết hợp điểm nhấn màu xanh Cyan (`#38bdf8`) và gradient xanh biển.
+  - **Dynamic Rotating QR Code (Xoay mã 15s)**: Cơ chế xoay mã QR tự động sau mỗi 15 giây kèm thanh đếm lùi trực quan, chống việc sinh viên chụp ảnh mã gửi ra ngoài phòng thi / lớp học.
+  - **Fullscreen Projector Mode**: Nút phóng to mã QR toàn màn hình overlay sắc nét trên máy chiếu giảng đường lớn.
+  - **Geo-fencing & Campus Wi-Fi Subnet Check**: Tùy chọn kiểm tra tọa độ GPS sinh viên qua công thức Haversine hoặc ràng buộc mạng Wi-Fi nội bộ trường (Dual-Factor Campus Network Guard).
+  - **Phát hiện GPS giả mạo (Anti-Mock GPS & Sensor Anomaly Detection)**: Tự động đối soát sai số GPS (`accuracy === 0`), cao độ giả định và kiểm tra tốc độ tức thời ($v > 25\text{ m/s}$) để ngăn chặn hành vi gian lận toạ độ.
+  - **Bảng điểm danh & khảo thí thời gian thực**: Thống kê danh sách sinh viên đã đối soát on-chain kèm khoảng cách GPS và trạng thái mạng kết nối.
 
 ### 4. Phân Hệ Quản Trị Viên (Admin & Issuer Portal - `/admin`)
 - **Cấp phát VC hàng loạt qua Merkle Tree (Batch VC Issuance)**: Nhập danh sách sinh viên theo lô (JSON Batch), hệ thống tự động tính toán **Merkle Tree Root** (`keccak256`) và ký số lô tập trung bằng ví Root Issuer của trường, giúp tiết kiệm chi phí và tăng tốc độ cấp phát chứng chỉ số quy mô lớn.
+- **Bảng Điều Khiển Giám Sát An Ninh (Navy Dark Dashboard)**: Lưới 4 ô thống kê: *Tổng DID*, *Đang hoạt động*, *Đã thu hồi*, *IDS Cảnh báo*.
 - **Hệ thống Giám sát An ninh & Cảnh báo Dị thường (IDS Alerts)**:
   - **Brute-force Challenge**: Phát hiện và chặn các nguồn thử sai chữ ký liên tiếp $\ge 3$ lần.
   - **Impossible Travel**: Phát hiện hành vi quét QR từ 2 vị trí địa lý cách nhau quá xa trong khoảng thời gian ngắn (ví dụ: > 100km trong < 15 phút).
@@ -61,6 +61,8 @@ Bộ kịch bản kiểm thử tấn công tự động (`backend/test-attacks.j
 ```text
 UTH-TrustID/
 ├── backend/                      # Máy chủ Node.js / Express & Socket.io
+│   ├── middlewares/
+│   │   └── networkGuard.js       # Dual-Factor Campus Network Guard (UTH Wi-Fi Subnet)
 │   ├── server.js                 # API Challenge, Verify, Merkle Batch, IDS Alerts, Self-Revoke
 │   ├── test-attacks.js           # Kịch bản kiểm thử tấn công tự động TC-01, TC-02, TC-03
 │   └── package.json
@@ -74,14 +76,18 @@ UTH-TrustID/
 │   │   ├── StudentWallet.jsx     # Ví DID Mobile PWA: WebAuthn, Selective Disclosure, Self-Revoke
 │   │   └── WebPortal.jsx         # Wrapper Cổng dịch vụ
 │   ├── pages/
-│   │   ├── AdminDashboard.jsx    # Dashboard Quản trị viên & Issuer
+│   │   ├── AdminDashboard.jsx    # Dashboard Quản trị viên & Merkle Tree Batch VC
 │   │   └── FacultyPortal.jsx     # Cổng Giảng viên: Rotating QR 15s, Geo-fencing & Subnet
 │   ├── contracts/
 │   │   └── DIDRegistry.sol       # Smart Contract Registry trên Polygon Amoy Testnet
 │   ├── services/
-│   │   └── did.js                # Core Mật mã: AES-GCM, PBKDF2, WebAuthn, W3C DID, Polygon RPC
+│   │   ├── did.js                # Core Mật mã: AES-GCM, PBKDF2, WebAuthn, W3C DID, Polygon RPC
+│   │   └── merkleTree.js         # Thuật toán sinh cây Merkle & Merkle Proof
+│   ├── utils/
+│   │   └── antiSpoofGps.js       # Thuật toán phát hiện bất thường GPS (Accuracy, Teleport)
 │   ├── App.jsx                   # Định tuyến Router: /wallet, /faculty, /admin, /portal
-│   ├── index.css                 # Giao diện Tailwind CSS v4 & Vùng an toàn iOS/Android
+│   ├── index.css                 # Giao diện Deep Blue-Navy Glassmorphism & Vùng an toàn iOS/Android
+│   ├── admin.css                 # Thiết kế hệ thống quản trị an ninh
 │   └── main.jsx
 ├── index.html                    # PWA Standalone configuration
 ├── vite.config.js                # Vite PWA, SSL Proxy, API Rewrite
