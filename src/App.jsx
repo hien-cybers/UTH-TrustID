@@ -34,14 +34,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-white">
-        {/* Top Navbar: Brand & Route Navigation */}
-        <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 py-2.5">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
+        {/* Top Navbar: Brand & Route Navigation with Safe Area Insets */}
+        <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 sm:px-6 pt-[calc(0.5rem+env(safe-area-inset-top,0px))] pb-2 shadow-lg">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-2 sm:gap-3">
             {/* Brand Logo & Chain Status */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
+              <div className="flex items-center space-x-2">
                 <div className="bg-cyan-500/10 p-1.5 rounded-xl border border-cyan-500/20 text-cyan-400">
-                  <ShieldCheck size={22} />
+                  <ShieldCheck size={20} className="sm:w-[22px] sm:h-[22px]" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-1.5">
@@ -52,7 +52,7 @@ export default function App() {
                       W3C DID
                     </span>
                   </div>
-                  <div className="flex items-center space-x-1.5 text-[10px] text-slate-400">
+                  <div className="flex items-center space-x-1.5 text-[9px] sm:text-[10px] text-slate-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>Polygon Amoy:</span>
                     <span className="font-mono text-slate-300">
@@ -63,61 +63,61 @@ export default function App() {
               </div>
             </div>
 
-            {/* Role-based Navigation Tabs (Responsive flex wrap / scroll) */}
-            <nav className="flex items-center space-x-1.5 overflow-x-auto py-0.5 no-scrollbar text-xs">
+            {/* Role-based Navigation Tabs (Horizontal smooth swipe on mobile) */}
+            <nav className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 -mx-1 px-1 text-xs">
               <NavLink
                 to="/wallet"
                 className={({ isActive }) =>
-                  `flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border transition whitespace-nowrap ${
+                  `flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition whitespace-nowrap flex-shrink-0 active:scale-95 ${
                     isActive
-                      ? 'bg-cyan-600 text-white border-cyan-500 font-medium shadow-md shadow-cyan-950/40'
-                      : 'bg-slate-950/60 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-cyan-600 text-white border-cyan-500 shadow-md shadow-cyan-950/40'
+                      : 'bg-slate-950/70 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800/80'
                   }`
                 }
               >
-                <Smartphone size={14} />
+                <Smartphone size={13} />
                 <span>Ví Sinh Viên</span>
               </NavLink>
 
               <NavLink
                 to="/portal"
                 className={({ isActive }) =>
-                  `flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border transition whitespace-nowrap ${
+                  `flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition whitespace-nowrap flex-shrink-0 active:scale-95 ${
                     isActive
-                      ? 'bg-cyan-600 text-white border-cyan-500 font-medium shadow-md shadow-cyan-950/40'
-                      : 'bg-slate-950/60 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-cyan-600 text-white border-cyan-500 shadow-md shadow-cyan-950/40'
+                      : 'bg-slate-950/70 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800/80'
                   }`
                 }
               >
-                <Monitor size={14} />
+                <Monitor size={13} />
                 <span>Cổng Đăng Nhập</span>
               </NavLink>
 
               <NavLink
                 to="/faculty"
                 className={({ isActive }) =>
-                  `flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border transition whitespace-nowrap ${
+                  `flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition whitespace-nowrap flex-shrink-0 active:scale-95 ${
                     isActive
-                      ? 'bg-cyan-600 text-white border-cyan-500 font-medium shadow-md shadow-cyan-950/40'
-                      : 'bg-slate-950/60 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-cyan-600 text-white border-cyan-500 shadow-md shadow-cyan-950/40'
+                      : 'bg-slate-950/70 text-slate-300 border-slate-800 hover:text-white hover:bg-slate-800/80'
                   }`
                 }
               >
-                <GraduationCap size={14} />
+                <GraduationCap size={13} />
                 <span>Cổng Giảng Viên</span>
               </NavLink>
 
               <NavLink
                 to="/admin"
                 className={({ isActive }) =>
-                  `flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border transition whitespace-nowrap ${
+                  `flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-medium transition whitespace-nowrap flex-shrink-0 active:scale-95 ${
                     isActive
-                      ? 'bg-rose-600 text-white border-rose-500 font-medium shadow-md shadow-rose-950/40'
-                      : 'bg-slate-950/60 text-rose-300 border-rose-900/40 hover:text-white hover:bg-rose-950/30'
+                      ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-950/40'
+                      : 'bg-slate-950/70 text-rose-300 border-rose-900/40 hover:text-white hover:bg-rose-950/30'
                   }`
                 }
               >
-                <Lock size={14} />
+                <Lock size={13} />
                 <span>Quản Trị Viên</span>
               </NavLink>
             </nav>

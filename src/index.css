@@ -7,7 +7,12 @@
   --sar: env(safe-area-inset-right, 0px);
 }
 
-html, body {
+html {
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
   width: 100%;
   min-height: 100%;
   min-height: 100dvh;
@@ -17,10 +22,26 @@ html, body {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: #020617;
+  color: #f8fafc;
 }
 
-/* Custom smooth scrollbar for code blocks & logs */
+/* Enable smooth momentum scrolling on iOS WebKit and Android */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar utility for clean mobile swipe bars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom smooth scrollbar for code blocks & logs on desktop */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;

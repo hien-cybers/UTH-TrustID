@@ -49,13 +49,13 @@ export default function FacultyPortal() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6 text-slate-100 animate-in fade-in duration-300">
+    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 text-slate-100 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <div className="flex items-center space-x-2 text-cyan-400 mb-1">
-            <GraduationCap size={24} />
-            <h2 className="font-bold text-lg sm:text-xl text-slate-100">
+            <GraduationCap size={22} className="sm:w-6 sm:h-6" />
+            <h2 className="font-bold text-base sm:text-xl text-slate-100">
               Cổng Giảng Viên - Quản Lý Điểm Danh & Khảo Thí
             </h2>
           </div>
@@ -74,25 +74,25 @@ export default function FacultyPortal() {
       </div>
 
       {/* Main Grid: QR Presentation + Session Settings */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Left: QR Display for Projector / Classroom screen */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center text-center">
-          <div className="flex items-center space-x-2 text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-3 py-1 rounded-full mb-4">
-            <Radio size={14} className="animate-pulse" />
+        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col items-center text-center">
+          <div className="flex items-center space-x-2 text-[11px] sm:text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2.5 sm:px-3 py-1 rounded-full mb-3 sm:mb-4">
+            <Radio size={13} className="animate-pulse" />
             <span>Phiên đang mở - Sinh viên mở Ví DID để quét</span>
           </div>
 
-          <div className="p-4 bg-white rounded-3xl shadow-2xl transition transform hover:scale-[1.01] mb-4">
+          <div className="p-3 sm:p-4 bg-white rounded-2xl sm:rounded-3xl shadow-2xl transition transform hover:scale-[1.01] mb-3 sm:mb-4 flex items-center justify-center">
             <QRCodeSVG
               value={JSON.stringify(qrPayload)}
               size={230}
               level="M"
               includeMargin={false}
-              className="w-48 h-48 sm:w-56 sm:h-56"
+              className="w-44 h-44 sm:w-56 sm:h-56"
             />
           </div>
 
-          <div className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-xs font-mono space-y-1.5 text-left">
+          <div className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 sm:p-3 text-[11px] sm:text-xs font-mono space-y-1.5 text-left">
             <div className="flex justify-between items-center">
               <span className="text-slate-500 font-sans">Mã phiên:</span>
               <span className="text-cyan-400 font-bold">{sessionId}</span>
@@ -111,21 +111,21 @@ export default function FacultyPortal() {
         </div>
 
         {/* Right: Session Info & Controls */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-            <h3 className="font-semibold text-sm text-slate-200 flex items-center space-x-2 border-b border-slate-800 pb-3">
+        <div className="lg:col-span-5 space-y-3.5 sm:space-y-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3 sm:space-y-4">
+            <h3 className="font-semibold text-xs sm:text-sm text-slate-200 flex items-center space-x-2 border-b border-slate-800 pb-2.5 sm:pb-3">
               <BookOpen size={16} className="text-cyan-400" />
               <span>Thông tin Lớp học & Buổi thi</span>
             </h3>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-2.5 sm:space-y-3 text-xs">
               <div>
                 <label className="text-slate-400 block mb-1 font-medium">Tên học phần / Lớp tín chỉ:</label>
                 <input
                   type="text"
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 sm:p-2.5 text-slate-200 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -135,7 +135,7 @@ export default function FacultyPortal() {
                   type="text"
                   value={room}
                   onChange={(e) => setRoom(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 sm:p-2.5 text-slate-200 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -168,20 +168,20 @@ export default function FacultyPortal() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
-              <span className="text-[11px] text-slate-400 block mb-0.5">Sinh viên có mặt</span>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="bg-slate-900 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
+              <span className="text-[10px] sm:text-[11px] text-slate-400 block mb-0.5">Sinh viên có mặt</span>
               <div className="flex items-center space-x-2">
-                <Users size={16} className="text-cyan-400" />
-                <span className="text-xl font-bold text-slate-100">{attendees.length}</span>
+                <Users size={15} className="text-cyan-400" />
+                <span className="text-lg sm:text-xl font-bold text-slate-100">{attendees.length}</span>
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
-              <span className="text-[11px] text-slate-400 block mb-0.5">Xác thực On-chain</span>
+            <div className="bg-slate-900 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
+              <span className="text-[10px] sm:text-[11px] text-slate-400 block mb-0.5">Xác thực On-chain</span>
               <div className="flex items-center space-x-2">
-                <ShieldCheck size={16} className="text-emerald-400" />
-                <span className="text-xl font-bold text-emerald-400">100%</span>
+                <ShieldCheck size={15} className="text-emerald-400" />
+                <span className="text-lg sm:text-xl font-bold text-emerald-400">100%</span>
               </div>
             </div>
           </div>
@@ -189,24 +189,24 @@ export default function FacultyPortal() {
       </div>
 
       {/* Attendee List Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm text-slate-200 flex items-center space-x-2">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 className="font-semibold text-xs sm:text-sm text-slate-200 flex items-center space-x-2">
             <CheckCircle2 size={16} className="text-emerald-400" />
             <span>Danh Sách Sinh Viên Đã Quét Thẻ ({attendees.length})</span>
           </h3>
 
           <button
             onClick={() => alert('Đã xuất báo cáo điểm danh file .xlsx thành công!')}
-            className="flex items-center space-x-1.5 text-xs text-slate-400 hover:text-cyan-300 transition"
+            className="flex items-center space-x-1 text-xs text-slate-400 hover:text-cyan-300 transition"
           >
-            <Download size={14} />
+            <Download size={13} />
             <span>Xuất Excel</span>
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[500px] text-left text-xs border-collapse font-mono">
+        <div className="overflow-x-auto -mx-2 sm:mx-0">
+          <table className="w-full min-w-[480px] text-left text-xs border-collapse font-mono">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 text-[11px] font-sans">
                 <th className="pb-2 px-2">MSSV</th>
@@ -237,3 +237,4 @@ export default function FacultyPortal() {
     </div>
   );
 }
+

@@ -272,7 +272,7 @@ export default function StudentWallet() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center">
+    <div className={`w-full max-w-md mx-auto flex flex-col items-center ${identity ? 'pb-24 sm:pb-28' : 'pb-6'}`}>
       {!identity ? (
         // MÀN HÌNH KHI CHƯA CÓ DANH TÍNH
         <div className="flex-1 w-full flex flex-col justify-center items-center text-center px-2 py-6 sm:py-8">
@@ -792,3 +792,4 @@ export default function StudentWallet() {
     </div>
   );
 }
+
