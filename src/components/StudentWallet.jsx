@@ -576,34 +576,43 @@ export default function StudentWallet() {
         </div>
       ) : (
         <div className="w-full space-y-3 sm:space-y-3.5">
-          {/* Top Segmented Sub-Tab Switcher: Ví DID | Chứng Chỉ VC | Nhật Ký Audit Log */}
+          {/* Top Segmented Sub-Tab Switcher: Thẻ DID | Chứng Chỉ VC | Bảo Mật & Khóa | Audit Log */}
           <div className="w-full flex items-center p-1 bg-slate-900/90 border border-slate-800 rounded-xl mb-1 backdrop-blur-md">
             <button
               onClick={() => setActiveSubTab('wallet')}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition ${
+              className={`flex-1 flex items-center justify-center space-x-1 py-2 px-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition ${
                 activeSubTab === 'wallet' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Key size={14} />
-              <span>Ví DID</span>
+              <Key size={13} />
+              <span>Thẻ DID</span>
             </button>
             <button
               onClick={() => setActiveSubTab('credentials')}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition ${
+              className={`flex-1 flex items-center justify-center space-x-1 py-2 px-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition ${
                 activeSubTab === 'credentials' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Award size={14} />
-              <span>Chứng chỉ VC</span>
+              <Award size={13} />
+              <span>Chứng chỉ</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('security')}
+              className={`flex-1 flex items-center justify-center space-x-1 py-2 px-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition ${
+                activeSubTab === 'security' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ShieldCheck size={13} />
+              <span>Bảo mật</span>
             </button>
             <button
               onClick={() => setActiveSubTab('logs')}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition ${
+              className={`flex-1 flex items-center justify-center space-x-1 py-2 px-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition ${
                 activeSubTab === 'logs' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <History size={14} />
-              <span>Audit Log</span>
+              <History size={13} />
+              <span>Nhật ký</span>
             </button>
           </div>
 
@@ -698,69 +707,186 @@ export default function StudentWallet() {
                 </button>
               </div>
 
-              {/* Các nút hành động chính */}
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                <button
-                  onClick={handleScanClick}
-                  disabled={isRevoked}
-                  className={`border p-3 sm:p-4 rounded-xl flex flex-col items-center justify-center space-y-1.5 sm:space-y-2 transition ${isRevoked
-                      ? 'opacity-40 bg-slate-900 border-slate-800 cursor-not-allowed'
-                      : 'bg-slate-900 hover:bg-slate-800 border-slate-800 active:scale-[0.98]'
-                    }`}
-                >
-                  <div className="p-2 sm:p-2.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
-                    <QrCode size={20} />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-semibold text-center leading-tight">Quét mã đăng nhập</span>
-                </button>
-
-                <button
-                  onClick={() => openProtectedAction('mnemonic')}
-                  className="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 sm:p-4 rounded-xl flex flex-col items-center justify-center space-y-1.5 sm:space-y-2 transition active:scale-[0.98]"
-                >
-                  <div className="p-2 sm:p-2.5 bg-purple-500/10 text-purple-400 rounded-lg">
-                    <Lock size={20} />
-                  </div>
-                  <span className="text-[11px] sm:text-xs font-semibold text-center leading-tight">Sao lưu 12 từ khóa</span>
-                </button>
-              </div>
-
-              {/* Hàng nút bảo mật phụ */}
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                <button
-                  onClick={() => openProtectedAction('key')}
-                  className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 p-2 sm:p-2.5 rounded-xl flex items-center justify-center space-x-1 text-[10px] sm:text-xs text-slate-300 transition"
-                >
-                  <Fingerprint size={14} className="text-cyan-400 flex-shrink-0" />
-                  <span className="truncate">{copiedKey ? 'Đã sao chép Key' : 'Trích xuất Private Key'}</span>
-                </button>
-
-                <a
-                  href={`${NETWORK_CONFIG.explorerUrl}/address/${NETWORK_CONFIG.contractAddress}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 p-2 sm:p-2.5 rounded-xl flex items-center justify-center space-x-1 text-[10px] sm:text-xs text-slate-300 transition"
-                >
-                  <ExternalLink size={13} className="text-purple-400 flex-shrink-0" />
-                  <span className="truncate">Smart Contract Amoy</span>
-                </a>
-              </div>
+              {/* HÀNH ĐỘNG CHÍNH: QUÉT MÃ ĐIỂM DANH */}
+              <button
+                onClick={handleScanClick}
+                disabled={isRevoked}
+                className={`w-full p-3.5 sm:p-4 rounded-2xl flex items-center justify-center space-x-3 transition shadow-xl ${isRevoked
+                    ? 'opacity-40 bg-slate-900 border border-slate-800 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-sky-600 to-cyan-500 hover:from-sky-500 hover:to-cyan-400 text-white font-bold active:scale-[0.99] shadow-cyan-900/30'
+                  }`}
+              >
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <QrCode size={22} />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-bold">Quét Mã QR Điểm Danh / Đăng Nhập</div>
+                  <div className="text-[11px] text-white/80 font-normal">Ký số EIP-191 & Ràng buộc dấu vân tay phần cứng</div>
+                </div>
+              </button>
 
               {/* Nút Tạo QR Điểm Danh Ngoại Tuyến */}
               <button
                 onClick={handleGenerateOfflineQr}
-                className="w-full bg-slate-900/80 hover:bg-slate-800 border border-cyan-500/30 p-2.5 rounded-xl flex items-center justify-center space-x-2 text-xs text-cyan-300 font-semibold transition"
+                className="w-full bg-slate-900/80 hover:bg-slate-800 border border-cyan-500/30 p-2.5 sm:p-3 rounded-xl flex items-center justify-center space-x-2 text-xs text-cyan-300 font-semibold transition"
               >
                 <Award size={15} className="text-cyan-400" />
                 <span>🎟️ Tạo Mã Điểm Danh Ngoại Tuyến (Tầng hầm B1)</span>
               </button>
 
-              {/* Emergency Recovery Token Section */}
+              {/* Kết quả ký số gần nhất */}
+              {authResult && (
+                <div className="bg-emerald-950/30 border border-emerald-800/50 rounded-2xl p-4 space-y-2 animate-in fade-in">
+                  <div className="flex justify-between items-center text-emerald-400 text-xs font-semibold">
+                    <div className="flex items-center space-x-1.5">
+                      <CheckCircle2 size={16} />
+                      <span>Ký số EIP-191 thành công ({authResult.time})</span>
+                    </div>
+                    <button onClick={() => setAuthResult(null)}>
+                      <X size={15} />
+                    </button>
+                  </div>
+                  <div className="text-[11px] font-mono text-slate-300 break-all bg-slate-950/80 p-2.5 rounded-lg border border-slate-800 space-y-1">
+                    <div><strong className="text-slate-500">Service:</strong> {authResult.serviceName} ({authResult.domain})</div>
+                    <div className="text-[10px] text-emerald-400 max-h-16 overflow-y-auto">{authResult.signature}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: VÍ CHỨNG CHỈ SỐ (VERIFIABLE CREDENTIALS) */}
+          {activeSubTab === 'credentials' && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center mb-1">
+                <h3 className="text-sm font-semibold text-slate-200">Chứng chỉ đã lưu ({credentials.length})</h3>
+                <span className="text-[11px] text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/30">
+                  W3C VC Spec
+                </span>
+              </div>
+
+              {/* Chế độ xuất trình có chọn lọc (Selective Disclosure) */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-2">
                 <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    {selectiveDisclosure ? <EyeOff size={16} className="text-cyan-400" /> : <Eye size={16} className="text-slate-400" />}
+                    <span className="text-xs font-semibold text-slate-200">Xuất trình có chọn lọc (Privacy Mode)</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectiveDisclosure(!selectiveDisclosure)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${selectiveDisclosure ? 'bg-cyan-600' : 'bg-slate-700'}`}
+                  >
+                    <span
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${selectiveDisclosure ? 'translate-x-4' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Khi bật, bạn có thể che giấu ngày sinh, lớp học hoặc GPA khi xuất trình thẻ cho bên thứ ba nhằm bảo vệ quyền riêng tư.
+                </p>
+              </div>
+
+              {/* Danh sách thẻ/chứng chỉ */}
+              <div className="space-y-3">
+                {credentials.map((vc) => (
+                  <div
+                    key={vc.id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg relative overflow-hidden"
+                  >
+                    <div className="flex justify-between items-start border-b border-slate-800 pb-2.5">
+                      <div>
+                        <span className="text-[10px] text-cyan-400 font-mono uppercase bg-cyan-950/60 px-1.5 py-0.5 rounded">
+                          {vc.type[1] || 'VerifiableCredential'}
+                        </span>
+                        <h4 className="text-sm font-bold text-white mt-1">{vc.name}</h4>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-semibold flex items-center space-x-1 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
+                        <CheckCircle size={10} />
+                        <span>Hợp lệ</span>
+                      </span>
+                    </div>
+
+                    {/* Thuộc tính chứng chỉ */}
+                    <div className="bg-slate-950/60 rounded-xl p-3 text-xs space-y-1.5 border border-slate-800/60 font-mono">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-sans">Sinh viên:</span>
+                        <span className="font-semibold text-slate-200">{vc.credentialSubject.fullName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-sans">MSSV:</span>
+                        <span className="text-cyan-300">{vc.credentialSubject.studentId}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-sans">Ngành:</span>
+                        <span className="text-slate-300">{vc.credentialSubject.major}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-sans">Trạng thái:</span>
+                        <span className="text-emerald-400 font-semibold">{vc.credentialSubject.status}</span>
+                      </div>
+                      {vc.credentialSubject.attendanceRate && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 font-sans">Chuyên cần:</span>
+                          <span className="text-emerald-400 font-bold">{vc.credentialSubject.attendanceRate}%</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 pt-1">
+                      <span>Cấp bởi: {vc.issuer.name}</span>
+                      <span className="truncate max-w-[150px] font-mono">{vc.issuerSignature.slice(0, 16)}...</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: BẢO MẬT & KHÔI PHỤC (SECURITY & RECOVERY) */}
+          {activeSubTab === 'security' && (
+            <div className="w-full space-y-3.5 sm:space-y-4">
+              {/* Card Sao lưu khóa mật mã */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg">
+                <div className="flex items-center space-x-2 text-cyan-400 font-bold text-xs">
+                  <Key size={15} />
+                  <span>Sao Lưu & Quản Trị Khóa Mật Mã</span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Bảo vệ 12 từ khóa hạt giống (BIP-39) và khóa ECDSA secp256k1. Cần xác thực mã PIN bảo vệ để mở.
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    onClick={() => openProtectedAction('mnemonic')}
+                    className="bg-slate-950 hover:bg-slate-800 border border-purple-500/30 p-2.5 rounded-xl flex items-center justify-center space-x-1.5 text-xs text-purple-300 font-semibold transition"
+                  >
+                    <Lock size={14} className="text-purple-400" />
+                    <span>12 Từ Khóa</span>
+                  </button>
+                  <button
+                    onClick={() => openProtectedAction('key')}
+                    className="bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 p-2.5 rounded-xl flex items-center justify-center space-x-1.5 text-xs text-cyan-300 font-semibold transition"
+                  >
+                    <Fingerprint size={14} className="text-cyan-400" />
+                    <span>Private Key</span>
+                  </button>
+                </div>
+                <a
+                  href={`${NETWORK_CONFIG.explorerUrl}/address/${NETWORK_CONFIG.contractAddress}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full bg-slate-950/80 hover:bg-slate-800 border border-slate-800 p-2 rounded-xl flex items-center justify-center space-x-1.5 text-[11px] text-slate-300 transition"
+                >
+                  <ExternalLink size={13} className="text-purple-400 flex-shrink-0" />
+                  <span>Tra Cứu Smart Contract Trên Polygonscan</span>
+                </a>
+              </div>
+
+              {/* Emergency Recovery Token Section */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-2.5 shadow-lg">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1.5 text-amber-400 text-xs font-semibold">
-                    <ShieldAlert size={14} />
-                    <span>Mã thu hồi khẩn cấp (Emergency Token)</span>
+                    <ShieldAlert size={15} />
+                    <span>Mã Thu Hồi Khẩn Cấp (Emergency Token)</span>
                   </div>
                   <button
                     onClick={() => copyToClipboard(identity.emergencyToken || 'EMERGENCY_UTH_' + identity.address.slice(2, 10).toUpperCase(), 'emergency')}
@@ -770,10 +896,10 @@ export default function StudentWallet() {
                     <span>{copiedEmergency ? 'Đã sao chép' : 'Sao chép'}</span>
                   </button>
                 </div>
-                <p className="text-[10px] text-slate-400 leading-relaxed">
-                  Lưu trữ mã này riêng biệt. Khi mất điện thoại, dùng mã này để thu hồi danh tính từ xa nhằm bảo vệ tài khoản:
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Lưu trữ mã này riêng biệt ngoài điện thoại. Khi mất máy, nhập mã này tại cổng Web để khóa danh tính từ xa:
                 </p>
-                <div className="bg-slate-950 p-2 rounded-lg font-mono text-[11px] text-amber-300 select-all break-all border border-slate-800">
+                <div className="bg-slate-950 p-2.5 rounded-lg font-mono text-[11px] text-amber-300 select-all break-all border border-slate-800">
                   {identity.emergencyToken || 'EMERGENCY_UTH_' + identity.address.slice(2, 10).toUpperCase()}
                 </div>
                 <button
@@ -783,25 +909,25 @@ export default function StudentWallet() {
                     setSelfRevokeToken(identity.emergencyToken || '');
                     setShowSelfRevokeModal(true);
                   }}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg text-[11px] font-medium transition text-center"
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 px-3 rounded-xl text-xs font-medium transition text-center"
                 >
                   Kích hoạt thu hồi từ xa ngay (Self-Revocation)
                 </button>
               </div>
 
               {/* Anti-Tamper & Self-Destruct Status */}
-              <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-lg">
                 <div className="flex items-center space-x-2">
-                  <Flame size={15} className="text-rose-400 flex-shrink-0" />
+                  <Flame size={16} className="text-rose-400 flex-shrink-0" />
                   <div>
                     <div className="text-xs font-semibold text-rose-300">Tự Hủy Chống Dò Khóa (Anti-Tamper)</div>
-                    <div className="text-[10px] text-slate-400">Tự động xóa sạch khóa & thu hồi on-chain sau 5 lần sai mã PIN</div>
+                    <div className="text-[10.5px] text-slate-400">Tự động xóa sạch khóa & thu hồi on-chain sau 5 lần sai mã PIN</div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => triggerTamperSelfDestruct('SIMULATED_TEST')}
-                  className="text-[10px] bg-rose-950/60 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 px-2.5 py-1 rounded-lg transition flex-shrink-0"
+                  className="text-[10px] bg-rose-950/60 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 px-2.5 py-1.5 rounded-lg transition flex-shrink-0"
                   title="Thử nghiệm cơ chế tự hủy"
                 >
                   Test Tự Hủy
@@ -831,29 +957,8 @@ export default function StudentWallet() {
                   </button>
                 </div>
               )}
-
-              {/* Kết quả ký số gần nhất */}
-              {authResult && (
-                <div className="bg-emerald-950/30 border border-emerald-800/50 rounded-2xl p-4 space-y-2 animate-in fade-in">
-                  <div className="flex justify-between items-center text-emerald-400 text-xs font-semibold">
-                    <div className="flex items-center space-x-1.5">
-                      <CheckCircle2 size={16} />
-                      <span>Ký số EIP-191 thành công ({authResult.time})</span>
-                    </div>
-                    <button onClick={() => setAuthResult(null)}>
-                      <X size={15} />
-                    </button>
-                  </div>
-                  <div className="text-[11px] font-mono text-slate-300 break-all bg-slate-950/80 p-2.5 rounded-lg border border-slate-800 space-y-1">
-                    <div><strong className="text-slate-500">Service:</strong> {authResult.serviceName} ({authResult.domain})</div>
-                    <div className="text-[10px] text-emerald-400 max-h-16 overflow-y-auto">{authResult.signature}</div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
-
-          {/* TAB 2: VÍ CHỨNG CHỈ SỐ (VERIFIABLE CREDENTIALS) */}
           {activeSubTab === 'credentials' && (
             <div className="space-y-3">
               <div className="flex justify-between items-center mb-1">

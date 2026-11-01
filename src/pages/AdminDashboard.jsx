@@ -11,6 +11,7 @@ export default function AdminDashboard() {
     idsAlerts: 1
   });
 
+  const [activeTab, setActiveTab] = useState('issuance'); // 'issuance' | 'lifecycle' | 'security'
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [merkleResult, setMerkleResult] = useState(null);
   const [proofVerifiedMap, setProofVerifiedMap] = useState({});
@@ -392,12 +393,106 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 3. BỐ CỤC 2 CỘT RESPONSIVE (1 cột trên mobile, 2 cột cân đối trên máy tính/web) */}
-      <div className="responsive-dashboard-grid">
-        
-        {/* === CỘT TRÁI === */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
+      {/* 2. TAB PHÂN CHIA QUY TRÌNH QUẢN TRỊ VIÊN */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        marginBottom: '14px',
+        background: '#0b1329',
+        padding: '4px',
+        borderRadius: '12px',
+        border: '1px solid rgba(255,255,255,0.08)'
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('issuance')}
+          style={{
+            flex: 1,
+            padding: '8px 6px',
+            borderRadius: '9px',
+            border: activeTab === 'issuance' ? '1px solid #00f2fe' : 'none',
+            background: activeTab === 'issuance' ? 'rgba(0, 242, 254, 0.15)' : 'transparent',
+            color: activeTab === 'issuance' ? '#00f2fe' : '#8492a6',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>🥞</span>
+          <span>Cấp Thẻ & VC</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('lifecycle')}
+          style={{
+            flex: 1,
+            padding: '8px 6px',
+            borderRadius: '9px',
+            border: activeTab === 'lifecycle' ? '1px solid #ff5252' : 'none',
+            background: activeTab === 'lifecycle' ? 'rgba(255, 82, 82, 0.15)' : 'transparent',
+            color: activeTab === 'lifecycle' ? '#ff5252' : '#8492a6',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>🔒</span>
+          <span>Vòng Đời & Thu Hồi</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('security')}
+          style={{
+            flex: 1,
+            padding: '8px 6px',
+            borderRadius: '9px',
+            border: activeTab === 'security' ? '1px solid #ffab00' : 'none',
+            background: activeTab === 'security' ? 'rgba(255, 171, 0, 0.15)' : 'transparent',
+            color: activeTab === 'security' ? '#ffab00' : '#8492a6',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>🛡️</span>
+          <span>An Ninh & NCKH</span>
+          {stats.idsAlerts > 0 && (
+            <span style={{
+              background: '#ff5252',
+              color: '#fff',
+              fontSize: '10px',
+              padding: '1px 5px',
+              borderRadius: '10px',
+              fontWeight: 800
+            }}>
+              {stats.idsAlerts}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* 3. NỘI DUNG TỪNG PHÂN HỆ QUẢN TRỊ */}
+
+      {/* === TAB 1: CẤP PHÁT THẺ & VC (ISSUANCE) === */}
+      {activeTab === 'issuance' && (
+        <div className="responsive-dashboard-grid">
           {/* A. CẤP PHÁT CHỨNG CHỈ SỐ THEO LÔ (MERKLE TREE) */}
           <div className="navy-card">
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
@@ -498,6 +593,100 @@ export default function AdminDashboard() {
             )}
           </div>
 
+          {/* D. CHỨNG CHỈ ĐỦ ĐIỀU KIỆN DỰ THI (EXAM ELIGIBILITY VC) */}
+          <div className="navy-card">
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <span style={{ color: '#38bdf8', fontSize: '16px', marginTop: '1px' }}>🎓</span>
+              <div>
+                <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>
+                  Chứng Chỉ Đủ Điều Kiện Dự Thi (Exam Eligibility VC)
+                </h3>
+                <p style={{ margin: 0, fontSize: '11px', color: '#8492a6', lineHeight: '1.45' }}>
+                  Ký phát hành chứng chỉ số W3C VC cho sinh viên có tỷ lệ chuyên cần &ge; 80%, gắn thẻ vào hồ sơ thi chính thức
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+              <div>
+                <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Mã số sinh viên (MSSV):</label>
+                <input
+                  type="text"
+                  value={examStudentId}
+                  onChange={(e) => setExamStudentId(e.target.value)}
+                  style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px', fontFamily: 'JetBrains Mono' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Học phần dự thi:</label>
+                <input
+                  type="text"
+                  value={examCourseId}
+                  onChange={(e) => setExamCourseId(e.target.value)}
+                  style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+                />
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <label style={{ fontSize: '11px', color: '#8492a6' }}>Tỷ lệ điểm danh tích lũy:</label>
+                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: examAttendanceRate >= 80 ? '#00e676' : '#ff5252' }}>
+                    {examAttendanceRate}% {examAttendanceRate >= 80 ? '(Đủ điều kiện)' : '(Không đủ điều kiện)'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  value={examAttendanceRate}
+                  onChange={(e) => setExamAttendanceRate(e.target.value)}
+                  style={{ width: '100%', accentColor: '#00f2fe' }}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleIssueExamVC}
+              disabled={isIssuingExamVC || examAttendanceRate < 80}
+              style={{
+                width: '100%',
+                padding: '10px',
+                borderRadius: '8px',
+                border: 'none',
+                background: examAttendanceRate >= 80 ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' : '#202d4a',
+                color: examAttendanceRate >= 80 ? '#fff' : '#64748b',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: examAttendanceRate >= 80 ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {isIssuingExamVC ? 'Đang ký chứng chỉ số...' : '🎓 Ký & Phát Hành VC Đủ Điều Kiện Dự Thi'}
+            </button>
+
+            {examVCResult && (
+              <div style={{ marginTop: '10px', padding: '10px', background: '#060911', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.4)', fontSize: '11px' }}>
+                <div style={{ color: '#00e676', fontWeight: 700, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>✓ VC ISSUED & DIGITALLY SIGNED</span>
+                  <span>W3C Standard</span>
+                </div>
+                <div style={{ color: '#8492a6', fontFamily: 'JetBrains Mono', lineHeight: '1.5' }}>
+                  <div>MSSV: <strong style={{ color: '#fff' }}>{examVCResult.credentialSubject.studentId}</strong></div>
+                  <div>Học phần: <span style={{ color: '#38bdf8' }}>{examVCResult.credentialSubject.courseId}</span></div>
+                  <div>Chuyên cần: <strong style={{ color: '#00e676' }}>{examVCResult.credentialSubject.attendanceRate}%</strong></div>
+                  <div>Trạng thái: <span style={{ color: '#00f2fe' }}>{examVCResult.credentialSubject.status}</span></div>
+                  <div style={{ wordBreak: 'break-all', marginTop: '3px' }}>Issuer Sig: <span style={{ color: '#64748b' }}>{examVCResult.proof.signature.slice(0, 32)}...</span></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* === TAB 2: VÒNG ĐỜI & THU HỒI (LIFECYCLE) === */}
+      {activeTab === 'lifecycle' && (
+        <div className="responsive-dashboard-grid">
           {/* B. QUẢN LÝ VÒNG ĐỜI THẺ SỐ: THU HỒI & MỞ KHÓA ON-CHAIN (REVOCATION REGISTRY) */}
           <div className="navy-card">
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
@@ -676,99 +865,65 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-
         </div>
+      )}
 
-        {/* === CỘT PHẢI === */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
-          {/* D. CHỨNG CHỈ ĐỦ ĐIỀU KIỆN DỰ THI (EXAM ELIGIBILITY VC) */}
+      {/* === TAB 3: AN NINH & NCKH (SECURITY) === */}
+      {activeTab === 'security' && (
+        <div className="responsive-dashboard-grid">
+          {/* F. KHỐI GIÁM SÁT AN NINH & CẢNH BÁO IDS */}
           <div className="navy-card">
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
-              <span style={{ color: '#38bdf8', fontSize: '16px', marginTop: '1px' }}>🎓</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
               <div>
-                <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>
-                  Chứng Chỉ Đủ Điều Kiện Dự Thi (Exam Eligibility VC)
+                <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 2px', color: '#fff' }}>
+                  🔥 Nhật Ký Xâm Nhập & Cảnh Báo IDS ({idsAlertsList.length})
                 </h3>
-                <p style={{ margin: 0, fontSize: '11px', color: '#8492a6', lineHeight: '1.45' }}>
-                  Ký phát hành chứng chỉ số W3C VC cho sinh viên có tỷ lệ chuyên cần &ge; 80%, gắn thẻ vào hồ sơ thi chính thức
+                <p style={{ margin: 0, fontSize: '11px', color: '#8492a6' }}>
+                  Phát hiện bất thường: Brute-force, Teleportation & Hardware Mismatch
                 </p>
               </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-              <div>
-                <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Mã số sinh viên (MSSV):</label>
-                <input
-                  type="text"
-                  value={examStudentId}
-                  onChange={(e) => setExamStudentId(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px', fontFamily: 'JetBrains Mono' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Học phần dự thi:</label>
-                <input
-                  type="text"
-                  value={examCourseId}
-                  onChange={(e) => setExamCourseId(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
-                />
-              </div>
-
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <label style={{ fontSize: '11px', color: '#8492a6' }}>Tỷ lệ điểm danh tích lũy:</label>
-                  <span style={{ fontSize: '11.5px', fontWeight: 700, color: examAttendanceRate >= 80 ? '#00e676' : '#ff5252' }}>
-                    {examAttendanceRate}% {examAttendanceRate >= 80 ? '(Đủ điều kiện)' : '(Không đủ điều kiện)'}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="50"
-                  max="100"
-                  value={examAttendanceRate}
-                  onChange={(e) => setExamAttendanceRate(e.target.value)}
-                  style={{ width: '100%', accentColor: '#00f2fe' }}
-                />
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  onClick={() => handleSimulateAttack('BRUTE_FORCE')}
+                  style={{ padding: '4px 6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #ff5252', background: 'rgba(255,82,82,0.1)', color: '#ff5252', cursor: 'pointer' }}
+                >
+                  + Brute-force
+                </button>
+                <button
+                  onClick={() => handleSimulateAttack('TELEPORT')}
+                  style={{ padding: '4px 6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #ffab00', background: 'rgba(255,171,0,0.1)', color: '#ffab00', cursor: 'pointer' }}
+                >
+                  + Teleport
+                </button>
               </div>
             </div>
 
-            <button
-              onClick={handleIssueExamVC}
-              disabled={isIssuingExamVC || examAttendanceRate < 80}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: examAttendanceRate >= 80 ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' : '#202d4a',
-                color: examAttendanceRate >= 80 ? '#fff' : '#64748b',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: examAttendanceRate >= 80 ? 'pointer' : 'not-allowed',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {isIssuingExamVC ? 'Đang ký chứng chỉ số...' : '🎓 Ký & Phát Hành VC Đủ Điều Kiện Dự Thi'}
-            </button>
-
-            {examVCResult && (
-              <div style={{ marginTop: '10px', padding: '10px', background: '#060911', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.4)', fontSize: '11px' }}>
-                <div style={{ color: '#00e676', fontWeight: 700, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>✓ VC ISSUED & DIGITALLY SIGNED</span>
-                  <span>W3C Standard</span>
+            <div style={{ maxHeight: '160px', overflowY: 'auto', marginTop: '6px' }}>
+              {idsAlertsList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '12px', color: '#8492a6', fontSize: '11px' }}>
+                  Hệ thống an toàn, không có cảnh báo xâm nhập.
                 </div>
-                <div style={{ color: '#8492a6', fontFamily: 'JetBrains Mono', lineHeight: '1.5' }}>
-                  <div>MSSV: <strong style={{ color: '#fff' }}>{examVCResult.credentialSubject.studentId}</strong></div>
-                  <div>Học phần: <span style={{ color: '#38bdf8' }}>{examVCResult.credentialSubject.courseId}</span></div>
-                  <div>Chuyên cần: <strong style={{ color: '#00e676' }}>{examVCResult.credentialSubject.attendanceRate}%</strong></div>
-                  <div>Trạng thái: <span style={{ color: '#00f2fe' }}>{examVCResult.credentialSubject.status}</span></div>
-                  <div style={{ wordBreak: 'break-all', marginTop: '3px' }}>Issuer Sig: <span style={{ color: '#64748b' }}>{examVCResult.proof.signature.slice(0, 32)}...</span></div>
-                </div>
-              </div>
-            )}
+              ) : (
+                idsAlertsList.map((al, idx) => (
+                  <div key={idx} style={{ padding: '8px', borderRadius: '6px', background: '#060911', border: '1px solid #162032', marginBottom: '5px', fontSize: '11px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                      <span style={{
+                        fontSize: '9.5px',
+                        fontWeight: 700,
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        background: al.severity === 'CRITICAL' ? 'rgba(255,82,82,0.2)' : 'rgba(255,171,0,0.2)',
+                        color: al.severity === 'CRITICAL' ? '#ff5252' : '#ffab00'
+                      }}>
+                        {al.type}
+                      </span>
+                      <span style={{ color: '#8492a6', fontSize: '10px' }}>{al.time}</span>
+                    </div>
+                    <div style={{ color: '#c0ccda', lineHeight: '1.4' }}>{al.detail}</div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* E. PHÂN HỆ ĐO LƯỜNG HIỆU NĂNG MẬT MÃ (NCKH BENCHMARK TOOL) */}
@@ -825,65 +980,8 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-
-          {/* F. KHỐI GIÁM SÁT AN NINH & CẢNH BÁO IDS */}
-          <div className="navy-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
-              <div>
-                <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 2px', color: '#fff' }}>
-                  🔥 Nhật Ký Xâm Nhập & Cảnh Báo IDS ({idsAlertsList.length})
-                </h3>
-                <p style={{ margin: 0, fontSize: '11px', color: '#8492a6' }}>
-                  Phát hiện bất thường: Brute-force, Teleportation & Hardware Mismatch
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button
-                  onClick={() => handleSimulateAttack('BRUTE_FORCE')}
-                  style={{ padding: '4px 6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #ff5252', background: 'rgba(255,82,82,0.1)', color: '#ff5252', cursor: 'pointer' }}
-                >
-                  + Brute-force
-                </button>
-                <button
-                  onClick={() => handleSimulateAttack('TELEPORT')}
-                  style={{ padding: '4px 6px', fontSize: '10px', borderRadius: '4px', border: '1px solid #ffab00', background: 'rgba(255,171,0,0.1)', color: '#ffab00', cursor: 'pointer' }}
-                >
-                  + Teleport
-                </button>
-              </div>
-            </div>
-
-            <div style={{ maxHeight: '160px', overflowY: 'auto', marginTop: '6px' }}>
-              {idsAlertsList.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '12px', color: '#8492a6', fontSize: '11px' }}>
-                  Hệ thống an toàn, không có cảnh báo xâm nhập.
-                </div>
-              ) : (
-                idsAlertsList.map((al, idx) => (
-                  <div key={idx} style={{ padding: '8px', borderRadius: '6px', background: '#060911', border: '1px solid #162032', marginBottom: '5px', fontSize: '11px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-                      <span style={{
-                        fontSize: '9.5px',
-                        fontWeight: 700,
-                        padding: '1px 5px',
-                        borderRadius: '3px',
-                        background: al.severity === 'CRITICAL' ? 'rgba(255,82,82,0.2)' : 'rgba(255,171,0,0.2)',
-                        color: al.severity === 'CRITICAL' ? '#ff5252' : '#ffab00'
-                      }}>
-                        {al.type}
-                      </span>
-                      <span style={{ color: '#8492a6', fontSize: '10px' }}>{al.time}</span>
-                    </div>
-                    <div style={{ color: '#c0ccda', lineHeight: '1.4' }}>{al.detail}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
         </div>
-
-      </div>
+      )}
 
     </div>
   );

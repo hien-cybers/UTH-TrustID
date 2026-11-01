@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { INITIAL_STUDENTS } from '../data/studentsData';
 
 export default function FacultyPortal() {
+  const [activeTab, setActiveTab] = useState('session'); // 'session' | 'records' | 'lookup'
   const [students] = useState(INITIAL_STUDENTS);
   const [mode, setMode] = useState('attendance'); // 'attendance' (≤ 35m) | 'exam' (≤ 15m)
   const [networkPolicy, setNetworkPolicy] = useState('HYBRID_4G_5G'); // 'HYBRID_4G_5G' | 'WIFI_STRICT'
@@ -387,12 +388,103 @@ export default function FacultyPortal() {
         </p>
       </div>
 
-      {/* 2. BỐ CỤC 2 CỘT RESPONSIVE (1 Cột Mobile, 2 Cột Desktop Web) */}
-      <div className="responsive-dashboard-grid">
-        
-        {/* === CỘT TRÁI: CẤU HÌNH, MÃ QR & TRA CỨU === */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
+      {/* 2. TAB PHÂN CHIA QUY TRÌNH GIẢNG VIÊN (SESSION | RECORDS | LOOKUP) */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        marginBottom: '14px',
+        background: '#0b1329',
+        padding: '4px',
+        borderRadius: '12px',
+        border: '1px solid rgba(255,255,255,0.08)'
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('session')}
+          style={{
+            flex: 1,
+            padding: '8px 6px',
+            borderRadius: '9px',
+            border: activeTab === 'session' ? '1px solid #38bdf8' : 'none',
+            background: activeTab === 'session' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+            color: activeTab === 'session' ? '#38bdf8' : '#8492a6',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>📌</span>
+          <span>Phiên & Mã QR</span>
+          {session && (
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: isSessionLocked ? '#ff5252' : '#00e676', display: 'inline-block' }} />
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('records')}
+          style={{
+            flex: 1,
+            padding: '8px 6px',
+            borderRadius: '9px',
+            border: activeTab === 'records' ? '1px solid #38bdf8' : 'none',
+            background: activeTab === 'records' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+            color: activeTab === 'records' ? '#38bdf8' : '#8492a6',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>📋</span>
+          <span>Đối Soát & SIS</span>
+          <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontFamily: 'JetBrains Mono' }}>
+            {records.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('lookup')}
+          style={{
+            flex: 1,
+            padding: '8px 6px',
+            borderRadius: '9px',
+            border: activeTab === 'lookup' ? '1px solid #38bdf8' : 'none',
+            background: activeTab === 'lookup' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+            color: activeTab === 'lookup' ? '#38bdf8' : '#8492a6',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '5px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>🔍</span>
+          <span>Tra Cứu & B1</span>
+          {offlineQueue.length > 0 && (
+            <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '10px', background: 'rgba(255, 171, 0, 0.2)', color: '#ffab00', fontFamily: 'JetBrains Mono' }}>
+              {offlineQueue.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* === TAB 1: PHIÊN ĐIỂM DANH & MÃ QR === */}
+      {activeTab === 'session' && (
+        <div className="responsive-dashboard-grid">
           {/* Card 1: Khối Cấu Hình Phiên Làm Việc */}
           <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -661,6 +753,34 @@ export default function FacultyPortal() {
             </div>
           )}
 
+          {session ? (
+            <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: '#c0ccda' }}>
+                👥 Đã có <strong style={{ color: '#00e676' }}>{records.length}</strong> sinh viên điểm danh thành công
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveTab('records')}
+                style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                Xem danh sách đối soát &rarr;
+              </button>
+            </div>
+          ) : (
+            <div className="glass-panel" style={{ padding: '24px 16px', background: 'rgba(15, 23, 42, 0.5)', border: '1px dashed rgba(255, 255, 255, 0.1)', borderRadius: '14px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📡</div>
+              <h4 style={{ margin: '0 0 6px', color: '#fff', fontSize: '14px' }}>Chưa kích hoạt phiên làm việc</h4>
+              <p style={{ margin: 0, fontSize: '11.5px', color: '#8492a6', maxWidth: '320px', lineHeight: '1.5' }}>
+                Bấm nút <strong>"Chốt GPS & Kích Hoạt Mã QR"</strong> bên cạnh để hệ thống lấy toạ độ thực tế của giảng đường và bắt đầu phát sóng mã QR xoay vòng Nonce.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === TAB 3: TRA CỨU THÍ SINH & XÁC THỰC NGOẠI TUYẾN (B1) === */}
+      {activeTab === 'lookup' && (
+        <div className="responsive-dashboard-grid">
           {/* Card 3: KHỐI TRA CỨU HỒ SƠ & TOKEN THÍ SINH (LOOKUP CANDIDATE BY MSSV/SBD/TOKEN) */}
           <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -800,11 +920,51 @@ export default function FacultyPortal() {
             )}
           </div>
 
-        </div>
+          {/* Card 6: Phân Hệ Ngoại Tuyến (Offline VC Verification & Queue) */}
+          <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: '#ffffff' }}>Xác thực ngoại tuyến (Tầng hầm B1)</div>
+                <div style={{ fontSize: '11px', color: '#8492a6' }}>Đối soát chữ ký số không cần 4G / Wi-Fi</div>
+              </div>
+              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#0b1329', color: '#38bdf8', fontFamily: 'JetBrains Mono', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                Queue: {offlineQueue.length} vé
+              </span>
+            </div>
 
-        {/* === CỘT PHẢI: DANH SÁCH ĐỐI SOÁT, SIS WEBHOOK & OFFLINE === */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          
+            <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#8492a6', lineHeight: '1.5' }}>
+              Khi phòng thi không có sóng, giám thị quét mã Verifiable Presentation sinh ra từ ví sinh viên để đối soát chữ ký số ECDSA cục bộ.
+            </p>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={() => setShowOfflineVerifyModal(true)}
+                style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', cursor: 'pointer', fontWeight: 600 }}
+              >
+                🔍 Đối Soát Vé Offline
+              </button>
+              <button 
+                onClick={handleAddOfflineTicket}
+                style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid #1e293b', background: '#0b1329', color: '#f8fafc', cursor: 'pointer', fontWeight: 600 }}
+              >
+                + Nhận vé mẫu
+              </button>
+              <button 
+                onClick={handleSyncOfflineQueue}
+                disabled={offlineQueue.length === 0}
+                className="btn-primary"
+                style={{ flex: 1, padding: '8px', fontSize: '11px' }}
+              >
+                Đồng bộ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* === TAB 2: ĐỐI SOÁT & SIS ĐÀO TẠO === */}
+      {activeTab === 'records' && (
+        <div className="responsive-dashboard-grid">
           {/* Card 4: Danh Sách Sinh Viên Đã Quét / Đối Soát */}
           <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -949,49 +1109,8 @@ export default function FacultyPortal() {
             </div>
           )}
 
-          {/* Card 6: Phân Hệ Ngoại Tuyến (Offline VC Verification & Queue) */}
-          <div className="glass-panel" style={{ padding: '16px', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: '#ffffff' }}>Xác thực ngoại tuyến (Tầng hầm B1)</div>
-                <div style={{ fontSize: '11px', color: '#8492a6' }}>Đối soát chữ ký số không cần 4G / Wi-Fi</div>
-              </div>
-              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#0b1329', color: '#38bdf8', fontFamily: 'JetBrains Mono', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-                Queue: {offlineQueue.length} vé
-              </span>
-            </div>
-
-            <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#8492a6', lineHeight: '1.5' }}>
-              Khi phòng thi không có sóng, giám thị quét mã Verifiable Presentation sinh ra từ ví sinh viên để đối soát chữ ký số ECDSA cục bộ.
-            </p>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
-                onClick={() => setShowOfflineVerifyModal(true)}
-                style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', cursor: 'pointer', fontWeight: 600 }}
-              >
-                🔍 Đối Soát Vé Offline
-              </button>
-              <button 
-                onClick={handleAddOfflineTicket}
-                style={{ flex: 1, padding: '8px', fontSize: '11px', borderRadius: '8px', border: '1px solid #1e293b', background: '#0b1329', color: '#f8fafc', cursor: 'pointer', fontWeight: 600 }}
-              >
-                + Nhận vé mẫu
-              </button>
-              <button 
-                onClick={handleSyncOfflineQueue}
-                disabled={offlineQueue.length === 0}
-                className="btn-primary"
-                style={{ flex: 1, padding: '8px', fontSize: '11px' }}
-              >
-                Đồng bộ
-              </button>
-            </div>
-          </div>
-
         </div>
-
-      </div>
+      )}
 
       {/* MODAL XÁC THỰC VÉ NGOẠI TUYẾN (OFFLINE VC VERIFICATION MODAL) */}
       {showOfflineVerifyModal && (
