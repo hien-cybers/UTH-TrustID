@@ -80,6 +80,10 @@ export default function StudentWallet() {
   // Hộp thoại Phê duyệt Đăng nhập (Challenge - Response UX)
   const [pendingAuthRequest, setPendingAuthRequest] = useState(null);
 
+  // Vé điểm danh ngoại tuyến (Offline VP QR)
+  const [showOfflineQrModal, setShowOfflineQrModal] = useState(false);
+  const [offlineTokenStr, setOfflineTokenStr] = useState('');
+
   useEffect(() => {
     loadAppData();
   }, []);
@@ -254,6 +258,19 @@ export default function StudentWallet() {
     } finally {
       setSelfRevokeLoading(false);
     }
+  };
+
+  const handleGenerateOfflineQr = async () => {
+    if (!identity) return;
+    try {
+      await authenticateWithBiometrics();
+    } catch {
+      alert("Xác thực FaceID/TouchID thất bại hoặc bị hủy bỏ!");
+      return;
+    }
+    const token = `UTH:OFFLINE:${identity.studentId || '2251120000'}:${Date.now()}:0x` + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    setOfflineTokenStr(token);
+    setShowOfflineQrModal(true);
   };
 
   const handleScanClick = () => {
@@ -576,6 +593,15 @@ export default function StudentWallet() {
                   <span className="truncate">Smart Contract Amoy</span>
                 </a>
               </div>
+
+              {/* Nút Tạo QR Điểm Danh Ngoại Tuyến */}
+              <button
+                onClick={handleGenerateOfflineQr}
+                className="w-full bg-slate-900/80 hover:bg-slate-800 border border-cyan-500/30 p-2.5 rounded-xl flex items-center justify-center space-x-2 text-xs text-cyan-300 font-semibold transition"
+              >
+                <Award size={15} className="text-cyan-400" />
+                <span>🎟️ Tạo Mã Điểm Danh Ngoại Tuyến (Tầng hầm B1)</span>
+              </button>
 
               {/* Emergency Recovery Token Section */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-2">
@@ -1073,6 +1099,40 @@ export default function StudentWallet() {
       {/* Modal Scanner */}
       {isScanning && (
         <Scanner onScanSuccess={handleScanComplete} onClose={() => setIsScanning(false)} />
+      )}
+
+      {/* Modal Xuất Trình QR Ngoại Tuyến (Offline VP QR) */}
+      {showOfflineQrModal && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-cyan-500/30 rounded-2xl max-w-sm w-full p-5 text-center shadow-2xl">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-xs font-bold text-cyan-400">VÉ ĐIỂM DANH NGOẠI TUYẾN (OFFLINE VP)</span>
+              <button onClick={() => setShowOfflineQrModal(false)} className="text-slate-400 hover:text-white text-lg">✕</button>
+            </div>
+            <p className="text-xs text-slate-400 mb-3">
+              Xuất trình mã này cho Giám thị quét khi phòng thi ở tầng hầm không có sóng 4G/Wi-Fi:
+            </p>
+            <div className="bg-white p-3 rounded-xl inline-block shadow-lg mb-3">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(offlineTokenStr)}`}
+                alt="Offline QR"
+                className="w-40 h-40 block"
+              />
+            </div>
+            <div className="bg-slate-950 p-2 rounded-lg font-mono text-[10px] text-cyan-300 break-all border border-slate-800 mb-3 text-left">
+              {offlineTokenStr}
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(offlineTokenStr);
+                alert("Đã sao chép chuỗi mã vé ngoại tuyến!");
+              }}
+              className="w-full btn-primary py-2 text-xs"
+            >
+              Sao Chép Chuỗi Vé
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
