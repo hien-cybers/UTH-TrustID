@@ -1,6 +1,7 @@
 // src/pages/FacultyPortal.jsx
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { Maximize2, Minimize2, X, Tv } from 'lucide-react';
 import { INITIAL_STUDENTS, calculateDistance } from '../data/studentsData';
 
 export default function FacultyPortal() {
@@ -20,6 +21,7 @@ export default function FacultyPortal() {
   const [dynamicNonce, setDynamicNonce] = useState('');
   const [countdown, setCountdown] = useState(15);
   const [records, setRecords] = useState([]);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Tra cứu
   const [searchKey, setSearchKey] = useState('');
@@ -40,6 +42,40 @@ export default function FacultyPortal() {
     }
     return () => clearInterval(timer);
   }, [session]);
+
+  // Bật / tắt chế độ toàn màn hình (Full Screen Projector Mode)
+  const handleToggleFullscreen = () => {
+    if (!isFullScreen) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+      setIsFullScreen(true);
+    } else {
+      if (document.exitFullscreen && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullScreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullScreen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullScreen) {
+        setIsFullScreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullScreen]);
 
   // Giữ nguyên định vị chính xác của phần trước
   const handleCreateSession = () => {
@@ -341,17 +377,45 @@ export default function FacultyPortal() {
                     <p style={{ margin: '2px 0 0', color: 'var(--text-muted)', fontSize: '13px' }}>{session.roomName} • Phiên: <code style={{ color: '#38bdf8' }}>{session.id}</code></p>
                   </div>
 
-                  <div style={{ textAlign: 'center', background: 'rgba(56, 189, 248, 0.08)', padding: '8px 16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>TỰ ĐỔI MÃ</div>
-                    <div style={{ fontSize: '22px', fontWeight: 800, color: countdown <= 5 ? '#f43f5e' : '#38bdf8', fontFamily: 'JetBrains Mono' }}>
-                      {countdown}s
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ textAlign: 'center', background: 'rgba(56, 189, 248, 0.08)', padding: '8px 16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>TỰ ĐỔI MÃ</div>
+                      <div style={{ fontSize: '22px', fontWeight: 800, color: countdown <= 5 ? '#f43f5e' : '#38bdf8', fontFamily: 'JetBrains Mono' }}>
+                        {countdown}s
+                      </div>
                     </div>
+
+                    <button
+                      onClick={handleToggleFullscreen}
+                      title="Bật toàn màn hình máy chiếu giảng đường"
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        background: 'rgba(56, 189, 248, 0.12)',
+                        color: '#38bdf8',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Maximize2 size={15} />
+                      <span style={{ display: 'inline' }}>Toàn Màn Hình</span>
+                    </button>
                   </div>
                 </div>
 
                 {/* Khối hiển thị QR động */}
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'center', margin: '20px 0', padding: '16px', background: 'var(--bg-input)', borderRadius: '14px', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
-                  <div style={{ background: '#fff', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div 
+                    onClick={handleToggleFullscreen}
+                    title="Bấm để phóng to toàn màn hình máy chiếu"
+                    style={{ background: '#fff', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s ease' }}
+                  >
                     <QRCodeSVG
                       value={qrPayloadString}
                       size={100}
@@ -368,6 +432,21 @@ export default function FacultyPortal() {
                     <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
                       📶 Chế độ mạng: <strong>{session.networkPolicy === 'WIFI_ONLY' ? 'Chỉ Wi-Fi trường (UTH-Secure)' : '4G/5G/Wi-Fi'}</strong>
                     </div>
+                    <button
+                      onClick={handleToggleFullscreen}
+                      className="btn-primary"
+                      style={{
+                        padding: '8px 14px',
+                        fontSize: '12px',
+                        borderRadius: '8px',
+                        marginTop: '10px',
+                        width: '100%',
+                        background: 'linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)'
+                      }}
+                    >
+                      <Maximize2 size={14} />
+                      <span>⛶ Phóng Toàn Màn Hình Máy Chiếu</span>
+                    </button>
                   </div>
                 </div>
 
@@ -527,6 +606,124 @@ export default function FacultyPortal() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* MÀN HÌNH MÁY CHIẾU TOÀN MÀN HÌNH (FULL SCREEN PROJECTOR OVERLAY) */}
+      {isFullScreen && session && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: '#070b14',
+            backgroundImage: 'radial-gradient(at 50% 15%, rgba(56, 189, 248, 0.18) 0px, transparent 65%)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 'clamp(16px, 3vw, 40px)',
+            color: '#fff',
+            overflowY: 'auto'
+          }}
+        >
+          {/* Top Bar Trong Chế Độ Toàn Màn Hình */}
+          <div style={{ width: '100%', maxWidth: '1240px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #0284c7, #38bdf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 0 25px rgba(56, 189, 248, 0.5)' }}>
+                🛡️
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '6px', background: session.mode === 'exam' ? '#f43f5e' : '#0284c7', color: '#fff', fontWeight: 800 }}>
+                    {session.mode === 'exam' ? 'PHÒNG THI CHÍNH THỨC' : 'ĐIỂM DANH LỚP HỌC'}
+                  </span>
+                  <span style={{ fontSize: '13px', color: '#94a3b8' }}>Phiên: <code style={{ color: '#38bdf8' }}>{session.id}</code></span>
+                </div>
+                <h1 style={{ margin: '4px 0 0', fontSize: 'clamp(20px, 3.5vw, 32px)', fontWeight: 800 }}>
+                  {session.courseName}
+                </h1>
+                <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '15px' }}>
+                  {session.roomName} • Bán kính Geo-Fencing: <strong style={{ color: '#34d399' }}>&le; {session.allowedRadius} mét</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Đồng hồ đếm ngược lớn & Nút thoát */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ textAlign: 'center', background: 'rgba(56, 189, 248, 0.1)', padding: '10px 24px', borderRadius: '16px', border: '1px solid rgba(56, 189, 248, 0.3)', backdropFilter: 'blur(10px)' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.8px' }}>TỰ ĐỔI MÃ SAU</div>
+                <div style={{ fontSize: 'clamp(28px, 4.5vw, 44px)', fontWeight: 900, color: countdown <= 5 ? '#f43f5e' : '#38bdf8', fontFamily: 'JetBrains Mono', lineHeight: 1.1 }}>
+                  {countdown}s
+                </div>
+              </div>
+
+              <button
+                onClick={handleToggleFullscreen}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#f87171',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <X size={18} />
+                <span>Thoát Toàn Màn Hình (Esc)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Vùng Trung Tâm: Mã QR Khổng Lồ Sắc Nét Cho Máy Chiếu */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: 'clamp(16px, 3.5vh, 36px) 0', textAlign: 'center' }}>
+            <div
+              style={{
+                background: '#ffffff',
+                padding: 'clamp(16px, 2.5vw, 28px)',
+                borderRadius: '28px',
+                boxShadow: '0 0 70px rgba(56, 189, 248, 0.4), 0 25px 50px rgba(0,0,0,0.85)',
+                display: 'inline-block'
+              }}
+            >
+              <QRCodeSVG
+                value={qrPayloadString}
+                size={Math.min(typeof window !== 'undefined' ? window.innerHeight * 0.46 : 380, 380)}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+
+            {/* Token Phiên Động */}
+            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '10px 24px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                <span style={{ color: '#94a3b8', fontSize: '15px' }}>Token phiên động:</span>
+                <code style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, color: '#38bdf8', letterSpacing: '2px' }}>{dynamicNonce}</code>
+              </div>
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: '15px' }}>
+                Sinh viên mở <strong>Ví UTH-TrustID</strong> trên điện thoại và quét mã để ký số điểm danh tức thời
+              </p>
+            </div>
+          </div>
+
+          {/* Thanh Thông Tin Cuối Màn Hình */}
+          <div style={{ width: '100%', maxWidth: '1240px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', padding: '14px 24px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid var(--border-color)', fontSize: '14px' }}>
+            <div>
+              📍 Toạ độ chốt phòng: <strong>{session.coords.lat.toFixed(6)}, {session.coords.lon.toFixed(6)}</strong> (±{session.coords.acc}m)
+            </div>
+            <div>
+              📶 Mạng: <strong style={{ color: '#38bdf8' }}>{session.networkPolicy === 'WIFI_ONLY' ? 'Chỉ Wi-Fi trường (UTH-Secure)' : '4G / 5G / Wi-Fi'}</strong>
+            </div>
+            <div>
+              👥 Đã đối soát thành công: <strong style={{ color: '#34d399', fontSize: '16px' }}>{records.filter(r => r.status === 'VALID').length}</strong> / {records.length} lượt
+            </div>
+          </div>
         </div>
       )}
     </div>
