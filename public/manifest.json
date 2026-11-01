@@ -1,0 +1,24 @@
+{
+  "name": "UTH-TrustID: Định Danh Số Sinh Viên",
+  "short_name": "UTH TrustID",
+  "description": "Hệ thống xác thực không mật khẩu và thẻ sinh viên số chuẩn W3C DID",
+  "start_url": "/wallet",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
