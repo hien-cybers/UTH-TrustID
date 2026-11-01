@@ -462,8 +462,20 @@ export default function FacultyPortal() {
   const mockGpsScans = records.filter(r => r.isMockGps).length;
   const distanceViolations = records.filter(r => r.dist > (session?.radius || 35)).length;
 
+  // Tạo chuỗi payload thô Custom Prefix UTH_ID, triệt tiêu hoàn toàn link https:// hay domain vercel.app
+  const qrRawPayload = session
+    ? [
+        "UTH_ID",
+        session.id,
+        dynamicNonce,
+        session.coords.lat.toFixed(4),
+        session.coords.lon.toFixed(4),
+        Date.now()
+      ].join(":")
+    : '';
+
   const qrUrl = session
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`UTH:${session.id}:${dynamicNonce}:${session.coords.lat}:${session.coords.lon}:${session.networkPolicy}`)}`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrRawPayload)}`
     : '';
 
   return (
@@ -1324,10 +1336,13 @@ export default function FacultyPortal() {
 
           <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', boxShadow: '0 0 50px rgba(56, 189, 248, 0.35)' }}>
             <img 
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(`UTH:${session.id}:${dynamicNonce}:${session.coords.lat}:${session.coords.lon}:${session.networkPolicy}`)}`} 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrRawPayload)}`} 
               alt="Projector QR" 
               style={{ width: 'min(70vw, 320px)', height: 'min(70vw, 320px)', display: 'block' }} 
             />
+          </div>
+          <div style={{ marginTop: '10px', fontSize: '11px', color: '#64748b', fontFamily: 'JetBrains Mono', wordBreak: 'break-all', textAlign: 'center' }}>
+            Payload thô: <span style={{ color: '#00f2fe' }}>{qrRawPayload}</span>
           </div>
 
           <div style={{ marginTop: '24px', textAlign: 'center' }}>

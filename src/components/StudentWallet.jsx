@@ -398,11 +398,13 @@ export default function StudentWallet() {
 
   const handleAttendanceScan = async (qrData, parsedObj = null) => {
     const parts = qrData ? qrData.split(':') : [];
+    const isUthId = parts[0] === 'UTH_ID';
     const sessionId = parsedObj?.sessionId || parts[1];
     const nonce = parsedObj?.nonce || parts[2];
     const sessionLat = parsedObj?.sessionLat !== undefined ? parsedObj.sessionLat : parseFloat(parts[3]);
     const sessionLon = parsedObj?.sessionLon !== undefined ? parsedObj.sessionLon : parseFloat(parts[4]);
-    const policy = parsedObj?.policy || parts[5] || 'HYBRID_4G_5G';
+    const timestamp = parsedObj?.timestamp || (isUthId ? parseInt(parts[5], 10) : undefined);
+    const policy = parsedObj?.policy || (isUthId ? (parts[6] || 'HYBRID_4G_5G') : (parts[5] || 'HYBRID_4G_5G'));
 
     try {
       await authenticateWithBiometrics();
@@ -492,7 +494,7 @@ export default function StudentWallet() {
     }
 
     let rawText = typeof data === 'string' ? data : (data.challenge || data.raw || JSON.stringify(data));
-    if (typeof rawText === 'string' && rawText.startsWith('UTH:')) {
+    if (typeof rawText === 'string' && (rawText.startsWith('UTH_ID:') || rawText.startsWith('UTH:'))) {
       handleAttendanceScan(rawText);
       return;
     }
