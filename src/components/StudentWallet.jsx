@@ -218,15 +218,17 @@ export default function StudentWallet() {
   const syncIdentityToBackend = async (id) => {
     if (!id?.address) return;
     try {
+      const devId = currentDeviceId || await getDeviceFingerprint().catch(() => '');
       await fetch('/api/identity/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           address: id.address,
-          studentId: '2251120000',
-          fullName: 'Sinh viên UTH',
-          major: 'An toàn Thông tin',
+          studentId: id.student?.mssv || id.student?.studentId || '2251120000',
+          fullName: id.student?.fullName || 'Nguyễn Đức Hiển',
+          major: id.student?.major || 'An toàn Thông tin',
           emergencyToken: id.emergencyToken,
+          deviceId: devId
         }),
       });
     } catch {

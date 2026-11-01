@@ -119,3 +119,4 @@ export async function clearAllCredentialsFromStorage() {
     window.dispatchEvent(new CustomEvent('uth-vc-storage-updated', { detail: { cleared: true } }));
   }
 }
+

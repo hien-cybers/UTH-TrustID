@@ -470,7 +470,8 @@ export default function FacultyPortal() {
         dynamicNonce,
         session.coords.lat.toFixed(4),
         session.coords.lon.toFixed(4),
-        Date.now()
+        Date.now(),
+        session.networkPolicy || 'HYBRID_4G_5G'
       ].join(":")
     : '';
 
