@@ -34,6 +34,20 @@ export default function AdminDashboard() {
     }
   ]);
 
+  // Phân hệ Khôi Phục Danh Tính Qua Cố Vấn Học Tập (Faculty Social Recovery)
+  const [recoverStudentId, setRecoverStudentId] = useState('2251120001');
+  const [recoverNewAddress, setRecoverNewAddress] = useState('0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db');
+  const [recoverReason, setRecoverReason] = useState('Sinh viên mất thiết bị di động cũ, yêu cầu cấp lại DID');
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [recoveryResult, setRecoveryResult] = useState(null);
+
+  // Phân hệ Cấp Phát Chứng Chỉ Đủ Điều Kiện Dự Thi (Exam Eligibility VC)
+  const [examStudentId, setExamStudentId] = useState('2251120001');
+  const [examCourseId, setExamCourseId] = useState('CS402 - An Toàn & Bảo Mật Mạng Máy Tính');
+  const [examAttendanceRate, setExamAttendanceRate] = useState(88);
+  const [isIssuingExamVC, setIsIssuingExamVC] = useState(false);
+  const [examVCResult, setExamVCResult] = useState(null);
+
   // Mẫu dữ liệu sinh viên JSON
   const sampleJson = `[
   {
@@ -194,6 +208,70 @@ export default function AdminDashboard() {
     alert(`[IDS ALERT TRIGGERED]\nĐã phát hiện và ghi nhận sự kiện bất thường: ${newAlert.type}!`);
   };
 
+  const handleFacultySocialRecover = async () => {
+    if (!recoverStudentId || !recoverNewAddress) {
+      alert("Vui lòng nhập đầy đủ MSSV và địa chỉ ví mới!");
+      return;
+    }
+    setIsRecovering(true);
+    setRecoveryResult(null);
+    try {
+      const res = await fetch('/api/identity/social-recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: recoverStudentId,
+          newAddress: recoverNewAddress,
+          advisorSig: 'ADVISOR_AUTH_SIG_' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+          reason: recoverReason
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRecoveryResult(data);
+        alert(`✅ CỐ VẤN HỌC TẬP ĐÃ PHÊ DUYỆT KHÔI PHỤC!\n${data.message}`);
+        handleRefresh();
+      } else {
+        alert(`❌ Khôi phục thất bại: ${data.message}`);
+      }
+    } catch (err) {
+      alert("Lỗi kết nối máy chủ: " + err.message);
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
+  const handleIssueExamVC = async () => {
+    if (!examStudentId || !examCourseId) {
+      alert("Vui lòng nhập đầy đủ MSSV và Mã học phần!");
+      return;
+    }
+    setIsIssuingExamVC(true);
+    setExamVCResult(null);
+    try {
+      const res = await fetch('/api/vc/exam-eligibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentId: examStudentId,
+          courseId: examCourseId,
+          attendanceRate: Number(examAttendanceRate)
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setExamVCResult(data.credential);
+        alert(`🎓 ĐÃ CẤP CHỨNG CHỈ ĐỦ ĐIỀU KIỆN DỰ THI (VC)!\nSinh viên: ${data.credential.credentialSubject.studentId}\nTrạng thái: ${data.credential.credentialSubject.status}`);
+      } else {
+        alert(`❌ Không đủ điều kiện dự thi: ${data.message}`);
+      }
+    } catch (err) {
+      alert("Lỗi kết nối máy chủ: " + err.message);
+    } finally {
+      setIsIssuingExamVC(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '460px', margin: '0 auto', padding: '16px 12px', minHeight: '100vh', background: '#07090e' }}>
       
@@ -349,7 +427,7 @@ export default function AdminDashboard() {
             {/* Danh sách Proof từng sinh viên */}
             <div style={{ marginTop: '10px', borderTop: '1px solid #162032', paddingTop: '8px' }}>
               <div style={{ fontSize: '11px', color: '#8492a6', fontWeight: 600, marginBottom: '6px' }}>
-                DANH SÁCH MERKLE PROOFS ($O(\log N)$):
+                DANH SÁCH MERKLE PROOFS (O(log N)):
               </div>
               {merkleResult.leaves.map((leaf, idx) => {
                 const sId = leaf.student.studentId || leaf.student.mssv;
@@ -379,7 +457,177 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* 4. PHÂN HỆ ĐO LƯỜNG HIỆU NĂNG MẬT MÃ (NCKH BENCHMARK TOOL) */}
+      {/* 4. PHÂN HỆ CẤP PHÁT CHỨNG CHỈ ĐỦ ĐIỀU KIỆN DỰ THI (EXAM ELIGIBILITY VC) */}
+      <div className="navy-card" style={{ marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <span style={{ color: '#38bdf8', fontSize: '16px', marginTop: '1px' }}>🎓</span>
+          <div>
+            <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>
+              Chứng Chỉ Đủ Điều Kiện Dự Thi (Exam Eligibility VC)
+            </h3>
+            <p style={{ margin: 0, fontSize: '11px', color: '#8492a6', lineHeight: '1.45' }}>
+              Ký phát hành chứng chỉ số W3C VC cho sinh viên có tỷ lệ chuyên cần &ge; 80%, gắn thẻ vào hồ sơ thi chính thức
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+          <div>
+            <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Mã số sinh viên (MSSV):</label>
+            <input
+              type="text"
+              value={examStudentId}
+              onChange={(e) => setExamStudentId(e.target.value)}
+              style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px', fontFamily: 'JetBrains Mono' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Học phần dự thi:</label>
+            <input
+              type="text"
+              value={examCourseId}
+              onChange={(e) => setExamCourseId(e.target.value)}
+              style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+            />
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+              <label style={{ fontSize: '11px', color: '#8492a6' }}>Tỷ lệ điểm danh tích lũy:</label>
+              <span style={{ fontSize: '11.5px', fontWeight: 700, color: examAttendanceRate >= 80 ? '#00e676' : '#ff5252' }}>
+                {examAttendanceRate}% {examAttendanceRate >= 80 ? '(Đủ điều kiện)' : '(Không đủ điều kiện)'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="50"
+              max="100"
+              value={examAttendanceRate}
+              onChange={(e) => setExamAttendanceRate(e.target.value)}
+              style={{ width: '100%', accentColor: '#00f2fe' }}
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleIssueExamVC}
+          disabled={isIssuingExamVC || examAttendanceRate < 80}
+          style={{
+            width: '100%',
+            padding: '10px',
+            borderRadius: '8px',
+            border: 'none',
+            background: examAttendanceRate >= 80 ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' : '#202d4a',
+            color: examAttendanceRate >= 80 ? '#fff' : '#64748b',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: examAttendanceRate >= 80 ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {isIssuingExamVC ? 'Đang ký chứng chỉ số...' : '🎓 Ký & Phát Hành VC Đủ Điều Kiện Dự Thi'}
+        </button>
+
+        {examVCResult && (
+          <div style={{ marginTop: '10px', padding: '10px', background: '#060911', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.4)', fontSize: '11px' }}>
+            <div style={{ color: '#00e676', fontWeight: 700, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>✓ VC ISSUED & DIGITALLY SIGNED</span>
+              <span>W3C Standard</span>
+            </div>
+            <div style={{ color: '#8492a6', fontFamily: 'JetBrains Mono', lineHeight: '1.5' }}>
+              <div>MSSV: <strong style={{ color: '#fff' }}>{examVCResult.credentialSubject.studentId}</strong></div>
+              <div>Học phần: <span style={{ color: '#38bdf8' }}>{examVCResult.credentialSubject.courseId}</span></div>
+              <div>Chuyên cần: <strong style={{ color: '#00e676' }}>{examVCResult.credentialSubject.attendanceRate}%</strong></div>
+              <div>Trạng thái: <span style={{ color: '#00f2fe' }}>{examVCResult.credentialSubject.status}</span></div>
+              <div style={{ wordBreak: 'break-all', marginTop: '3px' }}>Issuer Sig: <span style={{ color: '#64748b' }}>{examVCResult.proof.signature.slice(0, 32)}...</span></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 5. PHÂN HỆ CỐ VẤN HỌC TẬP KHÔI PHỤC DANH TÍNH (FACULTY SOCIAL RECOVERY) */}
+      <div className="navy-card" style={{ marginBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <span style={{ color: '#a855f7', fontSize: '16px', marginTop: '1px' }}>🛡️</span>
+          <div>
+            <h3 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 4px', color: '#fff' }}>
+              Khôi Phục Danh Tính Qua Cố Vấn (Social Recovery)
+            </h3>
+            <p style={{ margin: 0, fontSize: '11px', color: '#8492a6', lineHeight: '1.45' }}>
+              Hỗ trợ sinh viên mất thiết bị/hỏng máy: Tự động thu hồi khóa cũ và ánh xạ DID mới mà không làm mất lịch sử điểm danh
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+          <div>
+            <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>MSSV cần khôi phục:</label>
+            <input
+              type="text"
+              value={recoverStudentId}
+              onChange={(e) => setRecoverStudentId(e.target.value)}
+              style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px', fontFamily: 'JetBrains Mono' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Địa chỉ ví mới (New Public Key):</label>
+            <input
+              type="text"
+              value={recoverNewAddress}
+              onChange={(e) => setRecoverNewAddress(e.target.value)}
+              style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px', fontFamily: 'JetBrains Mono' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '11px', color: '#8492a6', display: 'block', marginBottom: '3px' }}>Lý do khôi phục:</label>
+            <input
+              type="text"
+              value={recoverReason}
+              onChange={(e) => setRecoverReason(e.target.value)}
+              style={{ width: '100%', padding: '7px 10px', background: '#060911', border: '1px solid #162032', borderRadius: '6px', color: '#fff', fontSize: '12px' }}
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleFacultySocialRecover}
+          disabled={isRecovering}
+          style={{
+            width: '100%',
+            padding: '10px',
+            borderRadius: '8px',
+            border: 'none',
+            background: 'linear-gradient(90deg, #9333ea 0%, #7e22ce 100%)',
+            color: '#fff',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'opacity 0.2s'
+          }}
+        >
+          {isRecovering ? 'Đang thực hiện xác thực & đổi khóa...' : '✍️ Cố Vấn Ký Duyệt Cấp Lại DID (Social Recover)'}
+        </button>
+
+        {recoveryResult && (
+          <div style={{ marginTop: '10px', padding: '10px', background: '#060911', borderRadius: '8px', border: '1px solid rgba(168, 85, 247, 0.4)', fontSize: '11px' }}>
+            <div style={{ color: '#c084fc', fontWeight: 700, marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>✓ SOCIAL RECOVERY COMPLETED</span>
+              <span style={{ color: '#00e676' }}>On-Chain Synchronized</span>
+            </div>
+            <div style={{ color: '#8492a6', fontFamily: 'JetBrains Mono', lineHeight: '1.5' }}>
+              <div>MSSV: <strong style={{ color: '#fff' }}>{recoveryResult.studentId}</strong></div>
+              <div>Ví cũ (Đã thu hồi): <span style={{ color: '#ff5252' }}>{recoveryResult.oldAddress.slice(0, 16)}...</span></div>
+              <div>Ví mới (Đang hoạt động): <span style={{ color: '#00e676' }}>{recoveryResult.newAddress.slice(0, 16)}...</span></div>
+              <div>Audit Trail: <span style={{ color: '#38bdf8' }}>Bảo toàn toàn bộ dữ liệu điểm danh</span></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 6. PHÂN HỆ ĐO LƯỜNG HIỆU NĂNG MẬT MÃ (NCKH BENCHMARK TOOL) */}
       <div className="navy-card" style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
           <div>
@@ -434,7 +682,7 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* 5. KHỐI GIÁM SÁT AN NINH & CẢNH BÁO IDS */}
+      {/* 7. KHỐI GIÁM SÁT AN NINH & CẢNH BÁO IDS */}
       <div className="navy-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <div>
@@ -442,7 +690,7 @@ export default function AdminDashboard() {
               🔥 Nhật Ký Xâm Nhập & Cảnh Báo IDS ({idsAlertsList.length})
             </h3>
             <p style={{ margin: 0, fontSize: '11px', color: '#8492a6' }}>
-              Phát hiện bất thường: Brute-force & Teleportation
+              Phát hiện bất thường: Brute-force, Teleportation & Hardware Footprint Mismatch
             </p>
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>

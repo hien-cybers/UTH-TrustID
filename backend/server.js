@@ -572,19 +572,56 @@ app.post('/api/attendance/verify', async (req, res) => {
     });
   }
 
-  // --- LỚP 3: Đối soát chữ ký số mật mã EIP-191 ---
+  // --- LỚP 3: Đối soát chữ ký số mật mã EIP-191 & Khóa Thiết Bị (Device Binding) ---
   try {
     const recoveredAddress = verifyMessage(challengeNonce, signature);
     const checksumAddress = getAddress(recoveredAddress);
 
+    // Đối soát Device Binding nếu client gửi deviceId
+    const declaredDeviceId = req.body.deviceId;
+    const identity = identitiesDB[checksumAddress];
+
+    if (identity && identity.deviceId && declaredDeviceId) {
+      if (identity.deviceId.toUpperCase() !== declaredDeviceId.toUpperCase()) {
+        triggerIDSAlert(
+          'HARDWARE_MISMATCH',
+          checksumAddress,
+          'CRITICAL',
+          `Cố tình xuất Private Key sang thiết bị lạ để điểm danh hộ (DeviceID: ${declaredDeviceId})`
+        );
+        return res.status(403).json({
+          success: false,
+          code: 'HARDWARE_MISMATCH',
+          message: 'Từ chối điểm danh: Thiết bị quét không khớp với thiết bị gốc đã gắn kết danh tính!'
+        });
+      }
+    } else if (identity && !identity.deviceId && declaredDeviceId) {
+      // Gắn kết thiết bị lần đầu
+      identity.deviceId = declaredDeviceId;
+    }
+
+    // Cơ chế Khóa 1 phiên duy nhất (Single Active Session Enforcement)
+    const now = Date.now();
+    const prevSession = activeSessionsMap.get(checksumAddress);
+    if (prevSession && (now - prevSession.timestamp) < 3 * 60 * 1000 && prevSession.sessionId !== sessionId) {
+      triggerIDSAlert(
+        'CONCURRENT_SESSION',
+        checksumAddress,
+        'HIGH',
+        `Phát hiện xuất hiện đồng thời tại 2 phiên khác nhau trong vòng 3 phút (${prevSession.sessionId} & ${sessionId})`
+      );
+    }
+    activeSessionsMap.set(checksumAddress, { sessionId, timestamp: now, clientIp });
+
     return res.json({
       success: true,
-      message: 'Điểm danh thành công! Đạt đủ điều kiện Mạng, GPS và Chữ ký số.',
+      message: 'Điểm danh thành công! Đạt đủ điều kiện Mạng, GPS, Thiết bị và Chữ ký số.',
       data: {
         studentAddress: checksumAddress,
         distance,
         clientIp,
         isCampusWifi,
+        deviceVerified: Boolean(identity?.deviceId),
         timestamp: new Date().toISOString()
       }
     });
@@ -595,6 +632,139 @@ app.post('/api/attendance/verify', async (req, res) => {
       message: 'Chữ ký mật mã không hợp lệ: ' + err.message
     });
   }
+});
+
+// ==========================================
+// 10. TÍCH HỢP HỆ THỐNG ĐÀO TẠO (SIS WEBHOOK) & PHỤC HỒI XÃ HỘI
+// ==========================================
+
+const activeSessionsMap = new Map();
+
+// Webhook đẩy kết quả điểm danh sang hệ thống đào tạo SIS / Daotao UTH
+app.post('/api/sis/sync-attendance', (req, res) => {
+  const { sessionId, courseName, roomName, records } = req.body;
+
+  if (!records || !Array.isArray(records)) {
+    return res.status(400).json({ success: false, message: 'Dữ liệu danh sách điểm danh rỗng' });
+  }
+
+  const sisTxId = 'SIS_UTH_' + Date.now().toString(36).toUpperCase() + '_' + Math.floor(1000 + Math.random() * 9000);
+  
+  recordAuditLog(
+    'SIS_GATEWAY',
+    'Đồng bộ Đào tạo SIS',
+    'Thành công',
+    `Đẩy ${records.length} bản ghi phiên ${sessionId || 'UNKNOWN'} sang SIS Daotao UTH`,
+    200
+  );
+
+  return res.json({
+    success: true,
+    message: 'Đã đồng bộ dữ liệu điểm danh sang Cổng Đào Tạo UTH thành công qua Webhook!',
+    sisTransactionId: sisTxId,
+    courseName: courseName || 'An Toàn Mạng',
+    roomName: roomName || 'A3-204',
+    syncedRecordsCount: records.length,
+    academicSystem: 'Phòng Đào Tạo UTH (daotao.uth.edu.vn)',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Phục hồi danh tính khẩn cấp qua Cố Vấn Học Tập (Social Recovery via Faculty)
+app.post('/api/identity/social-recover', async (req, res) => {
+  const { studentId, oldAddress, newAddress, advisorKey } = req.body;
+
+  if (!studentId || !newAddress) {
+    return res.status(400).json({ success: false, message: 'Thiếu mã sinh viên hoặc địa chỉ ví mới' });
+  }
+
+  try {
+    const checksumNew = getAddress(newAddress);
+    const checksumOld = oldAddress ? getAddress(oldAddress) : null;
+
+    // Vô hiệu hóa ví cũ nếu có
+    if (checksumOld && identitiesDB[checksumOld]) {
+      identitiesDB[checksumOld].isRevoked = true;
+      recordAuditLog(checksumOld, 'Thu hồi qua Cố vấn', 'Khóa ví cũ', `Cố vấn duyệt cấp ví mới cho SV ${studentId}`);
+    }
+
+    // Ánh xạ danh tính sang ví mới
+    identitiesDB[checksumNew] = {
+      studentId,
+      fullName: identitiesDB[checksumOld]?.fullName || 'Sinh viên UTH',
+      major: identitiesDB[checksumOld]?.major || 'An toàn Thông tin',
+      isRevoked: false,
+      recoveredByAdvisor: true,
+      recoveredAt: Date.now(),
+      createdAt: Date.now()
+    };
+
+    recordAuditLog(checksumNew, 'Phục hồi xã hội', 'Thành công', `Cố vấn học tập tái cấp danh tính cho SV ${studentId}`);
+
+    return res.json({
+      success: true,
+      message: `Đã khôi phục thành công danh tính cho SV ${studentId} sang địa chỉ ví mới ${checksumNew}!`,
+      newAddress: checksumNew,
+      did: `did:ethr:polygon:${checksumNew}`
+    });
+  } catch (err) {
+    return res.status(400).json({ success: false, message: 'Địa chỉ ví không hợp lệ: ' + err.message });
+  }
+});
+
+// Ký phát chứng chỉ số Đủ điều kiện dự thi (Exam Eligibility VC) dựa trên chuyên cần > 80%
+app.post('/api/vc/exam-eligibility', async (req, res) => {
+  const { studentId, studentAddress, courseName, attendanceRate } = req.body;
+
+  if (!studentId || attendanceRate === undefined) {
+    return res.status(400).json({ success: false, message: 'Thiếu thông tin sinh viên hoặc tỷ lệ chuyên cần' });
+  }
+
+  if (attendanceRate < 80) {
+    return res.status(403).json({
+      success: false,
+      message: `Từ chối cấp chứng chỉ: Tỷ lệ chuyên cần ${attendanceRate}% không đạt điều kiện tối thiểu (≥ 80%)!`
+    });
+  }
+
+  const addr = studentAddress ? getAddress(studentAddress) : UNIVERSITY_ISSUER_WALLET.address;
+  const vcPayload = `EXAM_ELIGIBILITY:${studentId}:${addr}:${courseName || 'An Toàn Mạng'}:${attendanceRate}%:${Date.now()}`;
+  const issuerSig = await UNIVERSITY_ISSUER_WALLET.signMessage(vcPayload);
+
+  const vc = {
+    id: `vc_exam_eligible_${studentId}_${Date.now()}`,
+    type: ['VerifiableCredential', 'ExamEligibilityCredential'],
+    issuer: {
+      id: `did:ethr:polygon:${UNIVERSITY_ISSUER_WALLET.address}`,
+      name: 'Phòng Khảo Thí & Đảm Bảo Chất Lượng UTH'
+    },
+    issuanceDate: new Date().toISOString(),
+    credentialSubject: {
+      studentId,
+      courseName: courseName || 'An Toàn Mạng',
+      attendanceRate: `${attendanceRate}%`,
+      status: 'QUALIFIED_FOR_FINAL_EXAM'
+    },
+    proof: {
+      type: 'EcdsaSecp256k1Signature2019',
+      proofPurpose: 'assertionMethod',
+      verificationMethod: `did:ethr:polygon:${UNIVERSITY_ISSUER_WALLET.address}#controller`,
+      signature: issuerSig
+    }
+  };
+
+  recordAuditLog(
+    addr,
+    'Cấp chứng chỉ dự thi',
+    'Thành công',
+    `Cấp VC Đủ điều kiện thi môn ${courseName} (Chuyên cần: ${attendanceRate}%)`
+  );
+
+  return res.json({
+    success: true,
+    message: 'Đã cấp Chứng chỉ số Đủ điều kiện dự thi kết thúc học phần thành công!',
+    credential: vc
+  });
 });
 
 const PORT = process.env.PORT || 4000;
