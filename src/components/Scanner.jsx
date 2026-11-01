@@ -29,12 +29,31 @@ export default function Scanner({ onScanSuccess, onClose }) {
         qrConfig,
         (decodedText) => {
           if (!isMounted) return;
-          try {
-            const parsed = JSON.parse(decodedText);
-            stopCamera().then(() => onScanSuccess(parsed));
-          } catch {
-            stopCamera().then(() => onScanSuccess({ challenge: decodedText }));
-          }
+          stopCamera().then(() => {
+            // Trường hợp 1: Mã QR Điểm danh / Thi cử định dạng "UTH:sessionId:nonce:lat:lon:policy"
+            if (typeof decodedText === 'string' && decodedText.startsWith('UTH:')) {
+              const parts = decodedText.split(':');
+              onScanSuccess({
+                type: 'ATTENDANCE_QR',
+                sessionId: parts[1],
+                nonce: parts[2],
+                sessionLat: parseFloat(parts[3]),
+                sessionLon: parseFloat(parts[4]),
+                policy: parts[5] || 'HYBRID_4G_5G',
+                raw: decodedText
+              });
+              return;
+            }
+
+            // Trường hợp 2: JSON payload
+            try {
+              const parsed = JSON.parse(decodedText);
+              onScanSuccess(parsed);
+            } catch {
+              // Trường hợp 3: Chuỗi Auth Challenge thuần túy
+              onScanSuccess({ challenge: decodedText });
+            }
+          });
         },
         () => {
           // Bỏ qua log từng frame

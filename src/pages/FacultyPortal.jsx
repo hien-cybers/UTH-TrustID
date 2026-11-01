@@ -1,5 +1,6 @@
 // src/pages/FacultyPortal.jsx - Cổng Giảng Viên & Quản Lý Thi Cử (Responsive Multi-Device & Quick Candidate Lookup)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { INITIAL_STUDENTS } from '../data/studentsData';
 
 export default function FacultyPortal() {
@@ -19,6 +20,8 @@ export default function FacultyPortal() {
   const [isFullscreenQR, setIsFullscreenQR] = useState(false);
   const [isSessionLocked, setIsSessionLocked] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const socketRef = useRef(null);
 
   // Tra cứu hồ sơ & Token mã hóa (Candidate & Token Quick Lookup)
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -39,6 +42,94 @@ export default function FacultyPortal() {
   const [offlineTokenInput, setOfflineTokenInput] = useState('');
   const [offlineVerifyResult, setOfflineVerifyResult] = useState(null);
   const [offlineQueue, setOfflineQueue] = useState([]);
+
+  // Khởi tạo WebSocket Socket.io lắng nghe điểm danh thời gian thực
+  useEffect(() => {
+    const socket = io({
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 10,
+    });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      setIsSocketConnected(true);
+      if (session) {
+        socket.emit('join-session', session.id);
+      }
+    });
+
+    socket.on('disconnect', () => {
+      setIsSocketConnected(false);
+    });
+
+    // Khi có sinh viên quét thành công trên điện thoại -> Tự động nhảy vào danh sách tức thì
+    socket.on('student-verified', (newStudent) => {
+      console.log('Real-time student attendance received:', newStudent);
+      setRecords((prev) => {
+        if (prev.some(r => r.mssv === newStudent.mssv)) {
+          return prev;
+        }
+        return [newStudent, ...prev];
+      });
+
+      if (session?.mode === 'exam') {
+        setSelectedStudentForPhoto(newStudent);
+      }
+    });
+
+    socket.on('attendance-update', ({ sessionId, attendee }) => {
+      if (session && session.id === sessionId && attendee) {
+        setRecords((prev) => {
+          if (prev.some(r => r.mssv === attendee.mssv)) return prev;
+          return [attendee, ...prev];
+        });
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [session?.id, session?.mode]);
+
+  // Đồng bộ Phiên điểm danh lên Backend
+  useEffect(() => {
+    if (session) {
+      if (socketRef.current) {
+        socketRef.current.emit('join-session', session.id);
+      }
+      fetch('/api/attendance/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          roomName: session.roomName,
+          courseName: session.courseName,
+          coords: session.coords,
+          radius: session.radius,
+          networkPolicy: session.networkPolicy,
+          initialNonce: dynamicNonce
+        })
+      }).catch(() => {});
+    }
+  }, [session?.id]);
+
+  // Đồng bộ Nonce xoay vòng 15 giây lên backend
+  useEffect(() => {
+    if (session && dynamicNonce) {
+      fetch('/api/attendance/session/nonce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          nonce: dynamicNonce
+        })
+      }).catch(() => {});
+
+      if (socketRef.current) {
+        socketRef.current.emit('rotate-nonce', { sessionId: session.id, nonce: dynamicNonce });
+      }
+    }
+  }, [dynamicNonce, session?.id]);
 
   // Xoay mã Nonce tự động mỗi 15 giây
   useEffect(() => {
@@ -660,6 +751,23 @@ export default function FacultyPortal() {
                   <img src={qrUrl} alt="Dynamic QR" style={{ width: '110px', height: '110px', display: 'block' }} />
                 </div>
                 <div style={{ flex: '1 1 180px', minWidth: 0, fontSize: '11.5px', lineHeight: '1.65' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      padding: '2px 7px',
+                      borderRadius: '10px',
+                      background: isSocketConnected ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 171, 0, 0.15)',
+                      color: isSocketConnected ? '#00e676' : '#ffab00',
+                      border: `1px solid ${isSocketConnected ? 'rgba(0, 230, 118, 0.3)' : 'rgba(255, 171, 0, 0.3)'}`
+                    }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isSocketConnected ? '#00e676' : '#ffab00', display: 'inline-block' }}></span>
+                      {isSocketConnected ? 'Real-Time Socket Connected' : 'Đang kết nối Real-Time...'}
+                    </span>
+                  </div>
                   <div style={{ wordBreak: 'break-all' }}>Mã Phiên: <code style={{ color: '#38bdf8', fontWeight: 700 }}>{session.id}</code></div>
                   <div style={{ wordBreak: 'break-all' }}>Nonce Token: <code style={{ color: '#00f2fe', fontWeight: 800 }}>{dynamicNonce}</code></div>
                   <div style={{ color: '#8492a6' }}>Xoay mã sau: <strong style={{ color: countdown <= 5 ? '#ff5252' : '#00e676', fontSize: '13px' }}>{countdown}s</strong></div>
@@ -698,7 +806,17 @@ export default function FacultyPortal() {
                       ⚡ Tái kiểm tra
                     </button>
                     <button
-                      onClick={() => setIsSessionLocked(!isSessionLocked)}
+                      onClick={() => {
+                        const nextLocked = !isSessionLocked;
+                        setIsSessionLocked(nextLocked);
+                        if (session) {
+                          fetch('/api/attendance/session/lock', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sessionId: session.id, locked: nextLocked })
+                          }).catch(() => {});
+                        }
+                      }}
                       style={{
                         padding: '4px 8px',
                         borderRadius: '6px',
@@ -710,7 +828,7 @@ export default function FacultyPortal() {
                         cursor: 'pointer'
                       }}
                     >
-                      {isSessionLocked ? '🔓 Mở khóa' : '🔒 Khóa phòng'}
+                      {isSessionLocked ? '🔓 Mở khóa' : '🔒 Khóa phiên'}
                     </button>
                   </div>
                 </div>

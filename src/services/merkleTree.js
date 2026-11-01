@@ -105,6 +105,22 @@ export function verifyMerkleProof(leafHash, proof, root) {
 }
 
 /**
+ * Xác thực Merkle Proof qua Backend API
+ */
+export async function verifyProofViaBackend(root, leafHash, proof) {
+  try {
+    const res = await fetch('/api/merkle/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ root, leafHash, proof })
+    });
+    return await res.json();
+  } catch (err) {
+    return { success: false, isValid: verifyMerkleProof(leafHash, proof, root), error: err.message };
+  }
+}
+
+/**
  * Module đo lường độ trễ hiệu năng mật mã (NCKH Benchmark Tool)
  */
 export async function runCryptoBenchmark() {
