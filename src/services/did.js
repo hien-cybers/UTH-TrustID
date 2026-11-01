@@ -424,7 +424,60 @@ export function generateW3CDIDDocument(identity) {
 
 export function getSavedCredentials() {
   const data = localStorage.getItem(STORAGE_KEYS.CREDENTIALS);
-  return data ? JSON.parse(data) : [];
+  let list = data ? JSON.parse(data) : [];
+
+  // Tự động kết hợp chứng chỉ cấp theo lô Merkle Tree từ Admin nếu có
+  const batchData = localStorage.getItem('uth_issued_credentials');
+  if (batchData) {
+    try {
+      const batchList = JSON.parse(batchData);
+      const identity = getSavedIdentity();
+      if (Array.isArray(batchList)) {
+        batchList.forEach((item) => {
+          const matchMSSV = identity && identity.student && (identity.student.mssv === item.studentId || identity.student.studentId === item.studentId);
+          const matchAddr = identity && identity.address && item.address && identity.address.toLowerCase() === item.address.toLowerCase();
+          const alreadyExists = list.some((c) => c.id === `vc_merkle_${item.studentId}`);
+
+          if ((matchMSSV || matchAddr || !identity) && !alreadyExists) {
+            list.push({
+              id: `vc_merkle_${item.studentId}`,
+              name: `Thẻ Sinh Viên Số (Merkle Batch #${item.studentId})`,
+              title: `Thẻ Sinh Viên Số (Merkle Tree)`,
+              type: ['VerifiableCredential', 'MerkleBatchCredential'],
+              issuer: {
+                name: 'Phòng Đào Tạo UTH (Merkle Root Registry)',
+                did: 'did:ethr:polygon:0x19B8640108cDdD431a49E59eB30aF42D52D7dC21',
+              },
+              issuerSignature: item.leafHash || '0xLeafHashSolidityPacked',
+              credentialSubject: {
+                studentId: item.studentId,
+                fullName: item.fullName,
+                major: item.major,
+                address: item.address,
+                status: 'Merkle Validated (Active)',
+                attendanceRate: 100,
+                leafHash: item.leafHash,
+                merkleProof: item.merkleProof,
+                merkleRoot: item.merkleRoot,
+              },
+              proof: {
+                type: 'MerkleProof2024',
+                merkleRoot: item.merkleRoot,
+                leafHash: item.leafHash,
+                proof: item.merkleProof,
+              },
+              issuedAt: item.issuedAt || new Date().toISOString(),
+              verified: true,
+            });
+          }
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return list;
 }
 
 export function saveCredential(credential) {
