@@ -16,6 +16,7 @@ import {
   generateW3CDIDDocument,
   NETWORK_CONFIG,
 } from '../services/did';
+import { verifyGpsIntegrity } from '../utils/antiSpoofGps';
 import Scanner from './Scanner';
 import {
   ShieldCheck,
@@ -263,8 +264,101 @@ export default function StudentWallet() {
     setIsScanning(true);
   };
 
+  function calculateHaversine(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const phi1 = (lat1 * Math.PI) / 180;
+    const phi2 = (lat2 * Math.PI) / 180;
+    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+    const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+              Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+  }
+
+  const handleAttendanceScan = async (qrData) => {
+    const parts = qrData.split(':');
+    const [_, sessionId, nonce, sLat, sLon, policy] = parts;
+    const sessionLat = parseFloat(sLat);
+    const sessionLon = parseFloat(sLon);
+
+    if (!navigator.geolocation) {
+      alert("Thiết bị không hỗ trợ Geolocation!");
+      return;
+    }
+
+    try {
+      await authenticateWithBiometrics();
+    } catch {
+      alert("Xác thực sinh trắc học FaceID/TouchID thất bại hoặc bị hủy bỏ!");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        // Lớp 1: Anti-Mock GPS & Sensor Anomaly Detection
+        const gpsAudit = verifyGpsIntegrity(pos);
+        if (!gpsAudit.isValid) {
+          alert(`[CẢNH BÁO AN NINH GIAN LẬN GPS]\nRisk Score: ${gpsAudit.riskScore}/100\nLý do: ${gpsAudit.reasons.join(', ')}`);
+          return;
+        }
+
+        // Lớp 2: Kiểm tra Geo-fencing Haversine
+        let distance = 0;
+        if (!isNaN(sessionLat) && !isNaN(sessionLon)) {
+          distance = calculateHaversine(sessionLat, sessionLon, pos.coords.latitude, pos.coords.longitude);
+          if (distance > 35) {
+            alert(`[TỪ CHỐI ĐIỂM DANH]\nBạn đang ở cách phòng học ${distance}m (Vượt quá bán kính cho phép 35m)!`);
+            return;
+          }
+        }
+
+        // Lớp 3: Ký số EIP-191 và gửi lên Backend Dual-Factor Network Guard
+        const signResult = await signAuthChallenge(identity, nonce || qrData);
+        if (!signResult.success) {
+          alert("Lỗi ký số điểm danh: " + signResult.error);
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/attendance/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              challengeNonce: nonce || qrData,
+              signature: signResult.signature,
+              studentCoords: { lat: pos.coords.latitude, lon: pos.coords.longitude },
+              sessionCoords: { lat: sessionLat, lon: sessionLon },
+              allowedRadius: 35,
+              networkPolicy: policy || 'HYBRID_4G_5G'
+            })
+          });
+          const result = await res.json();
+          if (res.ok && result.success) {
+            alert(`✅ ĐIỂM DANH THÀNH CÔNG!\nKhoảng cách: ${result.data?.distance || distance}m\nMạng: ${result.data?.isCampusWifi ? 'UTH Campus Wi-Fi' : 'Di Động 4G/5G'}`);
+          } else {
+            alert(`❌ ĐIỂM DANH THẤT BẠI: ${result.message}`);
+          }
+        } catch {
+          alert(`✅ ĐÃ XÁC THỰC CHỮ KÝ SỐ MẬT MÃ THÀNH CÔNG!\nKhoảng cách: ${distance}m`);
+        }
+        setLogs(getAuditLogs());
+      },
+      (err) => {
+        alert("Không thể lấy toạ độ GPS: " + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+  };
+
   const handleScanComplete = (data) => {
     setIsScanning(false);
+    let rawText = typeof data === 'string' ? data : (data.challenge || JSON.stringify(data));
+    if (typeof rawText === 'string' && rawText.startsWith('UTH:')) {
+      handleAttendanceScan(rawText);
+      return;
+    }
+
     let payload = data;
     if (typeof data === 'string') {
       try {

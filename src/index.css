@@ -1,85 +1,153 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* src/index.css - UTH-TrustID Original Deep Blue-Navy Glassmorphism Design System */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg-pure: #0a0a0a;
-  --card-charcoal: #141414;
-  --card-charcoal-light: #1c1c1c;
-  --border-subtle: #242424;
-  --lime-accent: #a3e635;
-  --lime-dim: rgba(163, 230, 53, 0.12);
-  --text-primary: #f4f4f5;
-  --text-secondary: #85858e;
-  --danger: #ef4444;
-  
-  /* Aliases for backwards compatibility */
-  --bg-dark: #0a0a0a;
-  --card-bg: #141414;
-  --lime: #a3e635;
-  --primary: #a3e635;
-  --border: #242424;
+  --bg-main: #070b14;
+  --bg-dark: #070b14;
+  --bg-pure: #070b14;
+  --admin-bg: #07090e;
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --card-bg: #0d131f;
+  --card-charcoal: #0d131f;
+  --bg-input: #0b1329;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(56, 189, 248, 0.3);
+  --border-subtle: #162032;
+  --border: #162032;
+  --primary: #38bdf8;
+  --cyan-accent: #00f2fe;
+  --primary-glow: rgba(56, 189, 248, 0.25);
+  --accent-purple: #a855f7;
+  --accent-rose: #f43f5e;
+  --accent-emerald: #10b981;
+  --green-active: #00e676;
+  --red-revoked: #ff5252;
+  --yellow-warn: #ffab00;
+  --text-main: #f8fafc;
+  --text-primary: #f8fafc;
+  --text-white: #ffffff;
+  --text-muted: #94a3b8;
+  --text-secondary: #8492a6;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --btn-bg: #131b2e;
+  --btn-border: #202d4a;
+}
+
+/* Tối ưu hóa hiển thị Mobile chuẩn iOS & Android */
+html, body {
+  height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
 }
 
 * {
   box-sizing: border-box;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--bg-pure);
-  color: var(--text-primary);
-  font-size: 13px;
-  -webkit-font-smoothing: antialiased;
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.08) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-code, .font-mono {
+code, .font-mono, .mono-code {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Card than phẳng, viền sắc nét, không blur */
-.card-flat, .panel, .glass-panel, .kalo-card {
-  background: var(--card-charcoal);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 14px;
+/* Modal Fullscreen Overlay cho máy chiếu */
+.fullscreen-qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: #050811;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.input-flat, .kalo-input, .input-sm, .custom-input {
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Nút bấm mobile kích thước chuẩn & Chặn iOS zoom khi chạm */
+button, input, select {
+  touch-action: manipulation;
+}
+
+/* Glassmorphism panel */
+.glass-panel, .panel, .card-flat {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.glass-panel:hover, .panel:hover {
+  border-color: var(--border-hover);
+}
+
+/* Khung viền nhỏ gọn & Input */
+.custom-input, .input-sm, .input-flat {
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: #0d0d0d;
-  border: 1px solid var(--border-subtle);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   color: #fff;
-  font-size: 13px;
+  font-size: 13.5px;
   outline: none;
+  transition: all 0.2s ease;
 }
 
-.input-flat:focus, .kalo-input:focus, .input-sm:focus, .custom-input:focus {
-  border-color: var(--lime-accent);
+.custom-input:focus, .input-sm:focus, .input-flat:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-.btn-lime, .kalo-btn-primary, .btn-primary {
-  background: var(--lime-accent);
-  color: #000;
-  font-weight: 700;
-  padding: 9px 16px;
-  border-radius: 6px;
+/* Primary Cyan-Blue Button */
+.btn-primary, .btn-lime {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
   border: none;
-  font-size: 12px;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: opacity 0.15s;
+  gap: 8px;
 }
 
-.btn-lime:active, .kalo-btn-primary:active, .btn-primary:active {
-  opacity: 0.85;
+.btn-primary:hover, .btn-lime:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+}
+
+.btn-primary:active, .btn-lime:active {
+  transform: translateY(0);
 }
 
 .btn-sm {
@@ -87,38 +155,20 @@ code, .font-mono {
   border-radius: 6px;
   border: none;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  background: var(--lime-accent);
-  color: #000;
+  background: #0284c7;
+  color: #fff;
   transition: opacity 0.15s;
 }
 
-button, input, select {
-  touch-action: manipulation;
+.btn-sm:hover {
+  opacity: 0.9;
 }
 
 /* ==========================================================
-   Admin Navy Design System (Giao diện Trung Tâm Quản Trị)
+   Admin Navy Design System (Quản trị hệ thống)
    ========================================================== */
-:root {
-  --admin-bg: #07090e;
-  --card-hover: #1e2c45;
-  --text-white: #ffffff;
-  --text-muted: #8492a6;
-  --cyan-accent: #00f2fe;
-  --green-active: #00e676;
-  --red-revoked: #ff5252;
-  --yellow-warn: #ffab00;
-  --btn-bg: #131b2e;
-  --btn-border: #202d4a;
-}
-
-.mono-code {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Card gốc xanh navy đậm bo tròn */
 .navy-card {
   background: #0d131f;
   border: 1px solid #162032;
@@ -127,7 +177,6 @@ button, input, select {
   position: relative;
 }
 
-/* Thẻ thống kê 2x2 */
 .stat-box {
   background: #0d131f;
   border: 1px solid #162032;
@@ -138,7 +187,6 @@ button, input, select {
   justify-content: space-between;
 }
 
-/* Nút bấm làm mới */
 .btn-refresh {
   width: 100%;
   padding: 10px;
@@ -161,7 +209,6 @@ button, input, select {
   color: #fff;
 }
 
-/* Nút Ký phát hành lô xanh dương */
 .btn-batch-issue {
   width: 100%;
   padding: 12px;
@@ -184,7 +231,6 @@ button, input, select {
   opacity: 0.92;
 }
 
-/* Ô nhập JSON code */
 .json-editor {
   width: 100%;
   height: 140px;
@@ -204,3 +250,15 @@ button, input, select {
   border-color: #00b4db;
 }
 
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 4px;
+}
