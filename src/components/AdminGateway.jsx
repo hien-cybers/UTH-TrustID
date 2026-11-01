@@ -13,35 +13,78 @@ import {
   Lock,
   ExternalLink,
   ChevronRight,
-  Fingerprint
+  Fingerprint,
+  Layers,
+  Flame,
+  Radio,
+  FileCheck2,
+  Sparkles
 } from 'lucide-react';
 
 export default function AdminGateway() {
   const [identities, setIdentities] = useState({});
   const [auditLogs, setAuditLogs] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [attackResults, setAttackResults] = useState(null);
   const [isRunningTests, setIsRunningTests] = useState(false);
 
+  // Batch VC Issuance Merkle Tree State
+  const [batchInput, setBatchInput] = useState(JSON.stringify([
+    {
+      studentId: "2251120001",
+      fullName: "Nguyễn Văn An",
+      major: "An toàn Thông tin",
+      address: "0x1111111111111111111111111111111111111111"
+    },
+    {
+      studentId: "2251120002",
+      fullName: "Trần Thị Bình",
+      major: "Mạng máy tính & Truyền thông",
+      address: "0x2222222222222222222222222222222222222222"
+    },
+    {
+      studentId: "2251120003",
+      fullName: "Lê Hoàng Cường",
+      major: "Khoa học Dữ liệu",
+      address: "0x3333333333333333333333333333333333333333"
+    }
+  ], null, 2));
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchResult, setBatchResult] = useState(null);
+
   useEffect(() => {
     fetchData();
+    // Polling IDS alerts every 8s
+    const timer = setInterval(fetchAlerts, 8000);
+    return () => clearInterval(timer);
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [idRes, logRes] = await Promise.all([
+      const [idRes, logRes, alertRes] = await Promise.all([
         fetch('/api/admin/identities').then(r => r.json()).catch(() => ({ identities: {} })),
-        fetch('/api/admin/logs').then(r => r.json()).catch(() => ({ logs: [] }))
+        fetch('/api/admin/logs').then(r => r.json()).catch(() => ({ logs: [] })),
+        fetch('/api/admin/alerts').then(r => r.json()).catch(() => ({ alerts: [] }))
       ]);
 
       if (idRes.identities) setIdentities(idRes.identities);
       if (logRes.logs) setAuditLogs(logRes.logs);
+      if (alertRes.alerts) setAlerts(alertRes.alerts);
     } catch (err) {
       console.error('Error fetching admin data:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const res = await fetch('/api/admin/alerts');
+      const data = await res.json();
+      if (data.alerts) setAlerts(data.alerts);
+    } catch {}
   };
 
   const handleToggleRevoke = async (address, currentRevoked) => {
@@ -67,6 +110,37 @@ export default function AdminGateway() {
     }
   };
 
+  // Cấp phát VC hàng loạt qua Merkle Tree
+  const handleBatchIssue = async () => {
+    try {
+      const parsed = JSON.parse(batchInput);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        alert("Dữ liệu phải là một mảng JSON các sinh viên hợp lệ!");
+        return;
+      }
+      setBatchLoading(true);
+      setBatchResult(null);
+
+      const res = await fetch('/api/admin/batch-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: parsed })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setBatchResult(data);
+        fetchData();
+      } else {
+        alert("Cấp phát thất bại: " + data.message);
+      }
+    } catch (err) {
+      alert("Định dạng JSON không hợp lệ: " + err.message);
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+
   const runLiveAttackTests = async () => {
     setIsRunningTests(true);
     const results = [];
@@ -85,11 +159,9 @@ export default function AdminGateway() {
         })
       });
 
-      // TC-01: Replay Attack
+      // TC-01: Replay Attack (Sử dụng nonce hết hạn/sai)
       const ch1 = await fetch('/api/auth/challenge').then(r => r.json());
-      // Giả lập chữ ký mẫu
       const mockSig = '0x' + '1b'.repeat(65);
-      // Gửi lần 1 -> fail/pass
       const replayRes = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,8 +179,6 @@ export default function AdminGateway() {
 
       // TC-02: Signature Tampering
       const ch2 = await fetch('/api/auth/challenge').then(r => r.json());
-      // Giả mạo bằng ví chưa đăng ký
-      const fakeAddr = '0x000000000000000000000000000000000000dEaD';
       const fakeSig = '0x' + '2c'.repeat(65);
       const tamperRes = await fetch('/api/auth/verify', {
         method: 'POST',
@@ -173,7 +243,7 @@ export default function AdminGateway() {
   return (
     <div className="w-full max-w-4xl space-y-4 sm:space-y-6 mt-2 sm:mt-4 pb-12 animate-in fade-in duration-300">
       {/* Header & Stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl">
         <div>
           <div className="flex items-center space-x-2 text-cyan-400 mb-1">
             <Lock size={18} className="sm:w-5 sm:h-5" />
@@ -194,7 +264,7 @@ export default function AdminGateway() {
         </button>
       </div>
 
-      {/* Metric Cards */}
+      {/* METRIC CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
         <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
@@ -214,7 +284,7 @@ export default function AdminGateway() {
 
         <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Đã Thu Hồi (Revoked)</span>
+            <span className="text-[11px] font-medium">Đã Thu Hồi</span>
             <ShieldAlert size={15} className="text-rose-400" />
           </div>
           <span className="text-lg sm:text-xl font-bold text-rose-400">{revokedCount}</span>
@@ -222,10 +292,135 @@ export default function AdminGateway() {
 
         <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-medium">Sự Kiện Nhật Ký</span>
-            <History size={15} className="text-amber-400" />
+            <span className="text-[11px] font-medium">IDS Cảnh Báo</span>
+            <Flame size={15} className={alerts.length > 0 ? "text-rose-400 animate-pulse" : "text-amber-400"} />
           </div>
-          <span className="text-lg sm:text-xl font-bold text-amber-400">{auditLogs.length}</span>
+          <span className={`text-lg sm:text-xl font-bold ${alerts.length > 0 ? 'text-rose-400' : 'text-slate-200'}`}>
+            {alerts.length}
+          </span>
+        </div>
+      </div>
+
+      {/* IDS ANOMALY DETECTION ALERTS WIDGET */}
+      {alerts.length > 0 && (
+        <div className="bg-rose-950/40 border border-rose-800/80 rounded-2xl p-4 sm:p-5 shadow-2xl animate-in slide-in-from-top-2">
+          <div className="flex items-center justify-between mb-3 border-b border-rose-800/50 pb-2.5">
+            <div className="flex items-center space-x-2 text-rose-400">
+              <Flame size={18} className="animate-pulse" />
+              <h3 className="font-bold text-xs sm:text-sm text-slate-100">
+                Hệ Thống IDS: Phát Hiện Dị Thường An Ninh ({alerts.length} Sự Kiện)
+              </h3>
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-900/80 text-rose-200 border border-rose-700 animate-pulse">
+              MỨC ĐỘ NGUY HIỂM CAO
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            {alerts.slice(-4).reverse().map((al) => (
+              <div
+                key={al.id}
+                className="bg-slate-950/80 border border-rose-900/60 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs"
+              >
+                <div className="space-y-0.5">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-mono font-bold text-rose-400 bg-rose-950 px-1.5 py-0.5 rounded border border-rose-800 text-[10px]">
+                      {al.type}
+                    </span>
+                    <span className="text-slate-300 font-semibold">{al.message}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-mono">
+                    Target: <span className="text-cyan-300">{al.address || al.clientIp}</span> | Time: {al.timestamp}
+                  </div>
+                </div>
+
+                <div className="text-right sm:text-right">
+                  <span className="inline-block px-2 py-0.5 bg-rose-900/50 border border-rose-800 text-rose-300 rounded text-[10px] font-sans">
+                    Đã chặn tự động
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* BATCH VC ISSUANCE VIA MERKLE TREE */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-3">
+          <div>
+            <h3 className="font-semibold text-xs sm:text-sm text-slate-200 flex items-center space-x-2">
+              <Layers size={16} className="text-cyan-400" />
+              <span>Cấp Phát Chứng Chỉ Số VC Theo Lô (Batch VC via Merkle Tree)</span>
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Tạo gốc Merkle Tree (Root Hash) để xác thực mật mã hàng nghìn sinh viên cùng lúc mà không tốn gas riêng lẻ
+            </p>
+          </div>
+
+          <span className="text-[10px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded-full font-mono self-start sm:self-auto">
+            Algorithm: keccak256
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs text-slate-300 block font-medium">
+            Danh sách sinh viên (JSON Array format):
+          </label>
+          <textarea
+            rows={5}
+            value={batchInput}
+            onChange={(e) => setBatchInput(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500 leading-relaxed"
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              onClick={() => {
+                setBatchInput(JSON.stringify([
+                  { studentId: "2251120101", fullName: "Trần Minh Đức", major: "An toàn TT", address: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b" },
+                  { studentId: "2251120102", fullName: "Võ Hoàng Nam", major: "Mạng máy tính", address: "0x2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c" },
+                  { studentId: "2251120103", fullName: "Đặng Thu Thảo", major: "Khoa học Dữ liệu", address: "0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d" }
+                ], null, 2));
+              }}
+              className="text-[11px] text-slate-400 hover:text-slate-200 underline"
+            >
+              Nạp dữ liệu mẫu khác
+            </button>
+
+            <button
+              onClick={handleBatchIssue}
+              disabled={batchLoading}
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-cyan-900/30 transition active:scale-[0.98]"
+            >
+              <Sparkles size={14} className={batchLoading ? 'animate-spin' : ''} />
+              <span>{batchLoading ? 'Đang tính toán Merkle Tree...' : 'Tính Merkle Root & Ký Phát Hành Lô'}</span>
+            </button>
+          </div>
+
+          {/* Result Card */}
+          {batchResult && (
+            <div className="bg-emerald-950/40 border border-emerald-800/60 rounded-xl p-3.5 space-y-2 text-xs animate-in fade-in">
+              <div className="flex items-center space-x-2 text-emerald-400 font-bold">
+                <CheckCircle2 size={16} />
+                <span>Đã phát hành thành công lô {batchResult.count} chứng chỉ số VC!</span>
+              </div>
+              <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 font-mono space-y-1 text-[11px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Merkle Root:</span>
+                  <span className="text-emerald-300 font-bold break-all select-all">{batchResult.merkleRoot}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Issuer Signature:</span>
+                  <span className="text-cyan-300 break-all select-all">{batchResult.issuerSignature?.slice(0, 24)}...</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Số lượng bản ghi:</span>
+                  <span className="text-slate-200">{batchResult.count} sinh viên (Đã đồng bộ Registry)</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -456,4 +651,3 @@ export default function AdminGateway() {
     </div>
   );
 }
-

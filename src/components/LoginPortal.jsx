@@ -13,7 +13,11 @@ import {
   User,
   GraduationCap,
   KeyRound,
-  FileCheck
+  FileCheck,
+  Clock,
+  ShieldAlert,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { NETWORK_CONFIG, subscribeToAuthEvents } from '../services/did';
 
@@ -22,6 +26,18 @@ export default function LoginPortal() {
   const [authenticatedSession, setAuthenticatedSession] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
   const socketRef = useRef(null);
+
+  // Nonce TTL Countdown (60s)
+  const NONCE_TTL = 60;
+  const [timeLeft, setTimeLeft] = useState(NONCE_TTL);
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Self-Revocation Modal from Web Portal
+  const [showSelfRevokeModal, setShowSelfRevokeModal] = useState(false);
+  const [revokeAddress, setRevokeAddress] = useState('');
+  const [revokeToken, setRevokeToken] = useState('');
+  const [revokeLoading, setRevokeLoading] = useState(false);
+  const [revokeMsg, setRevokeMsg] = useState('');
 
   // Khởi tạo kết nối WebSocket Socket.io (kết nối trực tiếp qua proxy Vite)
   useEffect(() => {
@@ -60,10 +76,32 @@ export default function LoginPortal() {
     };
   }, []);
 
+  // Timer 60s đếm lùi Nonce TTL
+  useEffect(() => {
+    if (authenticatedSession) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setIsExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [authenticatedSession, challengeData]);
+
   // Cấp phát phiên đăng nhập chuẩn hóa Nonce từ backend
   const generateNewSession = async () => {
+    setIsExpired(false);
+    setTimeLeft(NONCE_TTL);
+
     let nonce = 'auth_nonce_' + Math.random().toString(36).substring(2, 14);
     const sessionId = 'sess_' + Math.random().toString(36).substring(2, 9);
+    let domain = 'uth.edu.vn';
+    let messageToSign = '';
 
     try {
       const res = await fetch('/api/auth/challenge');
@@ -72,6 +110,12 @@ export default function LoginPortal() {
         if (data.challenge) {
           nonce = data.challenge;
         }
+        if (data.domain) {
+          domain = data.domain;
+        }
+        if (data.messageToSign) {
+          messageToSign = data.messageToSign;
+        }
       }
     } catch (e) {
       console.warn('Backend challenge fetch fallback to local:', e);
@@ -79,10 +123,11 @@ export default function LoginPortal() {
 
     const payload = {
       action: 'auth',
-      domain: 'nckh-auth.edu.vn',
+      domain,
       serviceName: 'Cổng Khảo Thí & Đào Tạo Số UTH',
       sessionId,
       nonce,
+      messageToSign,
       chainId: NETWORK_CONFIG.chainId,
       contractAddress: NETWORK_CONFIG.contractAddress,
       timestamp: Date.now(),
@@ -100,6 +145,41 @@ export default function LoginPortal() {
   const handleLogout = () => {
     setAuthenticatedSession(null);
     generateNewSession();
+  };
+
+  const handleRemoteSelfRevoke = async (e) => {
+    e.preventDefault();
+    if (!revokeAddress || !revokeToken) {
+      alert("Vui lòng nhập địa chỉ ví và mã khẩn cấp!");
+      return;
+    }
+    setRevokeLoading(true);
+    setRevokeMsg('');
+    try {
+      const res = await fetch('/api/identity/self-revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: revokeAddress.trim(),
+          emergencyToken: revokeToken.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRevokeMsg(data.message);
+        alert(data.message);
+        setShowSelfRevokeModal(false);
+        setRevokeAddress('');
+        setRevokeToken('');
+      } else {
+        setRevokeMsg('Lỗi: ' + data.message);
+        alert(data.message);
+      }
+    } catch (err) {
+      alert("Lỗi kết nối máy chủ: " + err.message);
+    } finally {
+      setRevokeLoading(false);
+    }
   };
 
   const user = authenticatedSession?.user || {
@@ -122,9 +202,9 @@ export default function LoginPortal() {
 
       <div className="flex items-center space-x-2 text-[10px] sm:text-[11px] text-slate-400 mb-4 bg-slate-950/70 border border-slate-800 px-2.5 sm:px-3 py-1 rounded-full max-w-full">
         <Lock size={12} className="text-emerald-400 flex-shrink-0" />
-        <span className="truncate">Domain: <strong className="text-slate-300">nckh-auth.edu.vn</strong></span>
+        <span className="truncate">Domain Ràng Buộc: <strong className="text-cyan-300 font-mono">uth.edu.vn</strong></span>
         <span className="text-slate-600">|</span>
-        <span className="text-cyan-400 font-medium whitespace-nowrap">Polygon Amoy (80002)</span>
+        <span className="text-purple-400 font-medium whitespace-nowrap">Polygon Amoy (80002)</span>
       </div>
 
       {authenticatedSession ? (
@@ -206,7 +286,25 @@ export default function LoginPortal() {
             Mở ứng dụng <strong>UTH TrustID</strong> trên điện thoại và quét mã QR để đăng nhập bằng FaceID / TouchID
           </p>
 
-          {challengeData && (
+          {/* Countdown & Status Bar */}
+          <div className="w-full flex items-center justify-between px-2 mb-3">
+            <span className="text-[11px] text-slate-400 flex items-center space-x-1">
+              <Clock size={12} className="text-cyan-400" />
+              <span>Thời gian hiệu lực:</span>
+            </span>
+
+            <span
+              className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
+                timeLeft <= 10
+                  ? 'bg-rose-950/60 border-rose-800/60 text-rose-300 animate-pulse'
+                  : 'bg-cyan-950/60 border-cyan-800/40 text-cyan-300'
+              }`}
+            >
+              {isExpired ? 'Hết hạn (Expired)' : `${timeLeft}s còn lại`}
+            </span>
+          </div>
+
+          {challengeData && !isExpired ? (
             <div className="p-3 sm:p-4 bg-white rounded-2xl sm:rounded-3xl shadow-2xl relative group transition transform hover:scale-[1.01] flex items-center justify-center">
               <QRCodeSVG
                 value={JSON.stringify(challengeData)}
@@ -216,12 +314,28 @@ export default function LoginPortal() {
                 className="w-44 h-44 sm:w-48 sm:h-48"
               />
             </div>
+          ) : (
+            <div className="w-48 h-48 sm:w-56 sm:h-56 bg-slate-950 border border-slate-800 rounded-3xl flex flex-col items-center justify-center p-4 text-center space-y-2">
+              <Clock size={32} className="text-rose-400 animate-bounce" />
+              <p className="text-xs text-rose-300 font-semibold">Mã QR đã hết hạn!</p>
+              <p className="text-[10px] text-slate-500">Mã có TTL 60s để ngăn ngừa tấn công phát lại (Replay Attack).</p>
+              <button
+                onClick={generateNewSession}
+                className="mt-1 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl transition"
+              >
+                Tạo mã mới
+              </button>
+            </div>
           )}
 
           <div className="mt-3.5 sm:mt-4 w-full bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 sm:p-3 text-[10px] sm:text-[11px] font-mono space-y-1.5">
             <div className="flex justify-between items-center">
               <span className="text-slate-500 font-sans">Challenge Nonce:</span>
               <span className="text-cyan-400 truncate max-w-[150px] sm:max-w-[220px]">{challengeData?.nonce}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500 font-sans">Single-Use TTL:</span>
+              <span className="text-emerald-400 font-semibold">60 Giây (Tự hủy sau 1 lần xác thực)</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-500 font-sans">Smart Contract:</span>
@@ -240,14 +354,100 @@ export default function LoginPortal() {
             </span>
           </div>
 
-          <button
-            onClick={generateNewSession}
-            className="mt-3 flex items-center space-x-1.5 text-xs text-slate-400 hover:text-cyan-300 transition"
-          >
-            <RefreshCw size={13} />
-            <span>Làm mới phiên đăng nhập</span>
-          </button>
+          <div className="flex items-center space-x-4 mt-3">
+            <button
+              onClick={generateNewSession}
+              className="flex items-center space-x-1.5 text-xs text-slate-400 hover:text-cyan-300 transition"
+            >
+              <RefreshCw size={13} />
+              <span>Làm mới phiên QR</span>
+            </button>
+
+            <span className="text-slate-700">|</span>
+
+            <button
+              onClick={() => setShowSelfRevokeModal(true)}
+              className="flex items-center space-x-1 text-xs text-rose-400/90 hover:text-rose-300 transition"
+            >
+              <ShieldAlert size={13} />
+              <span>Báo mất ví từ xa</span>
+            </button>
+          </div>
         </>
+      )}
+
+      {/* MODAL THU HỒI TỪ XA TRÊN CỔNG DỊCH VỤ WEB */}
+      {showSelfRevokeModal && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <form
+            onSubmit={handleRemoteSelfRevoke}
+            className="w-full max-w-sm bg-slate-900 border border-rose-900/60 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95"
+          >
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-2 text-rose-400">
+                <ShieldAlert size={18} />
+                <h4 className="font-bold text-sm text-slate-100">Báo Mất Thiết Bị / Thu Hồi Khẩn Cấp</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSelfRevokeModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Dành cho sinh viên bị mất điện thoại: Dùng mã khẩn cấp (Emergency Token) được cấp lúc khởi tạo ví để vô hiệu hóa tài khoản ngay lập tức từ trình duyệt:
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-[11px] text-slate-400 block font-medium">Địa chỉ Ví sinh viên (0x...):</label>
+              <input
+                type="text"
+                value={revokeAddress}
+                onChange={(e) => setRevokeAddress(e.target.value)}
+                placeholder="0x1D9b6938A3f073e3426052C7016155D85040Ed1D"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] text-slate-400 block font-medium">Mã bí mật khẩn cấp (Emergency Token):</label>
+              <input
+                type="text"
+                value={revokeToken}
+                onChange={(e) => setRevokeToken(e.target.value)}
+                placeholder="EMERGENCY_UTH_..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            {revokeMsg && (
+              <p className="text-xs text-rose-400 bg-rose-950/40 p-2 rounded-lg border border-rose-900/50">
+                {revokeMsg}
+              </p>
+            )}
+
+            <div className="flex space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSelfRevokeModal(false)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-xl transition"
+              >
+                Đóng
+              </button>
+              <button
+                type="submit"
+                disabled={revokeLoading}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center space-x-1"
+              >
+                {revokeLoading ? <RefreshCw size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
+                <span>{revokeLoading ? 'Đang gửi lệnh...' : 'Vô hiệu hóa ngay'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );

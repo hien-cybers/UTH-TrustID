@@ -35,12 +35,16 @@ import {
   FileCode,
   Download,
   ExternalLink,
+  ShieldAlert,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export default function StudentWallet() {
   const [identity, setIdentity] = useState(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedDid, setCopiedDid] = useState(false);
+  const [copiedEmergency, setCopiedEmergency] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [authResult, setAuthResult] = useState(null);
   const [isRevoked, setIsRevoked] = useState(false);
@@ -49,6 +53,16 @@ export default function StudentWallet() {
   const [activeSubTab, setActiveSubTab] = useState('wallet');
   const [credentials, setCredentials] = useState([]);
   const [logs, setLogs] = useState([]);
+
+  // Xuất trình có chọn lọc (Selective Disclosure)
+  const [selectiveDisclosure, setSelectiveDisclosure] = useState(false);
+
+  // Hộp thoại thu hồi khẩn cấp từ xa
+  const [showSelfRevokeModal, setShowSelfRevokeModal] = useState(false);
+  const [selfRevokeAddress, setSelfRevokeAddress] = useState('');
+  const [selfRevokeToken, setSelfRevokeToken] = useState('');
+  const [selfRevokeLoading, setSelfRevokeLoading] = useState(false);
+  const [selfRevokeMsg, setSelfRevokeMsg] = useState('');
 
   // Modals
   const [showMnemonicModal, setShowMnemonicModal] = useState(false);
@@ -80,6 +94,7 @@ export default function StudentWallet() {
           studentId: '2251120000',
           fullName: 'Sinh viên UTH',
           major: 'An toàn Thông tin',
+          emergencyToken: id.emergencyToken,
         }),
       });
     } catch {
@@ -198,6 +213,45 @@ export default function StudentWallet() {
     } else if (type === 'diddoc') {
       setCopiedDidDoc(true);
       setTimeout(() => setCopiedDidDoc(false), 2000);
+    } else if (type === 'emergency') {
+      setCopiedEmergency(true);
+      setTimeout(() => setCopiedEmergency(false), 2000);
+    }
+  };
+
+  const handleSelfRevokeSubmit = async (e) => {
+    e.preventDefault();
+    if (!selfRevokeAddress || !selfRevokeToken) {
+      alert('Vui lòng nhập địa chỉ ví và mã khẩn cấp!');
+      return;
+    }
+    setSelfRevokeLoading(true);
+    setSelfRevokeMsg('');
+    try {
+      const res = await fetch('/api/identity/self-revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: selfRevokeAddress,
+          emergencyToken: selfRevokeToken,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelfRevokeMsg(data.message);
+        if (identity && identity.address.toLowerCase() === selfRevokeAddress.toLowerCase()) {
+          setIsRevoked(true);
+        }
+        alert(data.message);
+        setShowSelfRevokeModal(false);
+      } else {
+        setSelfRevokeMsg('Lỗi: ' + data.message);
+        alert(data.message);
+      }
+    } catch (err) {
+      alert('Lỗi kết nối máy chủ: ' + err.message);
+    } finally {
+      setSelfRevokeLoading(false);
     }
   };
 
@@ -429,6 +483,40 @@ export default function StudentWallet() {
                 </a>
               </div>
 
+              {/* Emergency Recovery Token Section */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-amber-400 text-xs font-semibold">
+                    <ShieldAlert size={14} />
+                    <span>Mã thu hồi khẩn cấp (Emergency Token)</span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(identity.emergencyToken || 'EMERGENCY_UTH_' + identity.address.slice(2, 10).toUpperCase(), 'emergency')}
+                    className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded flex items-center space-x-1 transition"
+                  >
+                    {copiedEmergency ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                    <span>{copiedEmergency ? 'Đã sao chép' : 'Sao chép'}</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Lưu trữ mã này riêng biệt. Khi mất điện thoại, dùng mã này để thu hồi danh tính từ xa nhằm bảo vệ tài khoản:
+                </p>
+                <div className="bg-slate-950 p-2 rounded-lg font-mono text-[11px] text-amber-300 select-all break-all border border-slate-800">
+                  {identity.emergencyToken || 'EMERGENCY_UTH_' + identity.address.slice(2, 10).toUpperCase()}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelfRevokeAddress(identity.address);
+                    setSelfRevokeToken(identity.emergencyToken || '');
+                    setShowSelfRevokeModal(true);
+                  }}
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 px-3 rounded-lg text-[11px] font-medium transition text-center"
+                >
+                  Kích hoạt thu hồi từ xa ngay (Self-Revocation)
+                </button>
+              </div>
+
               {/* Nút Thu hồi khẩn cấp hoặc Khởi tạo lại */}
               {!isRevoked ? (
                 <button
@@ -484,6 +572,29 @@ export default function StudentWallet() {
                 </span>
               </div>
 
+              {/* Chế độ xuất trình có chọn lọc (Selective Disclosure) */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    {selectiveDisclosure ? <EyeOff size={16} className="text-cyan-400" /> : <Eye size={16} className="text-slate-400" />}
+                    <span className="text-xs font-semibold text-slate-200">Xuất trình có chọn lọc (Privacy Mode)</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectiveDisclosure(!selectiveDisclosure)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${selectiveDisclosure ? 'bg-cyan-600' : 'bg-slate-700'}`}
+                  >
+                    <span
+                      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${selectiveDisclosure ? 'translate-x-4' : 'translate-x-1'}`}
+                    />
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  {selectiveDisclosure
+                    ? 'Đang ẩn MSSV & Thông tin cá nhân. Chỉ xuất trình bằng chứng mã hóa xác nhận sinh viên UTH hợp lệ (Zero-Knowledge / Selective Disclosure cho Thư viện / Nhà xe).'
+                    : 'Đang hiển thị đầy đủ thông tin chứng chỉ sinh viên cho các nghiệp vụ kiểm tra học vụ.'}
+                </p>
+              </div>
+
               {credentials.map((vc) => (
                 <div
                   key={vc.id}
@@ -503,11 +614,15 @@ export default function StudentWallet() {
                   <div className="bg-slate-950/60 rounded-xl p-3 text-xs space-y-1.5 border border-slate-800/60 font-mono">
                     <div className="flex justify-between">
                       <span className="text-slate-500">Mã sinh viên:</span>
-                      <span className="text-slate-200 font-semibold">{vc.claims.studentId}</span>
+                      <span className="text-slate-200 font-semibold">
+                        {selectiveDisclosure ? '••••••••' : vc.claims.studentId}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Chuyên ngành:</span>
-                      <span className="text-slate-200">{vc.claims.major}</span>
+                      <span className="text-slate-200">
+                        {selectiveDisclosure ? '••••••••' : vc.claims.major}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Niên khóa:</span>
@@ -515,8 +630,14 @@ export default function StudentWallet() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Trạng thái:</span>
-                      <span className="text-emerald-400">{vc.claims.status}</span>
+                      <span className="text-emerald-400 font-bold">{vc.claims.status || 'Active UTH Student'}</span>
                     </div>
+                    {vc.issuerSignature && (
+                      <div className="pt-1.5 border-t border-slate-800/80 text-[10px] text-cyan-400/80 flex items-center justify-between">
+                        <span>Issuer Binding:</span>
+                        <span className="truncate max-w-[150px] font-mono">{vc.issuerSignature.slice(0, 16)}...</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -782,6 +903,76 @@ export default function StudentWallet() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MODAL 5: THU HỒI TỪ XA QUA MÃ KHẨN CẤP */}
+      {showSelfRevokeModal && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <form
+            onSubmit={handleSelfRevokeSubmit}
+            className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[90dvh] overflow-y-auto bg-slate-900 border border-rose-900/40 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95"
+          >
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-2 text-rose-400">
+                <ShieldAlert size={18} />
+                <h3 className="font-bold text-sm text-slate-100">Thu hồi danh tính khẩn cấp từ xa</h3>
+              </div>
+              <button type="button" onClick={() => setShowSelfRevokeModal(false)} className="text-slate-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Nhập địa chỉ ví cần thu hồi và mã bí mật khẩn cấp (Emergency Token) được cấp khi tạo danh tính:
+            </p>
+
+            <div className="space-y-2">
+              <label className="text-[11px] text-slate-400 block">Địa chỉ ví (Address):</label>
+              <input
+                type="text"
+                value={selfRevokeAddress}
+                onChange={(e) => setSelfRevokeAddress(e.target.value)}
+                placeholder="0x..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] text-slate-400 block">Mã khẩn cấp (Emergency Token):</label>
+              <input
+                type="text"
+                value={selfRevokeToken}
+                onChange={(e) => setSelfRevokeToken(e.target.value)}
+                placeholder="EMERGENCY_UTH_..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            {selfRevokeMsg && (
+              <p className="text-xs text-rose-400 bg-rose-950/40 p-2 rounded-lg border border-rose-900/50">
+                {selfRevokeMsg}
+              </p>
+            )}
+
+            <div className="flex space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSelfRevokeModal(false)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-xl transition"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                disabled={selfRevokeLoading}
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center space-x-1"
+              >
+                {selfRevokeLoading ? <RefreshCw size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
+                <span>{selfRevokeLoading ? 'Đang xử lý...' : 'Xác nhận thu hồi'}</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
