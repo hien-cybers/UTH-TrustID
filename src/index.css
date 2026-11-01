@@ -14,10 +14,20 @@
   --accent-emerald: #10b981;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Tối ưu hóa hiển thị Mobile chuẩn iOS & Android */
+html, body {
+  height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
 }
 
 * {
@@ -37,10 +47,36 @@ body {
   background-attachment: fixed;
   color: var(--text-main);
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 code, .font-mono {
   font-family: 'JetBrains Mono', monospace;
+}
+
+/* Modal Fullscreen Overlay cho máy chiếu */
+.fullscreen-qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: #050811;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Nút bấm mobile kích thước chuẩn không bị misclick & Chặn iOS zoom khi focus */
+button, input, select {
+  touch-action: manipulation;
+  font-size: 16px !important;
 }
 
 /* Glassmorphism card */

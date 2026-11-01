@@ -9,62 +9,23 @@ import WebPortal from './components/WebPortal';
 
 export default function App() {
   const getNavClass = ({ isActive }) => ({
-    padding: '8px 16px',
-    borderRadius: '10px',
+    flex: 1,
+    padding: '8px 4px',
     textDecoration: 'none',
-    fontSize: '13px',
-    fontWeight: 600,
-    color: isActive ? '#38bdf8' : 'var(--text-muted)',
-    background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
-    border: isActive ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid transparent',
-    transition: 'all 0.2s ease',
+    fontSize: '11px',
+    fontWeight: 700,
+    color: isActive ? '#38bdf8' : '#94a3b8',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: '6px',
-    whiteSpace: 'nowrap'
+    gap: '4px',
+    transition: 'all 0.15s ease'
   });
 
   return (
     <BrowserRouter>
-      {/* Header Sticky Glassmorphism */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 11, 20, 0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid var(--border-color)', padding: '12px clamp(16px, 4vw, 32px)' }}>
-        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #0284c7, #38bdf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', boxShadow: '0 0 15px rgba(56, 189, 248, 0.4)' }}>
-              🛡️
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '-0.3px', color: '#fff' }}>
-                UTH-TrustID
-              </div>
-              <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                Passwordless DID System
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <NavLink to="/faculty" style={getNavClass}>
-              <span>👨‍🏫</span> Cổng Giảng Viên
-            </NavLink>
-            <NavLink to="/wallet" style={getNavClass}>
-              <span>📱</span> Ví Sinh Viên
-            </NavLink>
-            <NavLink to="/portal" style={getNavClass}>
-              <span>💻</span> Cổng Dịch Vụ
-            </NavLink>
-            <NavLink to="/admin" style={getNavClass}>
-              <span>🔒</span> Quản Trị
-            </NavLink>
-          </nav>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main>
+      {/* Vùng nội dung chính co giãn động theo chiều cao thiết bị */}
+      <main style={{ minHeight: 'calc(100dvh - 65px)', paddingBottom: '70px', background: '#070b14' }}>
         <Routes>
           <Route path="/" element={<Navigate to="/faculty" replace />} />
           <Route path="/faculty" element={<FacultyPortal />} />
@@ -74,6 +35,39 @@ export default function App() {
           <Route path="*" element={<Navigate to="/faculty" replace />} />
         </Routes>
       </main>
+
+      {/* Thanh Bottom Nav cố định dưới đáy chuẩn Mobile app */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: 'rgba(11, 19, 41, 0.95)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        display: 'flex',
+        paddingBottom: 'var(--safe-bottom)',
+        paddingTop: '6px'
+      }}>
+        <NavLink to="/faculty" style={getNavClass}>
+          <span style={{ fontSize: '18px' }}>👨‍🏫</span>
+          <span>Giảng Viên</span>
+        </NavLink>
+        <NavLink to="/wallet" style={getNavClass}>
+          <span style={{ fontSize: '18px' }}>📱</span>
+          <span>Ví Sinh Viên</span>
+        </NavLink>
+        <NavLink to="/portal" style={getNavClass}>
+          <span style={{ fontSize: '18px' }}>💻</span>
+          <span>Cổng Dịch Vụ</span>
+        </NavLink>
+        <NavLink to="/admin" style={getNavClass}>
+          <span style={{ fontSize: '18px' }}>🔒</span>
+          <span>Quản Trị</span>
+        </NavLink>
+      </nav>
     </BrowserRouter>
   );
 }
