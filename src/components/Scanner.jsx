@@ -81,13 +81,13 @@ export default function Scanner({ onScanSuccess, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
+    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-sm bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
         {/* Header modal */}
-        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+        <div className="flex justify-between items-center p-3.5 sm:p-4 border-b border-slate-800">
           <div className="flex items-center space-x-2 text-cyan-400">
             <Camera size={18} />
-            <h3 className="font-semibold text-sm text-slate-200">Quét mã QR xác thực</h3>
+            <h3 className="font-semibold text-xs sm:text-sm text-slate-200">Quét mã QR xác thực</h3>
           </div>
           <button
             onClick={handleManualClose}
@@ -98,7 +98,7 @@ export default function Scanner({ onScanSuccess, onClose }) {
         </div>
 
         {/* Khung camera đơn duy nhất */}
-        <div className="p-4 flex flex-col items-center">
+        <div className="p-3.5 sm:p-4 flex flex-col items-center">
           <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-black border border-slate-800">
             {/* Vùng video camera */}
             <div
@@ -107,13 +107,13 @@ export default function Scanner({ onScanSuccess, onClose }) {
             ></div>
 
             {/* Khung ngắm quét đơn duy nhất (Single Viewfinder Reticle) */}
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-6">
-              <div className="relative w-52 h-52 border border-cyan-500/40 rounded-xl">
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
+              <div className="relative w-44 h-44 sm:w-52 sm:h-52 max-w-[75%] max-h-[75%] border border-cyan-500/40 rounded-xl">
                 {/* 4 góc viền neon nổi bật */}
-                <span className="absolute -top-1 -left-1 w-5 h-5 border-t-2 border-l-2 border-cyan-400 rounded-tl-sm"></span>
-                <span className="absolute -top-1 -right-1 w-5 h-5 border-t-2 border-r-2 border-cyan-400 rounded-tr-sm"></span>
-                <span className="absolute -bottom-1 -left-1 w-5 h-5 border-b-2 border-l-2 border-cyan-400 rounded-bl-sm"></span>
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 border-b-2 border-r-2 border-cyan-400 rounded-br-sm"></span>
+                <span className="absolute -top-1 -left-1 w-4 h-4 sm:w-5 sm:h-5 border-t-2 border-l-2 border-cyan-400 rounded-tl-sm"></span>
+                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 border-t-2 border-r-2 border-cyan-400 rounded-tr-sm"></span>
+                <span className="absolute -bottom-1 -left-1 w-4 h-4 sm:w-5 sm:h-5 border-b-2 border-l-2 border-cyan-400 rounded-bl-sm"></span>
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 border-b-2 border-r-2 border-cyan-400 rounded-br-sm"></span>
 
                 {/* Tia quét laser chuyển động */}
                 <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#22d3ee] animate-pulse absolute top-1/2 -translate-y-1/2"></div>
@@ -122,9 +122,9 @@ export default function Scanner({ onScanSuccess, onClose }) {
           </div>
 
           {errorMessage ? (
-            <p className="text-xs text-rose-400 mt-3 text-center px-2">{errorMessage}</p>
+            <p className="text-xs text-rose-400 mt-2.5 sm:mt-3 text-center px-2">{errorMessage}</p>
           ) : (
-            <p className="text-xs text-slate-400 mt-3 text-center">
+            <p className="text-xs text-slate-400 mt-2.5 sm:mt-3 text-center">
               Căn chỉnh mã QR Challenge vào giữa khung ngắm
             </p>
           )}

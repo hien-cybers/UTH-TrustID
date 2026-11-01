@@ -299,78 +299,80 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center p-4 selection:bg-cyan-500 selection:text-white pb-24">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col items-center px-3 sm:px-4 pt-[calc(0.5rem+env(safe-area-inset-top,0px))] pb-[calc(5rem+env(safe-area-inset-bottom,0px))] w-full selection:bg-cyan-500 selection:text-white overflow-x-hidden">
       {/* Header */}
-      <header className={`w-full ${viewMode === 'admin' ? 'max-w-4xl' : 'max-w-md'} flex flex-wrap justify-between items-center py-3 border-b border-slate-800 gap-3`}>
-        <div className="flex items-center space-x-2">
-          <div className="bg-cyan-500/10 p-2 rounded-xl border border-cyan-500/20 text-cyan-400">
-            <ShieldCheck size={26} />
-          </div>
-          <div>
-            <div className="flex items-center space-x-1.5">
-              <h1 className="font-bold text-base leading-tight">UTH TrustID</h1>
-              <span className="text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-400 px-1.5 py-0.2 rounded font-mono">
-                W3C DID
-              </span>
+      <header className={`w-full ${viewMode === 'admin' ? 'max-w-4xl' : 'max-w-md'} flex flex-col sm:flex-row justify-between items-stretch sm:items-center py-2 sm:py-3 border-b border-slate-800 gap-2.5`}>
+        <div className="flex items-center justify-between sm:justify-start space-x-2">
+          <div className="flex items-center space-x-2">
+            <div className="bg-cyan-500/10 p-1.5 sm:p-2 rounded-xl border border-cyan-500/20 text-cyan-400">
+              <ShieldCheck size={24} />
             </div>
-            {/* Live On-chain RPC Indicator */}
-            <div className="flex items-center space-x-1.5 text-[10px] text-slate-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Amoy:</span>
-              <span className="font-mono text-slate-300">
-                {blockNumber ? `#${blockNumber.toLocaleString()}` : 'Connecting...'}
-              </span>
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <h1 className="font-bold text-sm sm:text-base leading-tight">UTH TrustID</h1>
+                <span className="text-[9px] sm:text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-400 px-1.5 py-0.2 rounded font-mono">
+                  W3C DID
+                </span>
+              </div>
+              {/* Live On-chain RPC Indicator */}
+              <div className="flex items-center space-x-1.5 text-[10px] text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Amoy:</span>
+                <span className="font-mono text-slate-300">
+                  {blockNumber ? `#${blockNumber.toLocaleString()}` : 'Connecting...'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* 3-Mode View Switcher */}
-        <div className="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs space-x-1">
+        <div className="grid grid-cols-3 sm:flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl text-[11px] sm:text-xs gap-1">
           <button
             onClick={() => setViewMode('wallet')}
-            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg transition ${
+            className={`flex items-center justify-center space-x-1 py-1.5 px-2 rounded-lg transition ${
               viewMode === 'wallet' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Smartphone size={14} />
-            <span>Ví Mobile</span>
+            <Smartphone size={13} />
+            <span className="truncate">Ví Mobile</span>
           </button>
 
           <button
             onClick={() => setViewMode('portal')}
-            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg transition ${
+            className={`flex items-center justify-center space-x-1 py-1.5 px-2 rounded-lg transition ${
               viewMode === 'portal' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Monitor size={14} />
-            <span>Cổng Web</span>
+            <Monitor size={13} />
+            <span className="truncate">Cổng Web</span>
           </button>
 
           <button
             onClick={() => setViewMode('admin')}
-            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg transition ${
+            className={`flex items-center justify-center space-x-1 py-1.5 px-2 rounded-lg transition ${
               viewMode === 'admin' ? 'bg-cyan-600 text-white font-medium' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Lock size={14} />
-            <span>Quản Trị</span>
+            <Lock size={13} />
+            <span className="truncate">Quản Trị</span>
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className={`w-full ${viewMode === 'admin' ? 'max-w-4xl' : 'max-w-md'} flex-1 py-4 flex flex-col items-center`}>
+      <main className={`w-full ${viewMode === 'admin' ? 'max-w-4xl' : 'max-w-md'} flex-1 py-3 sm:py-4 flex flex-col items-center`}>
         {viewMode === 'admin' ? (
           <AdminGateway />
         ) : viewMode === 'portal' ? (
           <LoginPortal />
         ) : !identity ? (
           // MÀN HÌNH KHI CHƯA CÓ DANH TÍNH
-          <div className="flex-1 flex flex-col justify-center items-center text-center px-4 py-8">
-            <div className="w-20 h-20 bg-slate-900 border border-slate-800 rounded-3xl flex items-center justify-center text-cyan-400 mb-6 shadow-xl shadow-cyan-950/20">
-              <Key size={38} />
+          <div className="flex-1 w-full flex flex-col justify-center items-center text-center px-2 py-6 sm:py-8">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900 border border-slate-800 rounded-3xl flex items-center justify-center text-cyan-400 mb-5 shadow-xl shadow-cyan-950/20">
+              <Key size={32} />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Chưa có danh tính số</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Chưa có danh tính số</h2>
             <p className="text-xs text-slate-400 mb-6 max-w-xs leading-relaxed">
               Tạo danh tính W3C DID với khóa bảo mật được mã hóa AES-GCM và lưu trữ phân tán trên Polygon Amoy Testnet.
             </p>
@@ -380,7 +382,7 @@ export default function App() {
                 onClick={handleCreate}
                 className="w-full bg-cyan-600 hover:bg-cyan-500 active:scale-[0.98] transition font-semibold text-white py-3 px-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-cyan-900/30 text-xs"
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={15} />
                 <span>Khởi tạo DID mới (Mã hóa AES-GCM)</span>
               </button>
 
@@ -388,17 +390,17 @@ export default function App() {
                 onClick={() => setShowRestoreModal(true)}
                 className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 py-3 px-4 rounded-xl flex items-center justify-center space-x-2 text-xs transition"
               >
-                <Lock size={15} />
+                <Lock size={14} />
                 <span>Khôi phục bằng 12 từ Mnemonic (BIP-39)</span>
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="w-full space-y-3.5 sm:space-y-4">
             {/* Cảnh báo nếu danh tính đã bị thu hồi khẩn cấp */}
             {isRevoked && (
-              <div className="bg-rose-950/50 border border-rose-800 rounded-2xl p-4 flex items-center space-x-3 text-rose-300">
-                <AlertTriangle size={24} className="text-rose-400 flex-shrink-0" />
+              <div className="bg-rose-950/50 border border-rose-800 rounded-2xl p-3.5 sm:p-4 flex items-center space-x-3 text-rose-300">
+                <AlertTriangle size={22} className="text-rose-400 flex-shrink-0" />
                 <div className="text-xs">
                   <p className="font-bold text-rose-200">DANH TÍNH ĐÃ BỊ THU HỒI TRÊN BLOCKCHAIN</p>
                   Khóa ECDSA đã bị đóng băng vĩnh viễn khỏi Smart Contract. Mọi phiên đăng nhập đều bị từ chối.
@@ -408,9 +410,9 @@ export default function App() {
 
             {/* TAB 1: GIAO DIỆN VÍ CHÍNH */}
             {activeSubTab === 'wallet' && (
-              <div className="space-y-4">
+              <div className="w-full space-y-3.5 sm:space-y-4">
                 {/* Thẻ DID Card */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center space-x-1.5">
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400 bg-cyan-950/80 border border-cyan-800/50 px-2 py-0.5 rounded">
@@ -442,20 +444,20 @@ export default function App() {
                     </span>
                     <button
                       onClick={() => copyToClipboard(identity.did, 'did')}
-                      className="text-slate-400 hover:text-white p-1"
+                      className="text-slate-400 hover:text-white p-1 flex-shrink-0"
                     >
                       {copiedDid ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                     </button>
                   </div>
 
                   <label className="text-[11px] text-slate-400 block mb-1">Địa chỉ ví công khai (Ethereum Address):</label>
-                  <div className="flex items-center justify-between bg-slate-950/50 border border-slate-800/60 rounded-xl p-2.5 mb-3 text-xs font-mono text-slate-300 break-all">
-                    <span>{identity.address}</span>
+                  <div className="flex items-center justify-between bg-slate-950/50 border border-slate-800/60 rounded-xl p-2.5 mb-3 text-xs font-mono text-slate-300">
+                    <span className="break-all text-[11px] sm:text-xs leading-relaxed mr-2">{identity.address}</span>
                     <a
                       href={`${NETWORK_CONFIG.explorerUrl}/address/${identity.address}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-slate-500 hover:text-cyan-400 ml-2"
+                      className="text-slate-500 hover:text-cyan-400 p-1 flex-shrink-0"
                       title="Xem trên Polygonscan"
                     >
                       <ExternalLink size={14} />
@@ -473,50 +475,50 @@ export default function App() {
                 </div>
 
                 {/* Các nút hành động chính */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                   <button
                     onClick={handleScanClick}
                     disabled={isRevoked}
-                    className={`border p-4 rounded-xl flex flex-col items-center justify-center space-y-2 transition ${isRevoked
+                    className={`border p-3 sm:p-4 rounded-xl flex flex-col items-center justify-center space-y-1.5 sm:space-y-2 transition ${isRevoked
                         ? 'opacity-40 bg-slate-900 border-slate-800 cursor-not-allowed'
                         : 'bg-slate-900 hover:bg-slate-800 border-slate-800 active:scale-[0.98]'
                       }`}
                   >
-                    <div className="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
-                      <QrCode size={22} />
+                    <div className="p-2 sm:p-2.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
+                      <QrCode size={20} />
                     </div>
-                    <span className="text-xs font-semibold">Quét mã đăng nhập</span>
+                    <span className="text-[11px] sm:text-xs font-semibold text-center leading-tight">Quét mã đăng nhập</span>
                   </button>
 
                   <button
                     onClick={handleRevealMnemonic}
-                    className="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-4 rounded-xl flex flex-col items-center justify-center space-y-2 transition active:scale-[0.98]"
+                    className="bg-slate-900 hover:bg-slate-800 border border-slate-800 p-3 sm:p-4 rounded-xl flex flex-col items-center justify-center space-y-1.5 sm:space-y-2 transition active:scale-[0.98]"
                   >
-                    <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-lg">
-                      <Lock size={22} />
+                    <div className="p-2 sm:p-2.5 bg-purple-500/10 text-purple-400 rounded-lg">
+                      <Lock size={20} />
                     </div>
-                    <span className="text-xs font-semibold">Sao lưu 12 từ khóa</span>
+                    <span className="text-[11px] sm:text-xs font-semibold text-center leading-tight">Sao lưu 12 từ khóa</span>
                   </button>
                 </div>
 
                 {/* Hàng nút bảo mật phụ */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                   <button
                     onClick={() => copyToClipboard(identity.address, 'key')}
-                    className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 p-2.5 rounded-xl flex items-center justify-center space-x-1.5 text-xs text-slate-300 transition"
+                    className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 p-2 sm:p-2.5 rounded-xl flex items-center justify-center space-x-1 text-[10px] sm:text-xs text-slate-300 transition"
                   >
-                    <Fingerprint size={15} className="text-cyan-400" />
-                    <span>{copiedKey ? 'Đã sao chép Private Key' : 'Trích xuất Private Key'}</span>
+                    <Fingerprint size={14} className="text-cyan-400 flex-shrink-0" />
+                    <span className="truncate">{copiedKey ? 'Đã sao chép Key' : 'Trích xuất Private Key'}</span>
                   </button>
 
                   <a
                     href={`${NETWORK_CONFIG.explorerUrl}/address/${NETWORK_CONFIG.contractAddress}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 p-2.5 rounded-xl flex items-center justify-center space-x-1.5 text-xs text-slate-300 transition"
+                    className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800/80 p-2 sm:p-2.5 rounded-xl flex items-center justify-center space-x-1 text-[10px] sm:text-xs text-slate-300 transition"
                   >
-                    <ExternalLink size={14} className="text-purple-400" />
-                    <span>Smart Contract Amoy</span>
+                    <ExternalLink size={13} className="text-purple-400 flex-shrink-0" />
+                    <span className="truncate">Smart Contract Amoy</span>
                   </a>
                 </div>
 
@@ -657,31 +659,31 @@ export default function App() {
 
       {/* Bottom Navigation Bar */}
       {identity && viewMode === 'wallet' && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 flex justify-around py-3 max-w-md mx-auto z-40">
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] max-w-md mx-auto z-40 px-2 shadow-2xl">
           <button
             onClick={() => setActiveSubTab('wallet')}
-            className={`flex flex-col items-center space-y-1 text-xs ${activeSubTab === 'wallet' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center space-y-1 py-1 px-3 text-[11px] sm:text-xs transition ${activeSubTab === 'wallet' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
               }`}
           >
-            <Key size={18} />
+            <Key size={17} />
             <span>Ví DID</span>
           </button>
 
           <button
             onClick={() => setActiveSubTab('credentials')}
-            className={`flex flex-col items-center space-y-1 text-xs ${activeSubTab === 'credentials' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center space-y-1 py-1 px-3 text-[11px] sm:text-xs transition ${activeSubTab === 'credentials' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
               }`}
           >
-            <Award size={18} />
+            <Award size={17} />
             <span>Chứng chỉ VC</span>
           </button>
 
           <button
             onClick={() => setActiveSubTab('logs')}
-            className={`flex flex-col items-center space-y-1 text-xs ${activeSubTab === 'logs' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center space-y-1 py-1 px-3 text-[11px] sm:text-xs transition ${activeSubTab === 'logs' ? 'text-cyan-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
               }`}
           >
-            <History size={18} />
+            <History size={17} />
             <span>Audit Log</span>
           </button>
         </nav>
@@ -689,8 +691,8 @@ export default function App() {
 
       {/* MODAL 1: HỘP THOẠI PHÊ DUYỆT ĐĂNG NHẬP (CHALLENGE - RESPONSE UX) */}
       {pendingAuthRequest && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[90dvh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 sm:space-y-4 animate-in zoom-in-95">
             <div className="flex items-center space-x-2 text-cyan-400 border-b border-slate-800 pb-3">
               <ShieldCheck size={20} />
               <h3 className="font-bold text-sm text-slate-100">Yêu cầu Ủy quyền Đăng nhập</h3>
@@ -703,11 +705,11 @@ export default function App() {
             <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2 text-xs font-mono">
               <div className="flex justify-between">
                 <span className="text-slate-500">Tên dịch vụ:</span>
-                <span className="text-cyan-300 font-semibold">{pendingAuthRequest.serviceName || 'Cổng Dịch Vụ'}</span>
+                <span className="text-cyan-300 font-semibold truncate ml-2">{pendingAuthRequest.serviceName || 'Cổng Dịch Vụ'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Tên miền (Domain):</span>
-                <span className="text-slate-200 font-bold">{pendingAuthRequest.domain || 'nckh-auth.edu.vn'}</span>
+                <span className="text-slate-200 font-bold truncate ml-2">{pendingAuthRequest.domain || 'nckh-auth.edu.vn'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Blockchain:</span>
@@ -740,8 +742,8 @@ export default function App() {
 
       {/* MODAL 2: SAO LƯU 12 TỪ MNEMONIC (BIP-39) */}
       {showMnemonicModal && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95">
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[90dvh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 sm:space-y-4 animate-in zoom-in-95">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <div className="flex items-center space-x-2 text-purple-400">
                 <Lock size={18} />
@@ -757,11 +759,11 @@ export default function App() {
             </p>
 
             {/* Lưới 12 từ */}
-            <div className="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 bg-slate-950 p-2.5 sm:p-3 rounded-xl border border-slate-800">
               {revealedMnemonic.split(' ').map((word, idx) => (
-                <div key={idx} className="bg-slate-900 border border-slate-800/80 rounded-lg p-2 text-center text-xs">
+                <div key={idx} className="bg-slate-900 border border-slate-800/80 rounded-lg p-1.5 sm:p-2 text-center text-xs">
                   <span className="text-[10px] text-slate-500 block mb-0.5">{idx + 1}</span>
-                  <span className="font-mono text-cyan-300 font-semibold">{word}</span>
+                  <span className="font-mono text-cyan-300 font-semibold text-[11px] sm:text-xs truncate block">{word}</span>
                 </div>
               ))}
             </div>
@@ -787,10 +789,10 @@ export default function App() {
 
       {/* MODAL 3: KHÔI PHỤC VÍ TỪ 12 TỪ MNEMONIC */}
       {showRestoreModal && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <form
             onSubmit={handleRestoreSubmit}
-            className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95"
+            className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[90dvh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 sm:space-y-4 animate-in zoom-in-95"
           >
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <div className="flex items-center space-x-2 text-cyan-400">
@@ -837,8 +839,8 @@ export default function App() {
 
       {/* MODAL 4: XEM W3C DID DOCUMENT (JSON-LD) */}
       {showDidDocModal && didDocument && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-3 animate-in zoom-in-95 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[85vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3 animate-in zoom-in-95 flex flex-col">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3 flex-shrink-0">
               <div className="flex items-center space-x-2 text-cyan-400">
                 <FileCode size={18} />
@@ -853,7 +855,7 @@ export default function App() {
               Tài liệu định danh số chuẩn hóa theo khuyến nghị W3C DID Core Specification 1.0:
             </p>
 
-            <pre className="flex-1 overflow-y-auto bg-slate-950 border border-slate-800 p-3 rounded-xl text-[10px] font-mono text-cyan-300 leading-relaxed">
+            <pre className="flex-1 overflow-y-auto bg-slate-950 border border-slate-800 p-2.5 sm:p-3 rounded-xl text-[10px] font-mono text-cyan-300 leading-relaxed max-h-60">
               {JSON.stringify(didDocument, null, 2)}
             </pre>
 

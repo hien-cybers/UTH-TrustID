@@ -171,13 +171,13 @@ export default function AdminGateway() {
   const revokedCount = idEntries.filter(([_, id]) => id.isRevoked).length;
 
   return (
-    <div className="w-full max-w-4xl space-y-6 mt-4 pb-12 animate-in fade-in duration-300">
+    <div className="w-full max-w-4xl space-y-4 sm:space-y-6 mt-2 sm:mt-4 pb-12 animate-in fade-in duration-300">
       {/* Header & Stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-slate-900 border border-slate-800 p-4 sm:p-5 rounded-2xl">
         <div>
           <div className="flex items-center space-x-2 text-cyan-400 mb-1">
-            <Lock size={20} />
-            <h2 className="font-bold text-lg text-slate-100">Trung Tâm Quản Trị Danh Tính & Giám Sát An Ninh</h2>
+            <Lock size={18} className="sm:w-5 sm:h-5" />
+            <h2 className="font-bold text-base sm:text-lg text-slate-100">Trung Tâm Quản Trị Danh Tính & Giám Sát An Ninh</h2>
           </div>
           <p className="text-xs text-slate-400">
             Hệ thống quản lý định danh số W3C DID, Smart Contract Registry & Kiểm thử an toàn thông tin NCKH
@@ -187,7 +187,7 @@ export default function AdminGateway() {
         <button
           onClick={fetchData}
           disabled={loading}
-          className="flex items-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition"
+          className="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           <span>Làm mới dữ liệu</span>
@@ -195,52 +195,52 @@ export default function AdminGateway() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[11px] font-medium">Tổng DID</span>
             <Users size={15} className="text-cyan-400" />
           </div>
-          <span className="text-xl font-bold text-slate-100">{idEntries.length}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-100">{idEntries.length}</span>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
+        <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[11px] font-medium">Đang Hoạt Động</span>
             <ShieldCheck size={15} className="text-emerald-400" />
           </div>
-          <span className="text-xl font-bold text-emerald-400">{activeCount}</span>
+          <span className="text-lg sm:text-xl font-bold text-emerald-400">{activeCount}</span>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
+        <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[11px] font-medium">Đã Thu Hồi (Revoked)</span>
             <ShieldAlert size={15} className="text-rose-400" />
           </div>
-          <span className="text-xl font-bold text-rose-400">{revokedCount}</span>
+          <span className="text-lg sm:text-xl font-bold text-rose-400">{revokedCount}</span>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 p-3.5 rounded-xl">
+        <div className="bg-slate-900/80 border border-slate-800 p-3 sm:p-3.5 rounded-xl">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[11px] font-medium">Sự Kiện Nhật Ký</span>
             <History size={15} className="text-amber-400" />
           </div>
-          <span className="text-xl font-bold text-amber-400">{auditLogs.length}</span>
+          <span className="text-lg sm:text-xl font-bold text-amber-400">{auditLogs.length}</span>
         </div>
       </div>
 
       {/* SECTION 1: Identity Management Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm text-slate-200 flex items-center space-x-2">
-            <Fingerprint size={18} className="text-cyan-400" />
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3 sm:mb-4">
+          <h3 className="font-semibold text-xs sm:text-sm text-slate-200 flex items-center space-x-2">
+            <Fingerprint size={16} className="text-cyan-400" />
             <span>Danh Sách Danh Tính Sinh Viên (DID Registry)</span>
           </h3>
-          <span className="text-[11px] text-slate-400">Đồng bộ Polygon Amoy (80002)</span>
+          <span className="text-[10px] sm:text-[11px] text-slate-400">Đồng bộ Polygon Amoy (80002)</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="overflow-x-auto -mx-2 sm:mx-0">
+          <table className="w-full min-w-[560px] text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 text-[11px] font-medium">
                 <th className="pb-3 px-2">Địa chỉ Ví DID (Ethereum / Polygon)</th>
@@ -305,17 +305,17 @@ export default function AdminGateway() {
       </div>
 
       {/* SECTION 2: Centralized Audit Log Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-sm text-slate-200 flex items-center space-x-2">
-            <History size={18} className="text-amber-400" />
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3 sm:mb-4">
+          <h3 className="font-semibold text-xs sm:text-sm text-slate-200 flex items-center space-x-2">
+            <History size={16} className="text-amber-400" />
             <span>Nhật Ký An Ninh Tập Trung (Centralized Audit Logs)</span>
           </h3>
-          <span className="text-[11px] text-slate-400">Lưu vết bất biến phục vụ đối soát</span>
+          <span className="text-[10px] sm:text-[11px] text-slate-400">Lưu vết bất biến phục vụ đối soát</span>
         </div>
 
-        <div className="overflow-x-auto max-h-80 overflow-y-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        <div className="overflow-x-auto max-h-80 overflow-y-auto -mx-2 sm:mx-0">
+          <table className="w-full min-w-[560px] text-left text-xs border-collapse">
             <thead className="sticky top-0 bg-slate-900 z-10">
               <tr className="border-b border-slate-800 text-slate-400 text-[11px] font-medium">
                 <th className="pb-2 px-2">Thời gian</th>
@@ -365,14 +365,14 @@ export default function AdminGateway() {
       </div>
 
       {/* SECTION 3: Attack Vectors Verification */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
-            <h3 className="font-semibold text-sm text-slate-200 flex items-center space-x-2">
-              <ShieldAlert size={18} className="text-cyan-400" />
+            <h3 className="font-semibold text-xs sm:text-sm text-slate-200 flex items-center space-x-2">
+              <ShieldAlert size={16} className="text-cyan-400" />
               <span>Kiểm Thử Thực Nghiệm An Toàn Thông Tin (Attack Vectors)</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
               Đánh giá sức chống chịu trước các kịch bản tấn công theo tiêu chuẩn NCKH
             </p>
           </div>
