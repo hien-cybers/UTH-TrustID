@@ -1,39 +1,39 @@
 # UTH-TrustID: Decentralized Identity (W3C DID) & Passwordless Authentication Wallet
 
-Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity**) và xác thực không mật khẩu (**Passwordless Authentication**) tích hợp công nghệ Blockchain và Sinh trắc học phần cứng (**WebAuthn**), phục vụ đề tài Nghiên cứu Khoa học (NCKH) - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
+Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity**) và xác thực không mật khẩu (**Passwordless Authentication**) tích hợp công nghệ Blockchain (**Polygon Amoy**), Sinh trắc học phần cứng (**WebAuthn**), Cây Merkle (**Merkle Tree Batch VC**) và Hệ thống Giám sát An ninh Dị thường (**IDS**), phục vụ đề tài Nghiên cứu Khoa học (NCKH) - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
 
 ---
 
 ## 🌟 Tính Năng Nổi Bật
 
-1. **Chuẩn hóa Định danh W3C DID & Verifiable Credentials (VC)**
-   - Khởi tạo và quản lý mã định danh W3C: `did:ethr:polygon:<Address>`.
-   - Xuất tài liệu **W3C DID Document** theo đặc tả chuẩn quốc tế dạng **JSON-LD** (`GET /api/did/:address`).
-   - Lưu trữ và hiển thị Thẻ Sinh Viên Số UTH chuẩn W3C Verifiable Credentials.
+### 1. Chuẩn Hóa Logic An Toàn Thông Tin & Giao Thức (Security & Protocol Logic)
+- **Domain & Origin Binding**: Chuẩn hóa cấu trúc ký số EIP-191 mang tính chống chối bỏ:
+  $$\text{Payload} = \text{"uth.edu.vn wants you to sign in with non-repudiation: Nonce="} + nonce + \text{" at "} + timestamp$$
+  Chống triệt để tấn công Phishing và Relay Attack giữa các máy chủ giả mạo.
+- **Strict Nonce TTL (60s) & Single-Use Destruction**: Nonce có thời gian sống ngắn (60 giây) và **bị hủy ngay lập tức** khỏi bộ nhớ đệm tại request xác thực đầu tiên (bất kể thành công hay thất bại), triệt tiêu tuyệt đối nguy cơ tấn công phát lại (Replay Attack).
+- **Cryptographic Proof of Association**: Ràng buộc mật mã chặt chẽ giữa Khóa Ví và Thẻ Sinh Viên Số $(MSSV, studentAddress, issueDate, expiryDate)$ thông qua chữ ký số ECDSA từ University Root Issuer.
 
-2. **Cơ chế Bảo mật & Quản lý Khóa Đa Tầng (Key Management)**
-   - **Mã hóa AES-GCM-256**: Private Key và Mnemonic không bao giờ lưu dưới dạng plain-text; được mã hóa cục bộ thông qua Web Crypto API kết hợp dẫn xuất khóa PBKDF2 (100.000 vòng băm SHA-256).
-   - **Bảo vệ Sinh trắc học (WebAuthn)**: Yêu cầu xác thực FaceID / TouchID trước khi trích xuất khóa bí mật hoặc phê duyệt chữ ký.
-   - **Tẩy bộ nhớ đệm (Memory Sanitization)**: Tự động ghi đè (`0x00...`) và hủy biến chứa khóa riêng trong RAM ngay sau khi hoàn tất ký số EIP-191.
-   - **Sao lưu & Khôi phục chuẩn BIP-39**: Hỗ trợ xuất và khôi phục cặp khóa bằng cụm 12 từ khóa bí mật (Mnemonic Seed Phrase).
-   - **Tạo lại danh tính (Identity Reset)**: Hỗ trợ tạo cặp khóa mới độc lập sau khi danh tính cũ bị thu hồi.
+### 2. Phân Hệ Sinh Viên (Student Wallet PWA - `/wallet`)
+- **Xuất trình có chọn lọc (Selective Disclosure / Privacy Mode)**: Cho phép sinh viên bật chế độ riêng tư ẩn MSSV và thông tin cá nhân (`••••••••`), chỉ xuất trình bằng chứng mật mã xác nhận sinh viên UTH hợp lệ (Zero-Knowledge/Selective Disclosure cho Thư viện, Nhà xe).
+- **Cơ chế Thu hồi Nội bộ Chủ động (Self-Revocation via Emergency Token)**: Cấp mã khẩn cấp bí mật (`EMERGENCY_UTH_...`) khi tạo ví. Khi bị mất thiết bị, sinh viên có thể dùng mã này để tự khóa/thu hồi danh tính từ xa trên bất kỳ trình duyệt nào.
+- **Mã hóa Cục bộ AES-GCM-256 & WebAuthn**: Khóa riêng (Private Key) và cụm 12 từ khôi phục (BIP-39 Mnemonic) được mã hóa bằng AES-GCM kết hợp PBKDF2 (100.000 vòng lặp) và bảo vệ bằng TouchID/FaceID.
+- **Tẩy bộ nhớ đệm RAM (Memory Sanitization)**: Tự động ghi đè (`0x00...`) và hủy biến khóa riêng ngay sau khi hoàn tất ký số EIP-191.
 
-3. **Xác thực Không Mật Khẩu & Relay Thời Gian Thực (Challenge-Response UX)**
-   - Mã QR đóng gói chuẩn JSON mang đầy đủ metadata: `domain`, `serviceName`, `nonce`, `chainId`, `contractAddress`.
-   - **Hộp thoại Phê duyệt (Auth Approval Modal)**: Hiển thị minh bạch thông tin cổng dịch vụ trước khi người dùng đồng ý ký số.
-   - **WebSocket (Socket.io) Relay**: Cổng đăng nhập trên máy tính tự động nhận diện chữ ký từ điện thoại qua WebSocket room và chuyển sang **Dashboard Sinh Viên** tức thì không cần can thiệp thủ công.
+### 3. Phân Hệ Giảng Viên (Faculty & Verifier Portal - `/faculty`)
+- **Dynamic Rotating QR Code (Xoay mã 15s)**: Cơ chế xoay mã QR tự động sau mỗi 15 giây kèm thanh đếm lùi trực quan chuyển màu xanh $\to$ đỏ cảnh báo, chống việc sinh viên chụp ảnh mã gửi ra ngoài phòng thi / lớp học.
+- **Geo-fencing & Campus Wi-Fi Subnet Check**: Giảng viên có thể kích hoạt tùy chọn kiểm tra tọa độ GPS sinh viên ($\le 200\text{m}$ quanh UTH Bình Thạnh: $10.8016^\circ\text{N}, 106.7118^\circ\text{E}$) hoặc ràng buộc IP thuộc dải Subnet Wi-Fi nội bộ trường.
+- **Bảng điểm danh & khảo thí thời gian thực**: Thống kê danh sách sinh viên đã đối soát on-chain kèm khoảng cách GPS và trạng thái mạng kết nối.
 
-4. **Trung Tâm Quản Trị Danh Tính & Giám Sát An Ninh (Admin Gateway)**
-   - Quản lý tập trung toàn bộ danh tính sinh viên: Xem thông tin, chuyển đổi trạng thái **Hoạt Động (Active) $\leftrightarrow$ Thu Hồi (Revoked)** tức thì.
-   - Bảng **Nhật Ký An Ninh Tập Trung (Centralized Audit Logs)**: Lưu vết bất biến các sự kiện xác thực, tấn công và thu hồi danh tính.
+### 4. Phân Hệ Quản Trị Viên (Admin & Issuer Portal - `/admin`)
+- **Cấp phát VC hàng loạt qua Merkle Tree (Batch VC Issuance)**: Nhập danh sách sinh viên theo lô (JSON Batch), hệ thống tự động tính toán **Merkle Tree Root** (`keccak256`) và ký số lô tập trung bằng ví Root Issuer của trường, giúp tiết kiệm chi phí và tăng tốc độ cấp phát chứng chỉ số quy mô lớn.
+- **Hệ thống Giám sát An ninh & Cảnh báo Dị thường (IDS Alerts)**:
+  - **Brute-force Challenge**: Phát hiện và chặn các nguồn thử sai chữ ký liên tiếp $\ge 3$ lần.
+  - **Impossible Travel**: Phát hiện hành vi quét QR từ 2 vị trí địa lý cách nhau quá xa trong khoảng thời gian ngắn (ví dụ: > 100km trong < 15 phút).
+- **Registry Quản lý & Audit Logs**: Quản lý tập trung trạng thái hoạt động/thu hồi on-chain và tra cứu lịch sử kiểm toán an toàn thông tin.
 
-5. **Tương tác Smart Contract trên Blockchain Polygon Amoy**
-   - Kết nối trực tiếp RPC **Polygon Amoy Testnet (ChainId 80002)**.
-   - Smart Contract `DIDRegistry.sol` quản lý danh tính, đối soát chữ ký số ECDSA (`ecrecover`) và cơ chế thu hồi khẩn cấp (**Incident Revocation**).
-
-6. **Giao Diện Thích Ứng Toàn Diện (Responsive Mobile First)**
-   - Tương thích hoàn hảo với mọi kích cỡ màn hình từ iPhone SE (320px–375px) đến iPhone 11–16 (Notch, Dynamic Island) và các thiết bị Android.
-   - Hỗ trợ chuẩn vùng an toàn `env(safe-area-inset-top)` và `env(safe-area-inset-bottom)`.
+### 5. Cổng Dịch Vụ Web Không Mật Khẩu (Login Portal - `/portal`)
+- Tích hợp **WebSocket (Socket.io)** hai chiều tự động chuyển hướng sang Dashboard cá nhân ngay khi điện thoại quét và ký số thành công.
+- Tích hợp bộ đếm Nonce TTL 60s và nút **Báo mất ví khẩn cấp từ xa**.
 
 ---
 
@@ -43,9 +43,9 @@ Bộ kịch bản kiểm thử tấn công tự động (`backend/test-attacks.j
 
 | Mã Ca | Vectơ Tấn Công | Mô Tả Kịch Bản | Phản Hồi Kỳ Vọng | Kết Quả Thực Nghiệm | Đánh Giá NCKH |
 | :---: | :--- | :--- | :---: | :---: | :---: |
-| **TC-01** | **Replay Attack** (Tấn công phát lại) | Kẻ tấn công thu thập gói tin chữ ký hợp lệ trước đó và gửi lại máy chủ | `HTTP 401 Unauthorized` | `HTTP 401` | **ĐẠT (PASS)** |
-| **TC-02** | **Signature Tampering** (Giả mạo chữ ký / MitM) | Kẻ tấn công sửa đổi payload hoặc dùng khóa riêng mạo danh sinh viên | `HTTP 404 Not Found` | `HTTP 404` | **ĐẠT (PASS)** |
-| **TC-03** | **Revocation Abuse** (Lạm dụng danh tính thu hồi) | Cố tình đăng nhập bằng danh tính đã bị báo mất / thu hồi trên hệ thống | `HTTP 403 Forbidden` | `HTTP 403` | **ĐẠT (PASS)** |
+| **TC-01** | **Replay Attack** (Tấn công phát lại) | Kẻ tấn công thu thập gói tin chữ ký hợp lệ trước đó và gửi lại máy chủ | `HTTP 401 Unauthorized` | `HTTP 401` | **ĐẠT (PASS 100%)** |
+| **TC-02** | **Signature Tampering** (Giả mạo chữ ký / MitM) | Kẻ tấn công sửa đổi payload hoặc dùng khóa riêng mạo danh sinh viên | `HTTP 404 Not Found` | `HTTP 404` | **ĐẠT (PASS 100%)** |
+| **TC-03** | **Revocation Abuse** (Lạm dụng danh tính thu hồi) | Cố tình đăng nhập bằng danh tính đã bị báo mất / thu hồi trên hệ thống | `HTTP 403 Forbidden` | `HTTP 403` | **ĐẠT (PASS 100%)** |
 
 > **Tổng kết:** 3/3 ca thử nghiệm đều đạt chuẩn an toàn tuyệt đối (100% phòng thủ thành công).
 
@@ -55,31 +55,37 @@ Bộ kịch bản kiểm thử tấn công tự động (`backend/test-attacks.j
 
 ```text
 UTH-TrustID/
-├── backend/                    # Máy chủ Node.js / Express & Socket.io
-│   ├── server.js               # API Challenge, Verify, Admin, Audit Logs, W3C DID
-│   ├── test-attacks.js         # Script kiểm thử tự động TC-01, TC-02, TC-03
-│   └── package.json            # Dependencies: express, cors, ethers, socket.io
-├── public/                     # Icon PWA (192x192, 512x512), favicon, manifest
+├── backend/                      # Máy chủ Node.js / Express & Socket.io
+│   ├── server.js                 # API Challenge, Verify, Merkle Batch, IDS Alerts, Self-Revoke
+│   ├── test-attacks.js           # Kịch bản kiểm thử tấn công tự động TC-01, TC-02, TC-03
+│   └── package.json
+├── public/                       # Manifest PWA, Service Worker, Icons
 ├── src/
 │   ├── components/
-│   │   ├── AdminGateway.jsx    # Bảng điều khiển quản trị danh tính & Audit Log
-│   │   ├── LoginPortal.jsx     # Cổng dịch vụ web kết nối Socket.io & Dashboard SV
-│   │   └── Scanner.jsx         # Máy quét QR tối ưu WebKit / iOS Safari
+│   │   ├── AdminGateway.jsx      # Quản trị Registry, Merkle Batch Issuer & IDS Alerts
+│   │   ├── LoginPortal.jsx       # Cổng xác thực Web Socket.io & TTL 60s
+│   │   ├── ProtectedRoute.jsx    # Lớp bảo vệ tuyến đường (Route Guard) phân quyền
+│   │   ├── Scanner.jsx           # Máy quét QR WebKit / iOS Safari / Android
+│   │   ├── StudentWallet.jsx     # Ví DID Mobile PWA: WebAuthn, Selective Disclosure, Self-Revoke
+│   │   └── WebPortal.jsx         # Wrapper Cổng dịch vụ
+│   ├── pages/
+│   │   ├── AdminDashboard.jsx    # Dashboard Quản trị viên & Issuer
+│   │   └── FacultyPortal.jsx     # Cổng Giảng viên: Rotating QR 15s, Geo-fencing & Subnet
 │   ├── contracts/
-│   │   └── DIDRegistry.sol     # Smart Contract quản lý W3C DID trên Polygon Amoy
+│   │   └── DIDRegistry.sol       # Smart Contract Registry trên Polygon Amoy Testnet
 │   ├── services/
-│   │   └── did.js              # Core: Mật mã AES-GCM, WebAuthn, W3C DID, Polygon RPC
-│   ├── App.jsx                 # Ứng dụng Ví PWA (Ví Mobile, Cổng Web, Quản Trị)
-│   ├── index.css               # Cấu hình Tailwind CSS v4 & Safe Area Insets
+│   │   └── did.js                # Core Mật mã: AES-GCM, PBKDF2, WebAuthn, W3C DID, Polygon RPC
+│   ├── App.jsx                   # Định tuyến Router: /wallet, /faculty, /admin, /portal
+│   ├── index.css                 # Giao diện Tailwind CSS v4 & Vùng an toàn iOS/Android
 │   └── main.jsx
-├── index.html                  # Thẻ meta PWA độc lập (iOS Safari Standalone)
-├── vite.config.js              # Cấu hình Vite, VitePWA, Tailwind v4, SSL, Reverse Proxy
+├── index.html                    # PWA Standalone configuration
+├── vite.config.js                # Vite PWA, SSL Proxy, API Rewrite
 └── package.json
 ```
 
 ---
 
-## 🚀 Cài Đặt & Khởi Chạy
+## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
 
 ### 1. Khởi chạy Backend Service
 ```bash
@@ -89,7 +95,7 @@ npm start
 # Máy chủ Auth & Socket.io lắng nghe tại http://localhost:4000
 ```
 
-### 2. Chạy Kiểm thử Tấn công Thực nghiệm
+### 2. Chạy Kiểm Thử Tấn Công Thực Nghiệm
 ```bash
 cd backend
 node test-attacks.js
@@ -99,16 +105,24 @@ node test-attacks.js
 ```bash
 npm install
 npm run dev -- --host
-# Truy cập https://localhost:5173 (hoặc qua đường hầm Cloudflare)
+# Truy cập https://localhost:5173
 ```
 
-### 4. Đóng gói Sản Phẩm (Production Build)
+### 4. Đóng gói Bản Phát Hành (Production Build)
 ```bash
 npm run build
 ```
 
 ---
 
+## 🧭 Điều Hướng Các Phân Hệ
+* **Ví Sinh Viên (Mobile PWA)**: `/wallet`
+* **Cổng Giảng Viên (Điểm danh / Thi)**: `/faculty`
+* **Cổng Quản Trị Viên (Admin & Issuer)**: `/admin`
+* **Cổng Dịch Vụ Web (Đăng nhập không mật khẩu)**: `/portal`
+
+---
+
 ## 📜 Bản Quyền & Trích Dẫn
-Dự án được nghiên cứu và phát triển phục vụ đề tài Nghiên cứu Khoa học (NCKH) sinh viên - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
-Giấy phép phát hành: MIT License.
+Dự án được nghiên cứu và phát triển phục vụ đề tài Nghiên cứu Khoa học (NCKH) sinh viên - **Trường Đại học Giao thông Vận tải TP.HCM (UTH)**.  
+Giấy phép phát hành: **MIT License**.
