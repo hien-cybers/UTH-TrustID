@@ -1,7 +1,9 @@
 // src/pages/StaffLogin.jsx - Cổng Đăng Nhập Quản Trị & Giảng Viên (Email/Password + RBAC)
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function StaffLogin({ onLoginSuccess }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -24,7 +26,12 @@ export default function StaffLogin({ onLoginSuccess }) {
       if (res.ok && data.success) {
         localStorage.setItem('uth_staff_user', JSON.stringify(data.user));
         localStorage.setItem('uth_staff_token', data.token);
-        onLoginSuccess(data.user);
+        if (onLoginSuccess) onLoginSuccess(data.user);
+        if (data.user.role === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/services?tab=attendance');
+        }
         return;
       }
 
@@ -42,7 +49,12 @@ export default function StaffLogin({ onLoginSuccess }) {
       if (matchedUser) {
         localStorage.setItem('uth_staff_user', JSON.stringify(matchedUser));
         localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
-        onLoginSuccess(matchedUser);
+        if (onLoginSuccess) onLoginSuccess(matchedUser);
+        if (matchedUser.role === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/services?tab=attendance');
+        }
       } else {
         setErrorMsg(data.message || 'Tài khoản hoặc mật khẩu không chính xác!');
       }
@@ -61,7 +73,12 @@ export default function StaffLogin({ onLoginSuccess }) {
       if (matchedUser) {
         localStorage.setItem('uth_staff_user', JSON.stringify(matchedUser));
         localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
-        onLoginSuccess(matchedUser);
+        if (onLoginSuccess) onLoginSuccess(matchedUser);
+        if (matchedUser.role === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/services?tab=attendance');
+        }
       } else {
         setErrorMsg('Lỗi kết nối máy chủ: ' + err.message);
       }
@@ -255,3 +272,4 @@ export default function StaffLogin({ onLoginSuccess }) {
     </div>
   );
 }
+

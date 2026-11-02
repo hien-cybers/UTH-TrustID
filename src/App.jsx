@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
-import FacultyPortal from './pages/FacultyPortal';
+import ServicePortal from './pages/ServicePortal';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentWallet from './components/StudentWallet';
-import WebPortal from './components/WebPortal';
 import StaffLogin from './pages/StaffLogin';
 
 export default function App() {
@@ -27,9 +26,9 @@ export default function App() {
   const getNavClass = ({ isActive }) => ({
     flex: 1,
     minWidth: 0,
-    padding: '6px 2px',
+    padding: '7px 4px',
     textDecoration: 'none',
-    fontSize: '11px',
+    fontSize: '11.5px',
     fontWeight: 700,
     color: isActive ? '#38bdf8' : '#8492a6',
     background: isActive ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
@@ -45,12 +44,12 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {/* Header chỉ hiển thị Logo & Trạng thái mạng & Thông tin User nếu đăng nhập */}
+      {/* Header hiển thị Logo & Trạng thái mạng & Nút Đăng nhập / Thoát RBAC */}
       <header style={{
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: 'rgba(7, 11, 20, 0.88)',
+        background: 'rgba(7, 11, 20, 0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
@@ -90,16 +89,16 @@ export default function App() {
             </div>
           </div>
 
-          {/* Góc phải Header: Huy hiệu người dùng (nếu có) & Trạng thái Amoy */}
+          {/* Góc phải Header: Huy hiệu người dùng (nếu có) / Nút Đăng nhập & Trạng thái Amoy */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            {currentUser && (
+            {currentUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{
                   fontSize: '10.5px',
                   color: currentUser.role === 'ADMIN' ? '#00e676' : '#38bdf8',
                   background: currentUser.role === 'ADMIN' ? 'rgba(0, 230, 118, 0.12)' : 'rgba(56, 189, 248, 0.12)',
                   border: currentUser.role === 'ADMIN' ? '1px solid rgba(0, 230, 118, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                  padding: '2px 7px',
+                  padding: '3px 8px',
                   borderRadius: '6px',
                   fontWeight: 700
                 }}>
@@ -110,7 +109,7 @@ export default function App() {
                   onClick={handleLogout}
                   title="Đăng xuất tài khoản quản trị"
                   style={{
-                    padding: '2px 8px',
+                    padding: '3px 9px',
                     borderRadius: '6px',
                     border: '1px solid rgba(255, 82, 82, 0.4)',
                     background: 'rgba(255, 82, 82, 0.12)',
@@ -121,12 +120,33 @@ export default function App() {
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  Thoát
+                  Thoát ({currentUser.fullName ? currentUser.fullName.split(' ').pop() : 'User'})
                 </button>
               </div>
+            ) : (
+              <NavLink
+                to="/login"
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  color: '#38bdf8',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>🔑</span>
+                <span>Cán Bộ Đăng Nhập</span>
+              </NavLink>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '2px 6px', background: '#0b1329', borderRadius: '6px', border: '1px solid #162032' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 7px', background: '#0b1329', borderRadius: '6px', border: '1px solid #162032' }}>
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#00e676', display: 'inline-block', boxShadow: '0 0 6px #00e676' }} />
               <span style={{ fontSize: '10.5px', color: '#8492a6', fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
                 Amoy
@@ -136,7 +156,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area co giãn động theo chiều cao thiết bị */}
+      {/* Main Content Area */}
       <main style={{
         minHeight: 'calc(100dvh - 65px)',
         paddingBottom: 'calc(85px + env(safe-area-inset-bottom, 0px))',
@@ -149,24 +169,19 @@ export default function App() {
         boxSizing: 'border-box'
       }}>
         <Routes>
-          {/* Sinh viên: Truy cập tự do, không cần mật khẩu */}
+          {/* 1. Sinh viên: Truy cập ví tự do, không cần mật khẩu */}
           <Route path="/" element={<Navigate to="/wallet" replace />} />
           <Route path="/wallet" element={<StudentWallet />} />
-          <Route path="/portal" element={<WebPortal />} />
 
-          {/* Giảng viên: Yêu cầu đăng nhập (Role: FACULTY hoặc ADMIN) */}
-          <Route
-            path="/faculty"
-            element={
-              currentUser ? (
-                <FacultyPortal />
-              ) : (
-                <StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />
-              )
-            }
-          />
+          {/* 2. Cổng dịch vụ công khai (phân quyền tính năng theo role) */}
+          <Route path="/services" element={<ServicePortal currentUser={currentUser} />} />
+          <Route path="/portal" element={<Navigate to="/services" replace />} />
+          <Route path="/faculty" element={<Navigate to="/services?tab=attendance" replace />} />
 
-          {/* Quản trị viên: Yêu cầu quyền ADMIN tối cao */}
+          {/* 3. Trang Đăng nhập cán bộ công vụ */}
+          <Route path="/login" element={<StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />} />
+
+          {/* 4. Trung tâm Quản trị Cấp cao (Chỉ dành cho ADMIN) */}
           <Route
             path="/admin"
             element={
@@ -223,27 +238,23 @@ export default function App() {
         display: 'flex',
         paddingTop: '6px',
         paddingBottom: 'calc(6px + env(safe-area-inset-bottom, 0px))',
-        paddingLeft: 'calc(6px + env(safe-area-inset-left, 0px))',
-        paddingRight: 'calc(6px + env(safe-area-inset-right, 0px))',
+        paddingLeft: 'calc(10px + env(safe-area-inset-left, 0px))',
+        paddingRight: 'calc(10px + env(safe-area-inset-right, 0px))',
         width: '100%',
         maxWidth: '100vw',
         boxSizing: 'border-box',
-        gap: '4px'
+        gap: '6px'
       }}>
         <NavLink to="/wallet" style={getNavClass}>
-          <span style={{ fontSize: '17px' }}>📱</span>
+          <span style={{ fontSize: '18px' }}>📱</span>
           <span>Ví Sinh Viên</span>
         </NavLink>
-        <NavLink to="/portal" style={getNavClass}>
-          <span style={{ fontSize: '17px' }}>💻</span>
+        <NavLink to="/services" style={getNavClass}>
+          <span style={{ fontSize: '18px' }}>🏛️</span>
           <span>Cổng Dịch Vụ</span>
         </NavLink>
-        <NavLink to="/faculty" style={getNavClass}>
-          <span style={{ fontSize: '17px' }}>👨‍🏫</span>
-          <span>Giảng Viên</span>
-        </NavLink>
         <NavLink to="/admin" style={getNavClass}>
-          <span style={{ fontSize: '17px' }}>🔒</span>
+          <span style={{ fontSize: '18px' }}>🔒</span>
           <span>Quản Trị</span>
         </NavLink>
       </nav>
