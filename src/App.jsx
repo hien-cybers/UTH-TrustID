@@ -1,13 +1,29 @@
-// src/App.jsx - UTH-TrustID Deep Blue-Navy Interface (Bottom Nav Only)
-import React from 'react';
+// src/App.jsx - UTH-TrustID Deep Blue-Navy Interface (Bottom Nav & Staff RBAC Guard)
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
 import FacultyPortal from './pages/FacultyPortal';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentWallet from './components/StudentWallet';
 import WebPortal from './components/WebPortal';
+import StaffLogin from './pages/StaffLogin';
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('uth_staff_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('uth_staff_user');
+    localStorage.removeItem('uth_staff_token');
+    setCurrentUser(null);
+  };
+
   const getNavClass = ({ isActive }) => ({
     flex: 1,
     minWidth: 0,
@@ -29,7 +45,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {/* Header chỉ hiển thị Logo & Trạng thái mạng, KHÔNG để thanh điều hướng bên trên */}
+      {/* Header chỉ hiển thị Logo & Trạng thái mạng & Thông tin User nếu đăng nhập */}
       <header style={{
         position: 'sticky',
         top: 0,
@@ -74,12 +90,48 @@ export default function App() {
             </div>
           </div>
 
-          {/* Huy hiệu trạng thái kết nối mạng trường */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00e676', display: 'inline-block', boxShadow: '0 0 8px #00e676' }} />
-            <span style={{ fontSize: '11px', color: '#8492a6', fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
-              Amoy
-            </span>
+          {/* Góc phải Header: Huy hiệu người dùng (nếu có) & Trạng thái Amoy */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {currentUser && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{
+                  fontSize: '10.5px',
+                  color: currentUser.role === 'ADMIN' ? '#00e676' : '#38bdf8',
+                  background: currentUser.role === 'ADMIN' ? 'rgba(0, 230, 118, 0.12)' : 'rgba(56, 189, 248, 0.12)',
+                  border: currentUser.role === 'ADMIN' ? '1px solid rgba(0, 230, 118, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  fontWeight: 700
+                }}>
+                  {currentUser.role === 'ADMIN' ? 'Root Admin' : 'Giảng Viên'}
+                </span>
+
+                <button
+                  onClick={handleLogout}
+                  title="Đăng xuất tài khoản quản trị"
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 82, 82, 0.4)',
+                    background: 'rgba(255, 82, 82, 0.12)',
+                    color: '#ff5252',
+                    fontSize: '10.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Thoát
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '2px 6px', background: '#0b1329', borderRadius: '6px', border: '1px solid #162032' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#00e676', display: 'inline-block', boxShadow: '0 0 6px #00e676' }} />
+              <span style={{ fontSize: '10.5px', color: '#8492a6', fontWeight: 600, fontFamily: 'JetBrains Mono' }}>
+                Amoy
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -97,11 +149,62 @@ export default function App() {
         boxSizing: 'border-box'
       }}>
         <Routes>
+          {/* Sinh viên: Truy cập tự do, không cần mật khẩu */}
           <Route path="/" element={<Navigate to="/wallet" replace />} />
           <Route path="/wallet" element={<StudentWallet />} />
           <Route path="/portal" element={<WebPortal />} />
-          <Route path="/faculty" element={<FacultyPortal />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* Giảng viên: Yêu cầu đăng nhập (Role: FACULTY hoặc ADMIN) */}
+          <Route
+            path="/faculty"
+            element={
+              currentUser ? (
+                <FacultyPortal />
+              ) : (
+                <StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />
+              )
+            }
+          />
+
+          {/* Quản trị viên: Yêu cầu quyền ADMIN tối cao */}
+          <Route
+            path="/admin"
+            element={
+              currentUser && currentUser.role === 'ADMIN' ? (
+                <AdminDashboard />
+              ) : currentUser ? (
+                <div style={{ maxWidth: '440px', margin: '40px auto', padding: '24px 20px', background: '#0d131f', border: '1px solid #162032', borderRadius: '16px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>⛔</div>
+                  <h3 style={{ fontSize: '16px', color: '#ff5252', fontWeight: 800, margin: '0 0 6px' }}>
+                    Từ Chối Truy Cập (403 Forbidden)
+                  </h3>
+                  <p style={{ fontSize: '12px', color: '#8492a6', lineHeight: '1.5', margin: '0 0 16px' }}>
+                    Tài khoản <strong>{currentUser.email}</strong> có vai trò <strong>{currentUser.role}</strong>. Trung tâm Quản trị Cấp cao chỉ dành riêng cho tài khoản có quyền <strong>Root Admin</strong>.
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        padding: '9px 18px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: 'linear-gradient(90deg, #ff5252, #d32f2f)',
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Đăng xuất để đổi tài khoản Admin
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />
+              )
+            }
+          />
+
           <Route path="*" element={<Navigate to="/wallet" replace />} />
         </Routes>
       </main>
