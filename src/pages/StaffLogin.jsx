@@ -31,7 +31,7 @@ export default function StaffLogin({ onLoginSuccess }) {
         if (data.user.role === 'ADMIN') {
           navigate('/admin');
         } else {
-          navigate('/services?tab=attendance');
+          navigate('/faculty');
         }
         return;
       }
@@ -54,7 +54,7 @@ export default function StaffLogin({ onLoginSuccess }) {
         if (matchedUser.role === 'ADMIN') {
           navigate('/admin');
         } else {
-          navigate('/services?tab=attendance');
+          navigate('/faculty');
         }
       } else {
         setErrorMsg(data.message || 'Tài khoản hoặc mật khẩu không chính xác!');
@@ -78,7 +78,7 @@ export default function StaffLogin({ onLoginSuccess }) {
         if (matchedUser.role === 'ADMIN') {
           navigate('/admin');
         } else {
-          navigate('/services?tab=attendance');
+          navigate('/faculty');
         }
       } else {
         setErrorMsg('Lỗi kết nối máy chủ: ' + err.message);
@@ -95,8 +95,8 @@ export default function StaffLogin({ onLoginSuccess }) {
   };
 
   return (
-    <div style={{ maxWidth: '420px', margin: '30px auto', padding: '16px', boxSizing: 'border-box' }}>
-      <div style={{ background: '#0d131f', border: '1px solid #162032', borderRadius: '16px', padding: '24px 20px', boxShadow: '0 12px 36px rgba(0,0,0,0.45)' }}>
+    <div style={{ width: '100%', boxSizing: 'border-box' }}>
+      <div className="glass-card" style={{ padding: '20px 16px' }}>
         
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>

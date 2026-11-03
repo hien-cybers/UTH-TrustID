@@ -183,12 +183,8 @@ export default function FacultyPortalPro() {
 
   return (
     <div style={{
-      maxWidth: '430px',
-      margin: '0 auto',
-      minHeight: '100dvh',
-      background: '#07090E',
+      width: '100%',
       color: '#F8FAFC',
-      padding: '16px 14px 90px',
       boxSizing: 'border-box'
     }}>
       

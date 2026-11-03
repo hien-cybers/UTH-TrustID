@@ -101,7 +101,7 @@ export default function ServicePortal({ currentUser }) {
   };
 
   return (
-    <div style={{ maxWidth: '820px', margin: '0 auto', padding: '16px 12px', color: '#fff', boxSizing: 'border-box' }}>
+    <div style={{ width: '100%', color: '#fff', boxSizing: 'border-box' }}>
       
       {/* 1. Header Cổng Dịch Vụ */}
       <div style={{ background: '#0d131f', border: '1px solid #162032', borderRadius: '16px', padding: '18px 16px', marginBottom: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.3)' }}>
@@ -148,8 +148,8 @@ export default function ServicePortal({ currentUser }) {
           </div>
         </div>
 
-        {/* 4 Tab Điều Hướng */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px', marginTop: '14px', borderTop: '1px solid #162032', paddingTop: '12px' }}>
+        {/* 4 Tab Điều Hướng Gọn Trong Khung Điện Thoại */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '12px', borderTop: '1px solid #162032', paddingTop: '10px' }}>
           <button
             onClick={() => switchTab('lookup')}
             style={{
