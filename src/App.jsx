@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/wallet" element={<AppProView initialTab="wallet" />} />
         <Route path="/scan" element={<AppProView initialTab="scan" />} />
         <Route path="/faculty" element={<AppProView initialTab="faculty" />} />
+        <Route path="/recovery" element={<AppProView initialTab="recovery" />} />
 
         {/* Các route chuyên sâu mở rộng */}
         <Route path="/services" element={<ServicePortal currentUser={currentUser} />} />

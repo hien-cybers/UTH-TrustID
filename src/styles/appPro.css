@@ -19,7 +19,7 @@
   --accent-rose: #F43F5E;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -28,27 +28,29 @@
   user-select: none;
 }
 
-body {
-  background-color: #000;
-  color: var(--text-main);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+html, body {
+  width: 100%;
+  max-width: 100vw;
   min-height: 100dvh;
+  background-color: #020306;
+  color: var(--text-main);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
   width: 100%;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
-/* Khung hiển thị chuẩn tỉ lệ Smartphone hiện đại */
+/* Khung hiển thị chuẩn tỉ lệ Smartphone hiện đại - Tương thích mọi kích thước màn hình không tràn viền */
 .app-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 430px;
   height: 100dvh;
   max-height: 900px;
   background: var(--bg-root);
@@ -60,20 +62,49 @@ body {
   border-radius: 28px;
 }
 
-@media (max-width: 480px) {
+/* Trên màn hình Desktop/Laptop có chiều cao thấp, tự co giãn vừa khít khung nhìn */
+@media (min-width: 521px) {
   .app-container {
-    max-width: 100%;
+    height: min(100dvh - 16px, 880px);
+    margin: 8px auto;
+  }
+}
+
+/* Trên mọi thiết bị di động thực tế: Tràn viền tự nhiên 100% không bị cắt góc hay lệch khung */
+@media (max-width: 520px) {
+  html, body, #root {
+    background-color: var(--bg-root);
+    align-items: stretch;
+  }
+  .app-container {
+    max-width: 100vw;
+    width: 100vw;
+    height: 100dvh;
     max-height: 100dvh;
     border-radius: 0;
     box-shadow: none;
+    border: none;
+  }
+}
+
+/* Màn hình điện thoại nhỏ (iPhone SE / Galaxy Fold ngoài / <= 360px) */
+@media (max-width: 360px) {
+  .content-scroll {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .hero-pass {
+    padding: 16px 14px !important;
   }
 }
 
 /* Thanh nội dung cuộn mượt */
 .content-scroll {
   flex: 1;
+  width: 100%;
   overflow-y: auto;
-  padding: 16px 18px calc(84px + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
+  padding: 14px 16px calc(86px + env(safe-area-inset-bottom, 0px));
   scrollbar-width: none;
 }
 .content-scroll::-webkit-scrollbar {
@@ -82,16 +113,19 @@ body {
 
 /* Thẻ nổi phong cách Apple Card */
 .glass-card {
+  width: 100%;
+  max-width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-hairline);
   border-radius: 20px;
-  padding: 16px;
+  padding: 15px;
   position: relative;
+  overflow: hidden;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .glass-card:active {
-  transform: scale(0.99);
+  transform: scale(0.995);
 }
 
 /* Hiệu ứng lướt sáng kim loại */
@@ -101,10 +135,12 @@ body {
 }
 
 .hero-pass {
+  width: 100%;
+  max-width: 100%;
   background: linear-gradient(135deg, #0B132B 0%, #080D1A 60%, #030712 100%);
   border: 1px solid rgba(56, 189, 248, 0.28);
-  border-radius: 24px;
-  padding: 22px 20px;
+  border-radius: 22px;
+  padding: 20px 18px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 16px 36px -10px rgba(2, 132, 199, 0.35);
@@ -148,4 +184,20 @@ body {
 .btn-press:active {
   transform: scale(0.96);
   opacity: 0.88;
+}
+
+/* Input chuẩn Native Dark */
+.pro-input {
+  width: 100%;
+  background: #050811;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #F8FAFC;
+  font-size: 12.5px;
+  outline: none;
+  user-select: text;
+}
+.pro-input:focus {
+  border-color: var(--accent-cyan);
 }
