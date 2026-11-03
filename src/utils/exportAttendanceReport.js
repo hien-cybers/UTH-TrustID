@@ -57,3 +57,4 @@ export function exportAttendanceToExcel(attendees = [], sessionInfo = {}) {
   XLSX.writeFile(workbook, fileName);
   return fileName;
 }
+

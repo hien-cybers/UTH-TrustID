@@ -5,6 +5,7 @@ import App from './App.jsx';
 import './index.css';
 import './styles/nativeApp.css';
 import './styles/animations.css';
+import './styles/appPro.css';
 
 // Đăng ký Service Worker khi chạy trên trình duyệt
 if ('serviceWorker' in navigator) {

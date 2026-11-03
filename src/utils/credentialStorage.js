@@ -120,3 +120,9 @@ export async function clearAllCredentialsFromStorage() {
   }
 }
 
+// Aliases tương thích ngược
+export const saveCredential = saveCredentialToStorage;
+export const getCredential = getCredentialByStudentId;
+export const getAllCredentials = getAllCredentialsFromStorage;
+
+
