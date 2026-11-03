@@ -4,6 +4,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { INITIAL_STUDENTS } from '../data/studentsData';
 import FacultyPortal from './FacultyPortal';
 import LoginPortal from '../components/LoginPortal';
+import { 
+  Building2, 
+  Search, 
+  FileText, 
+  QrCode, 
+  Target, 
+  BookOpen, 
+  Lock, 
+  CheckCircle2, 
+  AlertTriangle 
+} from 'lucide-react';
 
 export default function ServicePortal({ currentUser }) {
   const navigate = useNavigate();
@@ -97,7 +108,18 @@ export default function ServicePortal({ currentUser }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '20px' }}>🏛️</span>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(0, 242, 254, 0.12)',
+                border: '1px solid rgba(0, 242, 254, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Building2 size={18} color="#00f2fe" strokeWidth={1.8} />
+              </div>
               <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: '#00f2fe', letterSpacing: '-0.3px' }}>
                 Cổng Dịch Vụ & Thẩm Tra Danh Tính UTH
               </h2>
@@ -139,10 +161,15 @@ export default function ServicePortal({ currentUser }) {
               cursor: 'pointer',
               background: activeTab === 'lookup' ? 'rgba(0, 242, 254, 0.15)' : '#0b1329',
               color: activeTab === 'lookup' ? '#00f2fe' : '#8492a6',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            🔍 Tra Cứu Thẻ Số
+            <Search size={14} />
+            <span>Tra Cứu Thẻ Số</span>
           </button>
 
           <button
@@ -156,10 +183,15 @@ export default function ServicePortal({ currentUser }) {
               cursor: 'pointer',
               background: activeTab === 'services' ? 'rgba(0, 242, 254, 0.15)' : '#0b1329',
               color: activeTab === 'services' ? '#00f2fe' : '#8492a6',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            📑 Dịch Vụ Một Chạm
+            <FileText size={14} />
+            <span>Dịch Vụ Một Chạm</span>
           </button>
 
           <button
@@ -173,10 +205,15 @@ export default function ServicePortal({ currentUser }) {
               cursor: 'pointer',
               background: activeTab === 'weblogin' ? 'rgba(0, 242, 254, 0.15)' : '#0b1329',
               color: activeTab === 'weblogin' ? '#00f2fe' : '#8492a6',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            💻 Đăng Nhập Web QR
+            <QrCode size={14} />
+            <span>Đăng Nhập Web QR</span>
           </button>
 
           <button
@@ -190,10 +227,15 @@ export default function ServicePortal({ currentUser }) {
               cursor: 'pointer',
               background: activeTab === 'attendance' ? 'rgba(0, 230, 118, 0.15)' : '#0b1329',
               color: activeTab === 'attendance' ? '#00e676' : '#8492a6',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
             }}
           >
-            🎯 Mở Phòng Điểm Danh
+            <Target size={14} />
+            <span>Mở Phòng Điểm Danh</span>
           </button>
         </div>
       </div>
@@ -202,7 +244,7 @@ export default function ServicePortal({ currentUser }) {
       {activeTab === 'lookup' && (
         <div style={{ background: '#0d131f', border: '1px solid #162032', borderRadius: '14px', padding: '18px 16px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ fontSize: '18px' }}>🔍</span>
+            <Search size={18} color="#00f2fe" />
             <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#fff' }}>
               Tra Cứu Tính Toàn Vẹn Của Thẻ Sinh Viên Số (DID Verification)
             </h3>
@@ -282,7 +324,7 @@ export default function ServicePortal({ currentUser }) {
             }}>
               {searchResult.notFound ? (
                 <div style={{ color: '#f87171', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>⚠️</span>
+                  <AlertTriangle size={15} color="#EF4444" />
                   <span>Không tìm thấy hồ sơ cho mã <strong>{searchResult.searchedId}</strong> hoặc thẻ chưa được cấp phát trong hệ thống!</span>
                 </div>
               ) : (
@@ -316,7 +358,7 @@ export default function ServicePortal({ currentUser }) {
                   </div>
 
                   <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #162032', color: '#00e676', fontSize: '11.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>✓</span>
+                    <CheckCircle2 size={14} color="#00e676" />
                     <span>Đã đối soát mật mã học thành công với Smart Contract Merkle Registry Trường UTH</span>
                   </div>
                 </div>
@@ -330,7 +372,7 @@ export default function ServicePortal({ currentUser }) {
       {activeTab === 'services' && (
         <div style={{ background: '#0d131f', border: '1px solid #162032', borderRadius: '14px', padding: '18px 16px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <span style={{ fontSize: '18px' }}>📑</span>
+            <FileText size={18} color="#00f2fe" />
             <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#fff' }}>
               Dịch Vụ Tiện Ích Sinh Viên Không Mật Khẩu
             </h3>
@@ -350,7 +392,10 @@ export default function ServicePortal({ currentUser }) {
               marginBottom: '14px',
               lineHeight: 1.5
             }}>
-              <div style={{ fontWeight: 800, marginBottom: '3px' }}>✓ {serviceActionMsg.title}</div>
+              <div style={{ fontWeight: 800, marginBottom: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 size={14} color="#00e676" />
+                <span>{serviceActionMsg.title}</span>
+              </div>
               <div>{serviceActionMsg.detail}</div>
             </div>
           )}
@@ -359,7 +404,9 @@ export default function ServicePortal({ currentUser }) {
             {/* Dịch vụ 1: Thư viện số */}
             <div style={{ background: '#07090e', border: '1px solid #162032', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '24px', marginBottom: '6px' }}>📖</div>
+                <div style={{ marginBottom: '8px' }}>
+                  <BookOpen size={24} color="#38bdf8" strokeWidth={1.8} />
+                </div>
                 <strong style={{ fontSize: '13px', color: '#fff' }}>Thư Viện Số UTH</strong>
                 <p style={{ margin: '4px 0 12px', fontSize: '11px', color: '#8492a6', lineHeight: 1.45 }}>
                   Mượn giáo trình chuyên ngành và truy cập phòng tự học thông minh bằng chữ ký số DID.
@@ -387,7 +434,9 @@ export default function ServicePortal({ currentUser }) {
             {/* Dịch vụ 2: Cấp giấy xác nhận sinh viên */}
             <div style={{ background: '#07090e', border: '1px solid #162032', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '24px', marginBottom: '6px' }}>📜</div>
+                <div style={{ marginBottom: '8px' }}>
+                  <FileText size={24} color="#00e676" strokeWidth={1.8} />
+                </div>
                 <strong style={{ fontSize: '13px', color: '#fff' }}>Giấy Xác Nhận Sinh Viên</strong>
                 <p style={{ margin: '4px 0 12px', fontSize: '11px', color: '#8492a6', lineHeight: 1.45 }}>
                   Cấp chứng nhận điện tử tạm hoãn nghĩa vụ, vay vốn hoặc ưu đãi xe buýt có gắn chữ ký số của Trường.
@@ -454,7 +503,9 @@ export default function ServicePortal({ currentUser }) {
             </div>
           ) : (
             <div style={{ background: '#0d131f', border: '1px solid #162032', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }}>
-              <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔐</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <Lock size={36} color="#38bdf8" strokeWidth={1.8} />
+              </div>
               <h4 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', color: '#fff' }}>
                 Khu Vực Dành Riêng Cho Cán Bộ / Giảng Viên
               </h4>
@@ -486,3 +537,4 @@ export default function ServicePortal({ currentUser }) {
     </div>
   );
 }
+

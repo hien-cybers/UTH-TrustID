@@ -1,6 +1,7 @@
 // src/pages/StaffLogin.jsx - Cổng Đăng Nhập Quản Trị & Giảng Viên (Email/Password + RBAC)
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Lock, GraduationCap, ShieldCheck, Key, AlertTriangle } from 'lucide-react';
 
 export default function StaffLogin({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -108,10 +109,9 @@ export default function StaffLogin({ onLoginSuccess }) {
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '22px',
             marginBottom: '10px'
           }}>
-            🔒
+            <Lock size={22} color="#38BDF8" strokeWidth={1.8} />
           </div>
           <h2 style={{ fontSize: '16.5px', fontWeight: 800, margin: '0 0 4px', color: '#fff', letterSpacing: '-0.3px' }}>
             Cổng Đăng Nhập Quản Trị
@@ -235,7 +235,10 @@ export default function StaffLogin({ onLoginSuccess }) {
                 alignItems: 'center'
               }}
             >
-              <span>👨‍🏫 Giảng Viên: giangvien@ut.edu.vn</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <GraduationCap size={14} color="#38bdf8" />
+                <span>Giảng Viên: giangvien@ut.edu.vn</span>
+              </span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Pass: 123456)</span>
             </button>
 
@@ -258,7 +261,10 @@ export default function StaffLogin({ onLoginSuccess }) {
                 alignItems: 'center'
               }}
             >
-              <span>🔒 Root Admin: admin@ut.edu.vn</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldCheck size={14} color="#00e676" />
+                <span>Root Admin: admin@ut.edu.vn</span>
+              </span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Pass: 123456)</span>
             </button>
           </div>
