@@ -41,12 +41,31 @@ export default function ScanPage() {
       message: 'Đang kiểm tra sinh trắc học và sinh chữ ký EIP-191...'
     });
 
-    const identity = getSavedIdentity();
+    let identity = getSavedIdentity();
+    if (!identity || !identity.address) {
+      const savedVCStr = localStorage.getItem('uth_student_vc');
+      if (savedVCStr) {
+        try {
+          const vc = JSON.parse(savedVCStr);
+          identity = {
+            address: vc.address,
+            privateKey: vc.privateKey,
+            student: {
+              studentId: vc.studentId,
+              mssv: vc.studentId,
+              fullName: vc.fullName,
+              major: vc.major
+            }
+          };
+        } catch {}
+      }
+    }
+
     if (!identity || !identity.address) {
       setScanStatus({
         type: 'ERROR',
-        title: 'CHƯA CÓ DANH TÍNH (DID)',
-        message: 'Vui lòng khởi tạo hoặc khôi phục ví trước khi quét mã điểm danh!'
+        title: 'CHƯA KÍCH HOẠT THẺ SINH VIÊN',
+        message: 'Vui lòng vào tab "Ví Số" và bấm "Kích Hoạt Thẻ Số Của Tôi" trước khi quét mã điểm danh!'
       });
       return;
     }
@@ -320,3 +339,4 @@ export default function ScanPage() {
     </div>
   );
 }
+

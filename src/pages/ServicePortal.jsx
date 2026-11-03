@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { INITIAL_STUDENTS } from '../data/studentsData';
-import FacultyPortal from './FacultyPortal';
+import FacultyPortalPro from './FacultyPortalPro';
 import LoginPortal from '../components/LoginPortal';
 import { 
   Building2, 
@@ -499,7 +499,7 @@ export default function ServicePortal({ currentUser }) {
               </div>
 
               {/* Nhúng toàn bộ bộ điều khiển điểm danh Giảng viên */}
-              <FacultyPortal />
+              <FacultyPortalPro />
             </div>
           ) : (
             <div style={{ background: '#0d131f', border: '1px solid #162032', borderRadius: '16px', padding: '32px 20px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }}>

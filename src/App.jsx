@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
-import StudentWalletView from './pages/StudentWalletView';
+import StudentWalletPro from './pages/StudentWalletPro';
+import FacultyPortalPro from './pages/FacultyPortalPro';
 import ScanPage from './pages/ScanPage';
 import ServicePortal from './pages/ServicePortal';
 import AdminDashboardPro from './pages/AdminDashboardPro';
@@ -155,9 +156,9 @@ export default function App() {
         {/* Nội dung Màn Hình Chính */}
         <main style={{ flex: 1, width: '100%' }}>
           <Routes>
-            {/* 1. Màn hình Ví Thẻ Sinh Viên Số Chuẩn Apple Wallet */}
+            {/* 1. Màn hình Ví Thẻ Sinh Viên Số Hoàn Chỉnh (Onboarding & Apple Wallet) */}
             <Route path="/" element={<Navigate to="/wallet" replace />} />
-            <Route path="/wallet" element={<StudentWalletView />} />
+            <Route path="/wallet" element={<StudentWalletPro />} />
 
             {/* 2. Màn hình Quét Mã Camera Riêng Biệt */}
             <Route path="/scan" element={<ScanPage />} />
@@ -165,7 +166,7 @@ export default function App() {
             {/* 3. Cổng Dịch Vụ & Thẩm Tra Danh Tính */}
             <Route path="/services" element={<ServicePortal currentUser={currentUser} />} />
             <Route path="/portal" element={<Navigate to="/services" replace />} />
-            <Route path="/faculty" element={<Navigate to="/services?tab=attendance" replace />} />
+            <Route path="/faculty" element={<FacultyPortalPro />} />
 
             {/* 4. Đăng Nhập Cán Bộ (RBAC) */}
             <Route path="/login" element={<StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />} />
