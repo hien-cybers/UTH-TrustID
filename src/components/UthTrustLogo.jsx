@@ -65,3 +65,4 @@ export default function UthTrustLogo({ size = 34 }) {
     </div>
   );
 }
+

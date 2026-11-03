@@ -26,13 +26,9 @@ export default function App() {
         <Route path="/wallet" element={<AppProView initialTab="wallet" />} />
         <Route path="/scan" element={<AppProView initialTab="scan" />} />
         <Route path="/faculty" element={<AppProView initialTab="faculty" />} />
-        <Route path="/recovery" element={<AppProView initialTab="recovery" />} />
-
-        {/* Các route chuyên sâu mở rộng */}
-        <Route path="/services" element={<ServicePortal currentUser={currentUser} />} />
-        <Route path="/portal" element={<Navigate to="/services" replace />} />
-        <Route path="/login" element={<StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />} />
-        <Route path="/admin" element={<AdminDashboardPro />} />
+        <Route path="/recovery" element={<AppProView initialTab="admin" />} />
+        <Route path="/admin" element={<AppProView initialTab="admin" />} />
+        <Route path="/admin-pro" element={<AdminDashboardPro />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
