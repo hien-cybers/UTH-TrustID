@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, Camera } from 'lucide-react';
 import ScanBoxEffect from './ScanBoxEffect';
+import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
 
 export default function Scanner({ onScanSuccess, onClose }) {
   const [errorMessage, setErrorMessage] = useState('');
@@ -30,6 +31,12 @@ export default function Scanner({ onScanSuccess, onClose }) {
         qrConfig,
         (decodedText) => {
           if (!isMounted) return;
+          // Kích hoạt phản hồi rung Haptic [40, 60, 40] & Âm thanh xác nhận chuẩn Native
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([40, 60, 40]); // Rung nhẹ xác nhận
+          }
+          triggerScanSuccessFeedback();
+
           stopCamera().then(() => {
             // 1. Kiểm tra tiền tố UTH_ID:... hoặc UTH:...
             if (typeof decodedText === 'string' && (decodedText.startsWith('UTH_ID:') || decodedText.startsWith('UTH:'))) {
