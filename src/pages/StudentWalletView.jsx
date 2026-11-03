@@ -90,16 +90,19 @@ export default function StudentWalletView() {
       </div>
 
       {/* THẺ ĐỊNH DANH SỐ (MÔ PHỎNG APPLE WALLET CARD) */}
-      <div style={{
-        background: 'linear-gradient(145deg, #0F172A 0%, #02142B 100%)',
-        border: '1px solid rgba(56, 189, 248, 0.25)',
-        borderRadius: '20px',
-        padding: '20px',
-        position: 'relative',
-        overflow: 'hidden',
-        boxShadow: '0 12px 30px rgba(0, 0, 0, 0.45)',
-        marginBottom: '20px'
-      }}>
+      <div 
+        className="sheen-card"
+        style={{
+          background: 'linear-gradient(145deg, #0F172A 0%, #02142B 100%)',
+          border: '1px solid rgba(56, 189, 248, 0.25)',
+          borderRadius: '20px',
+          padding: '20px',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 12px 30px rgba(0, 0, 0, 0.45)',
+          marginBottom: '20px'
+        }}
+      >
         {/* Họa tiết vi mạch chìm mờ phía sau */}
         <div style={{
           position: 'absolute',

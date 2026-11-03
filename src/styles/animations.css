@@ -1,0 +1,113 @@
+/* src/styles/animations.css - Hiệu ứng vi chuyển động chuẩn App Store / Google Play */
+
+/* 1. Hiệu ứng ánh sáng kim loại lướt qua Thẻ Apple Wallet (Shimmer Effect) */
+@keyframes cardSheen {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  20%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.sheen-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.sheen-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    rgba(56, 189, 248, 0.18),
+    transparent
+  );
+  transform: translateX(-150%) skewX(-20deg);
+  animation: cardSheen 5s infinite ease-in-out;
+  pointer-events: none;
+}
+
+/* 2. Hiệu ứng tia Laser đỏ/xanh quét lên xuống trong khung camera */
+@keyframes laserScan {
+  0% {
+    top: 5%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 90%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.8;
+  }
+}
+
+.scanner-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.laser-line {
+  position: absolute;
+  left: 5%;
+  width: 90%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #38bdf8, #00f2fe, transparent);
+  box-shadow: 0 0 12px 2px rgba(56, 189, 248, 0.7);
+  animation: laserScan 2.4s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* 3. Hiệu ứng nhịp thở đèn LED trạng thái (Pulsing Glow) */
+@keyframes statusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.pulse-green {
+  animation: statusPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  display: inline-block;
+}
+
+/* 4. Hiệu ứng xuất hiện mềm mượt cho danh sách điểm danh (Slide In Fade) */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 5. Phản hồi xúc giác khi chạm (Tactile Tap Feedback) */
+.btn-tactile {
+  transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), opacity 0.12s ease;
+}
+
+.btn-tactile:active {
+  transform: scale(0.96);
+  opacity: 0.88;
+}

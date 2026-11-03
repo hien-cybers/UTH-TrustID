@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, Camera } from 'lucide-react';
+import ScanBoxEffect from './ScanBoxEffect';
 
 export default function Scanner({ onScanSuccess, onClose }) {
   const [errorMessage, setErrorMessage] = useState('');
@@ -128,18 +129,9 @@ export default function Scanner({ onScanSuccess, onClose }) {
               className="w-full h-full [&>video]:w-full [&>video]:h-full [&>video]:object-cover [&_#qr-shaded-region]:hidden [&_#qr-reader__scan_region]:border-none"
             ></div>
 
-            {/* Khung ngắm quét đơn duy nhất (Single Viewfinder Reticle) */}
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-4">
-              <div className="relative w-44 h-44 sm:w-52 sm:h-52 max-w-[75%] max-h-[75%] border border-cyan-500/40 rounded-xl">
-                {/* 4 góc viền neon nổi bật */}
-                <span className="absolute -top-1 -left-1 w-4 h-4 sm:w-5 sm:h-5 border-t-2 border-l-2 border-cyan-400 rounded-tl-sm"></span>
-                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 border-t-2 border-r-2 border-cyan-400 rounded-tr-sm"></span>
-                <span className="absolute -bottom-1 -left-1 w-4 h-4 sm:w-5 sm:h-5 border-b-2 border-l-2 border-cyan-400 rounded-bl-sm"></span>
-                <span className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 border-b-2 border-r-2 border-cyan-400 rounded-br-sm"></span>
-
-                {/* Tia quét laser chuyển động */}
-                <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#22d3ee] animate-pulse absolute top-1/2 -translate-y-1/2"></div>
-              </div>
+            {/* Khung ngắm quét radar kèm tia laser laserScan */}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-3">
+              <ScanBoxEffect />
             </div>
           </div>
 

@@ -14,6 +14,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { io } from 'socket.io-client';
+import '../styles/animations.css';
 
 export default function FacultyPortalPro() {
   // 1. Đồng hồ thời gian thực (nhảy từng giây)
@@ -196,6 +197,7 @@ export default function FacultyPortalPro() {
           </p>
           <button
             onClick={handleCreateSession}
+            className="btn-tactile"
             style={{
               width: '100%',
               padding: '12px',
@@ -248,6 +250,7 @@ export default function FacultyPortalPro() {
             {/* NÚT HỦY MÃ / ĐÓNG PHÒNG CHỦ ĐỘNG */}
             <button
               onClick={() => handleCloseSession(false)}
+              className="btn-tactile"
               style={{
                 width: '100%',
                 padding: '11px',
@@ -298,10 +301,29 @@ export default function FacultyPortalPro() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {attendees.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#07090E', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>{item.name}</div>
-                      <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono' }}>{item.mssv} • Cách {item.dist}</div>
+                  <div 
+                    key={idx} 
+                    className="animate-slide-in"
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      background: '#07090E', 
+                      padding: '10px 12px', 
+                      borderRadius: '10px', 
+                      border: '1px solid rgba(56, 189, 248, 0.15)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {/* Đèn nháy xanh nhẹ */}
+                      <span className="pulse-green" style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981' }}></span>
+                      <div>
+                        <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#FFF' }}>{item.name}</div>
+                        <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono' }}>
+                          {item.mssv} • Cách {item.dist}
+                        </div>
+                      </div>
                     </div>
                     <div style={{ fontSize: '11px', color: '#10B981', fontFamily: 'JetBrains Mono', fontWeight: 600 }}>
                       ✓ {item.time}
@@ -317,3 +339,4 @@ export default function FacultyPortalPro() {
     </div>
   );
 }
+

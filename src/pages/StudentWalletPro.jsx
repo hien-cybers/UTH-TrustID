@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
+import '../styles/animations.css';
 
 export default function StudentWalletPro() {
   const navigate = useNavigate();
@@ -156,6 +157,7 @@ export default function StudentWalletPro() {
           </p>
           <button
             onClick={handleActivateInitialVC}
+            className="btn-tactile"
             style={{
               width: '100%',
               padding: '12px',
@@ -179,16 +181,19 @@ export default function StudentWalletPro() {
       ) : (
         /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> HIỂN THỊ THẺ CHUẨN APPLE WALLET */
         <div>
-          <div style={{
-            background: 'linear-gradient(145deg, #0F172A 0%, #02142B 100%)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
-            borderRadius: '20px',
-            padding: '20px',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.45)',
-            marginBottom: '16px'
-          }}>
+          <div 
+            className="sheen-card"
+            style={{
+              background: 'linear-gradient(145deg, #0F172A 0%, #02142B 100%)',
+              border: '1px solid rgba(56, 189, 248, 0.25)',
+              borderRadius: '20px',
+              padding: '20px',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 12px 30px rgba(0, 0, 0, 0.45)',
+              marginBottom: '16px'
+            }}
+          >
             <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', opacity: 0.05, pointerEvents: 'none' }}>
               <Cpu size={160} />
             </div>
@@ -236,6 +241,7 @@ export default function StudentWalletPro() {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
+                className="btn-tactile"
                 style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '4px', padding: '3px 6px', color: '#38BDF8', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
                 {copied ? <CheckCircle2 size={12} color="#10B981" /> : <Copy size={12} />}
@@ -261,6 +267,7 @@ export default function StudentWalletPro() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button
               onClick={() => navigate('/scan')}
+              className="btn-tactile"
               style={{
                 width: '100%',
                 padding: '12px',
@@ -283,6 +290,7 @@ export default function StudentWalletPro() {
 
             <button
               onClick={handleRevokeLocal}
+              className="btn-tactile"
               style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', color: '#EF4444', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
             >
               <Trash2 size={14} /> Gỡ thẻ số khỏi máy này
@@ -294,3 +302,4 @@ export default function StudentWalletPro() {
     </div>
   );
 }
+
