@@ -1,5 +1,5 @@
 // src/App.jsx - UTH-TrustID Native Mobile App (Phân Tách Role Chuẩn RBAC, Safe Area Tai Thỏ & Khung Điện Thoại 430px)
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
 import StudentWalletPro from './pages/StudentWalletPro';
@@ -11,9 +11,10 @@ import StaffLogin from './pages/StaffLogin';
 import UTHTrustIDApp from './UTHTrustIDApp';
 import MobileNavigation from './components/MobileNavigation';
 import UthTrustLogo from './components/UthTrustLogo';
+import LiveClock from './components/LiveClock';
 import './styles/appPro.css';
 
-import { Key, LogOut, ShieldAlert, Clock } from 'lucide-react';
+import { Key, LogOut, ShieldAlert } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -24,13 +25,6 @@ export default function App() {
       return null;
     }
   });
-
-  // Đồng hồ thời gian thực nhảy từng giây trên Header
-  const [currentTime, setCurrentTime] = useState(() => new Date());
-  useEffect(() => {
-    const t = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('uth_staff_user');
@@ -73,23 +67,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực + Trạng thái Phân Quyền RBAC */}
+            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Trạng thái Phân Quyền RBAC */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                fontSize: '10.5px',
-                fontFamily: 'JetBrains Mono, monospace',
-                color: '#94A3B8',
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '3px 7px',
-                borderRadius: '10px',
-                border: '1px solid rgba(255, 255, 255, 0.06)'
-              }}>
-                <Clock size={11} color="#38BDF8" />
-                <span>{currentTime.toLocaleTimeString('vi-VN', { hour12: false })}</span>
-              </div>
+              <LiveClock />
 
               {currentUser ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>

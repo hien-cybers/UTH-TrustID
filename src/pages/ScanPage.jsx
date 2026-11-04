@@ -3,10 +3,10 @@
 // 2. Seamless Re-enrollment: Khi sinh viên đổi FaceID/Vân tay trên OS (InvalidStateError/NotAllowedError),
 //    mở Modal nhập Mã PIN 6 số (123456) để giải mã Master Key & liên kết lại FaceID mới mà KHÔNG mất Thẻ VC!
 // 3. Pre-warm GPS nền (< 300ms) + Hybrid Hardware ID (Fuzzy >= 80%) + Auto-Sync 2 Lớp + Visual Liveness Stamp
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import Scanner from '../components/Scanner';
+import CameraScannerPro from '../components/CameraScannerPro';
 import ProofOfLivenessStamp from '../components/ProofOfLivenessStamp';
 import { 
   ShieldCheck, 
@@ -269,6 +269,10 @@ export default function ScanPage() {
       pinResolverRef.current = null;
     }
   };
+
+  const handleCloseCamera = useCallback(() => {
+    navigate('/wallet');
+  }, [navigate]);
 
   const handleScanSuccess = async (qrResult) => {
     if (isTerminatedRef.current) return;
@@ -765,22 +769,13 @@ export default function ScanPage() {
         </div>
       )}
 
-      {/* Vùng Camera Scanner */}
+      {/* Vùng Camera Scanner Chuẩn iOS Safari (CameraScannerPro - Chống Chớp Tắt Triệt Để) */}
       {isScanning && !pinModalOpen && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{
-            position: 'relative',
-            borderRadius: '18px',
-            overflow: 'hidden',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            background: '#07090E',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
-          }}>
-            <Scanner
-              onScanSuccess={handleScanSuccess}
-              onClose={() => navigate('/wallet')}
-            />
-          </div>
+          <CameraScannerPro
+            onScanSuccess={handleScanSuccess}
+            onClose={handleCloseCamera}
+          />
 
           {/* Nút Quét Thử Nhanh để test ngay WebAuthn + Haptic + Beep + Proof of Liveness + Offline IndexedDB */}
           <button

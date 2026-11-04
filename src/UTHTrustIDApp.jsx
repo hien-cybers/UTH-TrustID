@@ -21,16 +21,11 @@ import {
   authenticateWithFallback,
   verifyRecoveryPinAndUnwrap
 } from './utils/webauthnHelper';
+import LiveClock from './components/LiveClock';
+import CameraScannerPro from './components/CameraScannerPro';
 
 export default function UTHTrustIDApp() {
   const [activeTab, setActiveTab] = useState('wallet'); // 'wallet' | 'scan' | 'faculty' | 'admin'
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // 1. ĐỒNG HỒ THỜI GIAN THỰC NHẢY TỪNG GIÂY
-  useEffect(() => {
-    const t = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
 
   // ==========================================
   // PHÂN HỆ 1: VÍ SINH VIÊN (HOLDER) & PRE-WARM GPS
@@ -38,6 +33,7 @@ export default function UTHTrustIDApp() {
   const [credential, setCredential] = useState(null);
   const [cachedCoords, setCachedCoords] = useState({ lat: 10.7992, lon: 106.7056 });
   const [livenessActive, setLivenessActive] = useState(false);
+  const [livenessTimeStr, setLivenessTimeStr] = useState('08:30:15');
   const [livenessMillis, setLivenessMillis] = useState('000');
   const [livenessHash, setLivenessHash] = useState('0x88f...12a');
   const [offlineQueue, setOfflineQueue] = useState([]);
@@ -69,11 +65,12 @@ export default function UTHTrustIDApp() {
     }
   }, []);
 
-  // Timer cho Con dấu động (Proof of Liveness): Mili-giây nhảy mỗi 40ms, Hash đổi mỗi 1s
+  // Timer cho Con dấu động (Proof of Liveness): Mili-giây nhảy mỗi 40ms, Hash đổi mỗi 1s (chỉ chạy khi đã quét xong, camera đã tắt)
   useEffect(() => {
     if (!livenessActive) return;
     const msTimer = setInterval(() => {
       const now = new Date();
+      setLivenessTimeStr(now.toLocaleTimeString('vi-VN', { hour12: false }));
       setLivenessMillis(now.getMilliseconds().toString().padStart(3, '0'));
     }, 40);
 
@@ -286,10 +283,7 @@ export default function UTHTrustIDApp() {
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontFamily: 'monospace', color: '#94A3B8', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: '12px' }}>
-          <Clock size={12} color="#38BDF8" />
-          <span>{currentTime.toLocaleTimeString('vi-VN')}</span>
-        </div>
+        <LiveClock />
       </header>
 
       {/* 2. NỘI DUNG CHÍNH THEO TỪNG TAB */}
@@ -375,25 +369,15 @@ export default function UTHTrustIDApp() {
           </div>
         )}
 
-        {/* TAB 2: QUÉT MÃ RADAR + PROOF OF LIVENESS STAMP */}
+        {/* TAB 2: QUÉT MÃ CAMERA CHUẨN SAFARI iOS (CameraScannerPro) + PROOF OF LIVENESS STAMP */}
         {activeTab === 'scan' && (
           <div style={{ textAlign: 'center' }}>
             {!livenessActive ? (
-              <div>
-                <div style={{
-                  width: '260px',
-                  height: '260px',
-                  margin: '0 auto 16px',
-                  borderRadius: '20px',
-                  background: 'rgba(10,14,23,0.8)',
-                  border: '2px dashed rgba(56,189,248,0.4)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
-                }}>
-                  <Scan size={44} color="#38BDF8" style={{ opacity: 0.8 }} />
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <CameraScannerPro
+                  onScanSuccess={() => handleTriggerScanAndSign()}
+                  onClose={() => setActiveTab('wallet')}
+                />
                 <button
                   onClick={handleTriggerScanAndSign}
                   style={{ width: '100%', padding: '13px', background: 'linear-gradient(135deg, #0284C7, #0369A1)', border: 'none', borderRadius: '12px', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
@@ -410,7 +394,7 @@ export default function UTHTrustIDApp() {
                 <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '12px', marginBottom: '14px' }}>
                   <div style={{ fontSize: '10.5px', color: '#10B981', fontWeight: 700 }}>PROOF OF LIVENESS (CON DẤU SỐ ĐỘNG)</div>
                   <div style={{ fontSize: '20px', fontWeight: 800, color: '#FFF', fontFamily: 'monospace', margin: '6px 0' }}>
-                    {currentTime.toLocaleTimeString('vi-VN')}.<span style={{ color: '#38BDF8' }}>{livenessMillis}</span>
+                    {livenessTimeStr}.<span style={{ color: '#38BDF8' }}>{livenessMillis}</span>
                   </div>
                   <div style={{ fontSize: '10.5px', color: '#64748B', fontFamily: 'monospace' }}>
                     Dynamic Hash: {livenessHash} (Đổi mỗi 1s)
