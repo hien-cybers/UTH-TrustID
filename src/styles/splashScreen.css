@@ -1,0 +1,131 @@
+/* src/styles/splashScreen.css */
+
+/* Khung toàn màn hình che phủ lúc mở app */
+.splash-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  background-color: #04060A;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+/* Biến mất mượt mà sau khi nạp xong */
+.splash-hidden {
+  opacity: 0;
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+/* Vòng sóng xung kích tỏa ra phía sau logo */
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.splash-ring {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  animation: pulseRing 2s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.splash-ring:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+/* Logo phóng to và bật nảy (Pop & Glow) giống YouTube */
+@keyframes logoIntro {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+    filter: drop-shadow(0 0 0px rgba(56, 189, 248, 0));
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15) rotate(0deg);
+    filter: drop-shadow(0 0 35px rgba(2, 132, 199, 0.8));
+  }
+  80% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 20px rgba(2, 132, 199, 0.5));
+  }
+}
+
+.splash-logo-box {
+  width: 88px;
+  height: 88px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 50%, #075985 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  animation: logoIntro 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Chữ hiện dần từ dưới lên (Fade in Slide Up) */
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+    letter-spacing: -0.5px;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0px;
+  }
+}
+
+.splash-text-group {
+  margin-top: 24px;
+  text-align: center;
+  z-index: 2;
+  animation: textReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  opacity: 0; /* Giữ ẩn trước khi animation chạy */
+}
+
+/* Thanh nạp tiến trình siêu mảnh ở đáy màn hình */
+@keyframes progressLine {
+  0% { width: 0%; }
+  100% { width: 140px; }
+}
+
+.splash-loader-bar {
+  width: 140px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  margin-top: 32px;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+}
+
+.splash-loader-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38BDF8, #10B981);
+  border-radius: 6px;
+  animation: progressLine 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

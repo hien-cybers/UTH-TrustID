@@ -1,7 +1,8 @@
-// src/App.jsx - UTH-TrustID Native Mobile App (Phân Tách Role Chuẩn RBAC, Safe Area Tai Thỏ & Khung Điện Thoại 430px)
-import React, { useState } from 'react';
+// src/App.jsx - UTH-TrustID Native Mobile App (Splash Screen Động, Phân Tách Role RBAC, Safe Area Tai Thỏ & Khung 430px)
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
+import SplashScreen from './components/SplashScreen';
 import StudentWalletPro from './pages/StudentWalletPro';
 import FacultyPortalPro from './pages/FacultyPortalPro';
 import ScanPage from './pages/ScanPage';
@@ -12,11 +13,13 @@ import UTHTrustIDApp from './UTHTrustIDApp';
 import MobileNavigation from './components/MobileNavigation';
 import UthTrustLogo from './components/UthTrustLogo';
 import LiveClock from './components/LiveClock';
+import { startPreWarmGps } from './utils/gpsDriftFilter';
 import './styles/appPro.css';
 
 import { Key, LogOut, ShieldAlert } from 'lucide-react';
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('uth_staff_user');
@@ -26,6 +29,13 @@ export default function App() {
     }
   });
 
+  // Pre-load GPS chạy nền ngay khi Splash Screen đang hiển thị để ứng dụng sẵn sàng tức thì
+  useEffect(() => {
+    try {
+      startPreWarmGps();
+    } catch {}
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('uth_staff_user');
     localStorage.removeItem('uth_staff_token');
@@ -33,7 +43,14 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
+    <>
+      {/* Màn hình khởi động động (Animated Splash Screen) hiển thị khi vừa mở ứng dụng */}
+      {showSplash && (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      )}
+
+      {/* Giao diện chính của ứng dụng được nạp sẵn ngầm bên dưới */}
+      <BrowserRouter>
       {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
       <div className="mobile-viewport mobile-app-root">
         
@@ -202,6 +219,7 @@ export default function App() {
         <MobileNavigation currentUser={currentUser} />
 
       </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </>
   );
 }

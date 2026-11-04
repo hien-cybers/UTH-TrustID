@@ -338,3 +338,4 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
 });
 
 export default CameraScannerPro;
+
