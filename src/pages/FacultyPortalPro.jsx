@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { exportAttendanceToExcel } from '../utils/exportAttendanceReport';
+import { getSocketUrl, smartFetch } from '../utils/backendUrl';
 import '../styles/animations.css';
 
 export default function FacultyPortalPro() {
@@ -48,7 +49,7 @@ export default function FacultyPortalPro() {
   // Kết nối WebSocket Socket.io để nhận diện sinh viên, xoay Nonce 20s & kết quả Tái kiểm tra (Spot-check) thời gian thực
   useEffect(() => {
     try {
-      const socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
+      const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
       socketRef.current = socket;
 
       const addAttendeeRecord = (raw) => {
@@ -205,12 +206,31 @@ export default function FacultyPortalPro() {
   // Mở Phiên Lớp Học Thường (35m, 5 phút) hoặc Phòng Thi Gắt (20m, 3 phút) trên Unified Pipeline
   const handleStartSession = async (mode = 'ATTENDANCE') => {
     const sId = 'SES_' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    const fallbackNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
     const radius = mode === 'EXAM' ? 20 : 35;
     const duration = mode === 'EXAM' ? 180 : 300;
     const roomName = mode === 'EXAM' ? 'Phòng Thi A2-301 (Lockdown)' : 'Giảng Đường A2-301';
 
+    // Hiển thị mã QR tức thì (0ms) ngay khi bấm Mở Phòng, đồng thời đồng bộ lên Backend
+    const newSession = {
+      id: sId,
+      nonce: fallbackNonce,
+      mode,
+      room: roomName,
+      lat: 10.7992,
+      lon: 106.7056,
+      radius
+    };
+
+    setSession(newSession);
+    setCurrentNonce(fallbackNonce);
+    setTimeLeft(duration);
+    setAttendees([]);
+    setSpotCheckStatusMsg('');
+    socketRef.current?.emit('join-session', { sessionId: sId, role: 'FACULTY' });
+
     try {
-      const res = await fetch('/api/session/create', {
+      const res = await smartFetch('/api/session/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,26 +242,23 @@ export default function FacultyPortalPro() {
         })
       });
       const data = await res.json();
-      const initialNonce = data.initialNonce || ('NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase());
-
-      const newSession = {
-        id: data.sessionId || sId,
-        nonce: initialNonce,
-        mode,
-        room: roomName,
-        lat: 10.7992,
-        lon: 106.7056,
-        radius
-      };
-
-      setSession(newSession);
-      setCurrentNonce(initialNonce);
-      setTimeLeft(duration);
-      setAttendees([]);
-      setSpotCheckStatusMsg('');
-      socketRef.current?.emit('join-session', { sessionId: newSession.id, role: 'FACULTY' });
+      if (data.initialNonce) {
+        setCurrentNonce(data.initialNonce);
+        setSession((prev) => (prev ? { ...prev, nonce: data.initialNonce } : null));
+      }
+      socketRef.current?.emit('join-session', { sessionId: data.sessionId || sId, role: 'FACULTY' });
     } catch {}
   };
+
+  // Tự động xoay Nonce mỗi 20s dự phòng nếu WebSocket tạm thời gián đoạn
+  useEffect(() => {
+    if (!session) return;
+    const rot = setInterval(() => {
+      const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
+      setCurrentNonce((prev) => prev || nextNonce);
+    }, 20000);
+    return () => clearInterval(rot);
+  }, [session]);
 
   // Kích hoạt Tái kiểm tra điểm danh đột xuất (Spot-Check 60s) qua WebSocket Unified Pipeline
   const handleTriggerSpotCheck = async () => {
@@ -260,7 +277,7 @@ export default function FacultyPortalPro() {
     if (session) {
       socketRef.current?.emit('close-session', { sessionId: session.id });
       try {
-        await fetch('/api/session/close', {
+        await smartFetch('/api/session/close', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId: session.id })

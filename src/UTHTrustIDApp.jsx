@@ -12,15 +12,13 @@ import { verifyBiometricPresence } from './utils/webauthnHelper';
 import SplashScreen from './components/SplashScreen';
 import LiveClock from './components/LiveClock';
 import CameraScannerPro from './components/CameraScannerPro';
+import { getSocketUrl, smartFetch, DEFAULT_LAN_IP } from './utils/backendUrl';
 
-// Tự động định tuyến qua Vite Proxy / Cloudflare HTTPS Tunnel trên điện thoại hoặc cổng 5000 trên máy tính
-const API_BASE =
-  typeof window !== 'undefined' &&
-  (window.location.port === '5173' || window.location.hostname.includes('trycloudflare.com'))
-    ? ''
-    : 'http://localhost:5000';
+// Địa chỉ IPv4 mạng LAN của máy tính Windows (ipconfig: 192.168.88.200) & tự động định tuyến đa môi trường
+export const BACKEND_IP = DEFAULT_LAN_IP;
+export const SOCKET_URL = getSocketUrl();
 
-export const socket = io(API_BASE || window.location.origin, {
+export const socket = io(SOCKET_URL, {
   autoConnect: true,
   transports: ['websocket', 'polling']
 });
@@ -185,35 +183,46 @@ export default function UTHTrustIDApp() {
 
   const handleStartFacultySession = async (mode = 'ATTENDANCE') => {
     const sId = 'SES_' + Math.random().toString(36).substring(2, 7).toUpperCase();
+    const fallbackNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
     const payload = {
       sessionId: sId,
       roomName: 'Phòng A2-301',
-      coords: { lat: 10.7992, lon: 106.7056 },
+      coords: coords || { lat: 10.7992, lon: 106.7056 },
       radius: mode === 'EXAM' ? 20 : 35,
       networkPolicy
     };
 
+    // Kích hoạt ngay mã QR và phiên trên giao diện để không bao giờ bị trễ
+    setFacultySession({ id: sId, nonce: fallbackNonce, mode, radius: payload.radius });
+    setAttendees([]);
+    socket.emit('join-session', { sessionId: sId, role: 'FACULTY' });
+
     try {
-      const res = await fetch(`${API_BASE}/api/session/create`, {
+      const res = await smartFetch('/api/session/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.initialNonce) {
         setFacultySession({ id: sId, nonce: data.initialNonce, mode, radius: payload.radius });
         socket.emit('join-session', { sessionId: sId, role: 'FACULTY' });
-        setAttendees([]);
       }
     } catch (e) {
-      alert('Không thể kết nối máy chủ Backend: ' + e.message);
+      console.error('Lỗi mở phòng:', e);
     }
   };
 
   const handleCloseFacultySession = async () => {
     if (facultySession?.id) {
       try {
-        await fetch(`${API_BASE}/api/session/close`, {
+        await smartFetch('/api/session/close', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId: facultySession.id })
@@ -247,7 +256,7 @@ export default function UTHTrustIDApp() {
       // Nếu chưa có sessionId (ví dụ test giữa 2 tab/máy), tự động lấy phiên đang mở trên Backend
       if (!targetSessionId || !targetNonce) {
         try {
-          const activeRes = await fetch(`${API_BASE}/api/session/active`);
+          const activeRes = await smartFetch('/api/session/active');
           const activeData = await activeRes.json();
           if (activeData.success && activeData.session) {
             targetSessionId = activeData.session.sessionId;
@@ -272,7 +281,7 @@ export default function UTHTrustIDApp() {
       const signature = await wallet.signMessage(challenge);
 
       // 3. Gửi Payload đối soát 6 lớp lên Backend
-      const res = await fetch(`${API_BASE}/api/attendance/submit`, {
+      const res = await smartFetch('/api/attendance/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

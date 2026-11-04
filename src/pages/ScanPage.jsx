@@ -42,6 +42,7 @@ import {
   setSimulatedBiometricInvalidation,
   isSimulatedBiometricInvalidated
 } from '../utils/webauthnHelper';
+import { getSocketUrl, smartFetch } from '../utils/backendUrl';
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -138,7 +139,7 @@ export default function ScanPage() {
   // Đồng bộ trạng thái phòng học tức thời qua WebSocket Room (session-terminated)
   useEffect(() => {
     try {
-      const socket = io(window.location.origin, { transports: ['websocket', 'polling'] });
+      const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
       socketRef.current = socket;
 
       const handleClosed = (payload) => {
@@ -232,7 +233,7 @@ export default function ScanPage() {
         signature: sigRes.signature
       });
 
-      await fetch('/api/attendance/spot-check-verify', {
+      await smartFetch('/api/attendance/spot-check-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -361,7 +362,7 @@ export default function ScanPage() {
       // Nếu bấm nút Quét Thử Nhanh (SES_A2301), tự động lấy Session đang mở thực tế của Giảng viên trên Backend
       if (!isOfflineMode && sessionId === 'SES_A2301') {
         try {
-          const activeRes = await fetch('/api/session/active');
+          const activeRes = await smartFetch('/api/session/active');
           const activeData = await activeRes.json();
           if (activeData.success && activeData.session) {
             sessionId = activeData.session.sessionId;
@@ -494,7 +495,7 @@ export default function ScanPage() {
 
       try {
         // Thử gửi qua Unified Pipeline (/api/attendance/submit) nếu Giảng viên đã mở phòng
-        const submitRes = await fetch('/api/attendance/submit', {
+        const submitRes = await smartFetch('/api/attendance/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -541,7 +542,7 @@ export default function ScanPage() {
           return;
         }
 
-        const res = await fetch('/api/attendance/verify', {
+        const res = await smartFetch('/api/attendance/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

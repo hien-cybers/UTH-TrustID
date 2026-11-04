@@ -76,5 +76,12 @@
 	<string>UTH-TrustID cần quyền định vị GPS để xác thực khoảng cách điểm danh tại giảng đường UTH.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>UTH-TrustID sử dụng Face ID để mở khóa khóa riêng tư mật mã EIP-191 và chống điểm danh hộ.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
