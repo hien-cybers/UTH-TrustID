@@ -1,7 +1,9 @@
 // src/pages/AdminDashboardPro.jsx - Trung Tâm Quản Trị Cấp Cao (Chỉ dành cho ROLE = ADMIN):
 // 1. Security Console (#11): Giám sát Tổng DID, Active, Revoked, IDS Alerts
-// 2. Batch VC Issuance (#10): Băm danh sách sinh viên bằng keccak256, tạo Merkle Root & Merkle Proof
-// 3. On-Chain Revocation & Recovery (Bước 2 / Mảnh ghép #5): Gọi revokeKey(old_address) & Cấp lại Merkle Proof mới khi mất máy
+// 2. Batch VC Issuance (#10): Băm danh sách sinh viên bằng keccak256, tạo Merkle Root cố định theo kỳ học
+// 3. Decoupled 2-Layer Revocation (Điểm nghẽn ③ & Kịch bản 4):
+//    - Tầng 1: Giữ nguyên Merkle Root cố định của toàn trường (không làm hỏng Proof của 9.999 SV khác)
+//    - Tầng 2: Cập nhật `isRevoked[old_address] = true` độc lập hoặc cấp lại khóa qua KYC Recovery
 import React, { useState } from 'react';
 import { 
   Users, 
@@ -14,7 +16,8 @@ import {
   CheckCircle2,
   Copy,
   KeyRound,
-  FileCheck2
+  FileCheck2,
+  Ban
 } from 'lucide-react';
 import { ethers } from 'ethers';
 import { generateMerkleCredentials } from '../utils/merkleHelper';
@@ -49,7 +52,7 @@ export default function AdminDashboardPro() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [copiedRoot, setCopiedRoot] = useState(false);
 
-  // State phục vụ Bước 2: Thu hồi khóa máy cũ revokeKey(old_address) & Cấp lại Merkle Proof mới
+  // State phục vụ Điểm nghẽn ③ & Kịch bản 4: Sổ bộ Thu hồi Độc lập (`isRevoked[address]`) & KYC Recovery
   const [recoveryForm, setRecoveryForm] = useState({
     mssv: '2251120000',
     fullName: 'Nguyễn Đức Hiển',
@@ -58,6 +61,7 @@ export default function AdminDashboardPro() {
   });
   const [isRecovering, setIsRecovering] = useState(false);
   const [recoveryResult, setRecoveryResult] = useState(null);
+  const [revokeStatusMsg, setRevokeStatusMsg] = useState(null);
 
   const handleComputeMerkle = async () => {
     setIsProcessing(true);
@@ -79,6 +83,15 @@ export default function AdminDashboardPro() {
           await saveCredentialToStorage(cred);
         } catch {}
       }
+
+      // Đồng bộ lô phát hành lên Backend
+      try {
+        await fetch('/api/admin/batch-issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ students: parsed })
+        });
+      } catch {}
 
       setStats(prev => ({
         ...prev,
@@ -103,15 +116,62 @@ export default function AdminDashboardPro() {
     }
   };
 
-  // BƯỚC 2: Thực thi hàm revokeKey(old_address) trên Smart Contract / Backend & Cấp lại Merkle Proof mới
+  // KỊCH BẢN 4 (HỘI ĐỒNG NCKH): Bấm nút Revoke trên Dashboard -> Cập nhật `isRevoked[address] = true`
+  // mà KHÔNG làm hỏng Merkle Root chung của 9.999 sinh viên khác!
+  const handleDirectOnChainRevoke = async () => {
+    setIsRecovering(true);
+    setRevokeStatusMsg(null);
+    try {
+      const res = await fetch('/api/identity/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: recoveryForm.oldAddress })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStats(prev => ({
+          ...prev,
+          activeDID: Math.max(0, prev.activeDID - 1),
+          revokedDID: prev.revokedDID + 1
+        }));
+        setRevokeStatusMsg({
+          type: 'REVOKED',
+          text: `Đã ghi isRevoked[${recoveryForm.oldAddress.slice(0, 10)}...] = true trên Sổ bộ Thu hồi độc lập! (Giữ nguyên MerkleRoot của các SV khác). Khi SV này quét lại sẽ bị chặn: "Identity Revoked on Chain".`
+        });
+        triggerScanSuccessFeedback();
+      }
+    } catch {} finally {
+      setIsRecovering(false);
+    }
+  };
+
+  const handleReactivateKey = async () => {
+    setIsRecovering(true);
+    try {
+      const res = await fetch('/api/identity/reactivate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: recoveryForm.oldAddress })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRevokeStatusMsg({
+          type: 'ACTIVE',
+          text: `Đã mở khóa lại isRevoked[${recoveryForm.oldAddress.slice(0, 10)}...] = false.`
+        });
+      }
+    } catch {} finally {
+      setIsRecovering(false);
+    }
+  };
+
+  // BƯỚC 2: Thực thi hàm revokeKey(old_address) & Cấp lại khóa máy mới (KYC Key Recovery)
   const handleExecuteRevokeAndRecover = async () => {
     setIsRecovering(true);
     setRecoveryResult(null);
     try {
       const newWallet = ethers.Wallet.createRandom();
-      const newDeviceId = ethers.keccak256(
-        ethers.toUtf8Bytes(`UTH_NEW_DEVICE_HW:${navigator.userAgent}:${Date.now()}`)
-      );
+      const newDeviceId = `HYBRID:NEWCRYPTO_${Date.now().toString(16).slice(-8).toUpperCase()}:SCR01:PLAT01:TZ01:CANV01`;
 
       const res = await fetch('/api/identity/kyc-key-recovery', {
         method: 'POST',
@@ -183,7 +243,7 @@ export default function AdminDashboardPro() {
           Trung Tâm Quản Trị Danh Tính
         </h1>
         <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#64748B' }}>
-          Giám sát Smart Contract Registry, Phát hành lô Merkle & Thu hồi khóa <code>revokeKey()</code>
+          Sổ bộ Thu hồi Độc lập 2 Tầng (Static Merkle Root + <code>mapping isRevoked</code>)
         </p>
       </div>
 
@@ -235,11 +295,11 @@ export default function AdminDashboardPro() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '6px' }}>
           <Layers size={16} color="#38BDF8" />
           <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: '#FFF' }}>
-            Phát Hành Lô Bằng Merkle Tree (Batch VC)
+            Tầng 1: Phát Hành Lô Merkle Tree Cố Định (Batch VC)
           </h2>
         </div>
         <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: '#94A3B8', lineHeight: 1.4 }}>
-          Băm danh sách sinh viên bằng <code>keccak256</code>, tạo Merkle Root và mảng Merkle Proof lưu vào IndexedDB.
+          Băm danh sách sinh viên bằng <code>keccak256</code>, tạo <code>MerkleRoot</code> cố định cho cả học kỳ và lưu <code>merkleProof</code> vào IndexedDB.
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -255,7 +315,7 @@ export default function AdminDashboardPro() {
           spellCheck="false"
           style={{
             width: '100%',
-            height: '110px',
+            height: '105px',
             background: '#050811',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: '10px',
@@ -328,21 +388,21 @@ export default function AdminDashboardPro() {
         )}
       </div>
 
-      {/* 3. BƯỚC 2 / MẢNH GHÉP #5: THU HỒI THẺ & CẤP LẠI KHI MẤT MÁY (revokeKey(old_address)) */}
+      {/* 3. ĐIỂM NGHẼN ③ & KỊCH BẢN 4: SỔ BỘ THU HỒI ĐỘC LẬP (`isRevoked`) & CẤP LẠI KHI MẤT MÁY */}
       <div className="glass-card" style={{ borderColor: 'rgba(244, 63, 94, 0.28)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <KeyRound size={15} color="#F43F5E" />
             <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: '#FFF' }}>
-              Thu Hồi & Cấp Lại Khi Mất Máy
+              Tầng 2: Sổ Bộ Thu Hồi Độc Lập & Cấp Lại
             </h2>
           </div>
           <span style={{ fontSize: '9.5px', fontFamily: 'JetBrains Mono', color: '#F43F5E' }}>
-            revokeKey(old_address)
+            isRevoked[addr]
           </span>
         </div>
         <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: '#94A3B8', lineHeight: 1.4 }}>
-          Gọi hàm <code>revokeKey(old_address)</code> trên Smart Contract để khóa vĩnh viễn ví trên điện thoại bị mất, sau đó sinh cặp khóa mới và cấp lại Merkle Proof mới cho sinh viên.
+          Tách biệt <code>mapping(address =&gt; bool) isRevoked</code> khỏi <code>MerkleRoot</code> cố định: Khi thu hồi khóa của 1 sinh viên mất máy, 9.999 sinh viên còn lại <b>không bị hỏng Merkle Proof</b>.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
@@ -366,7 +426,7 @@ export default function AdminDashboardPro() {
 
         <div style={{ marginBottom: '10px' }}>
           <div style={{ fontSize: '10px', color: '#64748B', marginBottom: '3px', fontWeight: 600 }}>
-            Địa chỉ ví máy cũ cần khóa (<code>old_address</code>)
+            Địa chỉ ví cần khóa trên chuỗi (<code>old_address</code>)
           </div>
           <input
             className="pro-input"
@@ -374,6 +434,50 @@ export default function AdminDashboardPro() {
             value={recoveryForm.oldAddress}
             onChange={(e) => setRecoveryForm({ ...recoveryForm, oldAddress: e.target.value })}
           />
+        </div>
+
+        {/* Nút Kịch bản 4: Thu hồi tức thì trên chuỗi (Revoke Only) + Mở khóa */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: '8px', marginBottom: '8px' }}>
+          <button
+            onClick={handleDirectOnChainRevoke}
+            disabled={isRecovering}
+            className="btn-press"
+            style={{
+              padding: '10px',
+              borderRadius: '10px',
+              border: '1px solid rgba(244, 63, 94, 0.45)',
+              background: 'rgba(244, 63, 94, 0.14)',
+              color: '#F43F5E',
+              fontSize: '11px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            <Ban size={13} />
+            <span>Revoke Khóa Ngay (Kịch Bản 4)</span>
+          </button>
+
+          <button
+            onClick={handleReactivateKey}
+            disabled={isRecovering}
+            className="btn-press"
+            style={{
+              padding: '10px',
+              borderRadius: '10px',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              background: 'rgba(16, 185, 129, 0.12)',
+              color: '#10B981',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            Mở Khóa Lại
+          </button>
         </div>
 
         <button
@@ -388,9 +492,24 @@ export default function AdminDashboardPro() {
         >
           <KeyRound size={14} />
           <span>
-            {isRecovering ? 'Đang gọi revokeKey(old_address)...' : 'Thực Thi revokeKey() & Cấp Lại Merkle Proof Mới'}
+            {isRecovering ? 'Đang thực thi trên chuỗi...' : 'KYC Recovery: Khóa Máy Cũ & Cấp Khóa Máy Mới'}
           </span>
         </button>
+
+        {revokeStatusMsg && (
+          <div style={{
+            marginTop: '10px',
+            padding: '9px 10px',
+            borderRadius: '10px',
+            fontSize: '10.5px',
+            lineHeight: 1.45,
+            background: revokeStatusMsg.type === 'REVOKED' ? 'rgba(244, 63, 94, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+            border: revokeStatusMsg.type === 'REVOKED' ? '1px solid rgba(244, 63, 94, 0.35)' : '1px solid rgba(16, 185, 129, 0.35)',
+            color: revokeStatusMsg.type === 'REVOKED' ? '#FDA4AF' : '#6EE7B7'
+          }}>
+            {revokeStatusMsg.text}
+          </div>
+        )}
 
         {recoveryResult && (
           <div style={{
@@ -402,12 +521,12 @@ export default function AdminDashboardPro() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10B981', fontSize: '11px', fontWeight: 800 }}>
               <FileCheck2 size={14} />
-              <span>Đã Khóa Ví Cũ & Cấp Lại Merkle Proof Mới!</span>
+              <span>Đã Khóa Ví Cũ & Ủy Quyền Sang Ví Máy Mới!</span>
             </div>
             <div style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', color: '#94A3B8', marginTop: '5px', lineHeight: 1.5, wordBreak: 'break-all' }}>
-              <div>• Revoked: {recoveryResult.revokedOldAddress.slice(0, 12)}...{recoveryResult.revokedOldAddress.slice(-6)}</div>
+              <div>• isRevoked[old]: {recoveryResult.revokedOldAddress.slice(0, 12)}...{recoveryResult.revokedOldAddress.slice(-6)} = true</div>
               <div style={{ color: '#38BDF8' }}>• Ví máy mới: {recoveryResult.newAddress.slice(0, 12)}...{recoveryResult.newAddress.slice(-6)}</div>
-              <div style={{ color: '#10B981' }}>• Merkle Root mới: {recoveryResult.newMerkleRoot.slice(0, 18)}...</div>
+              <div style={{ color: '#10B981' }}>• Merkle Root bảo toàn: {recoveryResult.newMerkleRoot.slice(0, 18)}...</div>
             </div>
           </div>
         )}

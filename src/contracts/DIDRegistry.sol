@@ -2,9 +2,15 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title DIDRegistry (UTH-TrustID Identity Lifecycle & Merkle Batch Registry)
- * @dev Quản lý vòng đời định danh phi tập trung (W3C DID), Merkle Root O(log N),
- *      thu hồi khóa khẩn cấp revokeKey(old_address) và cấp lại khi mất thiết bị (KYC Recovery).
+ * @title DIDRegistry (UTH-TrustID Decoupled 2-Layer Revocation & Merkle Batch Registry)
+ * @dev Giải quyết triệt để Điểm nghẽn ③ (Nghịch lý Cập nhật Merkle Root khi Thu hồi Khóa):
+ *      - Tầng 1 (Static Batch): `currentMerkleRoot` cố định theo từng học kỳ/khóa học.
+ *        Khi 1 sinh viên mất máy, KHÔNG tính lại `MerkleRoot` để bảo toàn hiệu lực
+ *        `merkleProof` đang lưu trong điện thoại của 9.999 sinh viên còn lại.
+ *      - Tầng 2 (Dynamic Revocation & Delegation Mapping):
+ *        Sử dụng `mapping(address => bool) public isRevoked` và `keyDelegation` độc lập.
+ *        Hàm xác thực kiểm tra kép:
+ *        `verifyMerkleProof(proof, root, leaf) == true && isRevoked[studentAddr] == false`
  */
 contract DIDRegistry {
     struct IdentityRecord {
@@ -18,10 +24,14 @@ contract DIDRegistry {
     address public universityAdmin;
     bytes32 public currentMerkleRoot;
 
-    // Ánh xạ từ địa chỉ ví sang bản ghi danh tính
-    mapping(address => IdentityRecord) public identities;
-    // Lưu vết các Merkle Root đã phát hành theo lô (Batch VC Issuance)
+    // [TẦNG 1 - STATIC MERKLE BATCH ROOTS]
     mapping(bytes32 => bool) public anchoredMerkleRoots;
+
+    // [TẦNG 2 - DYNAMIC REVOCATION REGISTRY ĐỘC LẬP]
+    // Tách biệt hoàn toàn khỏi Merkle Tree để thu hồi O(1) mà không làm hỏng Proof của SV khác
+    mapping(address => bool) public isRevoked;
+    mapping(address => address) public keyDelegation;
+    mapping(address => IdentityRecord) public identities;
 
     event IdentityRegistered(address indexed owner, string didUri, uint256 timestamp);
     event IdentityRevoked(address indexed owner, uint256 timestamp);
@@ -29,7 +39,7 @@ contract DIDRegistry {
     event KeyRecoveredAndReissued(
         address indexed oldAddress,
         address indexed newAddress,
-        bytes32 indexed newMerkleRoot,
+        bytes32 indexed preservedOrNewMerkleRoot,
         uint256 timestamp
     );
     event MerkleRootAnchored(bytes32 indexed merkleRoot, uint256 timestamp);
@@ -44,13 +54,14 @@ contract DIDRegistry {
     }
 
     modifier onlyActiveIdentity(address _owner) {
+        require(!isRevoked[_owner], "Identity Revoked on Chain");
         require(identities[_owner].owner != address(0), "Danh tinh chua duoc dang ky");
-        require(!identities[_owner].isRevoked, "Danh tinh da bi thu hoi (Revoked)");
+        require(!identities[_owner].isRevoked, "Identity Revoked on Chain");
         _;
     }
 
     /**
-     * @notice Neo gốc Merkle Root khi phát hành lô Thẻ Sinh Viên Số (Batch VC)
+     * @notice Neo gốc Merkle Root cố định theo từng học kỳ (Static Batch Issuance)
      */
     function anchorMerkleRoot(bytes32 _merkleRoot) external onlyAdmin {
         currentMerkleRoot = _merkleRoot;
@@ -60,7 +71,6 @@ contract DIDRegistry {
 
     /**
      * @notice Đăng ký danh tính số mới lên Blockchain
-     * @param _didUri Chuỗi định danh DID của người dùng
      */
     function registerIdentity(string calldata _didUri) external {
         require(identities[msg.sender].owner == address(0), "Danh tinh da ton tai");
@@ -72,6 +82,7 @@ contract DIDRegistry {
             isRevoked: false,
             replacedBy: address(0)
         });
+        isRevoked[msg.sender] = false;
 
         emit IdentityRegistered(msg.sender, _didUri, block.timestamp);
     }
@@ -81,15 +92,20 @@ contract DIDRegistry {
      */
     function revokeIdentity() external onlyActiveIdentity(msg.sender) {
         identities[msg.sender].isRevoked = true;
+        isRevoked[msg.sender] = true;
         emit IdentityRevoked(msg.sender, block.timestamp);
     }
 
     /**
-     * @notice [BƯỚC 2 - ON-CHAIN REVOCATION] Quản trị viên thu hồi khóa của điện thoại bị mất
+     * @notice [ĐIỂM NGHẼN ③ - DECOUPLED ON-CHAIN REVOCATION]
+     *         Quản trị viên thu hồi khóa của điện thoại bị mất bằng `isRevoked[old_address] = true`.
+     *         KHÔNG thay đổi `currentMerkleRoot`, đảm bảo 9.999 sinh viên khác không bị lỗi Proof!
      * @param old_address Địa chỉ ví trên thiết bị cũ của sinh viên cần khóa vĩnh viễn
      */
     function revokeKey(address old_address) external onlyAdmin {
         require(old_address != address(0), "Dia chi vi khong hop le");
+        isRevoked[old_address] = true;
+
         if (identities[old_address].owner == address(0)) {
             identities[old_address] = IdentityRecord({
                 owner: old_address,
@@ -106,25 +122,26 @@ contract DIDRegistry {
     }
 
     /**
-     * @notice [BƯỚC 2 - SOCIAL / KYC RECOVERY] Thu hồi khóa máy cũ và cấp lại khóa máy mới kèm Merkle Root mới
-     * @param old_address Địa chỉ ví trên máy cũ bị mất
-     * @param new_address Địa chỉ ví mới sinh trên điện thoại mới của sinh viên
-     * @param newDidUri Chuỗi DID mới
-     * @param newMerkleRoot Gốc Merkle Root mới đã cập nhật lá của thiết bị mới
+     * @notice [SOCIAL / KYC RECOVERY] Thu hồi khóa máy cũ và ủy quyền sang khóa máy mới
+     *         Giữ nguyên hiệu lực các Merkle Root cũ trong `anchoredMerkleRoots` để không
+     *         làm gián đoạn việc điểm danh của toàn trường.
      */
     function recoverAndReissueKey(
         address old_address,
         address new_address,
         string calldata newDidUri,
-        bytes32 newMerkleRoot
+        bytes32 optionalNewMerkleRoot
     ) external onlyAdmin {
         require(new_address != address(0) && new_address != old_address, "Dia chi vi moi khong hop le");
 
-        // 1. Vô hiệu hóa khóa cũ vĩnh viễn
+        // 1. Vô hiệu hóa khóa cũ vĩnh viễn trong Sổ bộ Thu hồi độc lập
+        isRevoked[old_address] = true;
         identities[old_address].isRevoked = true;
         identities[old_address].replacedBy = new_address;
+        keyDelegation[old_address] = new_address;
 
         // 2. Cấp phát bản ghi danh tính cho khóa mới
+        isRevoked[new_address] = false;
         identities[new_address] = IdentityRecord({
             owner: new_address,
             didUri: newDidUri,
@@ -133,19 +150,39 @@ contract DIDRegistry {
             replacedBy: address(0)
         });
 
-        // 3. Cập nhật Merkle Root mới trên chuỗi
-        currentMerkleRoot = newMerkleRoot;
-        anchoredMerkleRoots[newMerkleRoot] = true;
+        // 3. Nếu có bổ sung Merkle Root phụ thì thêm vào mapping mà KHÔNG xóa Root cũ
+        if (optionalNewMerkleRoot != bytes32(0)) {
+            currentMerkleRoot = optionalNewMerkleRoot;
+            anchoredMerkleRoots[optionalNewMerkleRoot] = true;
+        }
 
         emit KeyRevokedByAdmin(old_address, msg.sender, block.timestamp);
-        emit KeyRecoveredAndReissued(old_address, new_address, newMerkleRoot, block.timestamp);
+        emit KeyRecoveredAndReissued(old_address, new_address, currentMerkleRoot, block.timestamp);
     }
 
     /**
      * @notice Kiểm tra tính hợp lệ của danh tính
      */
     function isValidIdentity(address _owner) external view returns (bool) {
-        return (identities[_owner].owner != address(0) && !identities[_owner].isRevoked);
+        return (!isRevoked[_owner] && !identities[_owner].isRevoked);
+    }
+
+    /**
+     * @notice Kiểm tra kép 2 tầng (Merkle Proof O(log N) + Revocation Mapping O(1))
+     */
+    function verifyStudentAttendanceStatus(
+        bytes32[] calldata proof,
+        bytes32 root,
+        bytes32 leaf,
+        address studentAddress
+    ) external view returns (bool) {
+        if (isRevoked[studentAddress] || identities[studentAddress].isRevoked) {
+            return false;
+        }
+        if (!anchoredMerkleRoots[root] && root != currentMerkleRoot) {
+            return false;
+        }
+        return verifyMerkleProof(proof, root, leaf);
     }
 
     /**

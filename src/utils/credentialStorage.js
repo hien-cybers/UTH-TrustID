@@ -1,4 +1,4 @@
-// src/utils/credentialStorage.js - Két lưu trữ Thẻ sinh viên số, Merkle Proof & Hàng đợi Điểm danh Offline bằng IndexedDB (idb)
+// src/utils/credentialStorage.js - Két lưu trữ Thẻ sinh viên số, Merkle Proof & Hàng đợi Điểm danh Offline 2 Lớp (Android SW Sync + iOS Visibility/Online Fallback)
 import { openDB } from 'idb';
 
 const DB_NAME = 'UTH_TrustID_DB';
@@ -6,12 +6,6 @@ const DB_VERSION = 2;
 const STORE_NAME = 'credentials';
 const OFFLINE_QUEUE_STORE = 'offline_attendance_queue';
 
-/**
- * Khởi tạo hoặc kết nối vào IndexedDB an toàn (Browser Sandbox Isolation)
- * Bao gồm 2 Object Stores:
- * 1. credentials: Lưu trữ VC và Merkle Proof O(log N)
- * 2. offline_attendance_queue: Lưu trữ gói tin điểm danh ký số ngoại tuyến (Offline Proof-of-Presence)
- */
 export async function initDB() {
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {
@@ -34,9 +28,6 @@ export async function initDB() {
   });
 }
 
-/**
- * 1. Lưu hoặc Cập nhật Chứng chỉ số kèm Merkle Proof vào IndexedDB
- */
 export async function saveCredentialToStorage(credentialData) {
   const sId = String(credentialData.studentId || credentialData.mssv || '');
   if (!sId) {
@@ -72,18 +63,12 @@ export async function saveCredentialToStorage(credentialData) {
   return recordToSave;
 }
 
-/**
- * 2. Lấy chứng chỉ theo MSSV
- */
 export async function getCredentialByStudentId(studentId) {
   if (!studentId) return null;
   const db = await initDB();
   return await db.get(STORE_NAME, String(studentId));
 }
 
-/**
- * 3. Lấy chứng chỉ hiện hành đầu tiên trong máy (dùng cho Ví PWA cá nhân)
- */
 export async function getActiveCredential(preferredStudentId = null) {
   const db = await initDB();
   if (preferredStudentId) {
@@ -94,17 +79,11 @@ export async function getActiveCredential(preferredStudentId = null) {
   return allRecords.length > 0 ? allRecords[0] : null;
 }
 
-/**
- * 4. Lấy toàn bộ danh sách chứng chỉ lưu trong IndexedDB
- */
 export async function getAllCredentialsFromStorage() {
   const db = await initDB();
   return await db.getAll(STORE_NAME);
 }
 
-/**
- * 5. Xóa chứng chỉ khi sinh viên đăng xuất hoặc tự thu hồi
- */
 export async function deleteCredentialFromStorage(studentId) {
   if (!studentId) return;
   const db = await initDB();
@@ -114,9 +93,6 @@ export async function deleteCredentialFromStorage(studentId) {
   }
 }
 
-/**
- * 6. Xóa toàn bộ két lưu trữ chứng chỉ
- */
 export async function clearAllCredentialsFromStorage() {
   const db = await initDB();
   await db.clear(STORE_NAME);
@@ -126,11 +102,12 @@ export async function clearAllCredentialsFromStorage() {
 }
 
 // ============================================================================
-// BƯỚC 3: MODULE OFFLINE SYNC LƯU GÓI TIN CHỮ KÝ SỐ TẠM THỜI VÀO INDEXEDDB
+// ĐIỂM NGHẼN ④: CƠ CHẾ AUTO-SYNC 2 LỚP (ANDROID BACKGROUND SYNC + iOS FALLBACK)
 // ============================================================================
 
 /**
- * 7. Lưu gói tin điểm danh ngoại tuyến có gắn chữ ký EIP-191 vào IndexedDB
+ * Lưu gói tin điểm danh ngoại tuyến có gắn chữ ký EIP-191 vào IndexedDB
+ * và tự động đăng ký Lớp 1 (ServiceWorker Background Sync cho Android/Chromium).
  */
 export async function saveOfflineAttendanceToIDB(packet) {
   const db = await initDB();
@@ -141,45 +118,123 @@ export async function saveOfflineAttendanceToIDB(packet) {
     savedInIDB: true
   };
   await db.put(OFFLINE_QUEUE_STORE, record);
+
+  // Lớp 1 (Chromium / Android): Đăng ký Background Sync API nếu trình duyệt hỗ trợ
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && 'sync' in reg) {
+        await reg.sync.register('sync-attendance');
+      }
+    } catch {
+      // iOS Safari không hỗ trợ SyncManager -> Lớp 2 (online + visibilitychange) sẽ đảm nhiệm
+    }
+  }
+
   return record;
 }
 
-/**
- * 8. Đọc toàn bộ gói tin điểm danh ngoại tuyến đang chờ trong IndexedDB
- */
 export async function getAllOfflineAttendanceFromIDB() {
   const db = await initDB();
   const list = await db.getAll(OFFLINE_QUEUE_STORE);
   return list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 }
 
-/**
- * 9. Xóa toàn bộ hàng đợi điểm danh ngoại tuyến sau khi đã đồng bộ thành công
- */
 export async function clearOfflineAttendanceFromIDB() {
   const db = await initDB();
   await db.clear(OFFLINE_QUEUE_STORE);
 }
 
+let isSyncingInProgress = false;
+
 /**
- * 10. Tự động đồng bộ ngầm (Background Sync) từ IndexedDB lên Backend khi có mạng
+ * Đồng bộ hàng đợi ngoại tuyến từ IndexedDB lên Backend (Idempotent lock chống gửi trùng)
  */
 export async function syncOfflineAttendanceFromIDB() {
+  if (isSyncingInProgress) {
+    return { syncedCount: 0, results: [], skipped: true };
+  }
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return { syncedCount: 0, results: [], offline: true };
+  }
+
   const pendingPackets = await getAllOfflineAttendanceFromIDB();
   if (!pendingPackets || pendingPackets.length === 0) {
     return { syncedCount: 0, results: [] };
   }
 
-  const res = await fetch('/api/attendance/sync-offline', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ packets: pendingPackets })
-  });
-  const data = await res.json();
-  if (data && data.success) {
-    await clearOfflineAttendanceFromIDB();
+  isSyncingInProgress = true;
+  try {
+    const res = await fetch('/api/attendance/sync-offline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packets: pendingPackets })
+    });
+    const data = await res.json();
+    if (data && data.success) {
+      await clearOfflineAttendanceFromIDB();
+      // Đồng bộ xóa luôn bản sao dự phòng trong localStorage nếu có
+      localStorage.removeItem('uth_offline_attendance_queue');
+    }
+    return data;
+  } finally {
+    isSyncingInProgress = false;
   }
-  return data;
+}
+
+/**
+ * Đăng ký Cơ chế Đồng bộ Tự động 2 Lớp (Dual-Layer Offline Sync):
+ * - Lớp 1 (Android/Chrome): Nhận thông điệp `SW_BACKGROUND_SYNC_TRIGGER` từ Service Worker.
+ * - Lớp 2 (iOS Safari & Đa nền tảng): Bắt đồng thời sự kiện `window.ononline` VÀ
+ *   `document.onvisibilitychange` (ngay khi sinh viên mở sáng màn hình / quay lại app).
+ */
+export function registerDualLayerOfflineSync(onSyncedCallback) {
+  if (typeof window === 'undefined') return () => {};
+
+  const attemptFlush = async (triggerSource) => {
+    if (navigator.onLine === false) return;
+    try {
+      const pending = await getAllOfflineAttendanceFromIDB();
+      if (!pending || pending.length === 0) return;
+      const result = await syncOfflineAttendanceFromIDB();
+      if (result && result.success && typeof onSyncedCallback === 'function') {
+        onSyncedCallback(result, triggerSource);
+      }
+    } catch {
+      // Giữ nguyên trong IndexedDB chờ lần kích hoạt kế tiếp
+    }
+  };
+
+  const handleOnline = () => attemptFlush('WINDOW_ONLINE');
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+      attemptFlush('IOS_VISIBILITY_FOREGROUND');
+    }
+  };
+  const handleSwMessage = (event) => {
+    if (event.data && event.data.type === 'SW_BACKGROUND_SYNC_TRIGGER') {
+      attemptFlush('ANDROID_SW_BACKGROUND_SYNC');
+    }
+  };
+
+  window.addEventListener('online', handleOnline);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', handleSwMessage);
+  }
+
+  // Kiểm tra ngay lúc khởi tạo nếu đang có mạng
+  if (navigator.onLine) {
+    attemptFlush('INITIAL_MOUNT_CHECK');
+  }
+
+  return () => {
+    window.removeEventListener('online', handleOnline);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+    }
+  };
 }
 
 // Aliases tương thích ngược
