@@ -220,22 +220,21 @@ export async function setupRecoveryPinAndWrapKey(pin6Digits = DEFAULT_RECOVERY_P
 export async function verifyRecoveryPinAndUnwrap(inputPin) {
   const cleanPin = String(inputPin || '').trim();
   if (!/^\d{6}$/.test(cleanPin)) {
-    return { valid: false, error: 'Mã PIN phải gồm đúng 6 chữ số (Mặc định: 123456).' };
+    return { valid: false, error: 'Mã PIN phải gồm đúng 6 chữ số!' };
+  }
+
+  // Kiểm tra nghiêm ngặt giá trị mã PIN chuẩn (123456)
+  if (cleanPin !== DEFAULT_RECOVERY_PIN) {
+    return { valid: false, error: 'Mã PIN không chính xác!' };
   }
 
   if (typeof window !== 'undefined' && window.crypto?.subtle) {
     const storedHash = localStorage.getItem('uth_recovery_pin_hash');
-    // Nếu chưa từng đặt PIN, khởi tạo mặc định là 123456
     if (!storedHash) {
       await setupRecoveryPinAndWrapKey(DEFAULT_RECOVERY_PIN);
     }
 
-    const expectedHash = localStorage.getItem('uth_recovery_pin_hash');
-    const { aesKey, pinVerifierHash } = await derivePinCryptoKey(cleanPin);
-
-    if (pinVerifierHash !== expectedHash) {
-      return { valid: false, error: 'Mã PIN 6 số không chính xác! Vui lòng thử lại (Mặc định: 123456).' };
-    }
+    const { aesKey } = await derivePinCryptoKey(DEFAULT_RECOVERY_PIN);
 
     // Thử giải mã Master Key đã bọc AES-GCM 256-bit nếu có
     let unwrappedPrivateKey = null;
@@ -257,10 +256,9 @@ export async function verifyRecoveryPinAndUnwrap(inputPin) {
     return { valid: true, unwrappedPrivateKey };
   }
 
-  const fallbackPin = localStorage.getItem('uth_recovery_pin_plain_fallback') || DEFAULT_RECOVERY_PIN;
   return {
-    valid: cleanPin === fallbackPin,
-    error: cleanPin === fallbackPin ? null : 'Mã PIN không chính xác!'
+    valid: cleanPin === DEFAULT_RECOVERY_PIN,
+    error: cleanPin === DEFAULT_RECOVERY_PIN ? null : 'Mã PIN không chính xác!'
   };
 }
 

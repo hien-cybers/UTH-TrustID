@@ -32,7 +32,9 @@ export default function StudentWalletPro() {
   const [showPassQr, setShowPassQr] = useState(false);
 
   // Mã PIN dự phòng 6 số (PBKDF2 100.000 vòng lặp) bọc khóa AES-GCM 256-bit
-  const [recoveryPin, setRecoveryPin] = useState('123456');
+  const [recoveryPin, setRecoveryPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinAttempts, setPinAttempts] = useState(0);
   const [pinSavedNotice, setPinSavedNotice] = useState('');
 
   // Selective Disclosure / ZKP-lite state
@@ -97,7 +99,22 @@ export default function StudentWalletPro() {
 
   // KÍCH HOẠT THẺ LẦN ĐẦU (First-time Onboarding + WebAuthn Passkey + AES-GCM Key Wrapping)
   const handleActivateInitialVC = async () => {
-    const cleanPin = /^\d{6}$/.test(recoveryPin.trim()) ? recoveryPin.trim() : '123456';
+    if (pinAttempts >= 5) {
+      setPinError('Bạn đã nhập sai quá 5 lần. Vui lòng chờ 5 phút.');
+      return;
+    }
+
+    const cleanPin = recoveryPin.trim();
+    if (cleanPin !== '123456') {
+      const nextAttempts = pinAttempts + 1;
+      setPinAttempts(nextAttempts);
+      setPinError(`Mã PIN không chính xác! (${nextAttempts}/5)`);
+      setRecoveryPin('');
+      return;
+    }
+
+    setPinError('');
+    setPinAttempts(0);
 
     const defaultInitialVC = {
       studentId: '2251120000',
@@ -238,7 +255,7 @@ export default function StudentWalletPro() {
             Nạp Thẻ Sinh Viên Số (VC) vào IndexedDB, đăng ký <b>WebAuthn FaceID/TouchID</b> và bọc khóa bằng <b>AES-GCM 256-bit</b>.
           </p>
 
-          <div style={{ textAlign: 'left', marginBottom: '12px', background: '#04060A', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ textAlign: 'left', marginBottom: '12px', background: '#04060A', padding: '10px', borderRadius: '10px', border: pinError ? '1px solid #EF4444' : '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#38BDF8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <KeyRound size={12} />
               <span>Mã PIN Khôi Phục Nội Bộ 6 Số (PBKDF2 100.000 vòng):</span>
@@ -246,12 +263,27 @@ export default function StudentWalletPro() {
             <input
               type="password"
               maxLength={6}
+              inputMode="numeric"
               value={recoveryPin}
-              onChange={(e) => setRecoveryPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="Nhập 6 chữ số (Mặc định: 123456)"
+              onChange={(e) => {
+                setRecoveryPin(e.target.value.replace(/\D/g, '').slice(0, 6));
+                if (pinError) setPinError('');
+              }}
+              placeholder="Nhập 6 số PIN chuẩn (123456)"
               className="pro-input"
-              style={{ fontFamily: 'JetBrains Mono', fontSize: '13px', letterSpacing: '3px', textAlign: 'center' }}
+              style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '13px',
+                letterSpacing: '3px',
+                textAlign: 'center',
+                border: pinError ? '1px solid #EF4444' : undefined
+              }}
             />
+            {pinError && (
+              <div style={{ color: '#EF4444', fontSize: '11px', fontWeight: 700, marginTop: '6px', textAlign: 'center' }}>
+                ⚠️ {pinError}
+              </div>
+            )}
             <div style={{ fontSize: '9.5px', color: '#64748B', marginTop: '4px' }}>
               Dùng để kích hoạt lại FaceID mới khi bạn đổi vân tay/khuôn mặt trên điện thoại mà không bị mất thẻ.
             </div>

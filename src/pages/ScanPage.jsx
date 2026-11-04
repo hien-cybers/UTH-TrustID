@@ -61,6 +61,7 @@ export default function ScanPage() {
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  const [pinAttempts, setPinAttempts] = useState(0);
   const pinResolverRef = useRef(null);
 
   // Trạng thái Tái kiểm tra điểm danh đột xuất (Spot-Check 60s từ Giảng viên)
@@ -270,7 +271,7 @@ export default function ScanPage() {
   // Mở Modal yêu cầu nhập Mã PIN 6 số khi FaceID/Vân tay trên thiết bị thay đổi (InvalidStateError / NotAllowedError)
   const requestPinFallbackModal = () => {
     return new Promise((resolve) => {
-      setPinInput('123456');
+      setPinInput('');
       setPinError('');
       setPinModalOpen(true);
       pinResolverRef.current = resolve;
@@ -278,11 +279,29 @@ export default function ScanPage() {
   };
 
   const handleConfirmPinModal = async () => {
-    const check = await verifyRecoveryPinAndUnwrap(pinInput);
-    if (!check.valid) {
-      setPinError(check.error || 'Mã PIN không chính xác!');
+    if (pinAttempts >= 5) {
+      setPinError('Bạn đã nhập sai quá 5 lần. Vui lòng chờ 5 phút.');
       return;
     }
+
+    if (pinInput !== '123456') {
+      const nextAttempts = pinAttempts + 1;
+      setPinAttempts(nextAttempts);
+      setPinError(`Mã PIN không chính xác! (${nextAttempts}/5)`);
+      setPinInput('');
+      return;
+    }
+
+    const check = await verifyRecoveryPinAndUnwrap(pinInput);
+    if (!check.valid) {
+      const nextAttempts = pinAttempts + 1;
+      setPinAttempts(nextAttempts);
+      setPinError(`Mã PIN không chính xác! (${nextAttempts}/5)`);
+      setPinInput('');
+      return;
+    }
+    setPinAttempts(0);
+    setPinError('');
     setPinModalOpen(false);
     setSimBiometricChanged(false);
     setSimulatedBiometricInvalidation(false);

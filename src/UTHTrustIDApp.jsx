@@ -12,6 +12,8 @@ import { verifyBiometricPresence } from './utils/webauthnHelper';
 import SplashScreen from './components/SplashScreen';
 import LiveClock from './components/LiveClock';
 import CameraScannerPro from './components/CameraScannerPro';
+import LockScreenModal from './components/LockScreenModal';
+import { useAutoLock } from './hooks/useAutoLock';
 import { getSocketUrl, smartFetch, DEFAULT_LAN_IP } from './utils/backendUrl';
 
 // Địa chỉ IPv4 mạng LAN của máy tính Windows (ipconfig: 192.168.88.200) & tự động định tuyến đa môi trường
@@ -25,6 +27,8 @@ export const socket = io(SOCKET_URL, {
 
 export default function UTHTrustIDApp() {
   const [showSplash, setShowSplash] = useState(true);
+  // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây
+  const { isLocked, unlock } = useAutoLock(30000);
   const [activeTab, setActiveTab] = useState('wallet'); // 'wallet' | 'scan' | 'faculty'
   const [showCameraScanner, setShowCameraScanner] = useState(false);
 
@@ -317,6 +321,14 @@ export default function UTHTrustIDApp() {
       
       {/* SPLASH SCREEN */}
       {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
+
+      {/* KHI BỊ KHÓA DO THOÁT APP QUÁ 30 GIÂY, MODAL NÀY ĐÈ LÊN TOÀN BỘ APP */}
+      {isLocked && (
+        <LockScreenModal
+          studentName={credential.fullName}
+          onUnlockSuccess={unlock}
+        />
+      )}
 
       {/* TOP HEADER (Sử dụng <LiveClock /> độc lập để không làm re-render Camera) */}
       <header style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0A0E17', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'sticky', top: 0, zIndex: 40 }}>

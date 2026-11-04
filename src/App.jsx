@@ -13,13 +13,17 @@ import UTHTrustIDApp from './UTHTrustIDApp';
 import MobileNavigation from './components/MobileNavigation';
 import UthTrustLogo from './components/UthTrustLogo';
 import LiveClock from './components/LiveClock';
+import LockScreenModal from './components/LockScreenModal';
+import { useAutoLock } from './hooks/useAutoLock';
 import { startPreWarmGps } from './utils/gpsDriftFilter';
 import './styles/appPro.css';
 
-import { Key, LogOut, ShieldAlert } from 'lucide-react';
+import { Key, LogOut, ShieldAlert, Lock } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
+  const { isLocked, unlock, lockNow } = useAutoLock(30000);
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('uth_staff_user');
@@ -47,6 +51,14 @@ export default function App() {
       {/* Màn hình khởi động động (Animated Splash Screen) hiển thị khi vừa mở ứng dụng */}
       {showSplash && (
         <SplashScreen onFinish={() => setShowSplash(false)} />
+      )}
+
+      {/* Khi bị khóa do thoát app quá 30 giây hoặc bấm khóa nhanh, modal này đè lên toàn bộ app */}
+      {isLocked && (
+        <LockScreenModal
+          studentName="Nguyễn Đức Hiển"
+          onUnlockSuccess={unlock}
+        />
       )}
 
       {/* Giao diện chính của ứng dụng được nạp sẵn ngầm bên dưới */}
@@ -87,6 +99,25 @@ export default function App() {
             {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Trạng thái Phân Quyền RBAC */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <LiveClock />
+
+              <button
+                onClick={lockNow}
+                title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
+                className="btn-press"
+                style={{
+                  padding: '5px 7px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(56, 189, 248, 0.28)',
+                  background: 'rgba(56, 189, 248, 0.08)',
+                  color: '#38BDF8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Lock size={12} />
+              </button>
 
               {currentUser ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
