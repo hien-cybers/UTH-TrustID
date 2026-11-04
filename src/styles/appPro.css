@@ -1,7 +1,11 @@
-/* src/styles/appPro.css - Khung Điện Thoại Chuẩn 420px Không Tràn Full Màn Hình (iOS & Material 3) */
+/* src/styles/appPro.css - Khung Điện Thoại Chuẩn 420px/430px & Chống Tràn Tai Thỏ / Home Indicator (iOS Safe Area & Material 3) */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
 
 :root {
+  /* Khai báo các biến vùng an toàn chuẩn iOS (Notch / Dynamic Island / Home Indicator) & Android */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+
   --bg-root: #04060A;
   --bg-card: #0A0E17;
   --bg-card-elevated: #111726;
@@ -29,7 +33,9 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
+  height: 100%;
   min-height: 100dvh;
+  background-color: #000000;
   background: radial-gradient(circle at 50% 0%, #0B1528 0%, #020408 70%) !important;
   color: var(--text-main);
   overflow-x: hidden;
@@ -47,11 +53,28 @@ html, body {
   padding: 12px 10px;
 }
 
-/* Khung Smartphone Cố Định Chuẩn 420px */
+/* Khung điện thoại: dùng 100dvh để không bị thanh URL Safari nhảy giật & tích hợp Safe Area */
+.mobile-app-root {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background-color: #04060A;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  /* CHỐNG TRÀN TAI THỎ (NOTCH / DYNAMIC ISLAND) & THANH HOME INDICATOR */
+  padding-top: var(--sat);
+  padding-bottom: calc(64px + var(--sab));
+}
+
+/* Khung Smartphone Cố Định Chuẩn 420px/430px */
 .mobile-viewport,
 .app-container {
   width: 100% !important;
-  max-width: 420px !important;
+  max-width: 430px !important;
   height: min(100dvh - 24px, 860px) !important;
   min-height: 600px;
   margin: 0 auto !important;
@@ -63,17 +86,18 @@ html, body {
   border-radius: 28px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.92), 0 0 0 1px rgba(56, 189, 248, 0.1) !important;
+  padding-top: var(--sat) !important;
   padding-bottom: 0 !important;
 }
 
-/* Vùng cuộn nội dung bên trong khung điện thoại */
+/* Vùng cuộn nội dung bên trong khung điện thoại (tự cộng thêm --sab cho thanh Home iPhone) */
 .mobile-scroll-body,
 .content-scroll {
   flex: 1 1 auto;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 14px 14px calc(82px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 14px calc(78px + var(--sab));
   scrollbar-width: none;
 }
 
@@ -82,7 +106,7 @@ html, body {
   display: none;
 }
 
-/* Trên màn hình điện thoại thật (<= 480px): Khớp vừa vặn màn hình điện thoại */
+/* Trên màn hình điện thoại thật (<= 480px): Khớp vừa vặn 100dvh và kích hoạt đầy đủ Safe Area */
 @media (max-width: 480px) {
   #root {
     padding: 0 !important;
@@ -96,6 +120,7 @@ html, body {
     border-radius: 0 !important;
     border: none !important;
     box-shadow: none !important;
+    padding-top: var(--sat) !important;
   }
 }
 

@@ -1,4 +1,4 @@
-// src/components/MobileNavigation.jsx - Thanh Điều Hướng Tách Biệt Theo Vai Trò (RBAC Navigation)
+// src/components/MobileNavigation.jsx - Thanh Điều Hướng Tách Biệt Theo Vai Trò (RBAC) & Tích Hợp Safe Area (env(safe-area-inset-bottom))
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Wallet, ShieldCheck, LayoutGrid, QrCode, Radio, Lock } from 'lucide-react';
@@ -15,19 +15,28 @@ export default function MobileNavigation({ currentUser }) {
         .bottom-nav {
           position: absolute;
           bottom: 0;
-          left: 0;
+          left: 50%;
+          transform: translateX(-50%);
           width: 100%;
-          height: 66px;
-          background: rgba(8, 12, 20, 0.95);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          max-width: 430px;
+          /* Tự động cộng thêm độ cao của thanh gạt Home Indicator trên iPhone */
+          height: calc(60px + env(safe-area-inset-bottom, 0px));
+          padding: 0 6px env(safe-area-inset-bottom, 0px);
+          background: rgba(10, 14, 23, 0.95);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
           border-top: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           justify-content: space-around;
           align-items: center;
-          padding: 0 6px;
           z-index: 100;
           box-sizing: border-box;
+        }
+
+        @media (max-width: 480px) {
+          .bottom-nav {
+            position: fixed;
+          }
         }
 
         .tab-item {
@@ -42,7 +51,7 @@ export default function MobileNavigation({ currentUser }) {
           font-weight: 600;
           transition: color 0.15s ease, transform 0.15s ease;
           width: 25%;
-          height: 100%;
+          height: 60px;
         }
 
         .tab-active {
@@ -55,22 +64,22 @@ export default function MobileNavigation({ currentUser }) {
         {role === 'STUDENT' && (
           <>
             <NavLink to="/wallet" className={getTabClass}>
-              <Wallet size={19} strokeWidth={2} />
+              <Wallet size={18} strokeWidth={2} />
               <span>Ví Số DID</span>
             </NavLink>
 
             <NavLink to="/scan" className={getTabClass}>
-              <QrCode size={19} strokeWidth={2} />
+              <QrCode size={18} strokeWidth={2} />
               <span>Quét Mã</span>
             </NavLink>
 
             <NavLink to="/services" className={getTabClass}>
-              <LayoutGrid size={19} strokeWidth={2} />
+              <LayoutGrid size={18} strokeWidth={2} />
               <span>Dịch Vụ</span>
             </NavLink>
 
             <NavLink to="/login" className={getTabClass}>
-              <Lock size={19} strokeWidth={2} />
+              <Lock size={18} strokeWidth={2} />
               <span>Cán Bộ</span>
             </NavLink>
           </>
@@ -80,22 +89,22 @@ export default function MobileNavigation({ currentUser }) {
         {role === 'FACULTY' && (
           <>
             <NavLink to="/faculty" className={getTabClass}>
-              <Radio size={19} strokeWidth={2} />
+              <Radio size={18} strokeWidth={2} />
               <span>Phòng Học</span>
             </NavLink>
 
             <NavLink to="/services" className={getTabClass}>
-              <LayoutGrid size={19} strokeWidth={2} />
+              <LayoutGrid size={18} strokeWidth={2} />
               <span>Tra Cứu SV</span>
             </NavLink>
 
             <NavLink to="/scan" className={getTabClass}>
-              <QrCode size={19} strokeWidth={2} />
+              <QrCode size={18} strokeWidth={2} />
               <span>Máy Quét</span>
             </NavLink>
 
             <NavLink to="/wallet" className={getTabClass}>
-              <Wallet size={19} strokeWidth={2} />
+              <Wallet size={18} strokeWidth={2} />
               <span>Ví Thử</span>
             </NavLink>
           </>
@@ -105,22 +114,22 @@ export default function MobileNavigation({ currentUser }) {
         {role === 'ADMIN' && (
           <>
             <NavLink to="/admin" className={getTabClass}>
-              <ShieldCheck size={19} strokeWidth={2} />
+              <ShieldCheck size={18} strokeWidth={2} />
               <span>Quản Trị</span>
             </NavLink>
 
             <NavLink to="/faculty" className={getTabClass}>
-              <Radio size={19} strokeWidth={2} />
+              <Radio size={18} strokeWidth={2} />
               <span>Phòng Học</span>
             </NavLink>
 
             <NavLink to="/services" className={getTabClass}>
-              <LayoutGrid size={19} strokeWidth={2} />
+              <LayoutGrid size={18} strokeWidth={2} />
               <span>Dịch Vụ</span>
             </NavLink>
 
             <NavLink to="/wallet" className={getTabClass}>
-              <Wallet size={19} strokeWidth={2} />
+              <Wallet size={18} strokeWidth={2} />
               <span>Ví Mẫu</span>
             </NavLink>
           </>

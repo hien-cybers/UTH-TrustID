@@ -1,5 +1,5 @@
-// src/App.jsx - UTH-TrustID Native Mobile App (Phân Tách Role Chuẩn RBAC & Khung Điện Thoại 420px)
-import React, { useState } from 'react';
+// src/App.jsx - UTH-TrustID Native Mobile App (Phân Tách Role Chuẩn RBAC, Safe Area Tai Thỏ & Khung Điện Thoại 430px)
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 
 import StudentWalletPro from './pages/StudentWalletPro';
@@ -8,11 +8,12 @@ import ScanPage from './pages/ScanPage';
 import ServicePortal from './pages/ServicePortal';
 import AdminDashboardPro from './pages/AdminDashboardPro';
 import StaffLogin from './pages/StaffLogin';
+import UTHTrustIDApp from './UTHTrustIDApp';
 import MobileNavigation from './components/MobileNavigation';
 import UthTrustLogo from './components/UthTrustLogo';
 import './styles/appPro.css';
 
-import { Key, LogOut, ShieldAlert } from 'lucide-react';
+import { Key, LogOut, ShieldAlert, Clock } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -24,6 +25,13 @@ export default function App() {
     }
   });
 
+  // Đồng hồ thời gian thực nhảy từng giây trên Header
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('uth_staff_user');
     localStorage.removeItem('uth_staff_token');
@@ -32,25 +40,27 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {/* Khung Smartphone 420px Cố Định Chính Giữa (Không Tràn Full Màn Hình) */}
-      <div className="mobile-viewport">
+      {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
+      <div className="mobile-viewport mobile-app-root">
         
-        {/* Top Header Chuẩn Native */}
+        {/* Top Header Chuẩn Native iOS / Android (Tránh đè lên Tai Thỏ / Dynamic Island) */}
         <header style={{
           flexShrink: 0,
+          position: 'sticky',
+          top: 0,
           zIndex: 50,
-          background: 'rgba(4, 6, 10, 0.92)',
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
+          background: 'rgba(10, 14, 23, 0.95)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '12px 14px 10px',
+          padding: '12px 16px',
           width: '100%'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
             
             {/* Logo Thương Hiệu UTH-TrustID */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <UthTrustLogo size={32} />
+              <UthTrustLogo size={30} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', color: '#FFF', whiteSpace: 'nowrap' }}>
                   UTH TRUST<span style={{ color: '#38BDF8' }}>ID</span>
@@ -63,8 +73,24 @@ export default function App() {
               </div>
             </div>
 
-            {/* Trạng thái Phân Quyền RBAC */}
+            {/* Đồng hồ thời gian thực + Trạng thái Phân Quyền RBAC */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '10.5px',
+                fontFamily: 'JetBrains Mono, monospace',
+                color: '#94A3B8',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '3px 7px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.06)'
+              }}>
+                <Clock size={11} color="#38BDF8" />
+                <span>{currentTime.toLocaleTimeString('vi-VN', { hour12: false })}</span>
+              </div>
+
               {currentUser ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{
@@ -76,7 +102,7 @@ export default function App() {
                     color: currentUser.role === 'ADMIN' ? '#10B981' : '#38BDF8',
                     border: currentUser.role === 'ADMIN' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)'
                   }}>
-                    {currentUser.role === 'ADMIN' ? 'Admin' : 'Giảng Viên'}
+                    {currentUser.role === 'ADMIN' ? 'Admin' : 'GV'}
                   </span>
 
                   <button
@@ -84,7 +110,7 @@ export default function App() {
                     title="Đăng xuất tài khoản công vụ"
                     className="btn-press"
                     style={{
-                      padding: '4px 8px',
+                      padding: '4px 7px',
                       borderRadius: '7px',
                       border: '1px solid rgba(244, 63, 94, 0.35)',
                       background: 'rgba(244, 63, 94, 0.12)',
@@ -98,7 +124,6 @@ export default function App() {
                     }}
                   >
                     <LogOut size={11} />
-                    <span>Thoát</span>
                   </button>
                 </div>
               ) : (
@@ -106,12 +131,12 @@ export default function App() {
                   to="/login"
                   className="btn-press"
                   style={{
-                    padding: '5px 9px',
+                    padding: '5px 8px',
                     borderRadius: '8px',
                     border: '1px solid rgba(56, 189, 248, 0.3)',
                     background: 'rgba(56, 189, 248, 0.1)',
                     color: '#38BDF8',
-                    fontSize: '10.5px',
+                    fontSize: '10px',
                     fontWeight: 700,
                     textDecoration: 'none',
                     display: 'flex',
@@ -120,7 +145,7 @@ export default function App() {
                   }}
                 >
                   <Key size={11} />
-                  <span>Đăng Nhập Cán Bộ</span>
+                  <span>Cán Bộ</span>
                 </NavLink>
               )}
             </div>
@@ -135,6 +160,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/wallet" replace />} />
             <Route path="/wallet" element={<StudentWalletPro />} />
             <Route path="/scan" element={<ScanPage />} />
+            <Route path="/all-in-one" element={<UTHTrustIDApp />} />
 
             {/* 2. CỔNG DỊCH VỤ & TRA CỨU (MỞ CHO SINH VIÊN, PHÂN QUYỀN TÍNH NĂNG CÁN BỘ) */}
             <Route path="/services" element={<ServicePortal currentUser={currentUser} />} />
@@ -192,7 +218,7 @@ export default function App() {
           </Routes>
         </main>
 
-        {/* Thanh Điều Hướng Dưới Cùng Tự Động Tách Theo Vai Trò (RBAC) */}
+        {/* Thanh Điều Hướng Dưới Cùng Tự Động Tách Theo Vai Trò (RBAC) & Tích Hợp Safe Area */}
         <MobileNavigation currentUser={currentUser} />
 
       </div>
