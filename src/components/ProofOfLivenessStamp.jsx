@@ -1,9 +1,10 @@
-// src/components/ProofOfLivenessStamp.jsx - Con Dấu Số Động Chống Gian Lận Chụp Màn Hình (Proof of Liveness)
-// Bao gồm: 1. Vòng sóng Radar đồng tâm chuyển động liên tục
-//          2. Đồng hồ mili-giây nhảy thời gian thực (HH:MM:SS.mmm)
-//          3. Mã Hash động đổi mỗi giây (1s Dynamic Cryptographic Hash)
+// src/components/ProofOfLivenessStamp.jsx - Con Dấu Số Động & Đối Soát Trực Quan (Visual Liveness Stamp)
+// Chống kịch bản Ủy quyền phần cứng vật lý (Sinh viên A cầm hộ máy của Sinh viên B):
+// 1. Hiển thị Ảnh hồ sơ số (VC Avatar) + Họ tên & MSSV cỡ lớn để giảng viên đối soát trực quan tại bàn
+// 2. Huy hiệu xác thực Sinh trắc học cục bộ (WebAuthn FaceID / TouchID Verified)
+// 3. Vòng sóng Radar đồng tâm + Đồng hồ mili-giây thực (HH:MM:SS.mmm) + Dynamic Hash đổi mỗi 1s
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Activity } from 'lucide-react';
+import { ShieldCheck, Fingerprint, AlertTriangle } from 'lucide-react';
 
 export default function ProofOfLivenessStamp({
   studentName = 'NGUYỄN ĐỨC HIỂN',
@@ -11,6 +12,8 @@ export default function ProofOfLivenessStamp({
   sessionId = 'SES_A2301',
   signatureHash = '0x8a4f91c2b7e0...c4e191',
   distance = '8m',
+  biometricVerified = true,
+  proximityWarning = null,
   onClose
 }) {
   const [liveTimeMs, setLiveTimeMs] = useState('');
@@ -24,7 +27,7 @@ export default function ProofOfLivenessStamp({
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
-      const ms = String(now.getMilliseconds()).padStart(3, '0');
+      const ms = String(now.getMilliseconds()).toString().padStart(3, '0');
       setLiveTimeMs(`${hh}:${mm}:${ss}.${ms}`);
       setWavePhase((p) => (p + 15) % 360);
     }, 40);
@@ -45,6 +48,8 @@ export default function ProofOfLivenessStamp({
     return () => clearInterval(hashInterval);
   }, []);
 
+  const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(studentName)}&backgroundColor=0284c7,0369a1&fontWeight=700`;
+
   return (
     <div
       className="hero-pass"
@@ -52,7 +57,7 @@ export default function ProofOfLivenessStamp({
         width: '100%',
         padding: '15px',
         borderRadius: '20px',
-        border: '1px solid rgba(16, 185, 129, 0.48)',
+        border: proximityWarning ? '1px solid rgba(245, 158, 11, 0.65)' : '1px solid rgba(16, 185, 129, 0.48)',
         background: 'linear-gradient(145deg, rgba(6, 78, 59, 0.42) 0%, rgba(10, 14, 23, 0.96) 65%, #04060A 100%)',
         boxShadow: '0 12px 32px rgba(16, 185, 129, 0.22)',
         position: 'relative',
@@ -77,7 +82,6 @@ export default function ProofOfLivenessStamp({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-          {/* Vòng sóng Radar đồng tâm chuyển động liên tục */}
           <div
             style={{
               position: 'relative',
@@ -137,29 +141,87 @@ export default function ProofOfLivenessStamp({
                 textOverflow: 'ellipsis'
               }}
             >
-              PROOF OF LIVENESS STAMP
+              VISUAL LIVENESS STAMP
             </div>
             <div style={{ fontSize: '9.5px', color: 'var(--text-muted)' }}>
-              Con dấu sóng Radar chống chụp màn hình
+              Chống chụp màn hình & Chống cầm máy điểm danh hộ
             </div>
           </div>
         </div>
 
+        {/* Huy hiệu Sinh trắc học WebAuthn (Tầng 1) */}
         <span
           style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
             fontSize: '9px',
             fontWeight: 700,
             fontFamily: 'JetBrains Mono',
-            color: '#38BDF8',
-            background: 'rgba(56, 189, 248, 0.12)',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            padding: '2px 7px',
+            color: biometricVerified ? '#10B981' : '#38BDF8',
+            background: biometricVerified ? 'rgba(16, 185, 129, 0.14)' : 'rgba(56, 189, 248, 0.12)',
+            border: biometricVerified ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(56, 189, 248, 0.3)',
+            padding: '3px 7px',
             borderRadius: '10px',
             flexShrink: 0
           }}
         >
-          LIVE 100%
+          <Fingerprint size={11} />
+          <span>FaceID/TouchID</span>
         </span>
+      </div>
+
+      {/* TẦNG 2 NGHIỆP VỤ: HỌ TÊN + MSSV CỠ LỚN KÈM ẢNH HỒ SƠ SỐ (VC AVATAR) ĐỐI SOÁT TẠI CHỖ */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '11px',
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(255, 255, 255, 0.09)',
+          borderRadius: '14px',
+          padding: '10px 12px',
+          marginBottom: '10px'
+        }}
+      >
+        <img
+          src={avatarUrl}
+          alt={studentName}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '12px',
+            border: '1.5px solid #38BDF8',
+            flexShrink: 0,
+            objectFit: 'cover'
+          }}
+        />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: '9px', color: '#38BDF8', fontWeight: 700, letterSpacing: '0.4px' }}>
+            HỒ SƠ ĐỐI SOÁT TRỰC QUAN (VC HOLDER)
+          </div>
+          <div
+            style={{
+              fontSize: '15px',
+              fontWeight: 800,
+              color: '#FFF',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              marginTop: '1px'
+            }}
+          >
+            {studentName}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+            <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#10B981' }}>
+              MSSV: {mssv}
+            </span>
+            <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', color: '#94A3B8' }}>
+              {sessionId} ({distance})
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Đồng hồ Mili-giây + Mã Hash Động Đổi Mỗi Giây (1s) */}
@@ -211,29 +273,29 @@ export default function ProofOfLivenessStamp({
         </div>
       </div>
 
-      {/* Thông tin Sinh viên & Phiên */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '8px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '10px',
-          padding: '7px 10px',
-          marginBottom: '8px'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-          <Activity size={13} color="#38BDF8" style={{ flexShrink: 0 }} />
-          <div style={{ fontSize: '11px', fontWeight: 700, color: '#FFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {studentName} • {mssv}
+      {/* TẦNG 3 TELEMETRY: Cảnh báo nếu phát hiện va chạm vi thời gian (Micro-time Proximity Collision) */}
+      {proximityWarning && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '6px',
+            background: 'rgba(245, 158, 11, 0.14)',
+            border: '1px solid rgba(245, 158, 11, 0.45)',
+            borderRadius: '10px',
+            padding: '8px 10px',
+            marginBottom: '8px',
+            fontSize: '10px',
+            color: '#FCD34D',
+            lineHeight: 1.4
+          }}
+        >
+          <AlertTriangle size={14} color="#F59E0B" style={{ flexShrink: 0, marginTop: '1px' }} />
+          <div>
+            <strong>Cảnh báo IDS [{proximityWarning.alert}]:</strong> {proximityWarning.detail}
           </div>
         </div>
-        <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', color: '#10B981', flexShrink: 0 }}>
-          {sessionId} ({distance})
-        </span>
-      </div>
+      )}
 
       {/* Sóng hài chuyển động liên tục theo frame */}
       <svg width="100%" height="20" viewBox="0 0 280 20" style={{ display: 'block', marginBottom: '6px' }}>
