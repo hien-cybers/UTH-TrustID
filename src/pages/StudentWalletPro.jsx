@@ -68,8 +68,30 @@ export default function StudentWalletPro() {
           };
           setCredential(autoVC);
           localStorage.setItem('uth_student_vc', JSON.stringify(autoVC));
+          return;
         }
       } catch {}
+    }
+
+    // Tự động khôi phục Thẻ Sinh viên số khi cài đè (Update) qua Sideloadly / đổi hostname
+    // trừ khi người dùng chủ động bấm "Gỡ thẻ số khỏi máy này" để test Onboarding
+    if (localStorage.getItem('uth_vc_explicitly_removed') !== 'true') {
+      const preservedVC = {
+        studentId: '2251120000',
+        fullName: 'Nguyễn Đức Hiển',
+        major: 'An toàn Thông tin',
+        address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
+        privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+        merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
+        merkleProof: [
+          '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
+          '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
+        ],
+        issuedAt: new Date().toLocaleDateString('vi-VN')
+      };
+      setCredential(preservedVC);
+      localStorage.setItem('uth_student_vc', JSON.stringify(preservedVC));
+      localStorage.setItem('uth_vc_storage', JSON.stringify(preservedVC));
     }
   }, []);
 
@@ -101,6 +123,7 @@ export default function StudentWalletPro() {
       await registerBiometric(defaultInitialVC.studentId);
     } catch {}
 
+    localStorage.removeItem('uth_vc_explicitly_removed');
     localStorage.setItem('uth_student_vc', JSON.stringify(defaultInitialVC));
     localStorage.setItem('uth_vc_storage', JSON.stringify(defaultInitialVC));
     localStorage.setItem('uth_did_private_key', defaultInitialVC.privateKey);
@@ -162,6 +185,7 @@ export default function StudentWalletPro() {
 
   const handleRevokeLocal = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa Thẻ số khỏi thiết bị này để thử lại kích hoạt lần đầu?')) {
+      localStorage.setItem('uth_vc_explicitly_removed', 'true');
       localStorage.removeItem('uth_student_vc');
       localStorage.removeItem('uth_vc_storage');
       localStorage.removeItem('uth_did_private_key');
