@@ -42,7 +42,7 @@ import {
   setSimulatedBiometricInvalidation,
   isSimulatedBiometricInvalidated
 } from '../utils/webauthnHelper';
-import { getSocketUrl, smartFetch } from '../utils/backendUrl';
+import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -142,6 +142,7 @@ export default function ScanPage() {
     try {
       const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
       socketRef.current = socket;
+      retargetSocket(socket).catch(() => {});
 
       const handleClosed = (payload) => {
         isTerminatedRef.current = true;

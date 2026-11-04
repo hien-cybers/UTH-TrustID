@@ -6,7 +6,22 @@ export const HOTSPOT_LAN_IP = '192.168.137.1';
 export const LAN_BACKEND_URL = `http://${DEFAULT_LAN_IP}:5000`;
 
 // 2. Đường dẫn HTTPS Tunnel công khai (Hoạt động xuyên cả 4G/5G và Wi-Fi trên iPhone mà không bị iOS ATS chặn)
-export const PUBLIC_TUNNEL_URL = 'https://thru-scsi-makes-podcast.trycloudflare.com';
+// Lưu ý: Quick Tunnel của Cloudflare đổi URL mỗi lần khởi động lại cloudflared. Ứng dụng sẽ tự dò (resolveBackendUrl)
+// sang LAN IP nếu Tunnel này đã chết, nên KHÔNG cần build lại .ipa chỉ vì đổi Tunnel.
+export const PUBLIC_TUNNEL_URL = 'https://governance-neck-fishing-hostel.trycloudflare.com';
+
+const RESOLVED_KEY = 'uth_resolved_backend_url';
+let resolvedBaseUrl = null;
+let resolvingPromise = null;
+
+function isNativeShell() {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.location.hostname === 'trustid.ut.edu.vn' ||
+    window.location.protocol === 'capacitor:' ||
+    Boolean(window.Capacitor?.isNativePlatform?.())
+  );
+}
 
 /**
  * Xác định URL kết nối Backend chuẩn xác cho cả 3 môi trường:
@@ -31,12 +46,8 @@ export function getBackendBaseUrl() {
   }
 
   // Nếu đang chạy trong Native App iOS (.ipa) với hostname 'trustid.ut.edu.vn' hoặc 'capacitor://'
-  if (
-    host === 'trustid.ut.edu.vn' ||
-    window.location.protocol === 'capacitor:' ||
-    window.Capacitor?.isNativePlatform?.()
-  ) {
-    return PUBLIC_TUNNEL_URL;
+  if (isNativeShell()) {
+    return resolvedBaseUrl || PUBLIC_TUNNEL_URL;
   }
 
   // Nếu mở trực tiếp trên trình duyệt qua IP LAN
@@ -55,12 +66,76 @@ export function getSocketUrl() {
   return base;
 }
 
+async function probeBase(base, timeoutMs = 2500) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base}/api/session/active`, { signal: controller.signal, cache: 'no-store' });
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) throw new Error('not-json');
+    return base;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+/**
+ * Dò song song các địa chỉ Backend (URL tùy chỉnh -> URL đã dò lần trước -> Tunnel -> LAN -> Hotspot)
+ * và ghi nhớ địa chỉ đầu tiên phản hồi JSON hợp lệ. Chỉ áp dụng cho Native App (.ipa/.apk);
+ * trên trình duyệt (Vite / Tunnel) luôn dùng cùng origin nên trả về ngay.
+ */
+export function resolveBackendUrl() {
+  if (!isNativeShell()) return Promise.resolve(getBackendBaseUrl());
+  if (resolvedBaseUrl) return Promise.resolve(resolvedBaseUrl);
+  if (resolvingPromise) return resolvingPromise;
+
+  const custom = (localStorage.getItem('uth_custom_backend_url') || '').trim().replace(/\/+$/, '');
+  const lastGood = (localStorage.getItem(RESOLVED_KEY) || '').trim();
+  const candidates = [...new Set([
+    custom,
+    lastGood,
+    PUBLIC_TUNNEL_URL,
+    LAN_BACKEND_URL,
+    `http://${HOTSPOT_LAN_IP}:5000`
+  ].filter(Boolean))];
+
+  resolvingPromise = Promise.any(candidates.map((c) => probeBase(c)))
+    .then((base) => {
+      resolvedBaseUrl = base;
+      try { localStorage.setItem(RESOLVED_KEY, base); } catch {}
+      return base;
+    })
+    .catch(() => PUBLIC_TUNNEL_URL)
+    .finally(() => { resolvingPromise = null; });
+
+  return resolvingPromise;
+}
+
+/**
+ * Chuyển hướng một Socket.IO client đã tạo sang Backend vừa dò được (nếu khác URL ban đầu).
+ * Socket.IO v4: Manager.open() dùng this.uri nên chỉ cần đổi uri rồi kết nối lại.
+ */
+export async function retargetSocket(socket) {
+  if (!socket || !isNativeShell()) return socket;
+  const base = await resolveBackendUrl();
+  const manager = socket.io;
+  if (base && manager && manager.uri !== base) {
+    manager.uri = base;
+    socket.disconnect();
+    socket.connect();
+  }
+  return socket;
+}
+
 /**
  * Gọi API thông minh với cơ chế tự động Fallback:
  * Thử gọi qua Primary URL (Tunnel / Proxy) -> nếu lỗi mạng thì tự động gọi sang LAN IP (http://192.168.88.200:5000) -> Hotspot IP (http://192.168.137.1:5000)
  */
 export async function smartFetch(path, options = {}) {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (isNativeShell()) {
+    try { await resolveBackendUrl(); } catch {}
+  }
   const primaryBase = getBackendBaseUrl();
 
   const candidates = [

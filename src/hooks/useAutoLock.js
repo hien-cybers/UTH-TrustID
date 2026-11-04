@@ -58,3 +58,4 @@ export function useAutoLock(timeoutMs = 30000) { // Mặc định 30 giây
 
   return { isLocked, unlock, lockNow: () => setIsLocked(true) };
 }
+

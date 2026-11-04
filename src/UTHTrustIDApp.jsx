@@ -14,7 +14,7 @@ import LiveClock from './components/LiveClock';
 import CameraScannerPro from './components/CameraScannerPro';
 import LockScreenModal from './components/LockScreenModal';
 import { useAutoLock } from './hooks/useAutoLock';
-import { getSocketUrl, smartFetch, DEFAULT_LAN_IP } from './utils/backendUrl';
+import { getSocketUrl, smartFetch, DEFAULT_LAN_IP, retargetSocket } from './utils/backendUrl';
 
 // Địa chỉ IPv4 mạng LAN của máy tính Windows (ipconfig: 192.168.88.200) & tự động định tuyến đa môi trường
 export const BACKEND_IP = DEFAULT_LAN_IP;
@@ -24,6 +24,8 @@ export const socket = io(SOCKET_URL, {
   autoConnect: true,
   transports: ['websocket', 'polling']
 });
+// Trên .ipa: nếu Tunnel cố định đã chết, tự chuyển socket sang Backend dò được (LAN / Hotspot)
+retargetSocket(socket).catch(() => {});
 
 export default function UTHTrustIDApp() {
   const [showSplash, setShowSplash] = useState(true);

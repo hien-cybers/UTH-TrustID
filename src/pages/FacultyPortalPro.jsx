@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { exportAttendanceToExcel } from '../utils/exportAttendanceReport';
-import { getSocketUrl, smartFetch } from '../utils/backendUrl';
+import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 import '../styles/animations.css';
 
 export default function FacultyPortalPro() {
@@ -51,6 +51,7 @@ export default function FacultyPortalPro() {
     try {
       const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
       socketRef.current = socket;
+      retargetSocket(socket).catch(() => {});
 
       const addAttendeeRecord = (raw) => {
         if (!raw) return;
