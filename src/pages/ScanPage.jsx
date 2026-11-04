@@ -1,11 +1,8 @@
 // src/pages/ScanPage.jsx - Màn Hình Quét Mã Sinh Viên:
-// 1. Pre-warm GPS nền (< 300ms) ngay khi mở tab Quét mã (Điểm nghẽn ①)
-// 2. Hybrid Hardware ID & Fuzzy Matching >= 80% trên iOS Safari (Điểm nghẽn ②)
-// 3. Auto-Sync 2 Lớp: Android Background Sync API + iOS online & visibilitychange (Điểm nghẽn ④)
-// 4. Phòng chống Ủy quyền Phần cứng Vật lý (Proxy Attendance):
-//    - Tầng 1: WebAuthn Biometrics (FaceID / TouchID) mở khóa ký số
-//    - Tầng 2: Visual Liveness Stamp hiện Ảnh hồ sơ VC + Họ tên & MSSV cỡ lớn
-//    - Tầng 3: Thu thập cảm biến góc nghiêng/gia tốc (Accelerometer/Gyroscope Telemetry) gửi về Backend IDS
+// 1. Cryptographic Biometric Gate: WebAuthn (FaceID/TouchID) + AES-GCM Key Wrapping + PBKDF2 6-Digit Recovery PIN
+// 2. Seamless Re-enrollment: Khi sinh viên đổi FaceID/Vân tay trên OS (InvalidStateError/NotAllowedError),
+//    mở Modal nhập Mã PIN 6 số (123456) để giải mã Master Key & liên kết lại FaceID mới mà KHÔNG mất Thẻ VC!
+// 3. Pre-warm GPS nền (< 300ms) + Hybrid Hardware ID (Fuzzy >= 80%) + Auto-Sync 2 Lớp + Visual Liveness Stamp
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
@@ -19,9 +16,11 @@ import {
   Wifi,
   WifiOff,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Fingerprint,
+  KeyRound
 } from 'lucide-react';
-import { getSavedIdentity, signAuthChallenge, authenticateWithBiometrics } from '../services/did';
+import { getSavedIdentity, signAuthChallenge } from '../services/did';
 import {
   getActiveCredential,
   saveOfflineAttendanceToIDB,
@@ -37,6 +36,12 @@ import {
   getSmoothedGpsPosition,
   evaluateGpsDriftTolerance
 } from '../utils/gpsDriftFilter';
+import {
+  authenticateWithFallback,
+  verifyRecoveryPinAndUnwrap,
+  setSimulatedBiometricInvalidation,
+  isSimulatedBiometricInvalidated
+} from '../utils/webauthnHelper';
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -49,6 +54,13 @@ export default function ScanPage() {
   const [offlineQueue, setOfflineQueue] = useState([]);
   const [syncingOffline, setSyncingOffline] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
+
+  // Trạng thái Mô phỏng đổi FaceID/Vân tay & Modal nhập Mã PIN dự phòng 6 số (Seamless Re-enrollment)
+  const [simBiometricChanged, setSimBiometricChanged] = useState(() => isSimulatedBiometricInvalidated());
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const pinResolverRef = useRef(null);
 
   const socketRef = useRef(null);
   const isTerminatedRef = useRef(false);
@@ -161,25 +173,52 @@ export default function ScanPage() {
     }
   };
 
+  // Mở Modal yêu cầu nhập Mã PIN 6 số khi FaceID/Vân tay trên thiết bị thay đổi (InvalidStateError / NotAllowedError)
+  const requestPinFallbackModal = () => {
+    return new Promise((resolve) => {
+      setPinInput('123456');
+      setPinError('');
+      setPinModalOpen(true);
+      pinResolverRef.current = resolve;
+    });
+  };
+
+  const handleConfirmPinModal = async () => {
+    const check = await verifyRecoveryPinAndUnwrap(pinInput);
+    if (!check.valid) {
+      setPinError(check.error || 'Mã PIN không chính xác!');
+      return;
+    }
+    setPinModalOpen(false);
+    setSimBiometricChanged(false);
+    setSimulatedBiometricInvalidation(false);
+    if (pinResolverRef.current) {
+      pinResolverRef.current(true);
+      pinResolverRef.current = null;
+    }
+  };
+
+  const handleCancelPinModal = () => {
+    setPinModalOpen(false);
+    if (pinResolverRef.current) {
+      pinResolverRef.current(false);
+      pinResolverRef.current = null;
+    }
+  };
+
   const handleScanSuccess = async (qrResult) => {
     if (isTerminatedRef.current) return;
-
-    // 1. Phản hồi rung & Âm thanh Beep bản địa (Haptic & Audio Engine)
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([40, 60, 40]);
-    }
-    triggerScanSuccessFeedback();
 
     setIsScanning(false);
     setScanStatus({
       type: 'PROCESSING',
-      title: 'ĐANG XÁC THỰC SINH TRẮC HỌC & PRE-WARM GPS (< 300ms)...',
-      message: 'Đang kiểm tra WebAuthn FaceID/TouchID, đọc bộ đệm Pre-warm GPS và ký số EIP-191...'
+      title: 'ĐANG XÁC THỰC SINH TRẮC HỌC (WEBAUTHN PASSKEY)...',
+      message: 'Đang kiểm tra FaceID / TouchID để mở khóa Private Key trong RAM...'
     });
 
     let identity = getSavedIdentity();
     if (!identity || !identity.address) {
-      const savedVCStr = localStorage.getItem('uth_student_vc');
+      const savedVCStr = localStorage.getItem('uth_student_vc') || localStorage.getItem('uth_vc_storage');
       if (savedVCStr) {
         try {
           const vc = JSON.parse(savedVCStr);
@@ -223,13 +262,34 @@ export default function ScanPage() {
         socketRef.current.emit('join-session', sessionId);
       }
 
-      // [TẦNG 1 KỸ THUẬT]: Ràng buộc Sinh trắc học cục bộ (WebAuthn FaceID / TouchID)
-      let biometricVerified = true;
+      // [BƯỚC 1 - CRYPTOGRAPHIC BIOMETRIC GATE]:
+      // Gọi WebAuthn (`verifyBiometricPresence`) kèm cơ chế Seamless Re-enrollment bằng Mã PIN 6 số (`authenticateWithFallback`)
+      let biometricVerified = false;
       try {
-        await authenticateWithBiometrics();
-      } catch {
-        biometricVerified = true;
+        biometricVerified = await authenticateWithFallback(nonce, requestPinFallbackModal);
+      } catch (bioErr) {
+        setScanStatus({
+          type: 'ERROR',
+          title: 'TỪ CHỐI MỞ KHÓA SINH TRẮC HỌC (WEBAUTHN BLOCKED)',
+          message: `Không thể mở khóa Private Key để ký số: ${bioErr.message || 'Xác thực FaceID/Vân tay hoặc Mã PIN bị hủy!'}`
+        });
+        return;
       }
+
+      if (!biometricVerified) {
+        setScanStatus({
+          type: 'ERROR',
+          title: 'XÁC THỰC SINH TRẮC HỌC THẤT BẠI',
+          message: 'Bạn đã hủy xác thực FaceID/TouchID và Mã PIN dự phòng. Private Key vẫn được khóa an toàn trong IndexedDB.'
+        });
+        return;
+      }
+
+      // [BƯỚC 2]: Rung phản hồi Haptic [40, 60, 40] & Âm thanh Beep khi vượt qua Sinh trắc học
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([40, 60, 40]);
+      }
+      triggerScanSuccessFeedback();
 
       if (isTerminatedRef.current) return;
 
@@ -291,13 +351,13 @@ export default function ScanPage() {
           sessionId,
           signatureHash: shortSig,
           distance: `${distance}m`,
-          biometricVerified
+          biometricVerified: true
         });
 
         setScanStatus({
           type: 'SUCCESS',
           title: 'ĐÃ LƯU GÓI ĐIỂM DANH NGOẠI TUYẾN (INDEXEDDB)',
-          message: `Phòng học đang mất sóng: Chữ ký EIP-191 và Merkle Proof đã lưu vào IndexedDB (Pre-warm GPS ${gpsLatencyMs}ms). Tự động đồng bộ qua 2 lớp (Android SW Sync + iOS visibilitychange/online).`,
+          message: `Đã xác thực Sinh trắc học & ký số EIP-191 ngoại tuyến (Pre-warm GPS ${gpsLatencyMs}ms). Tự động đồng bộ qua 2 lớp khi có mạng.`,
           details: {
             sessionId,
             distance: `${distance}m`,
@@ -339,7 +399,7 @@ export default function ScanPage() {
             sessionCoords: !isNaN(sessionLat) && !isNaN(sessionLon) ? { lat: sessionLat, lon: sessionLon } : undefined,
             networkPolicy: policy,
             deviceId,
-            biometricVerified,
+            biometricVerified: true,
             motionTelemetry: motionTelemetryRef.current,
             signature: signResult.signature,
             merkleProof: vc?.merkleProof || undefined,
@@ -356,14 +416,14 @@ export default function ScanPage() {
             sessionId,
             signatureHash: shortSig,
             distance: `${distance}m`,
-            biometricVerified,
+            biometricVerified: true,
             proximityWarning: data.proximityWarning || null
           });
 
           setScanStatus({
             type: 'SUCCESS',
-            title: 'ĐIỂM DANH THÀNH CÔNG',
-            message: `Sinh viên ${studentFullName} (${targetMssv}) đã được ghi nhận vào sổ cái (Pre-warm GPS: ${gpsLatencyMs}ms • Fuzzy HW: ${Math.round((data.data?.hardwareSimilarity || 1) * 100)}%).`,
+            title: 'ĐIỂM DANH THÀNH CÔNG (VERIFIED BIOMETRICS)',
+            message: `Sinh viên ${studentFullName} (${targetMssv}) đã vượt qua cổng Sinh trắc học WebAuthn & ghi nhận vào sổ cái (Pre-warm GPS: ${gpsLatencyMs}ms • Fuzzy HW: ${Math.round((data.data?.hardwareSimilarity || 1) * 100)}%).`,
             details: {
               sessionId,
               distance: `${distance}m (Pre-warm GPS ${gpsLatencyMs}ms)`,
@@ -380,7 +440,6 @@ export default function ScanPage() {
           });
         }
       } catch {
-        // Tự động chuyển sang lưu vào IndexedDB nếu rớt mạng bất ngờ
         const ts = Date.now();
         await saveOfflineAttendanceToIDB({
           id: 'OFF_' + ts,
@@ -404,7 +463,7 @@ export default function ScanPage() {
           sessionId,
           signatureHash: shortSig,
           distance: `${distance}m`,
-          biometricVerified
+          biometricVerified: true
         });
 
         setScanStatus({
@@ -427,7 +486,7 @@ export default function ScanPage() {
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
       
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
         <button
           onClick={() => navigate('/wallet')}
           className="btn-press"
@@ -449,33 +508,61 @@ export default function ScanPage() {
           <span>Về Ví Số</span>
         </button>
 
-        {/* Chuyển đổi Online / Offline Proof-of-Presence */}
-        <button
-          onClick={() => {
-            const nextOffline = !isOfflineMode;
-            setIsOfflineMode(nextOffline);
-            if (!nextOffline && offlineQueue.length > 0) {
-              handleBackgroundSync();
-            }
-          }}
-          className="btn-press"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            padding: '5px 10px',
-            borderRadius: '8px',
-            border: isOfflineMode ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid rgba(16, 185, 129, 0.35)',
-            background: isOfflineMode ? 'rgba(245, 158, 11, 0.14)' : 'rgba(16, 185, 129, 0.12)',
-            color: isOfflineMode ? '#F59E0B' : '#10B981',
-            fontSize: '10.5px',
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
-        >
-          {isOfflineMode ? <WifiOff size={12} /> : <Wifi size={12} />}
-          <span>{isOfflineMode ? 'Chế độ Offline (IndexedDB)' : 'Online (Chạm thử Offline)'}</span>
-        </button>
+        <div style={{ display: 'flex', gap: '5px' }}>
+          {/* Nút bật/tắt giả lập Sinh viên đổi FaceID mới trên iPhone để test Seamless PIN Re-enrollment */}
+          <button
+            onClick={() => {
+              const next = !simBiometricChanged;
+              setSimBiometricChanged(next);
+              setSimulatedBiometricInvalidation(next);
+            }}
+            className="btn-press"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 8px',
+              borderRadius: '8px',
+              border: simBiometricChanged ? '1px solid rgba(244, 63, 94, 0.5)' : '1px solid rgba(56, 189, 248, 0.3)',
+              background: simBiometricChanged ? 'rgba(244, 63, 94, 0.15)' : 'rgba(56, 189, 248, 0.1)',
+              color: simBiometricChanged ? '#FDA4AF' : '#38BDF8',
+              fontSize: '10px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            <Fingerprint size={12} />
+            <span>{simBiometricChanged ? 'Đang Giả Lập Đổi FaceID' : 'Test Đổi FaceID'}</span>
+          </button>
+
+          {/* Chuyển đổi Online / Offline Proof-of-Presence */}
+          <button
+            onClick={() => {
+              const nextOffline = !isOfflineMode;
+              setIsOfflineMode(nextOffline);
+              if (!nextOffline && offlineQueue.length > 0) {
+                handleBackgroundSync();
+              }
+            }}
+            className="btn-press"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '5px 8px',
+              borderRadius: '8px',
+              border: isOfflineMode ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid rgba(16, 185, 129, 0.35)',
+              background: isOfflineMode ? 'rgba(245, 158, 11, 0.14)' : 'rgba(16, 185, 129, 0.12)',
+              color: isOfflineMode ? '#F59E0B' : '#10B981',
+              fontSize: '10px',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            {isOfflineMode ? <WifiOff size={12} /> : <Wifi size={12} />}
+            <span>{isOfflineMode ? 'Offline' : 'Online'}</span>
+          </button>
+        </div>
       </div>
 
       <div>
@@ -483,12 +570,93 @@ export default function ScanPage() {
           Quét Mã Điểm Danh (Holder)
         </h1>
         <p style={{ margin: 0, fontSize: '11px', color: '#64748B', lineHeight: 1.4 }}>
-          WebAuthn FaceID • Pre-warm GPS (<code>&lt; 300ms</code>) • Visual Liveness Stamp &amp; Telemetry IDS
+          WebAuthn Biometric Gate • Key Wrapping AES-GCM + PIN 6 Số • Pre-warm GPS (<code>&lt; 300ms</code>)
         </p>
       </div>
 
+      {/* MODAL NHẬP MÃ PIN KHÔI PHỤC 6 SỐ KHI SINH VIÊN ĐỔI FACEID / VÂN TAY TRÊN ĐIỆN THOẠI */}
+      {pinModalOpen && (
+        <div
+          className="glass-card"
+          style={{
+            borderColor: 'rgba(245, 158, 11, 0.55)',
+            background: 'linear-gradient(145deg, rgba(120, 53, 15, 0.35) 0%, #0A0E17 70%)',
+            padding: '16px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <KeyRound size={18} color="#F59E0B" />
+            <h3 style={{ fontSize: '13.5px', fontWeight: 800, color: '#FCD34D', margin: 0 }}>
+              Cập Nhật Lại Liên Kết FaceID / Vân Tay
+            </h3>
+          </div>
+          <p style={{ fontSize: '11.5px', color: '#E2E8F0', lineHeight: 1.45, margin: '0 0 10px' }}>
+            Dữ liệu sinh trắc học trên thiết bị đã thay đổi (<code>InvalidStateError</code>). Nhập <b>Mã PIN cá nhân 6 số</b> để giải mã khóa <code>AES-GCM 256-bit</code> và kích hoạt lại FaceID mới mà không mất thẻ số:
+          </p>
+
+          <input
+            type="password"
+            maxLength={6}
+            value={pinInput}
+            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder="Nhập PIN 6 số (Mặc định: 123456)"
+            className="pro-input"
+            style={{
+              fontFamily: 'JetBrains Mono',
+              fontSize: '15px',
+              fontWeight: 800,
+              letterSpacing: '4px',
+              textAlign: 'center',
+              marginBottom: '8px'
+            }}
+          />
+
+          {pinError && (
+            <div style={{ fontSize: '11px', color: '#EF4444', marginBottom: '8px', fontWeight: 600 }}>
+              {pinError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={handleConfirmPinModal}
+              className="btn-press"
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                color: '#FFF',
+                fontWeight: 800,
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Xác Nhận PIN &amp; Liên Kết Lại FaceID
+            </button>
+            <button
+              onClick={handleCancelPinModal}
+              className="btn-press"
+              style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'transparent',
+                color: '#94A3B8',
+                fontWeight: 600,
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              Hủy
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Vùng Camera Scanner */}
-      {isScanning && (
+      {isScanning && !pinModalOpen && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{
             position: 'relative',
@@ -504,7 +672,7 @@ export default function ScanPage() {
             />
           </div>
 
-          {/* Nút Quét Thử Nhanh để test ngay Haptic + Beep + Proof of Liveness + Offline IndexedDB */}
+          {/* Nút Quét Thử Nhanh để test ngay WebAuthn + Haptic + Beep + Proof of Liveness + Offline IndexedDB */}
           <button
             onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
             className="btn-press"
@@ -528,7 +696,9 @@ export default function ScanPage() {
           >
             <Zap size={15} />
             <span>
-              {isOfflineMode
+              {simBiometricChanged
+                ? 'Quét Thử (Sẽ Bật Popup Nhập PIN 123456 Do Đổi FaceID)'
+                : isOfflineMode
                 ? 'Quét Thử Ngoại Tuyến (Lưu Chữ Ký Vào IndexedDB)'
                 : 'Quét Thử Nhanh (WebAuthn + Pre-warm GPS + Liveness Stamp)'}
             </span>

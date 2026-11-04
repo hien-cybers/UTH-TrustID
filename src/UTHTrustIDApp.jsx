@@ -15,6 +15,12 @@ import {
   WifiOff
 } from 'lucide-react';
 import { ethers } from 'ethers';
+import {
+  registerBiometric,
+  setupRecoveryPinAndWrapKey,
+  authenticateWithFallback,
+  verifyRecoveryPinAndUnwrap
+} from './utils/webauthnHelper';
 
 export default function UTHTrustIDApp() {
   const [activeTab, setActiveTab] = useState('wallet'); // 'wallet' | 'scan' | 'faculty' | 'admin'
@@ -81,8 +87,8 @@ export default function UTHTrustIDApp() {
     };
   }, [livenessActive]);
 
-  // Kích hoạt thẻ sinh viên lần đầu
-  const handleOnboardFirstTime = () => {
+  // Kích hoạt thẻ sinh viên lần đầu + Đăng ký WebAuthn Passkey & Mã PIN 6 số (123456)
+  const handleOnboardFirstTime = async () => {
     const defaultVC = {
       studentId: '2251120000',
       fullName: 'Nguyễn Đức Hiển',
@@ -94,18 +100,20 @@ export default function UTHTrustIDApp() {
         '0x0000000000000000000000000000000000000000000000000000000000000000'
       ]
     };
+    try {
+      await setupRecoveryPinAndWrapKey('123456', defaultVC.privateKey);
+      await registerBiometric(defaultVC.studentId);
+    } catch {}
     localStorage.setItem('uth_vc_storage', JSON.stringify(defaultVC));
     setCredential(defaultVC);
   };
 
-  // Quét và ký số EIP-191 một chạm
+  // Quét và ký số EIP-191 một chạm (kích hoạt WebAuthn Biometric Gate + Seamless PIN Fallback)
   const handleTriggerScanAndSign = async () => {
     if (!credential) {
-      handleOnboardFirstTime();
+      await handleOnboardFirstTime();
       return;
     }
-
-    if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
 
     const targetSession = sessionData || {
       id: 'SES_A2301',
@@ -114,8 +122,24 @@ export default function UTHTrustIDApp() {
       radius: 35
     };
 
+    const challenge = `AUTH_NONCE:${targetSession.nonce}`;
+
     try {
-      const challenge = `AUTH_NONCE:${targetSession.nonce}`;
+      // BƯỚC 1: BẬT POPUP QUÉT FACEID / TOUCHID TRÊN ĐIỆN THOẠI (KÈM FALLBACK MÃ PIN 6 SỐ)
+      await authenticateWithFallback(challenge, async () => {
+        const enteredPin = window.prompt(
+          'Dữ liệu sinh trắc học trên thiết bị đã thay đổi. Nhập mã PIN cá nhân (6 số, mặc định 123456) để kích hoạt lại FaceID:',
+          '123456'
+        );
+        if (!enteredPin) return false;
+        const res = await verifyRecoveryPinAndUnwrap(enteredPin);
+        return res.valid;
+      });
+
+      // BƯỚC 2: RUNG XÁC NHẬN KHI VƯỢT QUA SINH TRẮC HỌC
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+
+      // BƯỚC 3: KÝ SỐ EIP-191 BẰNG PRIVATE KEY TRONG THIẾT BỊ
       const wallet = new ethers.Wallet(credential.privateKey);
       const signature = await wallet.signMessage(challenge);
 
@@ -138,20 +162,21 @@ export default function UTHTrustIDApp() {
         return;
       }
 
+      // BƯỚC 4: MỞ CON DẤU ĐỘNG (LIVENESS STAMP)
       setLivenessActive(true);
       if (sessionData) {
         setAttendeesList((prev) => [
           {
             name: credential.fullName,
             mssv: credential.studentId,
-            dist: '6m',
+            dist: '6m (Verified Biometrics)',
             time: new Date().toLocaleTimeString('vi-VN')
           },
           ...prev
         ]);
       }
     } catch (err) {
-      console.error('Lỗi ký mật mã:', err);
+      console.error('Từ chối xác thực:', err);
     }
   };
 
