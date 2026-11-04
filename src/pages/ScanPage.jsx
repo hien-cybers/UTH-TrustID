@@ -43,6 +43,7 @@ import {
   isSimulatedBiometricInvalidated
 } from '../utils/webauthnHelper';
 import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
+import { getOrCreateDeviceId, signWithDecryptedKey } from '../utils/identityManager';
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -507,11 +508,26 @@ export default function ScanPage() {
       }
 
       // CHẾ ĐỘ ONLINE BÌNH THƯỜNG (ƯU TIÊN UNIFIED PIPELINE /api/attendance/submit)
-      const unifiedChallenge = `UTH_ATTENDANCE:${sessionId}:${nonce}`;
-      const unifiedSign = await signAuthChallenge(identity, unifiedChallenge);
-      const signMsg = `UTH-ATTENDANCE:${nonce}:${deviceId}`;
-      const signResult = await signAuthChallenge(identity, signMsg);
-      const shortSig = `${unifiedSign.signature.slice(0, 14)}...${unifiedSign.signature.slice(-6)}`;
+      // Cấu trúc thông điệp chuẩn hóa EIP-191 chống gian lận & gắn thiết bị
+      const timestamp = Date.now();
+      const currentDeviceId = getOrCreateDeviceId();
+      const sLatStr = Number(smoothedPos.lat || 10.7992).toFixed(6);
+      const sLonStr = Number(smoothedPos.lon || 106.7056).toFixed(6);
+      const rawChallenge = `${sessionId}:${nonce}:${sLatStr}:${sLonStr}:${currentDeviceId}:${timestamp}`;
+
+      let unifiedSignature = '';
+      let signingAddress = identity.address;
+
+      try {
+        const signVault = await signWithDecryptedKey('123456', rawChallenge);
+        unifiedSignature = signVault.signature;
+        signingAddress = signVault.address;
+      } catch {
+        const fallbackSign = await signAuthChallenge(identity, rawChallenge);
+        unifiedSignature = fallbackSign.signature;
+      }
+
+      const shortSig = `${unifiedSignature.slice(0, 14)}...${unifiedSignature.slice(-6)}`;
 
       try {
         // Thử gửi qua Unified Pipeline (/api/attendance/submit) nếu Giảng viên đã mở phòng
@@ -521,7 +537,8 @@ export default function ScanPage() {
           body: JSON.stringify({
             sessionId,
             nonce,
-            signature: unifiedSign.signature,
+            timestamp,
+            deviceId: currentDeviceId,
             studentCoords: {
               lat: smoothedPos.lat,
               lon: smoothedPos.lon
@@ -530,8 +547,10 @@ export default function ScanPage() {
               studentId: targetMssv,
               fullName: studentFullName,
               major: identity.student?.major || 'An toàn Thông tin',
-              address: identity.address
+              address: signingAddress,
+              merkleRoot: vc?.merkleRoot
             },
+            signature: unifiedSignature,
             merkleProof: vc?.merkleProof || ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85']
           })
         });

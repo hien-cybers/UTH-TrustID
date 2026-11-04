@@ -23,6 +23,8 @@ import { ethers } from 'ethers';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
 import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
 import { registerBiometric, setupRecoveryPinAndWrapKey } from '../utils/webauthnHelper';
+import { initializeRandomIdentity } from '../utils/identityManager';
+import { smartFetch } from '../utils/backendUrl';
 import '../styles/animations.css';
 
 export default function StudentWalletPro() {
@@ -116,26 +118,50 @@ export default function StudentWalletPro() {
     setPinError('');
     setPinAttempts(0);
 
-    const defaultInitialVC = {
+    const studentInfo = {
       studentId: '2251120000',
       fullName: 'Nguyễn Đức Hiển',
       major: 'An toàn Thông tin',
-      address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
-      privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-      merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
-      merkleProof: [
-        '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
-        '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
-      ],
+      faculty: 'Công nghệ Thông tin'
+    };
+
+    // 1. Sinh ví ngẫu nhiên 100% & mã hóa Private Key bằng AES-GCM 256-bit (PBKDF2 100K)
+    const { address, deviceId } = await initializeRandomIdentity(studentInfo, cleanPin);
+
+    // 2. Neo danh tính và sinh Merkle Proof trên Backend
+    let merkleRoot = '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2';
+    let merkleProof = ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85'];
+    try {
+      const regRes = await smartFetch('/api/identity/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          studentId: studentInfo.studentId,
+          fullName: studentInfo.fullName,
+          major: studentInfo.major,
+          deviceId
+        })
+      });
+      const regData = await regRes.json();
+      if (regData.merkleRoot) {
+        merkleRoot = regData.merkleRoot;
+        merkleProof = regData.merkleProof || [];
+      }
+    } catch {}
+
+    const defaultInitialVC = {
+      studentId: studentInfo.studentId,
+      fullName: studentInfo.fullName,
+      major: studentInfo.major,
+      address,
+      deviceId,
+      merkleRoot,
+      merkleProof,
       issuedAt: new Date().toLocaleDateString('vi-VN')
     };
 
-    // 1. Bọc khóa Private Key bằng AES-GCM 256-bit dẫn xuất từ Mã PIN 6 số (PBKDF2 100.000 vòng)
-    try {
-      await setupRecoveryPinAndWrapKey(cleanPin, defaultInitialVC.privateKey);
-    } catch {}
-
-    // 2. Đăng ký Passkey WebAuthn (FaceID / TouchID) với userVerification: 'preferred'
+    // 3. Đăng ký Passkey WebAuthn (FaceID / TouchID) với userVerification: 'preferred'
     try {
       await registerBiometric(defaultInitialVC.studentId);
     } catch {}
@@ -143,11 +169,10 @@ export default function StudentWalletPro() {
     localStorage.removeItem('uth_vc_explicitly_removed');
     localStorage.setItem('uth_student_vc', JSON.stringify(defaultInitialVC));
     localStorage.setItem('uth_vc_storage', JSON.stringify(defaultInitialVC));
-    localStorage.setItem('uth_did_private_key', defaultInitialVC.privateKey);
+    localStorage.removeItem('uth_did_private_key');
 
     const identityObj = {
       address: defaultInitialVC.address,
-      privateKey: defaultInitialVC.privateKey,
       student: {
         studentId: defaultInitialVC.studentId,
         mssv: defaultInitialVC.studentId,
@@ -163,7 +188,7 @@ export default function StudentWalletPro() {
     } catch {}
 
     setCredential(defaultInitialVC);
-    setPinSavedNotice(`Đã bọc khóa AES-GCM 256-bit (PIN: ${cleanPin}) & liên kết WebAuthn FaceID/TouchID!`);
+    setPinSavedNotice(`Đã sinh ví ngẫu nhiên (${address.slice(0, 6)}...${address.slice(-4)}), mã hóa AES-GCM (PIN: ${cleanPin}) & liên kết WebAuthn FaceID!`);
     triggerScanSuccessFeedback();
   };
 

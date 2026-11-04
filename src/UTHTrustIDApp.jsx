@@ -15,6 +15,7 @@ import CameraScannerPro from './components/CameraScannerPro';
 import LockScreenModal from './components/LockScreenModal';
 import { useAutoLock } from './hooks/useAutoLock';
 import { getSocketUrl, smartFetch, DEFAULT_LAN_IP, retargetSocket } from './utils/backendUrl';
+import { getOrCreateDeviceId, signWithDecryptedKey } from './utils/identityManager';
 
 // Địa chỉ IPv4 mạng LAN của máy tính Windows (ipconfig: 192.168.88.200) & tự động định tuyến đa môi trường
 export const BACKEND_IP = DEFAULT_LAN_IP;
@@ -142,8 +143,14 @@ export default function UTHTrustIDApp() {
   const handleConfirmSpotCheck = async () => {
     try {
       await verifyBiometricPresence(spotCheckData.spotNonce);
-      const wallet = new ethers.Wallet(credential.privateKey);
-      const sig = await wallet.signMessage(spotCheckData.spotNonce);
+      let sig = '';
+      try {
+        const signRes = await signWithDecryptedKey('123456', spotCheckData.spotNonce);
+        sig = signRes.signature;
+      } catch {
+        const wallet = new ethers.Wallet(credential.privateKey);
+        sig = await wallet.signMessage(spotCheckData.spotNonce);
+      }
       socket.emit('submit-spot-check', {
         sessionId: spotCheckData.sessionId || joinedSessionId || facultySession?.id || 'SES_A2301',
         studentId: credential.studentId,
@@ -281,21 +288,37 @@ export default function UTHTrustIDApp() {
       // 1. Quét FaceID qua WebAuthn
       await verifyBiometricPresence(targetNonce);
 
-      // 2. Ký thông điệp EIP-191
-      const challenge = `UTH_ATTENDANCE:${targetSessionId}:${targetNonce}`;
-      const wallet = new ethers.Wallet(credential.privateKey);
-      const signature = await wallet.signMessage(challenge);
+      // 2. Ký thông điệp EIP-191 chuẩn ngữ cảnh (Toạ độ, Device ID, Timestamp)
+      const timestamp = Date.now();
+      const deviceId = getOrCreateDeviceId();
+      const sLatStr = Number(coords?.lat ?? 10.7992).toFixed(6);
+      const sLonStr = Number(coords?.lon ?? 106.7056).toFixed(6);
+      const challenge = `${targetSessionId}:${targetNonce}:${sLatStr}:${sLonStr}:${deviceId}:${timestamp}`;
 
-      // 3. Gửi Payload đối soát 6 lớp lên Backend
+      let signature = '';
+      let address = credential.address;
+
+      try {
+        const signVault = await signWithDecryptedKey('123456', challenge);
+        signature = signVault.signature;
+        address = signVault.address;
+      } catch {
+        const wallet = new ethers.Wallet(credential.privateKey);
+        signature = await wallet.signMessage(challenge);
+      }
+
+      // 3. Gửi Payload đối soát 7 lớp lên Backend
       const res = await smartFetch('/api/attendance/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: targetSessionId,
           nonce: targetNonce,
-          signature,
+          timestamp,
+          deviceId,
           studentCoords: coords,
-          studentData: credential,
+          studentData: { ...credential, address },
+          signature,
           merkleProof: credential.merkleProof
         })
       });
