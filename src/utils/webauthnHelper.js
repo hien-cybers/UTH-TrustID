@@ -317,3 +317,4 @@ export function setSimulatedBiometricInvalidation(invalidated) {
 export function isSimulatedBiometricInvalidated() {
   return localStorage.getItem('uth_simulate_biometric_invalidated') === 'true';
 }
+

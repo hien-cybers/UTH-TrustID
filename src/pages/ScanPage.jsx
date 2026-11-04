@@ -62,6 +62,10 @@ export default function ScanPage() {
   const [pinError, setPinError] = useState('');
   const pinResolverRef = useRef(null);
 
+  // Trạng thái Tái kiểm tra điểm danh đột xuất (Spot-Check 60s từ Giảng viên)
+  const [spotCheckRequest, setSpotCheckRequest] = useState(null);
+  const [spotCheckCountdown, setSpotCheckCountdown] = useState(0);
+
   const socketRef = useRef(null);
   const isTerminatedRef = useRef(false);
   const motionTelemetryRef = useRef({ beta: 42.5, gamma: -3.2, accelMag: 9.81 });
@@ -141,6 +145,7 @@ export default function ScanPage() {
         isTerminatedRef.current = true;
         setIsScanning(false);
         setLivenessStampData(null);
+        setSpotCheckRequest(null);
         triggerSessionTerminatedFeedback();
         setScanStatus({
           type: 'ERROR',
@@ -150,11 +155,70 @@ export default function ScanPage() {
         });
       });
 
+      // Khi Giảng viên bấm "Tái Kiểm Tra Đột Xuất (Spot-Check)": Rung máy & yêu cầu quét lại FaceID trong 60s
+      socket.on('spot-check-requested', (payload) => {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([120, 60, 120, 60, 200]);
+        }
+        triggerSessionTerminatedFeedback();
+        setSpotCheckRequest(payload || { sessionId: 'SES_A2301', challenge: 'SPOT_CHECK_' + Date.now() });
+        setSpotCheckCountdown(payload?.timeoutSeconds || 60);
+      });
+
       return () => {
         socket.disconnect();
       };
     } catch {}
   }, []);
+
+  // Đếm lùi 60s cho lệnh Tái kiểm tra điểm danh đột xuất (Spot-Check)
+  useEffect(() => {
+    if (!spotCheckRequest || spotCheckCountdown <= 0) return;
+    const t = setInterval(() => {
+      setSpotCheckCountdown((c) => {
+        if (c <= 1) {
+          setSpotCheckRequest(null);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [spotCheckRequest, spotCheckCountdown]);
+
+  const handleConfirmSpotCheckFaceId = async () => {
+    if (!spotCheckRequest) return;
+    try {
+      const verified = await authenticateWithFallback(
+        spotCheckRequest.challenge || 'SPOT_CHECK',
+        requestPinFallbackModal
+      );
+      if (!verified) return;
+
+      let studentId = '2251120000';
+      let fullName = 'Nguyễn Đức Hiển';
+      try {
+        const vc = JSON.parse(localStorage.getItem('uth_student_vc') || localStorage.getItem('uth_vc_storage') || '{}');
+        if (vc.studentId) studentId = vc.studentId;
+        if (vc.fullName) fullName = vc.fullName;
+      } catch {}
+
+      await fetch('/api/attendance/spot-check-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: spotCheckRequest.sessionId || 'SES_A2301',
+          studentId,
+          fullName,
+          faceIdVerified: true
+        })
+      });
+
+      triggerScanSuccessFeedback();
+      setSpotCheckRequest(null);
+      setSyncMessage(`✓ Đã hoàn tất xác thực lại FaceID (Spot-Check) lúc ${new Date().toLocaleTimeString('vi-VN')}!`);
+    } catch {}
+  };
 
   const handleBackgroundSync = async () => {
     setSyncingOffline(true);
@@ -573,6 +637,52 @@ export default function ScanPage() {
           WebAuthn Biometric Gate • Key Wrapping AES-GCM + PIN 6 Số • Pre-warm GPS (<code>&lt; 300ms</code>)
         </p>
       </div>
+
+      {/* BANNER TÁI KIỂM TRA ĐIỂM DANH ĐỘT XUẤT (SPOT-CHECK 60S TỪ GIẢNG VIÊN) */}
+      {spotCheckRequest && (
+        <div
+          className="glass-card"
+          style={{
+            borderColor: 'rgba(245, 158, 11, 0.65)',
+            background: 'linear-gradient(145deg, rgba(180, 83, 9, 0.35) 0%, #0A0E17 75%)',
+            padding: '14px'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#FCD34D' }}>
+              📢 YÊU CẦU TÁI KIỂM TRA ĐỘT XUẤT (SPOT-CHECK)
+            </span>
+            <span style={{ fontSize: '11.5px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#F59E0B' }}>
+              Còn {spotCheckCountdown}s
+            </span>
+          </div>
+          <p style={{ fontSize: '11px', color: '#E2E8F0', margin: '0 0 10px', lineHeight: 1.45 }}>
+            Giảng viên vừa kích hoạt lệnh kiểm tra hiện diện giữa giờ. Vui lòng xác thực lại <b>FaceID / TouchID</b> trong vòng 60 giây để không bị đánh vắng:
+          </p>
+          <button
+            onClick={handleConfirmSpotCheckFaceId}
+            className="btn-press"
+            style={{
+              width: '100%',
+              padding: '10.5px',
+              borderRadius: '10px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+              color: '#04060A',
+              fontWeight: 800,
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}
+          >
+            <Fingerprint size={15} />
+            <span>Xác Thực Lại FaceID Ngay ({spotCheckCountdown}s)</span>
+          </button>
+        </div>
+      )}
 
       {/* MODAL NHẬP MÃ PIN KHÔI PHỤC 6 SỐ KHI SINH VIÊN ĐỔI FACEID / VÂN TAY TRÊN ĐIỆN THOẠI */}
       {pinModalOpen && (
