@@ -199,5 +199,5 @@ contract DIDRegistry {
 ## 👨‍💻 Tác Giả & Bản Quyền
 
 - **Tác giả:** Nguyễn Đức Hiển ([@hien-cybers](https://github.com/hien-cybers))
-- **Đơn vị:** Khoa Công nghệ Thông tin - Chuyên ngành An toàn Thông tin - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
+- **Đơn vị:** Khoa Công nghệ Thông tin - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
 - **Giấy phép:** Dự án được phân phối dưới giấy phép [MIT License](https://opensource.org/licenses/MIT).
