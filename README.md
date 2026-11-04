@@ -1,149 +1,203 @@
-# UTH-TrustID: Decentralized Identity (W3C DID) & Passwordless Authentication Wallet
+<div align="center">
 
-Hệ thống Ví định danh số phi tập trung (**W3C Decentralized Identity**) và xác thực không mật khẩu (**Passwordless Authentication**) tích hợp công nghệ Blockchain (**Polygon Amoy**), Sinh trắc học phần cứng (**WebAuthn**), Cây Merkle (**Merkle Tree Batch VC**), Phát hiện GPS giả mạo (**Anti-Mock GPS Anomaly Detection**) và Hệ thống Giám sát An ninh Dị thường (**IDS**), phục vụ đề tài Nghiên cứu Khoa học (NCKH) - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
+# 🛡️ UTH-TrustID: Decentralized Identity & Anti-Proxy Attendance Framework
+**Hệ sinh thái Danh tính số Phi tập trung (W3C DID) & Xác thực Hiện diện Phòng học / Phòng thi ứng dụng Merkle Tree & WebAuthn**
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Polygon Network](https://img.shields.io/badge/Network-Polygon_Amoy_Testnet-8247E5?logo=polygon&logoColor=white)](https://amoy.polygonscan.com/)
+[![W3C Standard](https://img.shields.io/badge/W3C-Verifiable_Credentials-blue?logo=w3c&logoColor=white)](https://www.w3.org/TR/vc-data-model/)
+[![Security: Defense-in-Depth](https://img.shields.io/badge/Security-Defense--in--Depth-success?logo=shield)](https://github.com/hien-cybers)
 
-## 🌟 Tính Năng Nổi Bật
+[Tổng quan](#-tổng-quan-kiến-trúc) • [Mô hình Đe dọa](#-mô-hình-đe-dọa--ma-trận-phòng-thủ-threat-model) • [Công nghệ](#-ngăn-xếp-công-nghệ-tech-stack) • [Cấu trúc](#-cấu-trúc-thư-mục-repository) • [Cài đặt](#-cài-đặt--triển-khai-nhanh) • [Smart Contract](#-hợp-đồng-thông-minh-didregistrysol)
 
-### 1. Chuẩn Hóa Logic An Toàn Thông Tin & Giao Thức (Security & Protocol Logic)
-- **Domain & Origin Binding**: Chuẩn hóa cấu trúc ký số EIP-191 mang tính chống chối bỏ:
-  $$\text{Payload} = \text{"uth.edu.vn wants you to sign in with non-repudiation: Nonce="} + nonce + \text{" at "} + timestamp$$
-  Chống triệt để tấn công Phishing và Relay Attack giữa các máy chủ giả mạo.
-- **Strict Nonce TTL (60s) & Single-Use Destruction**: Nonce có thời gian sống ngắn (60 giây) và **bị hủy ngay lập tức** khỏi bộ nhớ đệm tại request xác thực đầu tiên (bất kể thành công hay thất bại), triệt tiêu tuyệt đối nguy cơ tấn công phát lại (Replay Attack).
-- **Cryptographic Proof of Association**: Ràng buộc mật mã chặt chẽ giữa Khóa Ví và Thẻ Sinh Viên Số $(MSSV, studentAddress, issueDate, expiryDate)$ thông qua chữ ký số ECDSA từ University Root Issuer.
-- **Khóa Danh Tính Theo Thiết Bị Gốc (Device Binding / Hardware Footprint)**: Băm định danh phần cứng kết hợp từ Canvas 2D fingerprint, WebGL GPU Renderer, độ phân giải màn hình, múi giờ và CPU cores thành chuỗi `DEV_FP_...`. Khi ký số điểm danh, payload bắt buộc phải khớp chữ ký + DeviceID đã đăng ký để chống sao chép khóa sang thiết bị khác (`HARDWARE_MISMATCH`).
-- **Khóa 1 Phiên Duy Nhất (Single Active Session Enforcement)**: Tại một thời điểm, một mã sinh viên chỉ có 1 phiên hợp lệ duy nhất. Ngăn chặn hành vi một sinh viên đăng nhập cùng lúc ở 2 địa điểm/dịch vụ khác nhau.
-
-### 2. Phân Hệ Sinh Viên (Student Wallet PWA - `/wallet`)
-- **Giao Diện Deep Blue-Navy Glassmorphism**: Thẻ Sinh Viên Số thiết kế chuẩn kính mờ hiện đại, hiển thị trực quan thông tin định danh W3C DID, mã khóa, mã QR định danh và huy hiệu thiết bị gốc đã khóa.
-- **Xuất trình có chọn lọc (Selective Disclosure / Privacy Mode)**: Cho phép sinh viên bật chế độ riêng tư ẩn MSSV và thông tin cá nhân (`••••••••`), chỉ xuất trình bằng chứng mật mã xác nhận sinh viên UTH hợp lệ (Zero-Knowledge/Selective Disclosure cho Thư viện, Nhà xe).
-- **Cơ chế Thu hồi Khẩn cấp Chủ động (Self-Revocation via Emergency Token)**: Cấp mã khẩn cấp bí mật (`EMERGENCY_UTH_...`) khi tạo ví. Khi bị mất thiết bị, sinh viên có thể dùng mã này để tự khóa/thu hồi danh tính từ xa trên bất kỳ trình duyệt nào.
-- **Cơ chế Tự Hủy Chống Dò Khóa (Tamper Self-Destruct)**: Khi nhập sai mã PIN/xác thực bảo mật quá 5 lần liên tiếp, hệ thống tự động kích hoạt quy trình tự hủy: xóa sạch Private Key và 12 từ Mnemonic khỏi bộ nhớ cục bộ (`localStorage`), đồng thời tự động gửi lệnh thu hồi on-chain và báo cáo cảnh báo khẩn cấp lên IDS Quản trị.
-- **Mã hóa Cục bộ AES-GCM-256 & WebAuthn**: Khóa riêng (Private Key) và cụm 12 từ khôi phục (BIP-39 Mnemonic) được mã hóa bằng AES-GCM kết hợp PBKDF2 (100.000 vòng lặp) và bảo vệ bằng TouchID/FaceID.
-- **Tẩy bộ nhớ đệm RAM (Memory Sanitization)**: Tự động ghi đè (`0x00...`) và hủy biến khóa riêng ngay sau khi hoàn tất ký số EIP-191.
-- **Vé Điểm Danh Ngoại Tuyến (Offline Verifiable Presentation)**: Hỗ trợ sinh viên sinh mã QR offline chứa VP đã ký sẵn để điểm danh tại các phòng học/phòng thi tầng hầm không có sóng 4G/Wi-Fi.
-
-### 3. Phân Hệ Giảng Viên (Faculty & Verifier Portal - `/faculty`)
-- **Giao Diện Thẩm Mỹ Cao Cấp (Deep Blue-Navy Glassmorphism Aesthetic)**: Thiết kế chuẩn Mobile-first theo ngôn ngữ Dark Glassmorphism hiện đại kết hợp điểm nhấn màu xanh Cyan (`#38bdf8`) và gradient xanh biển.
-- **Dynamic Rotating QR Code (Xoay mã 15s)**: Cơ chế xoay mã QR tự động sau mỗi 15 giây kèm thanh đếm lùi trực quan, chống việc sinh viên chụp ảnh mã gửi ra ngoài phòng thi / lớp học.
-- **Fullscreen Projector Mode**: Nút phóng to mã QR toàn màn hình overlay sắc nét trên máy chiếu giảng đường lớn.
-- **Điểm Danh Ngẫu Nhiên Giữa Giờ (Mid-Session Random Verification)**: Giảng viên kích hoạt thử thách đột xuất 120 giây với mã Nonce khẩn cấp (`MID_...`), sinh viên trên lớp phải xác thực lại để chứng minh không bỏ về sớm.
-- **Kiểm Tra Minh Chứng Ngang Hàng (Peer-to-Peer Attestation / Mesh Check)**: Tùy chọn yêu cầu xác thực chéo từ $\ge 2$ bạn cùng lớp ở gần trước khi hệ thống ghi nhận điểm danh chính thức.
-- **Đồng Bộ Hệ Thống Đào Tạo SIS (Webhook Integration)**: Nút đồng bộ kết quả điểm danh trực tiếp về Cổng Quản lý Đào tạo UTH thông qua Webhook `/api/sis/sync-attendance`.
-- **Khóa Phiên Tự Động (Auto-Lock Session Timer)**: Tự động đếm lùi 15 phút và đóng phòng điểm danh, từ chối mọi yêu cầu quét mã muộn.
-- **Xuất Dữ Liệu Nghiệm Thu Ra CSV (Export Audit Trail)**: Xuất file bảng tính chi tiết: MSSV, Họ tên, Thời gian, Toạ độ GPS, Khoảng cách Haversine (m), Chế độ mạng, Hash chữ ký số EIP-191.
-
-### 4. Phân Hệ Quản Trị Viên (Admin & Issuer Portal - `/admin`)
-- **Cấp phát VC hàng loạt qua Merkle Tree (Batch VC Issuance)**: Nhập danh sách sinh viên theo lô (JSON Batch), hệ thống tự động tính toán **Merkle Tree Root** (`keccak256`) và ký số lô tập trung bằng ví Root Issuer của trường, giúp tiết kiệm chi phí và tăng tốc độ cấp phát chứng chỉ số quy mô lớn.
-- **Chứng Chỉ Đủ Điều Kiện Dự Thi (Exam Eligibility VC)**: Cấp phát chứng chỉ số W3C VC chuẩn cho sinh viên có tỷ lệ chuyên cần $\ge 80\%$, ký số EIP-191 bởi University Root Authority, tích hợp trực tiếp vào hồ sơ thi chính thức.
-- **Khôi Phục Danh Tính Qua Cố Vấn Học Tập (Faculty Social Recovery)**: Khi sinh viên mất điện thoại/thiết bị, Cố vấn học tập có thẩm quyền ký duyệt cấp lại DID mới và tự động thu hồi khóa cũ trên Polygon Amoy mà không làm mất lịch sử điểm danh và chứng chỉ đã tích lũy.
-- **Đo Lường Hiệu Năng Mật Mã (NCKH Benchmark Tool)**: Đo lường và định lượng độ trễ thời gian thực của các thuật toán: Sinh khóa secp256k1, Ký EIP-191, Phục hồi địa chỉ qua ecrecover, Tính khoảng cách Haversine và Dựng cây Merkle Tree (100 sinh viên).
-- **Hệ thống Giám sát An ninh & Cảnh báo Dị thường (IDS Alerts)**:
-  - **Brute-force Challenge**: Phát hiện và chặn các nguồn thử sai chữ ký liên tiếp $\ge 3$ lần.
-  - **Impossible Travel**: Phát hiện hành vi quét QR từ 2 vị trí địa lý cách nhau quá xa trong khoảng thời gian ngắn (vận tốc di chuyển vượt ngưỡng vật lý $v > 30\text{ m/s}$).
-  - **Hardware Mismatch & Tamper**: Ghi nhận cảnh báo khi DeviceID bị thay đổi hoặc kích hoạt cơ chế tự hủy.
-
-### 5. Cổng Dịch Vụ Web Không Mật Khẩu (Login Portal - `/portal`)
-- Tích hợp **WebSocket (Socket.io)** hai chiều tự động chuyển hướng sang Dashboard cá nhân ngay khi điện thoại quét và ký số thành công.
-- Tích hợp bộ đếm Nonce TTL 60s và nút **Báo mất ví khẩn cấp từ xa**.
+</div>
 
 ---
 
-## 🛡️ Thực Nghiệm Kiểm Thử An Toàn Thông Tin (Security Evaluation)
+## 📌 Tổng Quan Kiến Trúc
 
-Bộ kịch bản kiểm thử tấn công tự động (`backend/test-attacks.js`) mô phỏng các vectơ tấn công phổ biến vào hệ thống xác thực phi tập trung:
+**UTH-TrustID** giải quyết triệt để các vấn nạn gian lận điểm danh, điểm danh hộ (Proxy Attendance) và thi hộ trong môi trường đại học. Dự án chuyển đổi mô hình định danh truyền thống (User/Password tập trung) sang kiến trúc **Tam giác Danh tính Phi tập trung (Decentralized Identity Triangle)** theo tiêu chuẩn W3C:
 
-| Mã Ca | Vectơ Tấn Công | Mô Tả Kịch Bản | Phản Hồi Kỳ Vọng | Kết Quả Thực Nghiệm | Đánh Giá NCKH |
-| :---: | :--- | :--- | :--- | :--- | :---: |
-| **TC-01** | **Replay Attack** (Tấn công phát lại) | Kẻ tấn công thu thập gói tin chữ ký hợp lệ trước đó và gửi lại máy chủ | `HTTP 401 Unauthorized` | `HTTP 401` | **ĐẠT (PASS 100%)** |
-| **TC-02** | **Signature Tampering** (Giả mạo chữ ký / MitM) | Kẻ tấn công sửa đổi payload hoặc dùng khóa riêng mạo danh sinh viên | `HTTP 404 Not Found` | `HTTP 404` | **ĐẠT (PASS 100%)** |
-| **TC-03** | **Revocation Abuse** (Lạm dụng danh tính thu hồi) | Cố tình đăng nhập bằng danh tính đã bị báo mất / thu hồi trên hệ thống | `HTTP 403 Forbidden` | `HTTP 403` | **ĐẠT (PASS 100%)** |
-| **TC-04** | **Device Mismatch** (Sao chép Private Key sang máy khác) | Ký số bằng khóa riêng nhưng gửi DeviceID phần cứng không khớp | `HTTP 403 HARDWARE_MISMATCH` | `HTTP 403` | **ĐẠT (PASS 100%)** |
+```text
+               ┌──────────────────────────────┐
+               │  ROOT ISSUER (Nhà trường)    │
+               │  - Batch Issue via Merkle    │
+               │  - Commit Merkle Root to Chain│
+               └──────────────┬───────────────┘
+                              │
+                Phát hành VC  │  Neo Root On-Chain
+                              │  (DIDRegistry.sol)
+                              ▼
+┌─────────────────────────┐               ┌─────────────────────────┐
+│   HOLDER (Sinh viên)    │ ────────────► │  VERIFIER (Giảng viên)  │
+│ - Non-custodial Keypair │  Trình xuất   │ - Real-time Session     │
+│ - Hardware Device Bind  │  Bằng chứng   │ - Dynamic Sliding Nonce │
+│ - Biometric Gatekeeper  │   (EIP-191)   │ - Visual Liveness Stamp │
+└─────────────────────────┘               └─────────────────────────┘
+```
 
-> **Tổng kết:** 4/4 ca thử nghiệm đều đạt chuẩn an toàn tuyệt đối (100% phòng thủ thành công).
+### Các Trụ Cột Kỹ Thuật Chính:
+1. **Zero-Gas / O(log N) Scalability:** Sử dụng cây **Merkle Tree** nén toàn bộ danh sách sinh viên hợp lệ thành một mã băm gốc 32-byte duy nhất (`merkleRoot`) neo trên blockchain Polygon. Sinh viên tự lưu trữ thẻ và chứng minh tính hợp lệ với độ phức tạp $O(\log N)$.
+2. **On-Chain Revocation Registry:** Tách rời cấu trúc cây Merkle và sổ bộ thu hồi. Khi sinh viên mất máy, quản trị viên đưa địa chỉ ví cũ vào bảng `isRevoked` trên Smart Contract mà không làm vô hiệu hóa mảng Proof của các sinh viên khác.
+3. **Cryptographic Biometric Gate:** Tích hợp **WebAuthn (FIDO2)** gọi trực tiếp Secure Enclave (Apple) / Titan M (Android). Khóa bí mật chỉ được cấp quyền ký số EIP-191 khi vượt qua xác thực sinh trắc học phần cứng.
 
 ---
 
-## 🏗️ Cấu Trúc Dự Án
+## ⚔️ Mô Hình Đe Dọa & Ma Trận Phòng Thủ (Threat Model)
+
+| Vector Tấn Công | Kịch Bản Khai Thác | Cơ Chế Phòng Thủ Trọng Yếu Của UTH-TrustID |
+| :--- | :--- | :--- |
+| **Replay Attack** | Bắt gói tin chữ ký qua mạng và phát lại sau đó. | **Sliding Window Nonce:** Mã QR xoay Nonce mỗi chu kỳ 15–30s. Nonce gắn nhãn thời gian và chỉ tồn tại trong TTL 45s. |
+| **GPS Spoofing / Mock Location** | Dùng phần mềm giả lập toạ độ ở nhà để quét mã. | **Cơ chế Lai (Hybrid Geo-Fencing):** Kết hợp công thức Haversine ($\le 20\text{m}$ / $\le 35\text{m}$) và ràng buộc dải mạng nội bộ (Campus Wi-Fi Subnet IP). |
+| **Physical Device Delegation** | Đưa cả 2 điện thoại cho bạn cùng lớp cầm vào phòng. | **WebAuthn Local Gate:** Khóa Private Key sau lớp bảo vệ Face ID/Vân tay. Người khác cầm máy không thể mở khóa để ký số. |
+| **Screen Capture Fraud** | Chụp ảnh màn hình điểm danh thành công gửi cho nhau. | **Dynamic Liveness Stamp:** Con dấu số động gồm sóng radar, đồng hồ mili-giây thời gian thực ($40\text{ms}$) và 1s Dynamic Hash. |
+| **Mid-class Truancy** | Điểm danh đầu giờ rồi trốn về giữa buổi học. | **Random Spot-Check:** Kênh WebSocket kích hoạt lệnh tái kiểm tra đột xuất; sinh viên phải quét lại Face ID trong vòng 60 giây. |
+
+---
+
+## 💻 Ngăn Xếp Công Nghệ (Tech Stack)
+
+* **Blockchain & Cryptography:** Solidity `^0.8.20`, Ethers.js v6, MerkleTree.js, Keccak256, W3C DID, EIP-191 Personal Sign.
+* **Frontend Mobile / PWA:** React 19, Vite, Capacitor (Native Bridge iOS/Android), TailwindCSS / Vanilla CSS Safe-Area Engine, Lucide Icons.
+* **Backend & Real-Time Engine:** Node.js, Express.js, Socket.io (WebSocket Room Management), Web Crypto API (PBKDF2/AES-GCM).
+* **DevOps & Testing:** Hardhat, GitHub Actions (macOS Runner CI/CD cho iOS IPA), Sideloadly.
+
+---
+
+## 📁 Cấu Trúc Thư Mục Repository
 
 ```text
 UTH-TrustID/
-├── backend/                      # Máy chủ Node.js / Express & Socket.io
-│   ├── middlewares/
-│   │   └── networkGuard.js       # Dual-Factor Campus Network Guard (UTH Wi-Fi Subnet)
-│   ├── server.js                 # API Challenge, Verify, Device Binding, SIS Webhook, Social Recovery, Exam VC
-│   ├── test-attacks.js           # Kịch bản kiểm thử tấn công tự động TC-01, TC-02, TC-03, TC-04
+├── contracts/                     # Hợp đồng thông minh Solidity
+│   └── DIDRegistry.sol            # Quản lý Merkle Root & Sổ bộ thu hồi (Revocation)
+├── scripts/                       # Kịch bản deploy Hardhat lên Polygon Amoy
+│   └── deploy.js
+├── uth-trustid-backend/           # Node.js Server & Socket.io Gateway
+│   ├── server.js                  # Xử lý ecrecover, Haversine, Sliding Nonce, Spot-check
 │   └── package.json
-├── public/                       # Manifest PWA, Service Worker, Icons
-├── src/
-│   ├── components/
-│   │   ├── AdminGateway.jsx      # Quản trị Registry, Merkle Batch Issuer & IDS Alerts
-│   │   ├── LoginPortal.jsx       # Cổng xác thực Web Socket.io & TTL 60s
-│   │   ├── ProtectedRoute.jsx    # Lớp bảo vệ tuyến đường (Route Guard) phân quyền
-│   │   ├── Scanner.jsx           # Máy quét QR WebKit / iOS Safari / Android
-│   │   ├── StudentWallet.jsx     # Ví DID Mobile PWA: WebAuthn, Device Binding, Tamper Self-Destruct, Offline VP
-│   │   └── WebPortal.jsx         # Wrapper Cổng dịch vụ
-│   ├── pages/
-│   │   ├── AdminDashboard.jsx    # Dashboard Quản trị: Merkle Tree, Social Recovery, Exam VC, Benchmark, IDS
-│   │   └── FacultyPortal.jsx     # Cổng Giảng viên: Rotating QR 15s, Mid-session Check, P2P Mesh, SIS Webhook
-│   ├── contracts/
-│   │   └── DIDRegistry.sol       # Smart Contract Registry trên Polygon Amoy Testnet
-│   ├── services/
-│   │   ├── did.js                # Core Mật mã: AES-GCM, PBKDF2, WebAuthn, W3C DID, Polygon RPC
-│   │   └── merkleTree.js         # Thuật toán sinh cây Merkle & Merkle Proof
-│   ├── utils/
-│   │   ├── antiSpoofGps.js       # Thuật toán phát hiện bất thường GPS (Accuracy, Teleport)
-│   │   └── deviceFingerprint.js  # Thuật toán băm phần cứng (Canvas 2D + WebGL GPU + Screen + Timezone)
-│   ├── App.jsx                   # Định tuyến Router: /wallet, /faculty, /admin, /portal
-│   ├── index.css                 # Giao diện Deep Blue-Navy Glassmorphism & Vùng an toàn iOS/Android
-│   ├── admin.css                 # Thiết kế hệ thống quản trị an ninh
-│   └── main.jsx
-├── index.html                    # PWA Standalone configuration
-├── vite.config.js                # Vite PWA, SSL Proxy, API Rewrite
-└── package.json
+├── did-wallet/                    # Frontend React Vite PWA & Native App
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── SplashScreen.jsx           # Màn hình Splash động phong cách Native
+│   │   │   ├── CameraScannerPro.jsx       # Bộ quét Camera chống chớp tắt trên WebKit iOS
+│   │   │   ├── LiveClock.jsx              # Đồng hồ độc lập chống re-render
+│   │   │   └── ProofOfLivenessStamp.jsx   # Con dấu động Liveness Stamp
+│   │   ├── pages/
+│   │   │   ├── StudentWalletPro.jsx       # Ví Sinh viên số W3C VC & ZKP-lite
+│   │   │   ├── ScanPage.jsx               # Màn hình quét mã điểm danh & Spot-Check
+│   │   │   ├── FacultyPortalPro.jsx       # Cổng giảng viên (Projector Mode, Iframe Maps)
+│   │   │   └── AdminDashboardPro.jsx      # Quản trị Merkle Tree & Thu hồi khóa
+│   │   ├── utils/
+│   │   │   ├── webauthnHelper.js          # Module FaceID/TouchID native WebAuthn + Key Wrapping
+│   │   │   └── gpsDriftFilter.js          # Pre-warm GPS & Bộ lọc sai số trôi dạt
+│   │   ├── App.jsx                        # Giao diện chính phân quyền RBAC & Safe-Area
+│   │   └── main.jsx
+│   ├── ios/                               # Dự án Native iOS Xcode & SPM
+│   ├── .github/workflows/
+│   │   └── build-ios.yml                  # CI/CD tự động biên dịch IPA trên macOS Runner
+│   ├── capacitor.config.json              # Cấu hình Native App cho iOS
+│   └── package.json
+└── README.md
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
+## 🚀 Cài Đặt & Triển Khai Nhanh
 
-### 1. Khởi chạy Backend Service
+### 1. Khởi chạy Backend Server
 ```bash
-cd backend
+cd uth-trustid-backend
 npm install
-npm start
-# Máy chủ Auth & Socket.io lắng nghe tại http://localhost:4000
+node server.js
+# Backend sẵn sàng tại port 4000 kèm Socket.io
 ```
 
-### 2. Chạy Kiểm Thử Tấn Công Thực Nghiệm
+### 2. Khởi chạy Frontend React
 ```bash
-cd backend
-node test-attacks.js
-```
-
-### 3. Khởi chạy Ứng Dụng Frontend (PWA)
-```bash
+cd did-wallet
 npm install
 npm run dev -- --host
-# Truy cập https://localhost:5173
+# Mở trình duyệt tại http://localhost:5173
 ```
 
-### 4. Đóng gói Bản Phát Hành (Production Build)
+### 3. Đóng gói Ứng Dụng Di Động Native (Capacitor)
 ```bash
+cd did-wallet
+# Biên dịch giao diện tĩnh
 npm run build
+
+# Đồng bộ thay đổi vào thư mục iOS
+npx cap sync ios
+```
+
+- **iOS (IPA đóng gói tự động):** Dự án tích hợp sẵn GitHub Actions workflow `.github/workflows/build-ios.yml`. Khi đẩy code lên nhánh `main`, GitHub Actions tự động biên dịch trên máy ảo macOS-15. Bạn chỉ cần tải file `.ipa` từ mục **Artifacts** và cài đặt vào iPhone qua **Sideloadly**.
+
+---
+
+## 📜 Hợp Đồng Thông Minh (DIDRegistry.sol)
+
+Hợp đồng được tối ưu hóa chi phí lưu trữ, triển khai tại mạng Polygon Amoy Testnet:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title UTH-TrustID DIDRegistry
+ * @dev Quản trị Merkle Root danh tính sinh viên UTH và sổ bộ thu hồi khóa On-Chain
+ */
+contract DIDRegistry {
+    address public immutable rootAdmin;
+    bytes32 public currentMerkleRoot;
+
+    // Sổ bộ thu hồi địa chỉ ví khi mất máy (Bảo toàn Merkle Root chung)
+    mapping(address => bool) public isRevoked;
+
+    event MerkleRootUpdated(bytes32 indexed oldRoot, bytes32 indexed newRoot, uint256 timestamp);
+    event KeyRevoked(address indexed studentWallet, uint256 timestamp);
+    event KeyReinstated(address indexed studentWallet, uint256 timestamp);
+
+    modifier onlyAdmin() {
+        require(msg.sender == rootAdmin, "UTH: Caller is not root admin");
+        _;
+    }
+
+    constructor(bytes32 _initialRoot) {
+        rootAdmin = msg.sender;
+        currentMerkleRoot = _initialRoot;
+    }
+
+    function setMerkleRoot(bytes32 _newRoot) external onlyAdmin {
+        emit MerkleRootUpdated(currentMerkleRoot, _newRoot, block.timestamp);
+        currentMerkleRoot = _newRoot;
+    }
+
+    function revokeKey(address _studentWallet) external onlyAdmin {
+        require(!isRevoked[_studentWallet], "UTH: Already revoked");
+        isRevoked[_studentWallet] = true;
+        emit KeyRevoked(_studentWallet, block.timestamp);
+    }
+
+    function reinstateKey(address _studentWallet) external onlyAdmin {
+        require(isRevoked[_studentWallet], "UTH: Not in revoked list");
+        isRevoked[_studentWallet] = false;
+        emit KeyReinstated(_studentWallet, block.timestamp);
+    }
+}
 ```
 
 ---
 
-## 🧭 Điều Hướng Các Phân Hệ
-* **Cổng Giảng Viên (Mặc định: Điểm danh / Thi cử & Geo-Fencing)**: `/faculty` (hoặc `/`)
-* **Ví Sinh Viên (Mobile PWA)**: `/wallet`
-* **Cổng Dịch Vụ Web (Đăng nhập không mật khẩu)**: `/portal`
-* **Cổng Quản Trị Viên (Admin & Issuer)**: `/admin`
+## 🔒 Tuân Thủ Tiêu Chuẩn & Quyền Riêng Tư (Privacy-by-Design)
+
+- **Zero Identity Leaks:** Không lưu trữ khóa bí mật (Private Key) hoặc dữ liệu sinh trắc học (vân tay/khuôn mặt) trên máy chủ tập trung.
+- **Selective Disclosure:** Chế độ ẩn danh cho phép sinh viên xuất trình bằng chứng danh tính hợp lệ mà không làm lộ Họ tên, Mã sinh viên hay Địa chỉ ví công khai khi qua cổng trường hoặc mượn sách thư viện.
+- **Data Protection Compliance:** Cấu trúc dữ liệu và quy trình định danh được thiết kế bám sát các nguyên tắc cốt lõi của GDPR (Right to be Forgotten via Key Revocation) và tiêu chuẩn an toàn ISO/IEC 27001.
 
 ---
 
-## 📜 Bản Quyền & Trích Dẫn
-Dự án được nghiên cứu và phát triển phục vụ đề tài Nghiên cứu Khoa học (NCKH) sinh viên - **Trường Đại học Giao thông Vận tải TP.HCM (UTH)**.  
-Giấy phép phát hành: **MIT License**.
+## 👨‍💻 Tác Giả & Bản Quyền
+
+- **Tác giả:** Nguyễn Đức Hiển ([@hien-cybers](https://github.com/hien-cybers))
+- **Đơn vị:** Khoa Công nghệ Thông tin - Chuyên ngành An toàn Thông tin - Trường Đại học Giao thông Vận tải TP.HCM (UTH).
+- **Giấy phép:** Dự án được phân phối dưới giấy phép [MIT License](https://opensource.org/licenses/MIT).
