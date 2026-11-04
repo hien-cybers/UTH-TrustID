@@ -1,6 +1,6 @@
 {
-  "appId": "vn.edu.uth.trustid",
-  "appName": "UTH-TrustID",
+  "appId": "vn.edu.ut.trustid",
+  "appName": "UTH TrustID",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "ios": {
@@ -8,7 +8,8 @@
     "allowsLinkPreview": false
   },
   "server": {
-    "iosScheme": "capacitor",
+    "hostname": "trustid.ut.edu.vn",
+    "iosScheme": "https",
     "androidScheme": "https"
   }
 }

@@ -66,3 +66,4 @@ jobs:
         with:
           name: UTH-TrustID-iOS
           path: ios/App/derived_data/Build/Products/Release-iphoneos/UTH-TrustID.ipa
+
