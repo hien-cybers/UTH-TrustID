@@ -2,15 +2,15 @@
 // Chuẩn Native iOS Human Interface & Android Material 3 • Không Tràn Viền Trên Mọi Thiết Bị
 import React, { useState, useEffect, useRef } from 'react';
 import './styles/appPro.css';
-import { 
-  ShieldCheck, 
-  Wallet, 
-  Scan, 
-  Radio, 
-  Clock, 
-  MapPin, 
-  Copy, 
-  CheckCircle2, 
+import {
+  ShieldCheck,
+  Wallet,
+  Scan,
+  Radio,
+  Clock,
+  MapPin,
+  Copy,
+  CheckCircle2,
   Sparkles,
   Zap,
   Play,
@@ -183,7 +183,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
 
         const pendingIDB = await getAllOfflineAttendanceFromIDB();
         setOfflineQueue(pendingIDB || []);
-      } catch {}
+      } catch { }
     };
     loadFromIndexedDB();
   }, []);
@@ -197,7 +197,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         if (pending && pending.length > 0) {
           await handleSyncOfflinePackets();
         }
-      } catch {}
+      } catch { }
     };
     const handleOffline = () => setIsOfflineMode(true);
     window.addEventListener('online', handleOnline);
@@ -274,7 +274,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
       return () => {
         socket.disconnect();
       };
-    } catch {}
+    } catch { }
   }, [sessionId]);
 
   useEffect(() => {
@@ -300,7 +300,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, nonce: nextNonce })
-      }).catch(() => {});
+      }).catch(() => { });
     }, 15000);
     return () => clearInterval(nonceTimer);
   }, [sessionActive, sessionId]);
@@ -318,8 +318,8 @@ export default function AppProView({ initialTab = 'wallet' }) {
     const emailToUse = rolePreset === 'ADMIN'
       ? 'admin@ut.edu.vn'
       : rolePreset === 'FACULTY'
-      ? 'giangvien@ut.edu.vn'
-      : loginEmail;
+        ? 'giangvien@ut.edu.vn'
+        : loginEmail;
     const passwordToUse = '123456';
 
     try {
@@ -382,7 +382,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
           major: onboardForm.major,
           deviceId: deviceHwId
         })
-      }).catch(() => {});
+      }).catch(() => { });
 
       setStudentProfile(prev => ({
         ...prev,
@@ -394,7 +394,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
       }));
       setShowOnboardingModal(false);
       triggerScanSuccessFeedback();
-    } catch {}
+    } catch { }
   };
 
   // 1. NÂNG CẤP 2: SELECTIVE DISCLOSURE (Proof = { isUTHStudent: true, status: "Active" })
@@ -456,7 +456,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
       if (smoothed && !smoothed.fallback) {
         gpsLoc = smoothed;
       }
-    } catch {}
+    } catch { }
 
     const driftEval = evaluateGpsDriftTolerance(10.7992, 106.7056, gpsLoc, 35);
     const effectiveDist = driftEval.withinRadius ? driftEval.effectiveDistance : 8;
@@ -545,7 +545,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
           }
         })
       });
-    } catch {}
+    } catch { }
 
     const shortSig = `${signature.slice(0, 14)}...${signature.slice(-6)}`;
     setAttendees((prev) => {
@@ -617,7 +617,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         setSecurityStats(s => ({ ...s, totalDid: s.totalDid + 3, activeVc: s.activeVc + 3 }));
         triggerScanSuccessFeedback();
       }
-    } catch {} finally {
+    } catch { } finally {
       setBatchIssuing(false);
     }
   };
@@ -683,7 +683,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         });
         triggerScanSuccessFeedback();
       }
-    } catch {} finally {
+    } catch { } finally {
       setKycRecovering(false);
     }
   };
@@ -709,7 +709,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
           networkPolicy: 'HYBRID_4G_5G'
         })
       });
-    } catch {}
+    } catch { }
   };
 
   const handleTerminateSession = async () => {
@@ -722,12 +722,12 @@ export default function AppProView({ initialTab = 'wallet' }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, locked: true })
       });
-    } catch {}
+    } catch { }
   };
 
   return (
     <div className="app-container">
-      
+
       {/* 1. TOP HEADER / STATUS BAR CHUẨN NATIVE KHÔNG TRÀN VIỀN */}
       <header style={{
         padding: '12px 16px 10px',
@@ -795,7 +795,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         {/* =================================================================== */}
         {activeTab === 'wallet' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
+
             {/* THẺ HERO APPLE WALLET CARD */}
             <div
               className="hero-pass"
@@ -850,7 +850,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
                 }}>
                   {zkpMode ? 'Proof = { isUTHStudent: true, status: "Active" }' : studentProfile.name}
                 </div>
-                
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '9.5px', color: 'var(--text-dim)' }}>
@@ -1156,7 +1156,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         {/* =================================================================== */}
         {activeTab === 'scan' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            
+
             {/* MẢNH GHÉP #4: CHUYỂN ĐỔI ONLINE / OFFLINE PROOF-OF-PRESENCE (INDEXEDDB) */}
             <div
               className="glass-card"
@@ -1253,7 +1253,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
                 <div style={{ width: '100%', height: '100%' }}>
                   <Scanner
                     onScanSuccess={() => executeCryptographicScan()}
-                    onScanError={() => {}}
+                    onScanError={() => { }}
                   />
                 </div>
               ) : (
@@ -1286,8 +1286,8 @@ export default function AppProView({ initialTab = 'wallet' }) {
                 background: scanStatus === 'success'
                   ? 'var(--accent-green)'
                   : isOfflineMode
-                  ? 'linear-gradient(135deg, #D97706, #B45309)'
-                  : 'linear-gradient(135deg, #0284C7, #0369A1)',
+                    ? 'linear-gradient(135deg, #D97706, #B45309)'
+                    : 'linear-gradient(135deg, #0284C7, #0369A1)',
                 color: '#FFF',
                 fontWeight: 700,
                 fontSize: '12.5px',
@@ -1388,7 +1388,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         {/* =================================================================== */}
         {activeTab === 'faculty' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
+
             {/* Thanh trạng thái RBAC Giảng viên (Chức năng #6) */}
             <div className="glass-card" style={{ padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
               <div style={{ minWidth: 0 }}>
@@ -1613,7 +1613,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
         {/* =================================================================== */}
         {activeTab === 'admin' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
+
             {/* Header Admin Console (#11) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
               <div>
