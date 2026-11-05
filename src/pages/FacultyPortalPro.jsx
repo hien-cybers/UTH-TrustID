@@ -42,12 +42,16 @@ export default function FacultyPortalPro() {
   });
   const [isSessionCreated, setIsSessionCreated] = useState(false);
 
+  const ROTATION_INTERVAL = 35000; // 35 giây chuẩn tối ưu lấy nét Camera
+  const ROTATION_SECONDS = 35;
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [networkPolicy, setNetworkPolicy] = useState('CAMPUS_WIFI_ONLY'); // 'CAMPUS_WIFI_ONLY' | 'ALLOW_ALL'
   const [session, setSession] = useState(null);
   const [isClosed, setIsClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currentNonce, setCurrentNonce] = useState('');
+  const [nonceSecondsLeft, setNonceSecondsLeft] = useState(ROTATION_SECONDS);
   const [spotCheckStatusMsg, setSpotCheckStatusMsg] = useState('');
 
   // 3. Xem vị trí sinh viên trên Google Maps Iframe nhúng trực tiếp
@@ -168,6 +172,7 @@ export default function FacultyPortalPro() {
       socket.on('nonce-updated', ({ nonce }) => {
         if (nonce) {
           setCurrentNonce(nonce);
+          setNonceSecondsLeft(ROTATION_SECONDS);
           setSession((prev) => (prev ? { ...prev, nonce } : null));
         }
       });
@@ -311,6 +316,7 @@ export default function FacultyPortalPro() {
     setIsSessionCreated(true);
     setIsClosed(false);
     setCurrentNonce(fallbackNonce);
+    setNonceSecondsLeft(ROTATION_SECONDS);
     setTimeLeft(duration);
     setAttendees([]);
     setSpotCheckStatusMsg('');
@@ -337,21 +343,28 @@ export default function FacultyPortalPro() {
       const data = await res.json();
       if (data.initialNonce) {
         setCurrentNonce(data.initialNonce);
+        setNonceSecondsLeft(ROTATION_SECONDS);
         setSession((prev) => (prev ? { ...prev, nonce: data.initialNonce } : null));
       }
       socketRef.current?.emit('join-session', { sessionId: data.sessionId || sId, role: 'FACULTY' });
     } catch {}
   };
 
-  // Tự động xoay Nonce mỗi 20s dự phòng nếu WebSocket tạm thời gián đoạn
+  // Đếm ngược chu kỳ 35s của Nonce để hiển thị Thanh tiến trình (Progress Bar 100% -> 0%) và xoay Nonce dự phòng
   useEffect(() => {
     if (!session || isClosed) return;
-    const rot = setInterval(() => {
-      const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
-      socketRef.current?.emit('rotate-nonce', { sessionId: session.id, nonce: nextNonce });
-      setCurrentNonce(nextNonce);
-    }, 20000);
-    return () => clearInterval(rot);
+    const tick = setInterval(() => {
+      setNonceSecondsLeft((prev) => {
+        if (prev <= 1) {
+          const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
+          socketRef.current?.emit('rotate-nonce', { sessionId: session.id, nonce: nextNonce });
+          setCurrentNonce(nextNonce);
+          return ROTATION_SECONDS;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(tick);
   }, [session, isClosed]);
 
   // Giảng viên bấm xoay Nonce thủ công tức thì
@@ -359,6 +372,7 @@ export default function FacultyPortalPro() {
     if (!session || isClosed) return;
     const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
     setCurrentNonce(nextNonce);
+    setNonceSecondsLeft(ROTATION_SECONDS);
     setSession((prev) => (prev ? { ...prev, nonce: nextNonce } : null));
     socketRef.current?.emit('rotate-nonce', { sessionId: session.id, nonce: nextNonce });
   };
@@ -422,9 +436,12 @@ export default function FacultyPortalPro() {
   };
 
   const backendPolicyCode = networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'WIFI_ONLY' : 'HYBRID_4G_5G';
+  // TUYỆT ĐỐI KHÔNG gắn Date.now() biến thiên mỗi giây vào qrRawValue để giữ ma trận QR tĩnh 100% suốt 35s
   const qrRawValue = session
-    ? `UTH_ID:${session.id}:${currentNonce || session.nonce}:${session.lat}:${session.lon}:${Date.now()}:${backendPolicyCode}`
+    ? `UTH_ID:${session.id}:${currentNonce || session.nonce}:${session.lat}:${session.lon}:0:${backendPolicyCode}`
     : '';
+  const nonceProgressPct = Math.max(0, Math.min(100, Math.round((nonceSecondsLeft / ROTATION_SECONDS) * 100)));
+  const isNonceExpiringSoon = nonceProgressPct <= 15;
 
   return (
     <div className="page-enter" style={{ width: '100%', color: 'var(--text-main)', boxSizing: 'border-box' }}>
@@ -727,17 +744,49 @@ export default function FacultyPortalPro() {
               padding: isFullscreen ? '22px' : '14px',
               borderRadius: '20px',
               width: 'fit-content',
-              margin: '0 auto 12px',
-              border: '3px solid rgba(6, 182, 212, 0.45)',
+              margin: '0 auto 10px',
+              border: isNonceExpiringSoon ? '3px solid rgba(245, 158, 11, 0.75)' : '3px solid rgba(6, 182, 212, 0.45)',
               boxShadow: '0 8px 30px rgba(6, 182, 212, 0.25)'
             }}
           >
             <QRCodeCanvas
               value={qrRawValue || 'UTH_ID:SES_A2301:NONCE_DEMO:10.7992:106.7056'}
-              size={isFullscreen ? 300 : 176}
-              level="M"
+              size={isFullscreen ? 300 : 184}
+              level="L"
             />
           </div>
+
+          {/* Thanh tiến trình trực quan (Progress Bar 100% -> 0% trong 35 giây) ngay dưới mã QR */}
+          {!isClosed && (
+            <div style={{ width: '100%', maxWidth: isFullscreen ? '340px' : '220px', margin: '0 auto 10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontFamily: 'JetBrains Mono', marginBottom: '4px' }}>
+                <span style={{ color: isNonceExpiringSoon ? '#F59E0B' : 'var(--text-muted)', fontWeight: 700 }}>
+                  {isNonceExpiringSoon ? '⚠️ Sắp đổi mã QR...' : '⏳ Chu kỳ QR (Sliding 3 Nonce)'}
+                </span>
+                <span style={{ color: isNonceExpiringSoon ? '#EF4444' : '#06B6D4', fontWeight: 800 }}>
+                  {nonceSecondsLeft}s ({nonceProgressPct}%)
+                </span>
+              </div>
+              <div style={{
+                width: '100%',
+                height: '6px',
+                background: 'var(--bg-inset)',
+                borderRadius: '999px',
+                overflow: 'hidden',
+                border: '1px solid var(--border-hairline)'
+              }}>
+                <div style={{
+                  width: `${nonceProgressPct}%`,
+                  height: '100%',
+                  background: isNonceExpiringSoon
+                    ? 'linear-gradient(90deg, #F59E0B, #EF4444)'
+                    : 'linear-gradient(90deg, #06B6D4, #10B981)',
+                  borderRadius: '999px',
+                  transition: 'width 0.95s linear, background 0.3s ease'
+                }} />
+              </div>
+            </div>
+          )}
 
           <div style={{
             fontSize: isFullscreen ? '18px' : '11px',

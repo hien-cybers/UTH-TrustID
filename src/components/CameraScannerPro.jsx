@@ -86,8 +86,9 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
       audio: false,
       video: {
         facingMode: { ideal: 'environment' }, // Ưu tiên camera sau trên iPhone / Android
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+        width: { ideal: 720 },
+        height: { ideal: 720 },
+        aspectRatio: { ideal: 1.0 }
       }
     };
 
@@ -132,62 +133,95 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
       }
 
       if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+      let isDecodingFrame = false;
+      const QR_SCAN_CONFIG = {
+        fps: 20, // Tăng tốc độ đọc lên 20 khung hình/giây (50ms/frame)
+        qrbox: { width: 220, height: 220 }, // Gom vùng quét nhỏ gọn để chip lấy nét nhanh
+        aspectRatio: 1.0
+      };
+
       scanTimerRef.current = setInterval(async () => {
         const v = videoRef.current;
-        if (!v || v.readyState < 2 || hasScannedRef.current) return;
+        if (!v || v.readyState < 2 || hasScannedRef.current || isDecodingFrame) return;
+        isDecodingFrame = true;
 
-        let rawQrText = null;
+        try {
+          let rawQrText = null;
 
-        // Cách 1: Giải mã bằng BarcodeDetector (WebKit iOS 17+ / Chrome Android)
-        if (barcodeDetector) {
-          try {
-            const barcodes = await barcodeDetector.detect(v);
-            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-              rawQrText = barcodes[0].rawValue;
-            }
-          } catch {}
-        }
+          // Cách 1: Giải mã bằng BarcodeDetector phần cứng (WebKit iOS 17+ / Chrome Android)
+          if (barcodeDetector) {
+            try {
+              const barcodes = await barcodeDetector.detect(v);
+              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                rawQrText = barcodes[0].rawValue;
+              }
+            } catch {}
+          }
 
-        // Cách 2: Giải mã bằng jsQR trên Canvas ẩn (Hỗ trợ mọi đời iOS Safari 12-18)
-        if (!rawQrText && canvasRef.current) {
-          try {
-            const canvas = canvasRef.current;
-            const w = v.videoWidth || 480;
-            const h = v.videoHeight || 480;
-            if (w > 0 && h > 0) {
-              // Thu nhỏ kích thước quét xuống tối đa 480px để cực nhẹ CPU trên iPhone
-              const scale = Math.min(1, 480 / Math.max(w, h));
-              const cw = Math.floor(w * scale);
-              const ch = Math.floor(h * scale);
-              canvas.width = cw;
-              canvas.height = ch;
-              const ctx = canvas.getContext('2d', { willReadFrequently: true });
-              if (ctx) {
-                ctx.drawImage(v, 0, 0, cw, ch);
-                const imageData = ctx.getImageData(0, 0, cw, ch);
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                  inversionAttempts: 'dontInvert'
-                });
-                if (code && code.data) {
-                  rawQrText = code.data;
+          // Cách 2: Giải mã bằng jsQR tốc độ 20 FPS ưu tiên vùng trung tâm qrbox 220x220
+          if (!rawQrText && canvasRef.current) {
+            try {
+              const canvas = canvasRef.current;
+              const w = v.videoWidth || 480;
+              const h = v.videoHeight || 480;
+              if (w > 0 && h > 0) {
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                if (ctx) {
+                  // Bước 2A: Cắt vùng trung tâm qrbox (220x220) tỷ lệ 1:1 để giải mã siêu tốc (< 4ms)
+                  const minDim = Math.min(w, h);
+                  const cropSize = Math.floor(minDim * 0.68);
+                  const sx = Math.floor((w - cropSize) / 2);
+                  const sy = Math.floor((h - cropSize) / 2);
+                  const boxW = QR_SCAN_CONFIG.qrbox.width;
+                  const boxH = QR_SCAN_CONFIG.qrbox.height;
+
+                  canvas.width = boxW;
+                  canvas.height = boxH;
+                  ctx.drawImage(v, sx, sy, cropSize, cropSize, 0, 0, boxW, boxH);
+                  const boxData = ctx.getImageData(0, 0, boxW, boxH);
+                  const boxCode = jsQR(boxData.data, boxData.width, boxData.height, {
+                    inversionAttempts: 'attemptBoth'
+                  });
+                  if (boxCode && boxCode.data) {
+                    rawQrText = boxCode.data;
+                  }
+
+                  // Bước 2B: Fallback quét toàn khung hình nếu người dùng để lệch góc qrbox
+                  if (!rawQrText) {
+                    const scale = Math.min(1, 360 / Math.max(w, h));
+                    const cw = Math.floor(w * scale);
+                    const ch = Math.floor(h * scale);
+                    canvas.width = cw;
+                    canvas.height = ch;
+                    ctx.drawImage(v, 0, 0, cw, ch);
+                    const fullData = ctx.getImageData(0, 0, cw, ch);
+                    const fullCode = jsQR(fullData.data, fullData.width, fullData.height, {
+                      inversionAttempts: 'dontInvert'
+                    });
+                    if (fullCode && fullCode.data) {
+                      rawQrText = fullCode.data;
+                    }
+                  }
                 }
               }
-            }
-          } catch {}
-        }
+            } catch {}
+          }
 
-        if (rawQrText && !hasScannedRef.current) {
-          hasScannedRef.current = true;
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate([40, 60, 40]);
+          if (rawQrText && !hasScannedRef.current) {
+            hasScannedRef.current = true;
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+              navigator.vibrate([40, 60, 40]);
+            }
+            triggerScanSuccessFeedback();
+            stopCamera();
+            if (onScanSuccessRef.current) {
+              onScanSuccessRef.current(parseQrPayload(rawQrText));
+            }
           }
-          triggerScanSuccessFeedback();
-          stopCamera();
-          if (onScanSuccessRef.current) {
-            onScanSuccessRef.current(parseQrPayload(rawQrText));
-          }
+        } finally {
+          isDecodingFrame = false;
         }
-      }, 180);
+      }, Math.round(1000 / QR_SCAN_CONFIG.fps));
     } catch (err) {
       console.error('Lỗi truy cập camera:', err);
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -272,13 +306,13 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
           }}
         />
 
-        {/* Khung ngắm định vị và vạch quét laser */}
+        {/* Khung ngắm định vị qrbox 220x220 và vạch quét laser */}
         {!errorMsg && (
           <div style={{
             position: 'absolute',
-            width: '200px',
-            height: '200px',
-            border: '2px dashed rgba(56, 189, 248, 0.5)',
+            width: '220px',
+            height: '220px',
+            border: '2px dashed rgba(56, 189, 248, 0.65)',
             borderRadius: '16px',
             pointerEvents: 'none'
           }}>
