@@ -47,7 +47,7 @@ export function getBackendBaseUrl() {
 
   // Nếu đang chạy trong Native App iOS (.ipa) với hostname 'trustid.ut.edu.vn' hoặc 'capacitor://'
   if (isNativeShell()) {
-    return resolvedBaseUrl || PUBLIC_TUNNEL_URL;
+    return resolvedBaseUrl || LAN_BACKEND_URL;
   }
 
   // Nếu mở trực tiếp trên trình duyệt qua IP LAN
@@ -94,9 +94,9 @@ export function resolveBackendUrl() {
   const candidates = [...new Set([
     custom,
     lastGood,
-    PUBLIC_TUNNEL_URL,
     LAN_BACKEND_URL,
-    `http://${HOTSPOT_LAN_IP}:5000`
+    `http://${HOTSPOT_LAN_IP}:5000`,
+    PUBLIC_TUNNEL_URL
   ].filter(Boolean))];
 
   resolvingPromise = Promise.any(candidates.map((c) => probeBase(c)))
@@ -140,9 +140,9 @@ export async function smartFetch(path, options = {}) {
 
   const candidates = [
     `${primaryBase}${cleanPath}`,
-    `${PUBLIC_TUNNEL_URL}${cleanPath}`,
     `http://${DEFAULT_LAN_IP}:5000${cleanPath}`,
     `http://${HOTSPOT_LAN_IP}:5000${cleanPath}`,
+    `${PUBLIC_TUNNEL_URL}${cleanPath}`,
     `http://localhost:5000${cleanPath}`
   ];
 
