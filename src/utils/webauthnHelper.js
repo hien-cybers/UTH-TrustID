@@ -18,6 +18,41 @@ function base64ToUint8Array(b64) {
 }
 
 /**
+ * 0. Kiểm tra khả năng hỗ trợ Face ID / Vân tay phần cứng (Hardware Biometrics)
+ */
+export async function checkBiometricAvailability() {
+  try {
+    const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
+    const available = await NativeBiometric.isAvailable();
+    if (available && available.isAvailable) {
+      return {
+        available: true,
+        isNative: true,
+        biometryType: available.biometryType || 'FaceID',
+        label: available.biometryType === 1 ? 'Touch ID' : 'Face ID'
+      };
+    }
+  } catch {}
+
+  if (typeof window !== 'undefined' && window.PublicKeyCredential) {
+    const webAuthnAvail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => false);
+    return {
+      available: webAuthnAvail,
+      isNative: false,
+      biometryType: 'WebAuthn',
+      label: 'WebAuthn Passkey'
+    };
+  }
+
+  return {
+    available: false,
+    isNative: false,
+    biometryType: 'NONE',
+    label: 'Chưa phát hiện phần cứng'
+  };
+}
+
+/**
  * 1. Đăng ký Passkey / Sinh trắc học lần đầu hoặc khi Re-enroll sau khi đổi FaceID
  */
 export async function registerBiometric(studentId = '2251120000') {

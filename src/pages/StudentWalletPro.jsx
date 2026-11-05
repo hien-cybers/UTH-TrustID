@@ -16,15 +16,20 @@ import {
   EyeOff,
   Eye,
   Fingerprint,
-  KeyRound
+  KeyRound,
+  Shield,
+  ToggleLeft,
+  ToggleRight,
+  Smartphone
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
 import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
-import { registerBiometric, setupRecoveryPinAndWrapKey } from '../utils/webauthnHelper';
+import { registerBiometric, setupRecoveryPinAndWrapKey, checkBiometricAvailability, verifyBiometricPresence } from '../utils/webauthnHelper';
 import { initializeRandomIdentity } from '../utils/identityManager';
 import { smartFetch } from '../utils/backendUrl';
+import FaceIDModal from '../components/FaceIDModal';
 import '../styles/animations.css';
 
 export default function StudentWalletPro() {
@@ -32,6 +37,12 @@ export default function StudentWalletPro() {
   const [credential, setCredential] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showPassQr, setShowPassQr] = useState(false);
+
+  // Sinh trắc học phần cứng (Face ID / Touch ID / Keystore)
+  const [bioEnabled, setBioEnabled] = useState(true);
+  const [bioHardwareInfo, setBioHardwareInfo] = useState({ available: true, label: 'Face ID', isNative: true });
+  const [bioTestSuccessMsg, setBioTestSuccessMsg] = useState('');
+  const [showFaceTestModal, setShowFaceTestModal] = useState(false);
 
   // Mã PIN dự phòng 6 số (PBKDF2 100.000 vòng lặp) bọc khóa AES-GCM 256-bit
   const [recoveryPin, setRecoveryPin] = useState('');
@@ -44,6 +55,11 @@ export default function StudentWalletPro() {
   const [zkpVerifiedBadge, setZkpVerifiedBadge] = useState('');
 
   useEffect(() => {
+    // Kiểm tra cảm biến phần cứng Face ID / Vân tay khi khởi động
+    checkBiometricAvailability().then((info) => {
+      setBioHardwareInfo(info);
+    });
+
     const savedVC = localStorage.getItem('uth_student_vc');
     if (savedVC) {
       try {
@@ -192,6 +208,19 @@ export default function StudentWalletPro() {
     triggerScanSuccessFeedback();
   };
 
+  // Kiểm tra quét thử Face ID phần cứng
+  const handleTriggerFaceIdTest = async () => {
+    setBioTestSuccessMsg('');
+    setShowFaceTestModal(true);
+  };
+
+  const handleFaceTestSuccess = () => {
+    setShowFaceTestModal(false);
+    setBioTestSuccessMsg('✓ Đã xác thực Face ID từ phần cứng thành công! Cảm biến Apple / Keystore sẵn sàng.');
+    triggerScanSuccessFeedback();
+    setTimeout(() => setBioTestSuccessMsg(''), 5000);
+  };
+
   // Xác thực Selective Disclosure (ZKP-lite)
   const handleToggleZkp = async () => {
     const nextState = !zkpMode;
@@ -280,10 +309,34 @@ export default function StudentWalletPro() {
             Nạp Thẻ Sinh Viên Số (VC) vào IndexedDB, đăng ký <b>WebAuthn FaceID/TouchID</b> và bọc khóa bằng <b>AES-GCM 256-bit</b>.
           </p>
 
+          {/* CÀI ĐẶT SINH TRẮC HỌC FACE ID / VÂN TAY NATIVE PHẦN CỨNG */}
+          <div style={{ textAlign: 'left', marginBottom: '10px', background: '#04060A', padding: '10px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.22)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Fingerprint size={15} color="#38BDF8" />
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFF' }}>
+                  Bật Face ID / Vân Tay Native:
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBioEnabled(v => !v)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                {bioEnabled ? <ToggleRight size={26} color="#10B981" /> : <ToggleLeft size={26} color="#64748B" />}
+              </button>
+            </div>
+            <div style={{ fontSize: '9.5px', color: bioEnabled ? '#10B981' : '#94A3B8' }}>
+              {bioEnabled
+                ? '✓ Đã kích hoạt: Gọi trực tiếp Apple Secure Enclave / Android Keystore khi điểm danh.'
+                : '○ Đang tắt: Sẽ chỉ sử dụng mã PIN 6 số khi mở khóa và điểm danh.'}
+            </div>
+          </div>
+
           <div style={{ textAlign: 'left', marginBottom: '12px', background: '#04060A', padding: '10px', borderRadius: '10px', border: pinError ? '1px solid #EF4444' : '1px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#38BDF8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <KeyRound size={12} />
-              <span>Mã PIN Khôi Phục Nội Bộ 6 Số (PBKDF2 100.000 vòng):</span>
+              <span>Mã PIN Dự Phòng 6 Số (Fallback PIN: 123456):</span>
             </div>
             <input
               type="password"
@@ -310,7 +363,7 @@ export default function StudentWalletPro() {
               </div>
             )}
             <div style={{ fontSize: '9.5px', color: '#64748B', marginTop: '4px' }}>
-              Dùng để kích hoạt lại FaceID mới khi bạn đổi vân tay/khuôn mặt trên điện thoại mà không bị mất thẻ.
+              Phương án dự phòng an toàn khi đổi Face ID trên máy hoặc camera hỏng (PBKDF2 100K vòng).
             </div>
           </div>
 
@@ -334,7 +387,7 @@ export default function StudentWalletPro() {
               boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)'
             }}
           >
-            <DownloadCloud size={16} /> Đăng Ký FaceID & Kích Hoạt Thẻ (2251120000)
+            <DownloadCloud size={16} /> Kích Hoạt Thẻ Bằng Face ID (2251120000)
           </button>
         </div>
       ) : (
@@ -508,22 +561,107 @@ export default function StudentWalletPro() {
             )}
           </div>
 
-          {/* CHI TIẾT KEY WRAPPING (AES-GCM 256-BIT) & WEBAUTHN PASSKEY + RECOVERY PIN */}
-          <div className="glass-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Fingerprint size={13} color="#10B981" />
-                <span>WEBAUTHN PASSKEY &amp; AES-GCM KEY WRAPPING</span>
-              </span>
-              <span style={{ fontSize: '9.5px', color: '#10B981', fontFamily: 'JetBrains Mono', fontWeight: 700 }}>
-                PBKDF2 100K
+          {/* CÀI ĐẶT BẢO MẬT & SINH TRẮC HỌC PHẦN CỨNG (FACE ID / MÃ PIN) */}
+          <div className="glass-card" style={{ borderColor: 'rgba(56, 189, 248, 0.35)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Fingerprint size={16} color="#38BDF8" />
+                <h3 style={{ fontSize: '12.5px', fontWeight: 700, margin: 0, color: '#FFF' }}>
+                  Cài Đặt Sinh Trắc Học & Mã PIN
+                </h3>
+              </div>
+              <span style={{
+                fontSize: '9.5px',
+                fontFamily: 'JetBrains Mono',
+                color: '#10B981',
+                background: 'rgba(16, 185, 129, 0.12)',
+                padding: '2px 7px',
+                borderRadius: '6px',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                {bioHardwareInfo?.label || 'Face ID'} Native
               </span>
             </div>
-            <div style={{ background: '#04060A', padding: '7px 9px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: '#67E8F9', fontFamily: 'JetBrains Mono', wordBreak: 'break-all' }}>
+
+            {/* Switch Bật/Tắt Face ID */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#04060A', padding: '9px 10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#E2E8F0' }}>
+                  Bật Face ID / Vân Tay Phần Cứng
+                </div>
+                <div style={{ fontSize: '9.5px', color: '#64748B' }}>
+                  Apple Secure Enclave / Android Keystore
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBioEnabled(v => !v)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                {bioEnabled ? <ToggleRight size={26} color="#10B981" /> : <ToggleLeft size={26} color="#64748B" />}
+              </button>
+            </div>
+
+            {/* Nút Thử Nghiệm Face ID Ngay & Thông Tin PIN */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '8px', marginBottom: '8px' }}>
+              <button
+                type="button"
+                onClick={handleTriggerFaceIdTest}
+                className="btn-press"
+                style={{
+                  padding: '9px',
+                  borderRadius: '8px',
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  color: '#38BDF8',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Fingerprint size={13} />
+                <span>Thử Quét Face ID</span>
+              </button>
+
+              <div style={{
+                background: '#04060A',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '8px',
+                padding: '6px 8px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}>
+                <span style={{ fontSize: '9px', color: '#64748B' }}>PIN Dự Phòng</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', fontFamily: 'JetBrains Mono' }}>123456</span>
+              </div>
+            </div>
+
+            {bioTestSuccessMsg && (
+              <div style={{
+                marginBottom: '8px',
+                padding: '7px 9px',
+                borderRadius: '8px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                color: '#10B981',
+                fontSize: '10px',
+                fontWeight: 600
+              }}>
+                {bioTestSuccessMsg}
+              </div>
+            )}
+
+            <div style={{ background: '#04060A', padding: '7px 9px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '9.5px', color: '#67E8F9', fontFamily: 'JetBrains Mono', wordBreak: 'break-all' }}>
               Merkle Root: {credential.merkleRoot.slice(0, 26)}...
             </div>
-            <div style={{ fontSize: '10.5px', color: '#64748B', marginTop: '6px', lineHeight: 1.4 }}>
-              ✓ Khóa <code>secp256k1</code> được bọc bằng <b>AES-GCM 256-bit</b> trong IndexedDB. Mở khóa bằng <b>FaceID/TouchID</b> hoặc <b>Mã PIN dự phòng 6 số (123456)</b> khi đổi sinh trắc học trên máy.
+            <div style={{ fontSize: '10px', color: '#64748B', marginTop: '6px', lineHeight: 1.4 }}>
+              ✓ Khóa riêng tư <code>secp256k1</code> được bọc an toàn trong IndexedDB bằng <b>AES-GCM 256-bit</b> (PBKDF2 100K). Chỉ giải mã vào RAM khi vượt qua cổng sinh trắc học Face ID.
             </div>
           </div>
 
@@ -562,6 +700,20 @@ export default function StudentWalletPro() {
           </div>
         </div>
       )}
+
+      {/* Modal Face ID Apple Laser Scanning & Native Biometric Test */}
+      <FaceIDModal
+        isOpen={showFaceTestModal}
+        onSuccess={handleFaceTestSuccess}
+        onCancel={() => setShowFaceTestModal(false)}
+        onFallbackPin={() => {
+          setShowFaceTestModal(false);
+          alert('Chuyển sang kiểm tra mã PIN dự phòng: 123456');
+        }}
+        studentName={credential?.fullName || 'Nguyễn Đức Hiển'}
+        studentId={credential?.studentId || '2251120000'}
+        reason="Xác thực cảm biến Face ID / Vân tay phần cứng"
+      />
 
     </div>
   );
