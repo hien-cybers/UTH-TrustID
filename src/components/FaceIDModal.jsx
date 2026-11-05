@@ -47,7 +47,7 @@ export default function FaceIDModal({
             triggerScanSuccessFeedback();
             setTimeout(() => {
               if (isMounted) onSuccess();
-            }, 600);
+            }, 180);
           }
           return;
         }
@@ -60,15 +60,15 @@ export default function FaceIDModal({
         }
       }
 
-      // 2. Chế độ Quét Face ID Trực Quan (Apple Face ID Animation) trên Trình duyệt / Web / PWA / Demo (Siêu tốc < 1s)
+      // 2. Chế độ Quét Face ID Trực Quan (Apple Face ID Animation) phản hồi tức thì (< 380ms)
       const scanTimer = setTimeout(() => {
         if (!isMounted) return;
         setScanState('SUCCESS');
         triggerScanSuccessFeedback();
         setTimeout(() => {
           if (isMounted) onSuccess();
-        }, 350);
-      }, 600);
+        }, 140);
+      }, 240);
 
       return () => clearTimeout(scanTimer);
     };

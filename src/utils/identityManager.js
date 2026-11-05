@@ -6,6 +6,7 @@
 // 5. Chỉ giải mã tạm thời trong RAM khi cần ký số (RAM-Only ephemeral key), sau đó hủy ngay lập tức
 import { ethers } from 'ethers';
 import { setItem, getItem, removeItem } from './db';
+import { setActiveWallet, getActiveWallet } from './sessionKeyVault';
 
 // 1. Lấy hoặc tạo Device ID cố định cho thiết bị
 export function getOrCreateDeviceId() {
@@ -92,9 +93,10 @@ export async function activateStudentIdentity(studentData = {}, pin = '123456') 
     createdAt: Date.now()
   };
 
-  // Lưu trực tiếp vào IndexedDB bền vững
+  // Lưu trực tiếp vào IndexedDB bền vững & giữ ví trong RAM cho phiên hiện tại (< 50ms)
   await setItem('uth_secure_vault', identityVault);
   await setItem('uth_student_vc', studentVC);
+  setActiveWallet(randomWallet);
 
   // Tiêu hủy triệt để mọi key plaintext cũ trong storage
   await removeItem('uth_did_private_key');
@@ -150,12 +152,19 @@ export async function initializeRandomIdentity(studentInfo = {}, userPin = '1234
   await setItem('uth_secure_vault', secureVault);
   await setItem('uth_student_vc', studentVC);
   await removeItem('uth_did_private_key');
+  setActiveWallet(wallet);
 
   return { address: wallet.address, deviceId, wallet };
 }
 
-// 5. Giải mã tạm thời vào RAM để ký số rồi hủy ngay (Ephemeral Key in RAM)
+// 5. Giải mã tạm thời vào RAM để ký số (< 50ms nhờ Session In-Memory Vault, không lặp lại PBKDF2)
 export async function signWithDecryptedKey(userPin, messageHashOrString) {
+  const sessionWallet = getActiveWallet();
+  if (sessionWallet) {
+    const signature = await sessionWallet.signMessage(messageHashOrString);
+    return { signature, address: sessionWallet.address, deviceId: getOrCreateDeviceId() };
+  }
+
   let vault = await getItem('uth_secure_vault');
   if (typeof vault === 'string') {
     try { vault = JSON.parse(vault); } catch {}
@@ -168,8 +177,10 @@ export async function signWithDecryptedKey(userPin, messageHashOrString) {
       try { legacyVc = JSON.parse(legacyVc); } catch {}
     }
     if (legacyVc && legacyVc.privateKey) {
-      await initializeRandomIdentity(legacyVc, userPin, legacyVc.privateKey);
-      return await signWithDecryptedKey(userPin, messageHashOrString);
+      const w = new ethers.Wallet(legacyVc.privateKey);
+      setActiveWallet(w);
+      const signature = await w.signMessage(messageHashOrString);
+      return { signature, address: w.address, deviceId: getOrCreateDeviceId() };
     }
     throw new Error('Chưa khởi tạo ví danh tính!');
   }
@@ -191,7 +202,6 @@ export async function signWithDecryptedKey(userPin, messageHashOrString) {
     );
     privateKeyPlain = new TextDecoder().decode(decryptedBuf);
   } catch {
-    // Nếu thất bại và vault cũ chưa ghi iterations, thử fallback 100.000 vòng
     if (vaultIterations !== 100000) {
       try {
         const fallbackKey = await deriveEncryptionKey(userPin, salt, 100000);
@@ -209,14 +219,15 @@ export async function signWithDecryptedKey(userPin, messageHashOrString) {
     throw new Error('Mã PIN không chính xác, giải mã khóa thất bại!');
   }
 
-  // Khởi tạo ví trong RAM, ký thông điệp EIP-191
+  // Khởi tạo ví trong RAM, lưu vào Session In-Memory Vault để các lần ký tiếp theo đạt < 5ms
   const tempWallet = new ethers.Wallet(privateKeyPlain);
+  setActiveWallet(tempWallet);
   const signature = await tempWallet.signMessage(messageHashOrString);
 
-  // Hủy biến trong RAM ngay lập tức
+  // Hủy chuỗi plaintext trung gian
   privateKeyPlain = null;
 
-  return { signature, address: vault.address, deviceId: vault.deviceId };
+  return { signature, address: tempWallet.address, deviceId: vault.deviceId };
 }
 
 // 6. Kiểm tra trạng thái đã có vault mã hóa hay chưa

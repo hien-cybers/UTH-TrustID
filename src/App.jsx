@@ -15,7 +15,9 @@ import UthTrustLogo from './components/UthTrustLogo';
 import LiveClock from './components/LiveClock';
 import LockScreenModal from './components/LockScreenModal';
 import { useAutoLock } from './hooks/useAutoLock';
-import { startPreWarmGps } from './utils/gpsDriftFilter';
+import { preWarmGPS } from './utils/gpsDriftFilter';
+import { toggleTheme as applyRootTheme, getInitialThemeIsDark } from './utils/theme';
+import { clearActiveWallet } from './utils/sessionKeyVault';
 import './styles/appPro.css';
 
 import { Key, LogOut, ShieldAlert, Lock, Sun, Moon } from 'lucide-react';
@@ -24,7 +26,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
-  const [theme, setTheme] = useState(() => localStorage.getItem('uth_theme') || 'dark');
+  const [theme, setTheme] = useState(() => (getInitialThemeIsDark() ? 'dark' : 'light'));
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('uth_staff_user');
@@ -35,21 +37,26 @@ export default function App() {
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('uth_theme', theme);
+    applyRootTheme(theme === 'dark');
   }, [theme]);
 
-  // Pre-load GPS chạy nền ngay khi Splash Screen đang hiển thị để ứng dụng sẵn sàng tức thì
+  // Pre-warm GPS chạy nền ngay khi App mount để lấy sẵn toạ độ trong sessionStorage + RAM (< 5ms khi quét QR)
   useEffect(() => {
     try {
-      startPreWarmGps();
+      preWarmGPS();
     } catch {}
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('uth_staff_user');
     localStorage.removeItem('uth_staff_token');
+    clearActiveWallet();
     setCurrentUser(null);
+  };
+
+  const handleLockSession = () => {
+    clearActiveWallet();
+    lockNow();
   };
 
   const toggleTheme = () => {
@@ -57,7 +64,7 @@ export default function App() {
   };
 
   return (
-    <>
+    <div className="w-full min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col items-center justify-center">
       {/* Màn hình khởi động động (Animated Splash Screen) hiển thị khi vừa mở ứng dụng */}
       {showSplash && (
         <SplashScreen onFinish={() => setShowSplash(false)} />
@@ -74,18 +81,16 @@ export default function App() {
       {/* Giao diện chính của ứng dụng được nạp sẵn ngầm bên dưới */}
       <BrowserRouter>
       {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
-      <div className="mobile-viewport mobile-app-root">
+      <div className="mobile-viewport mobile-app-root bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         
         {/* Top Header Chuẩn Native iOS / Android (Tránh đè lên Tai Thỏ / Dynamic Island) */}
-        <header style={{
+        <header className="bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200" style={{
           flexShrink: 0,
           position: 'sticky',
           top: 0,
           zIndex: 50,
-          background: 'var(--bg-header, rgba(10, 14, 23, 0.95))',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid var(--border-hairline)',
           padding: '11px 15px',
           width: '100%'
         }}>
@@ -95,10 +100,10 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <UthTrustLogo size={30} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
-                  UTH TRUST<span style={{ color: '#38BDF8' }}>ID</span>
+                <div className="text-slate-900 dark:text-slate-100" style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
+                  UTH TRUST<span className="text-cyan-500">ID</span>
                 </div>
-                <div style={{ fontSize: '9px', color: 'var(--text-dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                <div className="text-slate-500 dark:text-slate-400" style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
                   {currentUser
                     ? (currentUser.role === 'ADMIN' ? 'ROLE: ROOT ISSUER' : 'ROLE: VERIFIER (GV)')
                     : 'ROLE: HOLDER (SINH VIÊN)'}
@@ -113,13 +118,10 @@ export default function App() {
               <button
                 onClick={toggleTheme}
                 title={theme === 'dark' ? 'Chuyển sang Chế độ Sáng (Light Mode)' : 'Chuyển sang Chế độ Tối (Dark Mode)'}
-                className="btn-press"
+                className="btn-press bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400"
                 style={{
                   padding: '5px 7px',
                   borderRadius: '8px',
-                  border: '1px solid var(--border-hairline)',
-                  background: 'rgba(56, 189, 248, 0.08)',
-                  color: '#38BDF8',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -130,15 +132,12 @@ export default function App() {
               </button>
 
               <button
-                onClick={lockNow}
+                onClick={handleLockSession}
                 title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
-                className="btn-press"
+                className="btn-press bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400"
                 style={{
                   padding: '5px 7px',
                   borderRadius: '8px',
-                  border: '1px solid rgba(56, 189, 248, 0.28)',
-                  background: 'rgba(56, 189, 248, 0.08)',
-                  color: '#38BDF8',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -156,7 +155,7 @@ export default function App() {
                     padding: '3px 7px',
                     borderRadius: '6px',
                     background: currentUser.role === 'ADMIN' ? 'rgba(16, 185, 129, 0.14)' : 'rgba(56, 189, 248, 0.14)',
-                    color: currentUser.role === 'ADMIN' ? '#10B981' : '#38BDF8',
+                    color: currentUser.role === 'ADMIN' ? '#10B981' : '#0284C7',
                     border: currentUser.role === 'ADMIN' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)'
                   }}>
                     {currentUser.role === 'ADMIN' ? 'Issuer' : 'Verifier'}
@@ -186,13 +185,10 @@ export default function App() {
               ) : (
                 <NavLink
                   to="/login"
-                  className="btn-press"
+                  className="btn-press bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400"
                   style={{
                     padding: '5px 8px',
                     borderRadius: '8px',
-                    border: '1px solid rgba(56, 189, 248, 0.3)',
-                    background: 'rgba(56, 189, 248, 0.1)',
-                    color: '#38BDF8',
                     fontSize: '10px',
                     fontWeight: 700,
                     textDecoration: 'none',
@@ -211,12 +207,12 @@ export default function App() {
         </header>
 
         {/* Vùng Nội Dung Cuộn Bên Trong Khung Điện Thoại */}
-        <main className="mobile-scroll-body">
+        <main className="mobile-scroll-body bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
           <Routes>
             {/* 1. VAI TRÒ HOLDER - SINH VIÊN (/student & /wallet) */}
             <Route path="/" element={<Navigate to="/student" replace />} />
-            <Route path="/student" element={<StudentWalletPro />} />
-            <Route path="/wallet" element={<StudentWalletPro />} />
+            <Route path="/student" element={<StudentWalletPro isDarkMode={theme === 'dark'} onToggleTheme={toggleTheme} />} />
+            <Route path="/wallet" element={<StudentWalletPro isDarkMode={theme === 'dark'} onToggleTheme={toggleTheme} />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/all-in-one" element={<UTHTrustIDApp />} />
 
@@ -281,6 +277,6 @@ export default function App() {
 
       </div>
       </BrowserRouter>
-    </>
+    </div>
   );
 }

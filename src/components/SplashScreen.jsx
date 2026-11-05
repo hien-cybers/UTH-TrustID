@@ -12,15 +12,21 @@ export default function SplashScreen({ onFinish }) {
   }, [onFinish]);
 
   useEffect(() => {
-    // 1. Sau 1.7 giây thì bắt đầu hiệu ứng tan dần (Fade out & Scale up)
+    if (sessionStorage.getItem('uth_splash_shown') === 'true') {
+      if (onFinishRef.current) onFinishRef.current();
+      return;
+    }
+    sessionStorage.setItem('uth_splash_shown', 'true');
+
+    // 1. Sau 0.45 giây thì bắt đầu hiệu ứng tan dần (Fade out & Scale up)
     const fadeTimer = setTimeout(() => {
       setFading(true);
-    }, 1700);
+    }, 450);
 
-    // 2. Sau 2.2 giây thì hủy hoàn toàn splash screen khỏi DOM
+    // 2. Sau 0.65 giây thì hủy hoàn toàn splash screen khỏi DOM
     const removeTimer = setTimeout(() => {
       if (onFinishRef.current) onFinishRef.current();
-    }, 2200);
+    }, 650);
 
     return () => {
       clearTimeout(fadeTimer);

@@ -31,11 +31,13 @@ import { registerBiometric, setupRecoveryPinAndWrapKey, checkBiometricAvailabili
 import { initializeRandomIdentity } from '../utils/identityManager';
 import { smartFetch } from '../utils/backendUrl';
 import { setItem, getItem, removeItem } from '../utils/db';
+import { setActiveWallet } from '../utils/sessionKeyVault';
 import FaceIDModal from '../components/FaceIDModal';
 import StudentMapView from '../components/StudentMapView';
+import StudentCardClean from '../components/StudentCardClean';
 import '../styles/animations.css';
 
-export default function StudentWalletPro() {
+export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
   const navigate = useNavigate();
   const [credential, setCredential] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -92,10 +94,14 @@ export default function StudentWalletPro() {
             merkleProof: DEFAULT_MERKLE_PROOF
           };
           setCredential(migratedVC);
+          try { setActiveWallet(new ethers.Wallet(migratedVC.privateKey)); } catch {}
           await setItem('uth_student_vc', migratedVC);
           return;
         }
         setCredential(savedVC);
+        if (savedVC.privateKey) {
+          try { setActiveWallet(new ethers.Wallet(savedVC.privateKey)); } catch {}
+        }
         return;
       }
 
@@ -116,6 +122,7 @@ export default function StudentWalletPro() {
           issuedAt: new Date().toLocaleDateString('vi-VN')
         };
         setCredential(autoVC);
+        try { setActiveWallet(new ethers.Wallet(autoVC.privateKey)); } catch {}
         await setItem('uth_student_vc', autoVC);
         return;
       }
@@ -134,6 +141,7 @@ export default function StudentWalletPro() {
           issuedAt: new Date().toLocaleDateString('vi-VN')
         };
         setCredential(preservedVC);
+        try { setActiveWallet(new ethers.Wallet(preservedVC.privateKey)); } catch {}
         await setItem('uth_student_vc', preservedVC);
       }
     };
@@ -437,388 +445,144 @@ export default function StudentWalletPro() {
           </button>
         </div>
       ) : (
-        /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> HIỂN THỊ THẺ APPLE WALLET + SELECTIVE DISCLOSURE */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> HIỂN THỊ STUDENT CARD CLEAN ĐỒNG BỘ MÀU LIGHT/DARK */
+        <div className="flex flex-col gap-3">
           {pinSavedNotice && (
-            <div style={{
-              padding: '8px 10px',
-              borderRadius: '10px',
-              background: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              color: '#10B981',
-              fontSize: '10.5px',
-              fontWeight: 700
-            }}>
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/35 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
               ✓ {pinSavedNotice}
             </div>
           )}
 
-          <div 
-            className="hero-pass"
-            style={{
-              borderColor: zkpMode ? 'rgba(16, 185, 129, 0.45)' : 'rgba(56, 189, 248, 0.35)',
-              clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)'
+          {/* COMPONENT THẺ SINH VIÊN ĐỒNG BỘ MÀU & CHẠY TỨC THÌ (< 50MS) */}
+          <StudentCardClean
+            student={{
+              name: zkpMode
+                ? 'Proof = { isUTHStudent: true, status: "Active" }'
+                : (credential.fullName || 'NGUYỄN ĐỨC HIỂN').toUpperCase(),
+              studentId: zkpMode ? 'isUTHStudent: true' : credential.studentId,
+              major: zkpMode ? 'status: "Active"' : credential.major,
+              faculty: 'Công nghệ Thông tin',
+              avatar: credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+              address: zkpMode ? '0x0000...ZKP' : credential.address,
+              validUntil: '2027',
+              status: zkpMode ? 'ZKP-LITE' : 'ACTIVE'
             }}
-          >
-            <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', opacity: 0.05, pointerEvents: 'none' }}>
-              <Cpu size={160} />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={13} color={zkpMode ? '#10B981' : '#38BDF8'} />
-                <span style={{ fontSize: '10px', color: zkpMode ? '#10B981' : '#38BDF8', fontWeight: 800, letterSpacing: '0.6px' }}>
-                  {zkpMode ? 'SELECTIVE DISCLOSURE (ZKP)' : 'ĐH GIAO THÔNG VẬN TẢI TP.HCM (UTH)'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{
-                  fontSize: '8.5px',
-                  fontWeight: 700,
-                  padding: '2px 6px',
-                  borderRadius: '6px',
-                  background: 'rgba(56, 189, 248, 0.14)',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
-                  color: '#38BDF8'
-                }}>
-                  FIDO2 Verified
-                </span>
-                <span style={{
-                  fontSize: '8.5px',
-                  fontWeight: 700,
-                  padding: '2px 6px',
-                  borderRadius: '6px',
-                  background: 'rgba(16, 185, 129, 0.14)',
-                  border: '1px solid rgba(16, 185, 129, 0.35)',
-                  color: '#10B981'
-                }}>
-                  Merkle Active
-                </span>
-              </div>
-            </div>
-
-            <div style={{ margin: '18px 0 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>
-                  {zkpMode ? 'CHỨNG MINH TỐI THIỂU (ẨN DANH TÍNH CÁ NHÂN)' : 'CHỦ THẺ SINH VIÊN'}
-                </div>
-                <div style={{ fontSize: zkpMode ? '14.5px' : '17px', fontWeight: 800, color: zkpMode ? '#10B981' : '#FFF', marginTop: '2px', wordBreak: 'break-word' }}>
-                  {zkpMode ? 'Proof = { isUTHStudent: true, status: "Active" }' : credential.fullName.toUpperCase()}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
-                  <div>
-                    <div style={{ fontSize: '9.5px', color: '#64748B' }}>{zkpMode ? 'THUỘC TÍNH' : 'MSSV'}</div>
-                    <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#E2E8F0', fontFamily: 'JetBrains Mono' }}>
-                      {zkpMode ? 'isUTHStudent: true' : credential.studentId}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '9.5px', color: '#64748B' }}>{zkpMode ? 'TRẠNG THÁI' : 'CHUYÊN NGÀNH'}</div>
-                    <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#E2E8F0' }}>
-                      {zkpMode ? 'status: "Active"' : credential.major}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Ảnh thẻ sinh viên (Avatar) */}
-              {!zkpMode && (
-                <div style={{ position: 'relative', flexShrink: 0, textAlign: 'center' }}>
-                  <img
-                    src={credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
-                    alt="Ảnh thẻ"
-                    style={{
-                      width: '54px',
-                      height: '54px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '2px solid rgba(56, 189, 248, 0.6)',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-                      display: 'block'
-                    }}
-                  />
-                  <label
-                    htmlFor="avatar-upload"
-                    style={{
-                      display: 'block',
-                      fontSize: '9px',
-                      color: '#38BDF8',
-                      cursor: 'pointer',
-                      marginTop: '4px',
-                      fontWeight: 600
-                    }}
-                  >
-                    Đổi ảnh
-                  </label>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleAvatarUpload}
-                  />
-                </div>
-              )}
-            </div>
-
-            {showPassQr && (
-              <div style={{
-                margin: '0 0 12px',
-                padding: '10px',
-                borderRadius: '12px',
-                background: 'rgba(4, 6, 10, 0.78)',
-                border: '1px solid rgba(56, 189, 248, 0.22)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <div style={{ background: '#FFF', padding: '5px', borderRadius: '8px', flexShrink: 0 }}>
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(
-                      zkpMode
-                        ? `UTH_ZKP_PROOF:{"isUTHStudent":true,"status":"Active"}`
-                        : `DID_PASS:${credential.studentId}:${credential.address}`
-                    )}`}
-                    alt="Pass QR"
-                    style={{ width: 66, height: 66, display: 'block' }}
-                  />
-                </div>
-                <div style={{ fontSize: '10px', color: '#94A3B8', lineHeight: 1.4 }}>
-                  {zkpMode
-                    ? 'Mã QR ZKP-lite: Chỉ xác nhận trạng thái Sinh viên UTH đang hoạt động mà không tiết lộ Họ tên hay MSSV.'
-                    : 'Mã QR Định danh cá nhân đã lưu trong két IndexedDB.'}
-                </div>
-              </div>
-            )}
-
-            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono' }}>
-                {zkpMode ? 'PII: [HIDDEN BY ZKP]' : `${credential.address.slice(0, 8)}...${credential.address.slice(-6)}`}
-              </div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  onClick={() => setShowPassQr(v => !v)}
-                  className="btn-press"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px', padding: '4px 8px', color: '#E2E8F0', fontSize: '10.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <QrCode size={12} color="#38BDF8" />
-                  <span>{showPassQr ? 'Ẩn QR' : 'Mã QR'}</span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(credential.address);
-                    setCopied(true);
-                    if (navigator.vibrate) navigator.vibrate(35);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="btn-press"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '6px', padding: '4px 8px', color: '#38BDF8', fontSize: '10.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  {copied ? <CheckCircle2 size={12} color="#10B981" /> : <Copy size={12} />}
-                  <span>{copied ? 'Đã chép' : 'Chép ví'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* NÚT CHÍNH (PRIMARY CTA): MỞ CAMERA QUÉT MÃ ĐIỂM DANH NGAY LẬP TỨC */}
-          <button
-            onClick={() => navigate('/scan')}
-            className="btn-press"
-            style={{
-              width: '100%',
-              padding: '13px 16px',
-              borderRadius: '14px',
-              border: '1px solid rgba(56, 189, 248, 0.45)',
-              background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-              color: '#FFF',
-              fontWeight: 800,
-              fontSize: '13.5px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: '0 6px 20px rgba(2, 132, 199, 0.35)'
-            }}
-          >
-            <QrCode size={18} />
-            <span>Mở Camera Quét Mã Điểm Danh Ngay</span>
-          </button>
+            onScanClick={() => navigate('/scan')}
+            onAvatarChange={!zkpMode ? handleAvatarUpload : undefined}
+            isDarkMode={isDarkMode}
+            onToggleTheme={onToggleTheme}
+          />
 
           {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}
-          <div className="glass-card" style={{ borderColor: zkpMode ? 'rgba(16, 185, 129, 0.4)' : undefined }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                <div style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: '8px',
-                  background: zkpMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  {zkpMode ? <EyeOff size={15} color="#10B981" /> : <Eye size={15} color="#38BDF8" />}
+          <div className="rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${zkpMode ? 'bg-emerald-500/15 text-emerald-500' : 'bg-cyan-500/10 text-cyan-500'}`}>
+                  {zkpMode ? <EyeOff size={15} /> : <Eye size={15} />}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
                     Tiết Lộ Có Chọn Lọc (ZKP-lite)
                   </div>
-                  <div style={{ fontSize: '10px', color: '#64748B' }}>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
                     Ẩn Họ tên, Ngày sinh, Địa chỉ ví khi qua cổng / thư viện
                   </div>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={handleToggleZkp}
-                className="btn-press"
-                style={{
-                  padding: '5px 10px',
-                  borderRadius: '8px',
-                  border: zkpMode ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(56, 189, 248, 0.3)',
-                  background: zkpMode ? '#10B981' : 'rgba(56, 189, 248, 0.12)',
-                  color: zkpMode ? '#04060A' : '#38BDF8',
-                  fontSize: '10px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  flexShrink: 0
-                }}
+                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold cursor-pointer flex-shrink-0 transition-all border ${
+                  zkpMode
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                    : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30'
+                }`}
               >
                 {zkpMode ? 'ĐANG BẬT ZKP' : 'Bật Ẩn Danh'}
               </button>
             </div>
 
             {zkpMode && (
-              <div style={{ marginTop: '8px', padding: '8px 10px', borderRadius: '8px', background: '#04060A', border: '1px solid rgba(16, 185, 129, 0.3)', fontSize: '10.5px', color: '#10B981', fontWeight: 700 }}>
+              <div className="mt-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold">
                 ✓ {zkpVerifiedBadge || 'Hợp lệ: Sinh viên UTH (Active)'}
               </div>
             )}
           </div>
 
           {/* CÀI ĐẶT BẢO MẬT & SINH TRẮC HỌC PHẦN CỨNG (FACE ID / MÃ PIN) */}
-          <div className="glass-card" style={{ borderColor: 'rgba(56, 189, 248, 0.35)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Fingerprint size={16} color="#38BDF8" />
-                <h3 style={{ fontSize: '12.5px', fontWeight: 700, margin: 0, color: '#FFF' }}>
+          <div className="rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+            <div className="flex justify-between items-center mb-2.5">
+              <div className="flex items-center gap-1.5">
+                <Fingerprint size={16} className="text-cyan-500" />
+                <h3 className="text-xs font-bold m-0 text-slate-900 dark:text-slate-100">
                   Cài Đặt Sinh Trắc Học & Mã PIN
                 </h3>
               </div>
-              <span style={{
-                fontSize: '9.5px',
-                fontFamily: 'JetBrains Mono',
-                color: '#10B981',
-                background: 'rgba(16, 185, 129, 0.12)',
-                padding: '2px 7px',
-                borderRadius: '6px',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
-              }}>
+              <span className="text-[9.5px] font-mono font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                 {bioHardwareInfo?.label || 'Face ID'} Native
               </span>
             </div>
 
             {/* Switch Bật/Tắt Face ID */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#04060A', padding: '9px 10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl mb-2 border border-slate-200 dark:border-slate-800">
               <div>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#E2E8F0' }}>
+                <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200">
                   Bật Face ID / Vân Tay Phần Cứng
                 </div>
-                <div style={{ fontSize: '9.5px', color: '#64748B' }}>
+                <div className="text-[9.5px] text-slate-500 dark:text-slate-400">
                   Apple Secure Enclave / Android Keystore
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setBioEnabled(v => !v)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                className="bg-transparent border-none cursor-pointer p-0"
               >
                 {bioEnabled ? <ToggleRight size={26} color="#10B981" /> : <ToggleLeft size={26} color="#64748B" />}
               </button>
             </div>
 
             {/* Nút Thử Nghiệm Face ID Ngay & Thông Tin PIN */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '8px', marginBottom: '8px' }}>
+            <div className="grid grid-cols-3 gap-2 mb-2">
               <button
                 type="button"
                 onClick={handleTriggerFaceIdTest}
-                className="btn-press"
-                style={{
-                  padding: '9px',
-                  borderRadius: '8px',
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
-                  color: '#38BDF8',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '5px',
-                  cursor: 'pointer'
-                }}
+                className="col-span-2 py-2 px-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
               >
                 <Fingerprint size={13} />
                 <span>Thử Quét Face ID</span>
               </button>
 
-              <div style={{
-                background: '#04060A',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '8px',
-                padding: '6px 8px',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center'
-              }}>
-                <span style={{ fontSize: '9px', color: '#64748B' }}>PIN Dự Phòng</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#38BDF8', fontFamily: 'JetBrains Mono' }}>123456</span>
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-1.5 px-2 text-center flex flex-col justify-center">
+                <span className="text-[9px] text-slate-500 dark:text-slate-400">PIN Dự Phòng</span>
+                <span className="text-[11px] font-bold font-mono text-cyan-600 dark:text-cyan-400">123456</span>
               </div>
             </div>
 
             {bioTestSuccessMsg && (
-              <div style={{
-                marginBottom: '8px',
-                padding: '7px 9px',
-                borderRadius: '8px',
-                background: 'rgba(16, 185, 129, 0.12)',
-                border: '1px solid rgba(16, 185, 129, 0.35)',
-                color: '#10B981',
-                fontSize: '10px',
-                fontWeight: 600
-              }}>
+              <div className="mb-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">
                 {bioTestSuccessMsg}
               </div>
             )}
 
-            <div style={{ background: '#04060A', padding: '7px 9px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '9.5px', color: '#67E8F9', fontFamily: 'JetBrains Mono', wordBreak: 'break-all' }}>
+            <div className="bg-slate-50 dark:bg-slate-950 py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[9.5px] text-cyan-600 dark:text-cyan-400 font-mono break-all">
               Merkle Root: {credential.merkleRoot.slice(0, 26)}...
             </div>
           </div>
 
           {/* BẢN ĐỒ VỊ TRÍ HIỆN DIỆN GPS PHẦN CỨNG & GOOGLE MAPS */}
-          <div className="glass-card" style={{ borderColor: 'rgba(56, 189, 248, 0.3)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showMap ? '10px' : '0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={17} style={{ color: '#38BDF8' }} />
-                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+          <div className="rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+            <div className="flex justify-between items-center" style={{ marginBottom: showMap ? '10px' : '0' }}>
+              <div className="flex items-center gap-2">
+                <MapPin size={17} className="text-cyan-500" />
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                   Vị Trí Hiện Diện GPS (Google Maps)
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => setShowMap(!showMap)}
-                style={{
-                  background: 'rgba(56, 189, 248, 0.12)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                  color: '#38BDF8',
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
+                className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer"
               >
                 {showMap ? 'Thu Gọn' : 'Xem Bản Đồ'}
               </button>
@@ -830,9 +594,9 @@ export default function StudentWalletPro() {
 
           {/* NÚT GỠ THẺ SỐ KHỎI MÁY */}
           <button
+            type="button"
             onClick={handleRevokeLocal}
-            className="btn-press"
-            style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', color: '#EF4444', fontSize: '11.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+            className="w-full py-2.5 bg-transparent border border-rose-500/25 rounded-xl text-rose-500 text-[11.5px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
           >
             <Trash2 size={13} /> Gỡ thẻ số khỏi máy này
           </button>

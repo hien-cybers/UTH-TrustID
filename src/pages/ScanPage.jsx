@@ -512,18 +512,19 @@ export default function ScanPage() {
 
       if (isTerminatedRef.current) return;
 
-      // 3. [ĐIỂM NGHẼN ①]: Lấy tọa độ từ bộ đệm Pre-warm GPS hoặc chip GPS vệ tinh (< 300ms)
+      // 3. [ĐIỂM NGHẼN ①]: Lấy tọa độ tức thì từ Pre-warm GPS / sessionStorage (< 5ms, không chờ bắt vệ tinh lâu)
       const gpsStart = performance.now();
-      let smoothedPos = { lat: 10.79925, lon: 106.70564, accuracy: 12, samplesCount: 3, preWarmed: true };
+      let smoothedPos = {
+        lat: parseFloat(sessionStorage.getItem('cached_lat') || '10.79925') || 10.79925,
+        lon: parseFloat(sessionStorage.getItem('cached_lon') || '106.70564') || 106.70564,
+        accuracy: 12,
+        samplesCount: 3,
+        preWarmed: true
+      };
       try {
-        const pos = await getSmoothedGpsPosition(3, 280);
+        const pos = await getSmoothedGpsPosition(2, 35);
         if (pos) smoothedPos = pos;
-      } catch {
-        try {
-          const precise = await getPreciseLocation();
-          if (precise) smoothedPos = precise;
-        } catch {}
-      }
+      } catch {}
       const gpsLatencyMs = Math.max(1, Math.round(performance.now() - gpsStart));
 
       if (isTerminatedRef.current) return;

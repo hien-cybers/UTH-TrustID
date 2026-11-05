@@ -22,15 +22,16 @@ export default function MobileNavigation({ currentUser }) {
           /* Tự động cộng thêm độ cao của thanh gạt Home Indicator trên iPhone */
           height: calc(60px + env(safe-area-inset-bottom, 0px));
           padding: 0 6px env(safe-area-inset-bottom, 0px);
-          background: rgba(10, 14, 23, 0.95);
+          background: var(--bg-header, rgba(15, 23, 42, 0.95));
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid var(--border-hairline, rgba(255, 255, 255, 0.08));
           display: flex;
           justify-content: space-around;
           align-items: center;
           z-index: 100;
           box-sizing: border-box;
+          transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
         @media (max-width: 480px) {
@@ -46,16 +47,16 @@ export default function MobileNavigation({ currentUser }) {
           justify-content: center;
           gap: 3px;
           text-decoration: none;
-          color: #64748B;
+          color: var(--text-dim, #64748B);
           font-size: 10px;
           font-weight: 600;
           transition: color 0.15s ease, transform 0.15s ease;
-          width: 25%;
+          width: 33%;
           height: 60px;
         }
 
         .tab-active {
-          color: #38BDF8 !important;
+          color: #06B6D4 !important;
         }
       `}</style>
 

@@ -7,7 +7,7 @@ export const LAN_BACKEND_URL = `http://${DEFAULT_LAN_IP}:5000`;
 
 // 2. Đường dẫn HTTPS Tunnel công khai (Hoạt động xuyên cả 4G/5G và Wi-Fi trên iPhone mà không bị iOS ATS chặn)
 // Lưu ý: Ứng dụng sẽ tự dò (resolveBackendUrl) sang LAN IP nếu Tunnel này đã chết, nên KHÔNG cần build lại .ipa chỉ vì đổi Tunnel.
-export const PUBLIC_TUNNEL_URL = 'https://stale-pens-hug.loca.lt';
+export const PUBLIC_TUNNEL_URL = 'https://fuzzy-drinks-own.loca.lt';
 
 const RESOLVED_KEY = 'uth_resolved_backend_url';
 let resolvedBaseUrl = null;
