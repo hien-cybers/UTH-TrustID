@@ -119,18 +119,16 @@ export default function UTHTrustIDApp() {
         return;
       }
 
-      // [QUY TẮC AN TOÀN THÔNG TIN ②]: Kiểm tra MSSV có nằm trong danh sách targetStudents hợp lệ không
-      const targetStudents = data?.targetStudents || data?.validStudentIds;
-      if (Array.isArray(targetStudents) && targetStudents.length > 0) {
-        if (!targetStudents.includes(credential.studentId)) {
-          console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${credential.studentId} không thuộc danh sách tái kiểm tra.`);
-          return;
-        }
+      // [QUY TẮC AN TOÀN THÔNG TIN ②]: Kiểm tra MSSV có nằm trong danh sách allowedStudents hợp lệ không
+      const allowedStudents = data?.allowedStudents || data?.targetStudents || data?.validStudentIds;
+      if (!Array.isArray(allowedStudents) || !allowedStudents.includes(credential.studentId)) {
+        console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${credential.studentId} không thuộc danh sách allowedStudents.`);
+        return;
       }
 
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       setSpotCheckData(data);
-      setSpotCountdown(data.timeoutSec || 60);
+      setSpotCountdown(data.duration || data.timeoutSec || 60);
     };
 
     const onSpotCheckConfirmed = () => {
@@ -142,6 +140,7 @@ export default function UTHTrustIDApp() {
       alert('❌ ' + message);
     };
 
+    socket.on('spot-check-trigger', onSpotCheckStart);
     socket.on('spot-check-start', onSpotCheckStart);
     socket.on('spot-check-confirmed', onSpotCheckConfirmed);
     socket.on('spot-check-failed', onSpotCheckFailed);

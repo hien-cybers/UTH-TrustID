@@ -31,9 +31,19 @@ export default function FacultyPortalPro() {
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Cấu hình Chính sách Mạng & Chế độ Màn chiếu (Projector Fullscreen)
+  // 2. State cấu hình tạo phòng của Giảng viên (Verifier)
+  const [sessionConfig, setSessionConfig] = useState({
+    courseCode: 'IT001.N12',
+    courseName: 'An toàn Mạng máy tính',
+    room: 'A2-301',
+    networkMode: 'CAMPUS_WIFI', // 'CAMPUS_WIFI' hoặc 'CELLULAR_ANY'
+    campusSsid: 'UTH_STUDENT_WIFI',
+    maxRadius: 30
+  });
+  const [isSessionCreated, setIsSessionCreated] = useState(false);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [networkPolicy, setNetworkPolicy] = useState('ALLOW_ALL'); // 'CAMPUS_WIFI_ONLY' | 'ALLOW_ALL'
+  const [networkPolicy, setNetworkPolicy] = useState('CAMPUS_WIFI_ONLY'); // 'CAMPUS_WIFI_ONLY' | 'ALLOW_ALL'
   const [session, setSession] = useState(null);
   const [isClosed, setIsClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -61,10 +71,12 @@ export default function FacultyPortalPro() {
         const name = raw.name || raw.fullName || raw.studentName || 'Sinh viên UTH';
         const numericDist = typeof raw.dist === 'number'
           ? raw.dist
+          : typeof raw.distance === 'number'
+          ? raw.distance
           : parseInt(String(raw.dist || raw.distance || '8').replace(/\D/g, ''), 10) || 8;
 
-        let lat = raw.lat !== undefined ? Number(raw.lat) : 10.79925;
-        let lon = raw.lon !== undefined ? Number(raw.lon) : 106.70562;
+        let lat = raw.coords?.lat !== undefined ? Number(raw.coords.lat) : (raw.lat !== undefined ? Number(raw.lat) : 10.79925);
+        let lon = raw.coords?.lon !== undefined ? Number(raw.coords.lon) : (raw.lon !== undefined ? Number(raw.lon) : 106.70562);
         if (raw.coordsStr && raw.coordsStr.includes(',')) {
           const [latS, lonS] = raw.coordsStr.split(',');
           if (!isNaN(parseFloat(latS))) lat = parseFloat(latS.trim());
@@ -80,7 +92,9 @@ export default function FacultyPortalPro() {
               avatar: raw.avatar || raw.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
               lat,
               lon,
+              coords: { lat, lon },
               dist: numericDist,
+              distance: numericDist,
               network: raw.network || raw.networkMode || 'Wi-Fi UTH',
               ip: raw.ip || raw.clientIp || '10.12.4.155',
               time: raw.time || raw.checkInTime || new Date().toLocaleTimeString('vi-VN', { hour12: false }),
@@ -95,11 +109,11 @@ export default function FacultyPortalPro() {
         });
       };
 
-      // Tự động khôi phục phiên điểm danh đang mở trên Backend khi chuyển qua lại giữa các tab
+      // Chỉ khôi phục phiên nếu Giảng viên đã chủ động khởi tạo phiên (userCreated === true)
       smartFetch('/api/session/active')
         .then((r) => r.json())
         .then((data) => {
-          if (data && (data.success || data.active) && data.session) {
+          if (data && (data.success || data.active) && data.session && data.session.userCreated) {
             const s = data.session;
             const restoredId = s.sessionId || s.id || 'SES_A2301';
             const restoredClosed = s.status === 'CLOSED';
@@ -107,12 +121,26 @@ export default function FacultyPortalPro() {
               id: restoredId,
               nonce: s.nonce,
               mode: s.radius <= 20 ? 'EXAM' : 'ATTENDANCE',
-              room: s.roomName || 'Giảng Đường A2-301',
+              courseCode: s.courseCode || 'IT001.N12',
+              courseName: s.courseName || 'An toàn Mạng máy tính',
+              room: s.room || s.roomName || 'A2-301',
+              campusSsid: s.campusSsid || 'UTH_STUDENT_WIFI',
+              networkMode: s.networkMode || (s.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY'),
               lat: s.coords?.lat ?? 10.7992,
               lon: s.coords?.lon ?? 106.7056,
-              radius: s.radius || 35,
+              radius: s.radius || 30,
               isClosed: restoredClosed
             });
+            setSessionConfig((prev) => ({
+              ...prev,
+              courseCode: s.courseCode || prev.courseCode,
+              courseName: s.courseName || prev.courseName,
+              room: s.room || prev.room,
+              networkMode: s.networkMode || (s.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY'),
+              campusSsid: s.campusSsid || prev.campusSsid,
+              maxRadius: s.radius || prev.maxRadius
+            }));
+            setIsSessionCreated(true);
             setCurrentNonce(s.nonce || '');
             setIsClosed(restoredClosed);
             if (s.networkPolicy) setNetworkPolicy(s.networkPolicy);
@@ -248,26 +276,39 @@ export default function FacultyPortalPro() {
     } catch {}
   };
 
-  // Mở Phiên Lớp Học Thường (35m, 5 phút) hoặc Phòng Thi Gắt (20m, 3 phút) trên Unified Pipeline
+  // Mở Phiên Điểm Danh hoặc Phòng Thi từ Form Thiết Lập Phiên của Giảng viên
   const handleStartSession = async (mode = 'ATTENDANCE') => {
     const sId = 'SES_' + Math.random().toString(36).substring(2, 7).toUpperCase();
     const fallbackNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
-    const radius = mode === 'EXAM' ? 20 : 35;
+    const radius = mode === 'EXAM' ? 20 : Number(sessionConfig.maxRadius || 30);
     const duration = mode === 'EXAM' ? 180 : 300;
-    const roomName = mode === 'EXAM' ? 'Phòng Thi A2-301 (Lockdown)' : 'Giảng Đường A2-301';
+    const courseCode = sessionConfig.courseCode?.trim() || 'IT001.N12';
+    const courseName = sessionConfig.courseName?.trim() || 'An toàn Mạng máy tính';
+    const room = sessionConfig.room?.trim() || 'A2-301';
+    const roomName = `${courseCode} - ${courseName} (${room})`;
+    const resolvedPolicy =
+      sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'CAMPUS_WIFI_ONLY' : 'ALLOW_ALL';
+
+    setNetworkPolicy(resolvedPolicy);
 
     // Hiển thị mã QR tức thì (0ms) ngay khi bấm Mở Phòng, đồng thời đồng bộ lên Backend
     const newSession = {
       id: sId,
       nonce: fallbackNonce,
       mode,
-      room: roomName,
+      courseCode,
+      courseName,
+      room,
+      roomName,
+      campusSsid: sessionConfig.campusSsid || 'UTH_STUDENT_WIFI',
+      networkMode: sessionConfig.networkMode,
       lat: 10.7992,
       lon: 106.7056,
       radius
     };
 
     setSession(newSession);
+    setIsSessionCreated(true);
     setIsClosed(false);
     setCurrentNonce(fallbackNonce);
     setTimeLeft(duration);
@@ -281,10 +322,16 @@ export default function FacultyPortalPro() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: sId,
+          courseCode,
+          courseName,
+          room,
           roomName,
+          campusSsid: sessionConfig.campusSsid || 'UTH_STUDENT_WIFI',
+          networkMode: sessionConfig.networkMode,
+          maxRadius: radius,
           coords: { lat: 10.7992, lon: 106.7056 },
           radius,
-          networkPolicy
+          networkPolicy: resolvedPolicy
         })
       });
       const data = await res.json();
@@ -398,64 +445,185 @@ export default function FacultyPortalPro() {
         </h1>
       </div>
 
-      {/* 1. THANH CẤU HÌNH MẠNG & CHÍNH SÁCH BẢO MẬT (WI-FI TRƯỜNG VS 4G) */}
-      <div className="glass-card stagger-1 card-interactive" style={{ padding: '12px', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10.5px', color: '#06B6D4', fontWeight: 700, letterSpacing: '0.4px' }}>
-            CHÍNH SÁCH MẠNG PHÒNG HỌC &amp; THI
-          </span>
-          <span style={{ fontSize: '9.5px', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono' }}>
-            {networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'UTH Subnet Guard' : '4G/5G + Wi-Fi'}
-          </span>
+      {/* 1. FORM THIẾT LẬP PHIÊN ĐIỂM DANH HOẶC KHU VỰC PHÁT MÃ QR XOAY VÒNG */}
+      {!isSessionCreated || !session ? (
+        <div className="glass-card stagger-1 card-interactive" style={{ padding: '16px', marginBottom: '12px', borderRadius: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
+              Thiết Lập Phiên Điểm Danh
+            </h3>
+            <span style={{ fontSize: '9.5px', color: '#06B6D4', fontFamily: 'JetBrains Mono', fontWeight: 700 }}>
+              {sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'UTH Wi-Fi Lock' : '4G/5G & Tự do'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: '8px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>
+                  Mã lớp học phần:
+                </label>
+                <input
+                  placeholder="Mã lớp học phần (VD: IT001.N12)"
+                  className="pro-input"
+                  value={sessionConfig.courseCode}
+                  onChange={(e) => setSessionConfig({ ...sessionConfig, courseCode: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>
+                  Phòng học &amp; Bán kính (m):
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '5px' }}>
+                  <input
+                    placeholder="Phòng (A2-301)"
+                    className="pro-input"
+                    value={sessionConfig.room}
+                    onChange={(e) => setSessionConfig({ ...sessionConfig, room: e.target.value })}
+                  />
+                  <input
+                    type="number"
+                    min="10"
+                    max="100"
+                    placeholder="30m"
+                    className="pro-input"
+                    value={sessionConfig.maxRadius}
+                    onChange={(e) => setSessionConfig({ ...sessionConfig, maxRadius: Number(e.target.value) || 30 })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>
+                Tên môn học:
+              </label>
+              <input
+                placeholder="Tên môn học (VD: An toàn Mạng máy tính)"
+                className="pro-input"
+                value={sessionConfig.courseName}
+                onChange={(e) => setSessionConfig({ ...sessionConfig, courseName: e.target.value })}
+              />
+            </div>
+
+            {/* Chọn chế độ mạng */}
+            <div>
+              <label style={{ display: 'block', fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '5px' }}>
+                Ràng buộc kết nối mạng:
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSessionConfig({ ...sessionConfig, networkMode: 'CAMPUS_WIFI' });
+                    setNetworkPolicy('CAMPUS_WIFI_ONLY');
+                  }}
+                  className="btn-press"
+                  style={{
+                    padding: '9px 8px',
+                    borderRadius: '10px',
+                    border: sessionConfig.networkMode === 'CAMPUS_WIFI' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
+                    background: sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'rgba(6, 182, 212, 0.14)' : 'var(--bg-inset)',
+                    color: sessionConfig.networkMode === 'CAMPUS_WIFI' ? '#06B6D4' : 'var(--text-muted)',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  📶 Wi-Fi Trường UTH
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSessionConfig({ ...sessionConfig, networkMode: 'CELLULAR_ANY' });
+                    setNetworkPolicy('ALLOW_ALL');
+                  }}
+                  className="btn-press"
+                  style={{
+                    padding: '9px 8px',
+                    borderRadius: '10px',
+                    border: sessionConfig.networkMode === 'CELLULAR_ANY' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
+                    background: sessionConfig.networkMode === 'CELLULAR_ANY' ? 'rgba(6, 182, 212, 0.14)' : 'var(--bg-inset)',
+                    color: sessionConfig.networkMode === 'CELLULAR_ANY' ? '#06B6D4' : 'var(--text-muted)',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🌐 4G/5G &amp; Tự do
+                </button>
+              </div>
+            </div>
+
+            {sessionConfig.networkMode === 'CAMPUS_WIFI' && (
+              <div>
+                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-dim)', fontWeight: 600, marginBottom: '3px' }}>
+                  SSID / Subnet Wi-Fi trường UTH:
+                </label>
+                <input
+                  placeholder="SSID Wi-Fi trường (VD: UTH_STUDENT_WIFI)"
+                  className="pro-input"
+                  style={{ fontFamily: 'JetBrains Mono', fontSize: '11px' }}
+                  value={sessionConfig.campusSsid}
+                  onChange={(e) => setSessionConfig({ ...sessionConfig, campusSsid: e.target.value })}
+                />
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.65fr', gap: '8px', marginTop: '4px' }}>
+              <button
+                type="button"
+                onClick={() => handleStartSession('ATTENDANCE')}
+                className="btn-press"
+                style={{
+                  width: '100%',
+                  padding: '12px 10px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #06B6D4, #0284C7)',
+                  color: '#FFF',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)'
+                }}
+              >
+                <Play size={15} />
+                <span>Khởi Tạo Phiên Điểm Danh</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStartSession('EXAM')}
+                className="btn-press"
+                style={{
+                  width: '100%',
+                  padding: '12px 8px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
+                  color: '#FFF',
+                  fontWeight: 800,
+                  fontSize: '11.5px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  boxShadow: '0 4px 14px rgba(124, 58, 237, 0.28)'
+                }}
+              >
+                <ShieldAlert size={14} />
+                <span>Phòng Thi (20m)</span>
+              </button>
+            </div>
+          </div>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
-          <button
-            onClick={() => setNetworkPolicy('CAMPUS_WIFI_ONLY')}
-            className="btn-press"
-            style={{
-              padding: '9px 8px',
-              borderRadius: '10px',
-              border: networkPolicy === 'CAMPUS_WIFI_ONLY' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
-              background: networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'rgba(6, 182, 212, 0.14)' : 'var(--bg-inset)',
-              color: networkPolicy === 'CAMPUS_WIFI_ONLY' ? '#06B6D4' : 'var(--text-muted)',
-              fontSize: '11px',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            <Wifi size={13} /> Chỉ Wi-Fi Trường (UTH)
-          </button>
-
-          <button
-            onClick={() => setNetworkPolicy('ALLOW_ALL')}
-            className="btn-press"
-            style={{
-              padding: '9px 8px',
-              borderRadius: '10px',
-              border: networkPolicy === 'ALLOW_ALL' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
-              background: networkPolicy === 'ALLOW_ALL' ? 'rgba(16, 185, 129, 0.14)' : 'var(--bg-inset)',
-              color: networkPolicy === 'ALLOW_ALL' ? '#10B981' : 'var(--text-muted)',
-              fontSize: '11px',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            <Smartphone size={13} /> Cho Phép 4G / Wi-Fi
-          </button>
-        </div>
-      </div>
-
-      {/* 2. KHU VỰC PHÁT MÃ QR ĐIỂM DANH / PHÒNG THI (HỖ TRỢ PROJECTOR FULLSCREEN OVERLAY) */}
-      {session ? (
+      ) : (
         <div
           className={isFullscreen ? '' : 'glass-card stagger-2 card-interactive'}
           style={
@@ -482,7 +650,7 @@ export default function FacultyPortalPro() {
                 }
           }
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: isFullscreen ? '560px' : '100%', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: isFullscreen ? '560px' : '100%', marginBottom: '8px' }}>
             <span style={{
               fontSize: isFullscreen ? '14px' : '11px',
               color: isClosed ? '#EF4444' : '#10B981',
@@ -492,7 +660,7 @@ export default function FacultyPortalPro() {
               borderRadius: '999px',
               border: isClosed ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(16,185,129,0.4)'
             }}>
-              ● {isClosed ? 'ĐÃ ĐÓNG PHÒNG' : session.mode === 'EXAM' ? 'PHÒNG THI LOCKDOWN (≤ 20m)' : 'LỚP HỌC ĐANG MỞ (≤ 35m)'}
+              ● {isClosed ? 'ĐÃ ĐÓNG PHÒNG' : `${session.courseCode || 'IT001'} • Phòng ${session.room || 'A2-301'} (≤ ${session.radius}m)`}
             </span>
 
             <div style={{ display: 'flex', gap: '6px' }}>
@@ -541,6 +709,13 @@ export default function FacultyPortalPro() {
                 <span>{isFullscreen ? 'Thu Nhỏ' : 'Phóng To'}</span>
               </button>
             </div>
+          </div>
+
+          <div style={{ fontSize: isFullscreen ? '15px' : '11.5px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
+            {session.courseName || 'An toàn Mạng máy tính'} •{' '}
+            <span style={{ color: '#06B6D4', fontFamily: 'JetBrains Mono', fontSize: '10.5px' }}>
+              {session.networkMode === 'CAMPUS_WIFI' ? `📶 ${session.campusSsid || 'UTH_STUDENT_WIFI'}` : '🌐 4G/5G & Tự do'}
+            </span>
           </div>
 
           {/* QR Code Canvas nội bộ tốc độ 0ms cho màn chiếu (hoạt động cả khi Offline/Hotspot) */}
@@ -622,73 +797,27 @@ export default function FacultyPortalPro() {
             </button>
           </div>
 
-          {isClosed && (
-            <button
-              onClick={() => { setSession(null); setIsClosed(false); }}
-              className="btn-press"
-              style={{
-                width: '100%',
-                marginTop: '8px',
-                padding: '9px 12px',
-                borderRadius: '10px',
-                border: '1px solid rgba(56, 189, 248, 0.4)',
-                background: 'rgba(56, 189, 248, 0.15)',
-                color: '#38BDF8',
-                fontSize: '11.5px',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              + Mở Phiên Điểm Danh Mới
-            </button>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
           <button
-            onClick={() => handleStartSession('ATTENDANCE')}
+            onClick={() => {
+              setSession(null);
+              setIsSessionCreated(false);
+              setIsClosed(false);
+            }}
             className="btn-press"
             style={{
-              padding: '13px 10px',
-              background: 'linear-gradient(135deg, #0284C7, #0369A1)',
-              border: 'none',
-              borderRadius: '12px',
-              color: '#FFF',
+              width: '100%',
+              marginTop: '8px',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              background: 'rgba(56, 189, 248, 0.1)',
+              color: '#0284C7',
+              fontSize: '11px',
               fontWeight: 700,
-              fontSize: '12px',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.28)'
+              cursor: 'pointer'
             }}
           >
-            <Play size={18} />
-            <span>Mở Lớp Học Thường (35m)</span>
-          </button>
-
-          <button
-            onClick={() => handleStartSession('EXAM')}
-            className="btn-press"
-            style={{
-              padding: '13px 10px',
-              background: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
-              border: 'none',
-              borderRadius: '12px',
-              color: '#FFF',
-              fontWeight: 700,
-              fontSize: '12px',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 4px 14px rgba(124, 58, 237, 0.28)'
-            }}
-          >
-            <ShieldAlert size={18} />
-            <span>Mở Phòng Thi Gắt (20m)</span>
+            ⚙ Thiết Lập / Tạo Phiên Điểm Danh Mới
           </button>
         </div>
       )}
@@ -778,28 +907,53 @@ export default function FacultyPortalPro() {
                     </div>
                   </div>
 
-                  {/* NÚT MỞ BẢN ĐỒ GOOGLE MAPS IFRAME NHÚNG TRỰC TIẾP */}
-                  <button
-                    onClick={() => setSelectedStudentLocation(item)}
-                    className="btn-press"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      background: 'rgba(56, 189, 248, 0.12)',
-                      border: '1px solid rgba(56, 189, 248, 0.3)',
-                      color: '#38BDF8',
-                      padding: '6px 9px',
-                      borderRadius: '8px',
-                      fontSize: '10.5px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      flexShrink: 0
-                    }}
-                  >
-                    <MapPin size={12} />
-                    <span>Xem Vị Trí</span>
-                  </button>
+                  {/* LINK MỞ TRỰC TIẾP VỊ TRÍ GOOGLE MAPS VỆ TINH + NÚT BẢN ĐỒ NHÚNG MINI */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px', flexShrink: 0 }}>
+                    <a
+                      href={`https://www.google.com/maps?q=${item.coords?.lat ?? item.lat ?? 10.7992},${item.coords?.lon ?? item.lon ?? 106.7056}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-press"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: 'rgba(59, 130, 246, 0.12)',
+                        border: '1px solid rgba(59, 130, 246, 0.35)',
+                        color: '#3B82F6',
+                        padding: '5px 8px',
+                        borderRadius: '8px',
+                        fontSize: '10px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontWeight: 700,
+                        textDecoration: 'none'
+                      }}
+                      title="Xem vị trí thực tế trên Google Maps"
+                    >
+                      <span>📍 Xem Vị Trí ({item.distance ?? item.dist}m)</span>
+                    </a>
+
+                    <button
+                      onClick={() => setSelectedStudentLocation(item)}
+                      className="btn-press"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: 'rgba(6, 182, 212, 0.1)',
+                        border: '1px solid rgba(6, 182, 212, 0.28)',
+                        color: '#06B6D4',
+                        padding: '3px 7px',
+                        borderRadius: '6px',
+                        fontSize: '9.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <MapPin size={10} />
+                      <span>Bản Đồ Nhúng</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))

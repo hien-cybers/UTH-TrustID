@@ -183,6 +183,20 @@ export default function ScanPage() {
         })
         .catch(() => {});
 
+      socket.on('session-created', (payload) => {
+        if (payload?.sessionId) {
+          activeSessionRef.current = {
+            sessionId: payload.sessionId,
+            nonce: payload.nonce || 'NONCE_LIVE'
+          };
+          socket.emit('join-session', {
+            sessionId: payload.sessionId,
+            role: 'STUDENT',
+            studentId: myStudentIdRef.current || '2251120000'
+          });
+        }
+      });
+
       socket.on('nonce-updated', (payload) => {
         if (payload?.nonce) {
           activeSessionRef.current = {
@@ -217,30 +231,29 @@ export default function ScanPage() {
 
       // Khi Giảng viên bấm "Tái Kiểm Tra Đột Xuất (Spot-Check)": Rung máy & yêu cầu quét lại FaceID trong 60s
       const handleSpotCheck = (payload) => {
-        // [QUY TẮC AN TOÀN THÔNG TIN ①]: Bỏ qua hoàn toàn nếu sinh viên CHƯA điểm danh thành công ban đầu
+        // 1. Nếu sinh viên chưa từng điểm danh -> BỎ QUA NGAY
         if (!hasCheckedInRef.current) {
           console.warn('[SpotCheck] Từ chối kích hoạt: Sinh viên chưa điểm danh thành công ban đầu!');
           return;
         }
 
-        // [QUY TẮC AN TOÀN THÔNG TIN ②]: Kiểm tra MSSV có nằm trong danh sách targetStudents hợp lệ không
-        const targetStudents = payload?.targetStudents || payload?.validStudentIds;
+        // 2. Nếu MSSV của mình không nằm trong danh sách đã có mặt (allowedStudents) -> BỎ QUA NGAY
+        const allowedStudents = payload?.allowedStudents || payload?.targetStudents || payload?.validStudentIds;
         const currentMssv = myStudentIdRef.current || '2251120000';
-        if (Array.isArray(targetStudents) && targetStudents.length > 0) {
-          if (!targetStudents.includes(currentMssv)) {
-            console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${currentMssv} không nằm trong danh sách được phép tái kiểm tra.`);
-            return;
-          }
+        if (!Array.isArray(allowedStudents) || !allowedStudents.includes(currentMssv)) {
+          console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${currentMssv} không nằm trong danh sách allowedStudents.`);
+          return;
         }
 
+        // 3. Đủ điều kiện -> Rung thiết bị và bật thông báo + nút Face ID
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate([100, 50, 100, 50, 200]);
+          navigator.vibrate([200, 100, 200]);
         }
         triggerSessionTerminatedFeedback();
         setSpotCheckRequest(
           payload || { sessionId: 'SES_A2301', spotNonce: 'SPOT_' + Date.now(), challenge: 'SPOT_' + Date.now() }
         );
-        setSpotCheckCountdown(payload?.timeoutSec || payload?.timeoutSeconds || 60);
+        setSpotCheckCountdown(payload?.duration || payload?.timeoutSec || payload?.timeoutSeconds || 60);
       };
 
       socket.on('spot-check-trigger', handleSpotCheck);
