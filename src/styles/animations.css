@@ -86,29 +86,93 @@
   display: inline-block;
 }
 
-/* 4. Hiệu ứng xuất hiện mềm mượt cho danh sách điểm danh (Slide In Fade) */
+/* 4. Hiệu ứng chuyển trang & xuất hiện mềm mượt (Spring Slide-Up Fade) */
 @keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px) scale(0.99);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes attendeeFlash {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: none;
+  }
+}
+
+.page-enter,
 .animate-slide-in {
-  animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideInUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* 5. Phản hồi xúc giác khi chạm (Tactile Tap Feedback) */
-.btn-tactile {
-  transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), opacity 0.12s ease;
+.animate-fade-scale {
+  animation: fadeInScale 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.btn-tactile:active {
+.attendee-row-enter {
+  animation: attendeeFlash 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger-1 {
+  animation: slideInUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.04s both;
+}
+
+.stagger-2 {
+  animation: slideInUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.09s both;
+}
+
+.stagger-3 {
+  animation: slideInUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+}
+
+.stagger-4 {
+  animation: slideInUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.19s both;
+}
+
+/* 5. Hiệu ứng nâng thẻ (Interactive Card Elevation) */
+.card-interactive {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-1.5px);
+}
+
+/* 6. Phản hồi xúc giác khi chạm (Tactile Tap Feedback) */
+.btn-tactile,
+.btn-press {
+  transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), opacity 0.12s ease, box-shadow 0.15s ease;
+}
+
+.btn-tactile:active,
+.btn-press:active {
   transform: scale(0.96);
   opacity: 0.88;
 }
-

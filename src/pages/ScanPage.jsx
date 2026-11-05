@@ -83,6 +83,7 @@ export default function ScanPage() {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const hasCheckedInRef = useRef(false);
   const myStudentIdRef = useRef('2251120000');
+  const activeSessionRef = useRef(null);
   const motionTelemetryRef = useRef({ beta: 42.5, gamma: -3.2, accelMag: 9.81 });
 
   // Khởi tạo nạp trước MSSV của sinh viên từ IndexedDB
@@ -164,6 +165,33 @@ export default function ScanPage() {
       socketRef.current = socket;
       retargetSocket(socket).catch(() => {});
 
+      // Nạp sẵn phiên đang mở từ Backend vào RAM nền để khi bấm Quét Nhanh tốn 0ms
+      smartFetch('/api/session/active')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.success && d?.session) {
+            activeSessionRef.current = {
+              sessionId: d.session.sessionId,
+              nonce: d.session.nonce
+            };
+            socket.emit('join-session', {
+              sessionId: d.session.sessionId,
+              role: 'STUDENT',
+              studentId: myStudentIdRef.current || '2251120000'
+            });
+          }
+        })
+        .catch(() => {});
+
+      socket.on('nonce-updated', (payload) => {
+        if (payload?.nonce) {
+          activeSessionRef.current = {
+            sessionId: payload.sessionId || activeSessionRef.current?.sessionId || 'SES_A2301',
+            nonce: payload.nonce
+          };
+        }
+      });
+
       const handleClosed = (payload) => {
         // Nếu sinh viên ĐÃ điểm danh thành công: Giữ nguyên con dấu Liveness Stamp và giao diện thành công!
         if (hasCheckedInRef.current) {
@@ -215,6 +243,7 @@ export default function ScanPage() {
         setSpotCheckCountdown(payload?.timeoutSec || payload?.timeoutSeconds || 60);
       };
 
+      socket.on('spot-check-trigger', handleSpotCheck);
       socket.on('spot-check-start', handleSpotCheck);
       socket.on('spot-check-requested', handleSpotCheck);
 
@@ -484,16 +513,22 @@ export default function ScanPage() {
       const sessionLon = qrResult.sessionLon !== undefined && !isNaN(qrResult.sessionLon) ? qrResult.sessionLon : parseFloat(parts[4] || '106.7056');
       const policy = qrResult.policy || parts[6] || 'HYBRID_4G_5G';
 
-      // Nếu bấm nút Quét Thử Nhanh (SES_A2301), tự động lấy Session đang mở thực tế của Giảng viên trên Backend
+      // Nếu bấm nút Quét Thử Nhanh (SES_A2301), ưu tiên lấy ngay từ RAM (0ms), hoặc lấy từ Backend
       if (!isOfflineMode && sessionId === 'SES_A2301') {
-        try {
-          const activeRes = await smartFetch('/api/session/active');
-          const activeData = await activeRes.json();
-          if (activeData.success && activeData.session) {
-            sessionId = activeData.session.sessionId;
-            nonce = activeData.session.nonce;
-          }
-        } catch {}
+        if (activeSessionRef.current?.sessionId && activeSessionRef.current?.nonce) {
+          sessionId = activeSessionRef.current.sessionId;
+          nonce = activeSessionRef.current.nonce;
+        } else {
+          try {
+            const activeRes = await smartFetch('/api/session/active');
+            const activeData = await activeRes.json();
+            if (activeData.success && activeData.session) {
+              sessionId = activeData.session.sessionId;
+              nonce = activeData.session.nonce;
+              activeSessionRef.current = { sessionId, nonce };
+            }
+          } catch {}
+        }
       }
 
       if (sessionId && socketRef.current) {
@@ -735,7 +770,7 @@ export default function ScanPage() {
   };
 
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="page-enter" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
       
       {/* Top Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
@@ -743,11 +778,11 @@ export default function ScanPage() {
           onClick={() => navigate('/wallet')}
           className="btn-press"
           style={{
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-inset)',
+            border: '1px solid var(--border-hairline)',
             borderRadius: '8px',
             padding: '5px 10px',
-            color: '#94A3B8',
+            color: 'var(--text-muted)',
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
@@ -775,9 +810,9 @@ export default function ScanPage() {
               gap: '4px',
               padding: '5px 8px',
               borderRadius: '8px',
-              border: simBiometricChanged ? '1px solid rgba(244, 63, 94, 0.5)' : '1px solid rgba(56, 189, 248, 0.3)',
-              background: simBiometricChanged ? 'rgba(244, 63, 94, 0.15)' : 'rgba(56, 189, 248, 0.1)',
-              color: simBiometricChanged ? '#FDA4AF' : '#38BDF8',
+              border: simBiometricChanged ? '1px solid rgba(244, 63, 94, 0.5)' : '1px solid rgba(6, 182, 212, 0.3)',
+              background: simBiometricChanged ? 'rgba(244, 63, 94, 0.15)' : 'rgba(6, 182, 212, 0.1)',
+              color: simBiometricChanged ? '#F43F5E' : '#06B6D4',
               fontSize: '10px',
               fontWeight: 700,
               cursor: 'pointer'
@@ -818,10 +853,10 @@ export default function ScanPage() {
       </div>
 
       <div>
-        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 3px', color: '#FFF' }}>
+        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 3px', color: 'var(--text-main)' }}>
           Quét Mã Điểm Danh (Holder)
         </h1>
-        <p style={{ margin: 0, fontSize: '11px', color: '#64748B', lineHeight: 1.4 }}>
+        <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.4 }}>
           WebAuthn Biometric Gate • Key Wrapping AES-GCM + PIN 6 Số • Pre-warm GPS (<code>&lt; 300ms</code>)
         </p>
       </div>
@@ -1055,23 +1090,23 @@ export default function ScanPage() {
 
       {/* Kết Quả Xử Lý */}
       {scanStatus && (
-        <div className="glass-card">
+        <div className="glass-card animate-fade-scale">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             {scanStatus.type === 'SUCCESS' && <CheckCircle2 size={18} color="#10B981" />}
             {scanStatus.type === 'ERROR' && <AlertTriangle size={18} color="#EF4444" />}
-            {scanStatus.type === 'PROCESSING' && <ShieldCheck size={18} color="#38BDF8" />}
+            {scanStatus.type === 'PROCESSING' && <ShieldCheck size={18} color="#06B6D4" />}
             
             <h3 style={{
               fontSize: '13px',
               fontWeight: 800,
               margin: 0,
-              color: scanStatus.type === 'SUCCESS' ? '#10B981' : (scanStatus.type === 'ERROR' ? '#EF4444' : '#38BDF8')
+              color: scanStatus.type === 'SUCCESS' ? '#10B981' : (scanStatus.type === 'ERROR' ? '#EF4444' : '#06B6D4')
             }}>
               {scanStatus.title}
             </h3>
           </div>
 
-          <p style={{ fontSize: '11.5px', color: '#94A3B8', margin: '0 0 10px', lineHeight: 1.45 }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px', lineHeight: 1.45 }}>
             {scanStatus.message}
           </p>
 

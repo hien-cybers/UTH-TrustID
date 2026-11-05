@@ -271,35 +271,35 @@ export default function AdminDashboardPro() {
   };
 
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div className="page-enter" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
       
       {/* Header Quản Trị */}
       <div>
-        <div style={{ fontSize: '10.5px', color: '#38BDF8', fontWeight: 700, letterSpacing: '0.4px' }}>
+        <div style={{ fontSize: '10.5px', color: '#0284C7', fontWeight: 700, letterSpacing: '0.4px' }}>
           SYSTEM CONSOLE • ROOT ADMIN (ISSUER)
         </div>
-        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '2px 0 0', color: '#FFF' }}>
+        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-main)' }}>
           Trung Tâm Quản Trị Danh Tính
         </h1>
-        <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#64748B' }}>
+        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
           Sổ bộ Thu hồi Độc lập 2 Tầng (Static Merkle Root + <code>mapping isRevoked</code>)
         </p>
       </div>
 
       {/* 1. BẢNG ĐIỀU KHIỂN AN NINH (SECURITY CONSOLE - #11) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-        <div className="glass-card" style={{ padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8' }}>
+      <div className="stagger-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div className="glass-card card-interactive" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Tổng DID</span>
-            <Users size={15} color="#38BDF8" />
+            <Users size={15} color="#0284C7" />
           </div>
-          <div style={{ fontSize: '21px', fontWeight: 800, color: '#FFF', marginTop: '4px' }} className="font-mono">
+          <div style={{ fontSize: '21px', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }} className="font-mono">
             {stats.totalDID}
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8' }}>
+        <div className="glass-card card-interactive" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Đang Hoạt Động</span>
             <CheckCircle size={15} color="#10B981" />
           </div>
@@ -308,8 +308,8 @@ export default function AdminDashboardPro() {
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8' }}>
+        <div className="glass-card card-interactive" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>Đã Thu Hồi</span>
             <AlertTriangle size={15} color="#EF4444" />
           </div>
@@ -318,32 +318,32 @@ export default function AdminDashboardPro() {
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8' }}>
+        <div className="glass-card card-interactive" style={{ padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
             <span style={{ fontSize: '11px', fontWeight: 600 }}>IDS Cảnh Báo</span>
             <ShieldAlert size={15} color="#F59E0B" />
           </div>
-          <div style={{ fontSize: '21px', fontWeight: 800, color: stats.idsAlerts > 0 ? '#F59E0B' : '#FFF', marginTop: '4px' }} className="font-mono">
+          <div style={{ fontSize: '21px', fontWeight: 800, color: stats.idsAlerts > 0 ? '#F59E0B' : 'var(--text-main)', marginTop: '4px' }} className="font-mono">
             {stats.idsAlerts}
           </div>
         </div>
       </div>
 
       {/* 2. CẤP PHÁT THEO LÔ BẰNG MERKLE TREE (BATCH VC ISSUANCE - #10) */}
-      <div className="glass-card">
+      <div className="glass-card stagger-2">
         <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '6px' }}>
-          <Layers size={16} color="#38BDF8" />
-          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: '#FFF' }}>
+          <Layers size={16} color="#0284C7" />
+          <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
             Tầng 1: Phát Hành Lô Merkle Tree Cố Định (Batch VC)
           </h2>
         </div>
-        <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: '#94A3B8', lineHeight: 1.4 }}>
+        <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
           Băm danh sách sinh viên bằng <code>keccak256</code>, tạo <code>MerkleRoot</code> cố định cho cả học kỳ và lưu <code>merkleProof</code> vào IndexedDB.
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-          <Terminal size={12} color="#64748B" />
-          <span style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748B' }}>
+          <Terminal size={12} color="var(--text-muted)" />
+          <span style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-muted)' }}>
             Mảng dữ liệu JSON sinh viên:
           </span>
         </div>
@@ -355,10 +355,10 @@ export default function AdminDashboardPro() {
           style={{
             width: '100%',
             height: '105px',
-            background: '#050811',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-inset)',
+            border: '1px solid var(--border-hairline)',
             borderRadius: '10px',
-            color: '#38BDF8',
+            color: '#0284C7',
             fontFamily: 'JetBrains Mono',
             fontSize: '10.5px',
             lineHeight: 1.4,
@@ -428,18 +428,18 @@ export default function AdminDashboardPro() {
       </div>
 
       {/* 2.5. ADM_02: NEO MERKLE ROOT ON-CHAIN (POLYGON AMOY TESTNET - CHAIN ID 80002) */}
-      <div className="glass-card" style={{ borderColor: 'rgba(168, 85, 247, 0.35)' }}>
+      <div className="glass-card stagger-3" style={{ borderColor: 'rgba(168, 85, 247, 0.35)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <Cpu size={16} color="#C084FC" />
-            <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: '#FFF' }}>
+            <Cpu size={16} color="#9333EA" />
+            <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
               ADM_02: Neo Merkle Root On-Chain (Polygon Amoy)
             </h2>
           </div>
           <span style={{
             fontSize: '9.5px',
             fontFamily: 'JetBrains Mono',
-            color: '#C084FC',
+            color: '#9333EA',
             background: 'rgba(168, 85, 247, 0.15)',
             padding: '2px 7px',
             borderRadius: '6px',
@@ -449,13 +449,13 @@ export default function AdminDashboardPro() {
           </span>
         </div>
 
-        <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: '#94A3B8', lineHeight: 1.45 }}>
+        <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: 'var(--text-muted)', lineHeight: 1.45 }}>
           Đẩy mã băm gốc 32-byte <code>currentMerkleRoot</code> lên Smart Contract <code>DIDRegistry.sol</code> trên mạng Polygon Amoy Testnet làm căn cứ đối soát minh bạch bất biến cho toàn trường.
         </p>
 
         <div style={{
-          background: '#050811',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--bg-inset)',
+          border: '1px solid var(--border-hairline)',
           borderRadius: '10px',
           padding: '10px',
           marginBottom: '10px',
@@ -464,18 +464,18 @@ export default function AdminDashboardPro() {
           gap: '6px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px' }}>
-            <span style={{ color: '#64748B' }}>Smart Contract:</span>
-            <span style={{ fontFamily: 'JetBrains Mono', color: '#A855F7', fontWeight: 600 }}>0x27a5D6e269226B2b347F9B935c1f01D81b6c0e86</span>
+            <span style={{ color: 'var(--text-muted)' }}>Smart Contract:</span>
+            <span style={{ fontFamily: 'JetBrains Mono', color: '#9333EA', fontWeight: 600 }}>0x27a5D6e269226B2b347F9B935c1f01D81b6c0e86</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px' }}>
-            <span style={{ color: '#64748B' }}>Merkle Root hiện hành:</span>
-            <span style={{ fontFamily: 'JetBrains Mono', color: '#38BDF8', fontWeight: 600 }}>
+            <span style={{ color: 'var(--text-muted)' }}>Merkle Root hiện hành:</span>
+            <span style={{ fontFamily: 'JetBrains Mono', color: '#0284C7', fontWeight: 600 }}>
               {(merkleResult?.rootHash || anchorState?.merkleRoot || '0x3b06a0bf378a29b4...').slice(0, 18)}...
             </span>
           </div>
           {anchorState?.blockNumber && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px' }}>
-              <span style={{ color: '#64748B' }}>Khối On-Chain (Block #):</span>
+              <span style={{ color: 'var(--text-muted)' }}>Khối On-Chain (Block #):</span>
               <span style={{ fontFamily: 'JetBrains Mono', color: '#10B981', fontWeight: 700 }}>#{anchorState.blockNumber}</span>
             </div>
           )}
@@ -504,27 +504,27 @@ export default function AdminDashboardPro() {
             border: '1px solid rgba(168, 85, 247, 0.3)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: '#C084FC', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#9333EA', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <CheckCircle2 size={13} color="#10B981" />
                 ON-CHAIN CONFIRMED (POLYGON AMOY)
               </span>
               <span style={{ fontSize: '9.5px', color: '#10B981', fontWeight: 700 }}>Success (Block #{anchorState.blockNumber})</span>
             </div>
             <div style={{
-              background: '#04060A',
+              background: 'var(--bg-inset)',
               padding: '7px 9px',
               borderRadius: '6px',
               fontFamily: 'JetBrains Mono',
               fontSize: '10px',
-              color: '#DDD',
+              color: 'var(--text-main)',
               wordBreak: 'break-all',
               display: 'flex',
               flexDirection: 'column',
               gap: '4px'
             }}>
               <div>
-                <span style={{ color: '#64748B' }}>Tx Hash: </span>
-                <span style={{ color: '#A855F7' }}>{anchorState.txHash}</span>
+                <span style={{ color: 'var(--text-muted)' }}>Tx Hash: </span>
+                <span style={{ color: '#9333EA' }}>{anchorState.txHash}</span>
               </div>
               <a
                 href={anchorState.explorerUrl}
@@ -534,7 +534,7 @@ export default function AdminDashboardPro() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  color: '#38BDF8',
+                  color: '#0284C7',
                   textDecoration: 'none',
                   fontWeight: 600,
                   fontSize: '10px',
@@ -550,11 +550,11 @@ export default function AdminDashboardPro() {
       </div>
 
       {/* 3. ĐIỂM NGHẼN ③ & KỊCH BẢN 4: SỔ BỘ THU HỒI ĐỘC LẬP (`isRevoked`) & CẤP LẠI KHI MẤT MÁY */}
-      <div className="glass-card" style={{ borderColor: 'rgba(244, 63, 94, 0.28)' }}>
+      <div className="glass-card stagger-4" style={{ borderColor: 'rgba(244, 63, 94, 0.28)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <KeyRound size={15} color="#F43F5E" />
-            <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: '#FFF' }}>
+            <h2 style={{ fontSize: '13px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
               Tầng 2: Sổ Bộ Thu Hồi Độc Lập & Cấp Lại
             </h2>
           </div>
@@ -562,7 +562,7 @@ export default function AdminDashboardPro() {
             isRevoked[addr]
           </span>
         </div>
-        <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: '#94A3B8', lineHeight: 1.4 }}>
+        <p style={{ margin: '0 0 10px', fontSize: '10.5px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
           Tách biệt <code>mapping(address =&gt; bool) isRevoked</code> khỏi <code>MerkleRoot</code> cố định: Khi thu hồi khóa của 1 sinh viên mất máy, 9.999 sinh viên còn lại <b>không bị hỏng Merkle Proof</b>.
         </p>
 

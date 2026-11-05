@@ -288,7 +288,7 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
         const zkCommitment = ethers.keccak256(
           ethers.toUtf8Bytes(`UTH_ZKP_BLINDED:${credential.address}:isUTHStudent=true:status=Active`)
         );
-        const res = await fetch('/api/zkp/verify-selective', {
+        const res = await smartFetch('/api/zkp/verify-selective', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -322,53 +322,54 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
   };
 
   return (
-    <div style={{ width: '100%' }}>
+    <div className="page-enter" style={{ width: '100%' }}>
       
       {/* HEADER */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div>
-          <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 700, letterSpacing: '0.4px' }}>
+          <div style={{ fontSize: '10px', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.4px' }}>
             SINH VIÊN (HOLDER) • PASSWORDLESS
           </div>
-          <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '2px 0 0', color: '#FFF' }}>
+          <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-main)' }}>
             Ví Danh Tính DID
           </h1>
         </div>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '4px',
-          padding: '3px 8px',
-          borderRadius: '8px',
+          gap: '5px',
+          padding: '4px 10px',
+          borderRadius: '999px',
           fontSize: '10.5px',
           fontWeight: 700,
           background: credential ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
           color: credential ? '#10B981' : '#EF4444',
           border: credential ? '1px solid rgba(16,185,129,0.28)' : '1px solid rgba(239,68,68,0.28)'
         }}>
-          {credential ? '● Đã kích hoạt' : '○ Chưa nạp thẻ'}
+          <span className={credential ? 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-rose-500'} />
+          {credential ? 'Đã kích hoạt' : 'Chưa nạp thẻ'}
         </div>
       </div>
 
       {/* TRƯỜNG HỢP 1: LẦN ĐẦU MỞ MÁY CHƯA CÓ THẺ (FIRST-TIME ONBOARDING + WEBAUTHN + RECOVERY PIN) */}
       {!credential ? (
-        <div className="glass-card" style={{ padding: '20px 16px', textAlign: 'center' }}>
+        <div className="glass-card animate-fade-scale" style={{ padding: '20px 16px', textAlign: 'center' }}>
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
             <UserCheck size={23} color="#38BDF8" />
           </div>
-          <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', color: '#FFF' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', color: 'var(--text-main)' }}>
             Kích Hoạt Danh Tính & Sinh Trắc Học
           </h3>
-          <p style={{ fontSize: '11.5px', color: '#94A3B8', margin: '0 0 12px', lineHeight: 1.45 }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.45 }}>
             Nạp Thẻ Sinh Viên Số (VC) vào IndexedDB, đăng ký <b>WebAuthn FaceID/TouchID</b> và bọc khóa bằng <b>AES-GCM 256-bit</b>.
           </p>
 
           {/* CÀI ĐẶT SINH TRẮC HỌC FACE ID / VÂN TAY NATIVE PHẦN CỨNG */}
-          <div style={{ textAlign: 'left', marginBottom: '10px', background: '#04060A', padding: '10px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.22)' }}>
+          <div style={{ textAlign: 'left', marginBottom: '10px', background: 'var(--bg-inset)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.22)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Fingerprint size={15} color="#38BDF8" />
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#FFF' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)' }}>
                   Bật Face ID / Vân Tay Native:
                 </span>
               </div>
@@ -380,14 +381,14 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
                 {bioEnabled ? <ToggleRight size={26} color="#10B981" /> : <ToggleLeft size={26} color="#64748B" />}
               </button>
             </div>
-            <div style={{ fontSize: '9.5px', color: bioEnabled ? '#10B981' : '#94A3B8' }}>
+            <div style={{ fontSize: '9.5px', color: bioEnabled ? '#10B981' : 'var(--text-muted)' }}>
               {bioEnabled
                 ? '✓ Đã kích hoạt: Gọi trực tiếp Apple Secure Enclave / Android Keystore khi điểm danh.'
                 : '○ Đang tắt: Sẽ chỉ sử dụng mã PIN 6 số khi mở khóa và điểm danh.'}
             </div>
           </div>
 
-          <div style={{ textAlign: 'left', marginBottom: '12px', background: '#04060A', padding: '10px', borderRadius: '10px', border: pinError ? '1px solid #EF4444' : '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ textAlign: 'left', marginBottom: '12px', background: 'var(--bg-inset)', padding: '10px', borderRadius: '10px', border: pinError ? '1px solid #EF4444' : '1px solid var(--border-hairline)' }}>
             <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#38BDF8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
               <KeyRound size={12} />
               <span>Mã PIN Dự Phòng 6 Số (Fallback PIN: 123456):</span>
@@ -474,7 +475,7 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
           />
 
           {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}
-          <div className="rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+          <div className="stagger-2 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
             <div className="flex justify-between items-center gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${zkpMode ? 'bg-emerald-500/15 text-emerald-500' : 'bg-cyan-500/10 text-cyan-500'}`}>
@@ -492,7 +493,7 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
               <button
                 type="button"
                 onClick={handleToggleZkp}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold cursor-pointer flex-shrink-0 transition-all border ${
+                className={`btn-press px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold cursor-pointer flex-shrink-0 transition-all border ${
                   zkpMode
                     ? 'bg-emerald-500 text-slate-950 border-emerald-400'
                     : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30'
@@ -503,14 +504,14 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
             </div>
 
             {zkpMode && (
-              <div className="mt-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold">
+              <div className="animate-fade-scale mt-2 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold">
                 ✓ {zkpVerifiedBadge || 'Hợp lệ: Sinh viên UTH (Active)'}
               </div>
             )}
           </div>
 
           {/* CÀI ĐẶT BẢO MẬT & SINH TRẮC HỌC PHẦN CỨNG (FACE ID / MÃ PIN) */}
-          <div className="rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+          <div className="stagger-3 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
             <div className="flex justify-between items-center mb-2.5">
               <div className="flex items-center gap-1.5">
                 <Fingerprint size={16} className="text-cyan-500" />
@@ -571,7 +572,7 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
           </div>
 
           {/* BẢN ĐỒ VỊ TRÍ HIỆN DIỆN GPS PHẦN CỨNG & GOOGLE MAPS */}
-          <div className="rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
+          <div className="stagger-4 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
             <div className="flex justify-between items-center" style={{ marginBottom: showMap ? '10px' : '0' }}>
               <div className="flex items-center gap-2">
                 <MapPin size={17} className="text-cyan-500" />

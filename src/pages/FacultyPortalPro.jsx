@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { QRCodeCanvas } from 'qrcode.react';
 import { exportAttendanceToExcel } from '../utils/exportAttendanceReport';
 import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 import '../styles/animations.css';
@@ -98,10 +99,10 @@ export default function FacultyPortalPro() {
       smartFetch('/api/session/active')
         .then((r) => r.json())
         .then((data) => {
-          if (data && data.active && data.session) {
+          if (data && (data.success || data.active) && data.session) {
             const s = data.session;
-            const restoredId = s.sessionId || s.id;
-            const restoredClosed = s.status === 'CLOSED' || !s.isOpen;
+            const restoredId = s.sessionId || s.id || 'SES_A2301';
+            const restoredClosed = s.status === 'CLOSED';
             setSession({
               id: restoredId,
               nonce: s.nonce,
@@ -195,7 +196,7 @@ export default function FacultyPortalPro() {
         addAttendeeRecord(attendeeData);
       });
 
-      socket.on('spot-check-verified', (payload) => {
+      const handleSpotCheckVerified = (payload) => {
         if (!payload?.studentId) return;
         setAttendees((prev) =>
           prev.map((item) =>
@@ -207,7 +208,10 @@ export default function FacultyPortalPro() {
         setSpotCheckStatusMsg(
           `✓ Sinh viên ${payload.fullName || payload.studentId} vừa hoàn tất quét lại FaceID (Spot-Check)!`
         );
-      });
+      };
+
+      socket.on('spot-check-verified', handleSpotCheckVerified);
+      socket.on('spot-check-updated', handleSpotCheckVerified);
 
       return () => {
         socket.disconnect();
@@ -294,13 +298,23 @@ export default function FacultyPortalPro() {
 
   // Tự động xoay Nonce mỗi 20s dự phòng nếu WebSocket tạm thời gián đoạn
   useEffect(() => {
-    if (!session) return;
+    if (!session || isClosed) return;
     const rot = setInterval(() => {
       const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
-      setCurrentNonce((prev) => prev || nextNonce);
+      socketRef.current?.emit('rotate-nonce', { sessionId: session.id, nonce: nextNonce });
+      setCurrentNonce(nextNonce);
     }, 20000);
     return () => clearInterval(rot);
-  }, [session]);
+  }, [session, isClosed]);
+
+  // Giảng viên bấm xoay Nonce thủ công tức thì
+  const handleManualRotateNonce = () => {
+    if (!session || isClosed) return;
+    const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
+    setCurrentNonce(nextNonce);
+    setSession((prev) => (prev ? { ...prev, nonce: nextNonce } : null));
+    socketRef.current?.emit('rotate-nonce', { sessionId: session.id, nonce: nextNonce });
+  };
 
   // Kích hoạt Tái kiểm tra điểm danh đột xuất (Spot-Check 60s) qua WebSocket Unified Pipeline
   const handleTriggerSpotCheck = async () => {
@@ -366,31 +380,31 @@ export default function FacultyPortalPro() {
     : '';
 
   return (
-    <div style={{ width: '100%', color: '#F8FAFC', boxSizing: 'border-box' }}>
+    <div className="page-enter" style={{ width: '100%', color: 'var(--text-main)', boxSizing: 'border-box' }}>
       
       {/* HEADER + ĐỒNG HỒ THỜI GIAN THỰC */}
       <div style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10.5px', color: '#38BDF8', fontWeight: 700, letterSpacing: '0.5px' }}>
+          <span style={{ fontSize: '10.5px', color: '#06B6D4', fontWeight: 700, letterSpacing: '0.5px' }}>
             FACULTY CONSOLE • VERIFIER
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#94A3B8', fontFamily: 'JetBrains Mono' }}>
-            <Clock size={12} color="#38BDF8" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono' }}>
+            <Clock size={12} color="#06B6D4" />
             <span>{currentDateTime.toLocaleTimeString('vi-VN')}</span>
           </div>
         </div>
-        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '3px 0 0', color: '#FFF' }}>
+        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '3px 0 0', color: 'var(--text-main)' }}>
           Quản Lý Phiên Điểm Danh &amp; Phòng Thi
         </h1>
       </div>
 
       {/* 1. THANH CẤU HÌNH MẠNG & CHÍNH SÁCH BẢO MẬT (WI-FI TRƯỜNG VS 4G) */}
-      <div style={{ background: '#0A0E17', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '12px', marginBottom: '12px' }}>
+      <div className="glass-card stagger-1 card-interactive" style={{ padding: '12px', marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10.5px', color: '#38BDF8', fontWeight: 700, letterSpacing: '0.4px' }}>
+          <span style={{ fontSize: '10.5px', color: '#06B6D4', fontWeight: 700, letterSpacing: '0.4px' }}>
             CHÍNH SÁCH MẠNG PHÒNG HỌC &amp; THI
           </span>
-          <span style={{ fontSize: '9.5px', color: '#64748B', fontFamily: 'JetBrains Mono' }}>
+          <span style={{ fontSize: '9.5px', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono' }}>
             {networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'UTH Subnet Guard' : '4G/5G + Wi-Fi'}
           </span>
         </div>
@@ -402,9 +416,9 @@ export default function FacultyPortalPro() {
             style={{
               padding: '9px 8px',
               borderRadius: '10px',
-              border: networkPolicy === 'CAMPUS_WIFI_ONLY' ? '1px solid #38BDF8' : '1px solid rgba(255,255,255,0.08)',
-              background: networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'rgba(56, 189, 248, 0.14)' : '#070A10',
-              color: networkPolicy === 'CAMPUS_WIFI_ONLY' ? '#38BDF8' : '#94A3B8',
+              border: networkPolicy === 'CAMPUS_WIFI_ONLY' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
+              background: networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'rgba(6, 182, 212, 0.14)' : 'var(--bg-inset)',
+              color: networkPolicy === 'CAMPUS_WIFI_ONLY' ? '#06B6D4' : 'var(--text-muted)',
               fontSize: '11px',
               fontWeight: 700,
               display: 'flex',
@@ -423,9 +437,9 @@ export default function FacultyPortalPro() {
             style={{
               padding: '9px 8px',
               borderRadius: '10px',
-              border: networkPolicy === 'ALLOW_ALL' ? '1px solid #10B981' : '1px solid rgba(255,255,255,0.08)',
-              background: networkPolicy === 'ALLOW_ALL' ? 'rgba(16, 185, 129, 0.14)' : '#070A10',
-              color: networkPolicy === 'ALLOW_ALL' ? '#10B981' : '#94A3B8',
+              border: networkPolicy === 'ALLOW_ALL' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
+              background: networkPolicy === 'ALLOW_ALL' ? 'rgba(16, 185, 129, 0.14)' : 'var(--bg-inset)',
+              color: networkPolicy === 'ALLOW_ALL' ? '#10B981' : 'var(--text-muted)',
               fontSize: '11px',
               fontWeight: 700,
               display: 'flex',
@@ -443,6 +457,7 @@ export default function FacultyPortalPro() {
       {/* 2. KHU VỰC PHÁT MÃ QR ĐIỂM DANH / PHÒNG THI (HỖ TRỢ PROJECTOR FULLSCREEN OVERLAY) */}
       {session ? (
         <div
+          className={isFullscreen ? '' : 'glass-card stagger-2 card-interactive'}
           style={
             isFullscreen
               ? {
@@ -460,8 +475,6 @@ export default function FacultyPortalPro() {
                   textAlign: 'center'
                 }
               : {
-                  background: '#0A0E17',
-                  border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '20px',
                   padding: '16px 14px',
                   textAlign: 'center',
@@ -475,52 +488,79 @@ export default function FacultyPortalPro() {
               color: isClosed ? '#EF4444' : '#10B981',
               fontWeight: 800,
               background: isClosed ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-              padding: '2px 8px',
-              borderRadius: '6px',
+              padding: '3px 9px',
+              borderRadius: '999px',
               border: isClosed ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(16,185,129,0.4)'
             }}>
               ● {isClosed ? 'ĐÃ ĐÓNG PHÒNG' : session.mode === 'EXAM' ? 'PHÒNG THI LOCKDOWN (≤ 20m)' : 'LỚP HỌC ĐANG MỞ (≤ 35m)'}
             </span>
 
-            <button
-              onClick={toggleFullscreen}
-              className="btn-press"
-              style={{
-                background: 'rgba(56, 189, 248, 0.12)',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                padding: isFullscreen ? '8px 14px' : '5px 10px',
-                borderRadius: '8px',
-                color: '#38BDF8',
-                fontSize: isFullscreen ? '13px' : '11px',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                cursor: 'pointer'
-              }}
-            >
-              {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={13} />}
-              <span>{isFullscreen ? 'Thu Nhỏ Màn Chiếu' : 'Phóng To Máy Chiếu'}</span>
-            </button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {!isClosed && (
+                <button
+                  onClick={handleManualRotateNonce}
+                  title="Đổi mã Nonce mới ngay lập tức"
+                  className="btn-press"
+                  style={{
+                    background: 'rgba(6, 182, 212, 0.12)',
+                    border: '1px solid rgba(6, 182, 212, 0.35)',
+                    padding: isFullscreen ? '8px 12px' : '5px 9px',
+                    borderRadius: '8px',
+                    color: '#06B6D4',
+                    fontSize: isFullscreen ? '13px' : '10.5px',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <RotateCw size={12} />
+                  <span>Xoay Nonce</span>
+                </button>
+              )}
+
+              <button
+                onClick={toggleFullscreen}
+                className="btn-press"
+                style={{
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  padding: isFullscreen ? '8px 14px' : '5px 10px',
+                  borderRadius: '8px',
+                  color: '#06B6D4',
+                  fontSize: isFullscreen ? '13px' : '11px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={13} />}
+                <span>{isFullscreen ? 'Thu Nhỏ' : 'Phóng To'}</span>
+              </button>
+            </div>
           </div>
 
-          {/* QR Code độ phân giải cao cho màn chiếu */}
-          <div style={{
-            background: '#FFF',
-            padding: isFullscreen ? '22px' : '12px',
-            borderRadius: '18px',
-            width: 'fit-content',
-            margin: '0 auto 12px',
-            boxShadow: '0 0 35px rgba(56, 189, 248, 0.35)'
-          }}>
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=${isFullscreen ? '320x320' : '180x180'}&data=${encodeURIComponent(qrRawValue)}`}
-              alt="Projector QR"
-              style={{
-                width: isFullscreen ? '320px' : '180px',
-                height: isFullscreen ? '320px' : '180px',
-                display: 'block'
-              }}
+          {/* QR Code Canvas nội bộ tốc độ 0ms cho màn chiếu (hoạt động cả khi Offline/Hotspot) */}
+          <div
+            key={currentNonce}
+            className="animate-fade-scale"
+            style={{
+              background: '#FFF',
+              padding: isFullscreen ? '22px' : '14px',
+              borderRadius: '20px',
+              width: 'fit-content',
+              margin: '0 auto 12px',
+              border: '3px solid rgba(6, 182, 212, 0.45)',
+              boxShadow: '0 8px 30px rgba(6, 182, 212, 0.25)'
+            }}
+          >
+            <QRCodeCanvas
+              value={qrRawValue || 'UTH_ID:SES_A2301:NONCE_DEMO:10.7992:106.7056'}
+              size={isFullscreen ? 300 : 176}
+              level="M"
             />
           </div>
 
@@ -531,7 +571,7 @@ export default function FacultyPortalPro() {
             fontWeight: 800,
             marginBottom: '12px'
           }}>
-            ID: {session.id} • Đóng sau: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} • Nonce: {currentNonce.slice(-6)}
+            ID: {session.id} • Đóng sau: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} • Nonce: {(currentNonce || session.nonce || '').slice(-7)}
           </div>
 
           {/* Cụm tác vụ: Tái kiểm tra đột xuất (Spot-check 60s) & Đóng phòng ngay */}
@@ -670,9 +710,9 @@ export default function FacultyPortalPro() {
       )}
 
       {/* 3. DANH SÁCH SINH VIÊN ĐIỂM DANH + NÚT MỞ GOOGLE MAPS IFRAME TRỰC TIẾP */}
-      <div style={{ background: '#0A0E17', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '14px' }}>
+      <div className="glass-card stagger-3" style={{ borderRadius: '16px', padding: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#94A3B8' }}>
+          <span style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-muted)' }}>
             DANH SÁCH ĐÃ VÀO PHÒNG ({attendees.length})
           </span>
           <span style={{ fontSize: '10px', color: '#10B981', background: 'rgba(16,185,129,0.12)', padding: '2px 7px', borderRadius: '6px', fontWeight: 700 }}>
@@ -682,16 +722,17 @@ export default function FacultyPortalPro() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {attendees.length === 0 ? (
-            <div style={{ fontSize: '11.5px', color: '#64748B', textAlign: 'center', padding: '16px 8px', background: '#04060A', borderRadius: '10px', border: '1px dashed rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '11.5px', color: 'var(--text-dim)', textAlign: 'center', padding: '16px 8px', background: 'var(--bg-inset)', borderRadius: '10px', border: '1px dashed var(--border-hairline)' }}>
               Chưa có sinh viên nào quét mã. Khi sinh viên quét QR trên màn chiếu, tên và vị trí thực sẽ tự động nhảy lên đây qua WebSocket.
             </div>
           ) : (
             attendees.map((item, idx) => (
               <div
                 key={item.mssv || idx}
+                className="attendee-row-enter card-interactive"
                 style={{
-                  background: '#04060A',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'var(--bg-inset)',
+                  border: '1px solid var(--border-hairline)',
                   borderRadius: '12px',
                   padding: '10px 12px'
                 }}
@@ -706,13 +747,13 @@ export default function FacultyPortalPro() {
                         height: '38px',
                         borderRadius: '50%',
                         objectFit: 'cover',
-                        border: '1.5px solid rgba(56, 189, 248, 0.5)',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                        border: '1.5px solid rgba(6, 182, 212, 0.5)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                         flexShrink: 0
                       }}
                     />
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                         <span>{item.name}</span>
                         <span style={{
                           fontSize: '10px',
@@ -728,10 +769,10 @@ export default function FacultyPortalPro() {
                             : '✓ Có Mặt'}
                         </span>
                       </div>
-                      <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono', marginTop: '2px' }}>
-                        MSSV: <strong style={{ color: '#38BDF8' }}>{item.mssv}</strong> • Cách máy chiếu: {item.dist}m
+                      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono', marginTop: '2px' }}>
+                        MSSV: <strong style={{ color: '#06B6D4' }}>{item.mssv}</strong> • Cách máy chiếu: {item.dist}m
                       </div>
-                      <div style={{ fontSize: '10px', color: '#64748B', marginTop: '2px' }}>
+                      <div style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '2px' }}>
                         Mạng: {item.network} ({item.ip}) • Lúc {item.time}
                       </div>
                     </div>

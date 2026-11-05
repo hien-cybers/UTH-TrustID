@@ -79,8 +79,8 @@ export default function StaffLogin({ onLoginSuccess }) {
   };
 
   return (
-    <div style={{ width: '100%', boxSizing: 'border-box' }}>
-      <div className="glass-card" style={{ padding: '20px 16px' }}>
+    <div className="page-enter" style={{ width: '100%', boxSizing: 'border-box' }}>
+      <div className="glass-card card-interactive" style={{ padding: '20px 16px' }}>
         
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -88,19 +88,19 @@ export default function StaffLogin({ onLoginSuccess }) {
             width: '46px',
             height: '46px',
             borderRadius: '12px',
-            background: 'rgba(56, 189, 248, 0.12)',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
+            background: 'rgba(6, 182, 212, 0.12)',
+            border: '1px solid rgba(6, 182, 212, 0.3)',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '10px'
           }}>
-            <Lock size={22} color="#38BDF8" strokeWidth={1.8} />
+            <Lock size={22} color="#06B6D4" strokeWidth={1.8} />
           </div>
-          <h2 style={{ fontSize: '16.5px', fontWeight: 800, margin: '0 0 4px', color: '#fff', letterSpacing: '-0.3px' }}>
+          <h2 style={{ fontSize: '16.5px', fontWeight: 800, margin: '0 0 4px', color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
             Cổng Đăng Nhập Quản Trị
           </h2>
-          <p style={{ margin: 0, fontSize: '11.5px', color: '#8492a6', lineHeight: '1.45' }}>
+          <p style={{ margin: 0, fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.45' }}>
             Xác thực tài khoản công vụ (RBAC) dành cho Cán bộ Giảng viên & Ban Quản trị UTH
           </p>
         </div>
@@ -133,14 +133,15 @@ export default function StaffLogin({ onLoginSuccess }) {
               placeholder="giangvien@ut.edu.vn"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="pro-input"
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
                 padding: '10px 12px',
                 borderRadius: '8px',
-                background: '#060911',
-                border: '1px solid #162032',
-                color: '#fff',
+                background: 'var(--bg-inset)',
+                border: '1px solid var(--border-hairline)',
+                color: 'var(--text-main)',
                 fontSize: '13px',
                 outline: 'none',
                 fontFamily: 'JetBrains Mono, monospace'
@@ -149,7 +150,7 @@ export default function StaffLogin({ onLoginSuccess }) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '11.5px', color: '#8492a6', marginBottom: '5px', fontWeight: 600 }}>
+            <label style={{ display: 'block', fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: 600 }}>
               Mật khẩu
             </label>
             <input
@@ -158,14 +159,15 @@ export default function StaffLogin({ onLoginSuccess }) {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="pro-input"
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
                 padding: '10px 12px',
                 borderRadius: '8px',
-                background: '#060911',
-                border: '1px solid #162032',
-                color: '#fff',
+                background: 'var(--bg-inset)',
+                border: '1px solid var(--border-hairline)',
+                color: 'var(--text-main)',
                 fontSize: '13px',
                 outline: 'none'
               }}
