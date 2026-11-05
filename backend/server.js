@@ -2088,6 +2088,7 @@ app.get('/api/session/active', (req, res) => {
         radius: s.radius,
         networkPolicy: s.networkPolicy,
         nonce: s.currentNonce,
+        status: s.status || 'OPEN',
         attendees: Array.from(s.attendees.values())
       }
     });
@@ -2102,7 +2103,7 @@ app.post('/api/attendance/submit', async (req, res) => {
     const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const clientIP = Array.isArray(rawIp) ? rawIp[0] : String(rawIp).split(',')[0].trim();
 
-    const isTestPipeline = reqSid && (String(reqSid).startsWith('SES_TEST_') || String(reqSid).startsWith('SES_E2E'));
+    const isTestPipeline = reqSid && String(reqSid).startsWith('SES_TEST_');
     const targetSid = (reqSid && activeSessions.has(reqSid)) ? reqSid : latestOpenSessionId;
     let session = targetSid ? activeSessions.get(targetSid) : null;
 
@@ -2239,6 +2240,18 @@ app.post('/api/attendance/submit', async (req, res) => {
     const verifyAddr = studentAddr;
     const sFullName = studentData.fullName || studentData.name || 'Sinh Viên UTH';
     const sMajor = studentData.major || 'An toàn Thông tin';
+
+    // Tự động khôi phục đăng ký danh tính cho ví ngẫu nhiên sinh trên điện thoại nếu server vừa khởi động lại
+    if (!identitiesDB[checksumAddr] && sFullName !== 'Kẻ Mạo Danh') {
+      identitiesDB[checksumAddr] = {
+        studentId: studentData.studentId,
+        fullName: sFullName,
+        major: sMajor,
+        isRevoked: false,
+        status: 'Active'
+      };
+    }
+
     const leaf = solidityPackedKeccak256(
       ['string', 'string', 'string', 'address'],
       [studentData.studentId, sFullName, sMajor, verifyAddr]

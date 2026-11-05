@@ -68,9 +68,33 @@ export default function StudentWalletPro() {
     });
 
     const loadInitialVC = async () => {
+      const DEFAULT_DEMO_ADDR = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+      const DEFAULT_DEMO_PRIV = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
+      const DEFAULT_MERKLE_ROOT = '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2';
+      const DEFAULT_MERKLE_PROOF = ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85'];
+
       // 1. Ưu tiên đọc từ két IndexedDB an toàn (UTHTRUSTID_DB / identity_vault)
       const savedVC = await getItem('uth_student_vc');
       if (savedVC) {
+        // Tự động đồng bộ nếu thẻ cũ dùng địa chỉ ví mẫu không khớp khóa ký
+        if (
+          savedVC.address?.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d' ||
+          savedVC.merkleRoot?.startsWith('0x78ab3199')
+        ) {
+          const migratedVC = {
+            ...savedVC,
+            address:
+              savedVC.address?.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+                ? DEFAULT_DEMO_ADDR
+                : savedVC.address,
+            privateKey: savedVC.privateKey || DEFAULT_DEMO_PRIV,
+            merkleRoot: DEFAULT_MERKLE_ROOT,
+            merkleProof: DEFAULT_MERKLE_PROOF
+          };
+          setCredential(migratedVC);
+          await setItem('uth_student_vc', migratedVC);
+          return;
+        }
         setCredential(savedVC);
         return;
       }
@@ -82,13 +106,13 @@ export default function StudentWalletPro() {
           fullName: savedIdentity.student?.fullName || 'Nguyễn Đức Hiển',
           major: savedIdentity.student?.major || 'An toàn Thông tin',
           avatar: savedIdentity.student?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          address: savedIdentity.address,
-          privateKey: savedIdentity.privateKey || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-          merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
-          merkleProof: [
-            '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
-            '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
-          ],
+          address:
+            savedIdentity.address.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+              ? DEFAULT_DEMO_ADDR
+              : savedIdentity.address,
+          privateKey: savedIdentity.privateKey || DEFAULT_DEMO_PRIV,
+          merkleRoot: DEFAULT_MERKLE_ROOT,
+          merkleProof: DEFAULT_MERKLE_PROOF,
           issuedAt: new Date().toLocaleDateString('vi-VN')
         };
         setCredential(autoVC);
@@ -103,13 +127,10 @@ export default function StudentWalletPro() {
           fullName: 'Nguyễn Đức Hiển',
           major: 'An toàn Thông tin',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
-          privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-          merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
-          merkleProof: [
-            '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
-            '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
-          ],
+          address: DEFAULT_DEMO_ADDR,
+          privateKey: DEFAULT_DEMO_PRIV,
+          merkleRoot: DEFAULT_MERKLE_ROOT,
+          merkleProof: DEFAULT_MERKLE_PROOF,
           issuedAt: new Date().toLocaleDateString('vi-VN')
         };
         setCredential(preservedVC);
@@ -575,6 +596,31 @@ export default function StudentWalletPro() {
               </div>
             </div>
           </div>
+
+          {/* NÚT CHÍNH (PRIMARY CTA): MỞ CAMERA QUÉT MÃ ĐIỂM DANH NGAY LẬP TỨC */}
+          <button
+            onClick={() => navigate('/scan')}
+            className="btn-press"
+            style={{
+              width: '100%',
+              padding: '13px 16px',
+              borderRadius: '14px',
+              border: '1px solid rgba(56, 189, 248, 0.45)',
+              background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+              color: '#FFF',
+              fontWeight: 800,
+              fontSize: '13.5px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 6px 20px rgba(2, 132, 199, 0.35)'
+            }}
+          >
+            <QrCode size={18} />
+            <span>Mở Camera Quét Mã Điểm Danh Ngay</span>
+          </button>
 
           {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}
           <div className="glass-card" style={{ borderColor: zkpMode ? 'rgba(16, 185, 129, 0.4)' : undefined }}>

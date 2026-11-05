@@ -2,6 +2,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, GraduationCap, ShieldCheck, Key, AlertTriangle } from 'lucide-react';
+import { smartFetch } from '../utils/backendUrl';
+
+const FACULTY_EMAILS = ['giangvien@ut.edu.vn', 'giangvien@uth.edu.vn', 'gv@uth.edu.vn', 'gv@ut.edu.vn'];
+const ADMIN_EMAILS = ['admin@ut.edu.vn', 'admin@uth.edu.vn'];
+const VALID_PASSWORDS = ['123456', 'password123', 'admin123', 'adminpassword123'];
 
 export default function StaffLogin({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -10,17 +15,18 @@ export default function StaffLogin({ onLoginSuccess }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e) => {
-    if (e) e.preventDefault();
+  const performLogin = async (inputEmail, inputPassword) => {
     setIsLoading(true);
     setErrorMsg('');
+    const cleanEmail = String(inputEmail || '').trim().toLowerCase();
+    const cleanPass = String(inputPassword || '').trim();
 
     try {
       // 1. Gửi yêu cầu xác thực lên Backend Express API
-      const res = await fetch('/api/staff/login', {
+      const res = await smartFetch('/api/staff/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password: password.trim() })
+        body: JSON.stringify({ email: cleanEmail, password: cleanPass })
       });
       const data = await res.json();
 
@@ -35,63 +41,41 @@ export default function StaffLogin({ onLoginSuccess }) {
         }
         return;
       }
+    } catch {}
 
-      // 2. Fallback ngoại tuyến cục bộ nếu Backend tạm ngắt
-      let matchedUser = null;
-      const cleanEmail = email.trim().toLowerCase();
-      const cleanPass = password.trim();
-
-      if (cleanEmail === 'giangvien@ut.edu.vn' && (cleanPass === 'password123' || cleanPass === '123456')) {
-        matchedUser = { id: 'GV001', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY', email: 'giangvien@ut.edu.vn' };
-      } else if (cleanEmail === 'admin@ut.edu.vn' && (cleanPass === 'adminpassword123' || cleanPass === '123456')) {
-        matchedUser = { id: 'ADM001', fullName: 'Quản Trị Viên Hệ Thống', role: 'ADMIN', email: 'admin@ut.edu.vn' };
-      }
-
-      if (matchedUser) {
-        localStorage.setItem('uth_staff_user', JSON.stringify(matchedUser));
-        localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
-        if (onLoginSuccess) onLoginSuccess(matchedUser);
-        if (matchedUser.role === 'ADMIN') {
-          navigate('/admin');
-        } else {
-          navigate('/faculty');
-        }
-      } else {
-        setErrorMsg(data.message || 'Tài khoản hoặc mật khẩu không chính xác!');
-      }
-    } catch (err) {
-      // Fallback offline
-      const cleanEmail = email.trim().toLowerCase();
-      const cleanPass = password.trim();
-      let matchedUser = null;
-
-      if (cleanEmail === 'giangvien@ut.edu.vn' && (cleanPass === 'password123' || cleanPass === '123456')) {
-        matchedUser = { id: 'GV001', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY', email: 'giangvien@ut.edu.vn' };
-      } else if (cleanEmail === 'admin@ut.edu.vn' && (cleanPass === 'adminpassword123' || cleanPass === '123456')) {
-        matchedUser = { id: 'ADM001', fullName: 'Quản Trị Viên Hệ Thống', role: 'ADMIN', email: 'admin@ut.edu.vn' };
-      }
-
-      if (matchedUser) {
-        localStorage.setItem('uth_staff_user', JSON.stringify(matchedUser));
-        localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
-        if (onLoginSuccess) onLoginSuccess(matchedUser);
-        if (matchedUser.role === 'ADMIN') {
-          navigate('/admin');
-        } else {
-          navigate('/faculty');
-        }
-      } else {
-        setErrorMsg('Lỗi kết nối máy chủ: ' + err.message);
-      }
-    } finally {
-      setIsLoading(false);
+    // 2. Fallback ngoại tuyến cục bộ nếu Backend tạm ngắt
+    let matchedUser = null;
+    if (FACULTY_EMAILS.includes(cleanEmail) && VALID_PASSWORDS.includes(cleanPass)) {
+      matchedUser = { id: 'GV001', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY', email: cleanEmail };
+    } else if (ADMIN_EMAILS.includes(cleanEmail) && VALID_PASSWORDS.includes(cleanPass)) {
+      matchedUser = { id: 'ADM001', fullName: 'Quản Trị Viên Hệ Thống', role: 'ADMIN', email: cleanEmail };
     }
+
+    if (matchedUser) {
+      localStorage.setItem('uth_staff_user', JSON.stringify(matchedUser));
+      localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
+      if (onLoginSuccess) onLoginSuccess(matchedUser);
+      if (matchedUser.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/faculty');
+      }
+    } else {
+      setErrorMsg('Tài khoản hoặc mật khẩu không chính xác! (Gợi ý: giangvien@ut.edu.vn / 123456)');
+    }
+    setIsLoading(false);
   };
 
-  const handleQuickFill = (targetEmail, targetPass) => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
+    await performLogin(email, password);
+  };
+
+  const handleQuickFill = async (targetEmail, targetPass) => {
     setEmail(targetEmail);
     setPassword(targetPass);
     setErrorMsg('');
+    await performLogin(targetEmail, targetPass);
   };
 
   return (

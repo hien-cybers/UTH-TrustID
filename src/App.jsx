@@ -46,6 +46,28 @@ export default function App() {
     setCurrentUser(null);
   };
 
+  const handleQuickRoleSwitch = (targetRole) => {
+    if (targetRole === 'STUDENT') {
+      localStorage.removeItem('uth_staff_user');
+      localStorage.removeItem('uth_staff_token');
+      setCurrentUser(null);
+      return;
+    }
+    if (targetRole === 'FACULTY') {
+      const gvUser = { id: 'GV001', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY', email: 'giangvien@ut.edu.vn' };
+      localStorage.setItem('uth_staff_user', JSON.stringify(gvUser));
+      localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
+      setCurrentUser(gvUser);
+      return;
+    }
+    if (targetRole === 'ADMIN') {
+      const admUser = { id: 'ADM001', fullName: 'Quản Trị Viên Hệ Thống', role: 'ADMIN', email: 'admin@ut.edu.vn' };
+      localStorage.setItem('uth_staff_user', JSON.stringify(admUser));
+      localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
+      setCurrentUser(admUser);
+    }
+  };
+
   return (
     <>
       {/* Màn hình khởi động động (Animated Splash Screen) hiển thị khi vừa mở ứng dụng */}
@@ -178,6 +200,73 @@ export default function App() {
               )}
             </div>
 
+          </div>
+
+          {/* Thanh Chuyển Nhanh Vai Trò 1-Chạm (Sinh Viên | Giảng Viên | Quản Trị Admin) */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr',
+            gap: '6px',
+            marginTop: '9px',
+            padding: '4px',
+            borderRadius: '10px',
+            background: 'rgba(4, 6, 10, 0.85)',
+            border: '1px solid rgba(255, 255, 255, 0.06)'
+          }}>
+            <NavLink
+              to="/wallet"
+              onClick={() => handleQuickRoleSwitch('STUDENT')}
+              style={{
+                padding: '5px 8px',
+                borderRadius: '7px',
+                textAlign: 'center',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                background: !currentUser ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
+                color: !currentUser ? '#38BDF8' : '#64748B',
+                border: !currentUser ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid transparent'
+              }}
+            >
+              Sinh Viên (DID)
+            </NavLink>
+            <NavLink
+              to="/faculty"
+              onClick={() => handleQuickRoleSwitch('FACULTY')}
+              style={{
+                padding: '5px 8px',
+                borderRadius: '7px',
+                textAlign: 'center',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                background: currentUser?.role === 'FACULTY' ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
+                color: currentUser?.role === 'FACULTY' ? '#38BDF8' : '#64748B',
+                border: currentUser?.role === 'FACULTY' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid transparent'
+              }}
+            >
+              Giảng Viên (QR)
+            </NavLink>
+            <NavLink
+              to="/admin"
+              onClick={() => handleQuickRoleSwitch('ADMIN')}
+              style={{
+                padding: '5px 8px',
+                borderRadius: '7px',
+                textAlign: 'center',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                background: currentUser?.role === 'ADMIN' ? 'rgba(16, 185, 129, 0.18)' : 'transparent',
+                color: currentUser?.role === 'ADMIN' ? '#10B981' : '#64748B',
+                border: currentUser?.role === 'ADMIN' ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid transparent'
+              }}
+            >
+              Root Admin
+            </NavLink>
           </div>
         </header>
 

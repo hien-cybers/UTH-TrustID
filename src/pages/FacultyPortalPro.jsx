@@ -32,7 +32,7 @@ export default function FacultyPortalPro() {
 
   // 2. Cấu hình Chính sách Mạng & Chế độ Màn chiếu (Projector Fullscreen)
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [networkPolicy, setNetworkPolicy] = useState('CAMPUS_WIFI_ONLY'); // 'CAMPUS_WIFI_ONLY' | 'ALLOW_ALL'
+  const [networkPolicy, setNetworkPolicy] = useState('ALLOW_ALL'); // 'CAMPUS_WIFI_ONLY' | 'ALLOW_ALL'
   const [session, setSession] = useState(null);
   const [isClosed, setIsClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -93,6 +93,36 @@ export default function FacultyPortalPro() {
           ];
         });
       };
+
+      // Tự động khôi phục phiên điểm danh đang mở trên Backend khi chuyển qua lại giữa các tab
+      smartFetch('/api/session/active')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && data.active && data.session) {
+            const s = data.session;
+            const restoredId = s.sessionId || s.id;
+            const restoredClosed = s.status === 'CLOSED' || !s.isOpen;
+            setSession({
+              id: restoredId,
+              nonce: s.nonce,
+              mode: s.radius <= 20 ? 'EXAM' : 'ATTENDANCE',
+              room: s.roomName || 'Giảng Đường A2-301',
+              lat: s.coords?.lat ?? 10.7992,
+              lon: s.coords?.lon ?? 106.7056,
+              radius: s.radius || 35,
+              isClosed: restoredClosed
+            });
+            setCurrentNonce(s.nonce || '');
+            setIsClosed(restoredClosed);
+            if (s.networkPolicy) setNetworkPolicy(s.networkPolicy);
+            if (!restoredClosed) setTimeLeft(240);
+            if (Array.isArray(s.attendees)) {
+              s.attendees.forEach((att) => addAttendeeRecord(att));
+            }
+            socket.emit('join-session', { sessionId: restoredId, role: 'FACULTY' });
+          }
+        })
+        .catch(() => {});
 
       // LẮNG NGHE SINH VIÊN QUÉT XONG -> NHẢY LÊN BẢNG TỨC THÌ (0ms trễ)
       socket.on('new-attendee', (record) => {

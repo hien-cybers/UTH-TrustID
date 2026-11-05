@@ -131,7 +131,7 @@ export default function AppProView({ initialTab = 'wallet' }) {
   const [studentProfile, setStudentProfile] = useState({
     name: "NGUYỄN ĐỨC HIỂN",
     mssv: "2251120000",
-    role: "Sinh Viên • K22",
+    role: "Sinh Viên • K24",
     major: "An Toàn Thông Tin",
     did: "0x1D9b6938A3f073e3426052C7016155D85040Ed1D",
     rootProof: "0x78ab31...394812",

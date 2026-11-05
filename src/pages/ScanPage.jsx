@@ -441,8 +441,11 @@ export default function ScanPage() {
         try {
           const vc = typeof savedVC === 'string' ? JSON.parse(savedVC) : savedVC;
           identity = {
-            address: vc.address,
-            privateKey: vc.privateKey,
+            address:
+              vc.address?.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+                ? '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+                : vc.address,
+            privateKey: vc.privateKey || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
             student: {
               studentId: vc.studentId,
               mssv: vc.studentId,
@@ -456,7 +459,7 @@ export default function ScanPage() {
 
     if (!identity || !identity.address) {
       identity = {
-        address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
+        address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
         privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
         student: {
           studentId: '2251120000',
@@ -465,6 +468,8 @@ export default function ScanPage() {
           major: 'An toàn Thông tin'
         }
       };
+    } else if (identity.address.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d') {
+      identity.address = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
     }
 
     // 2. Phân loại mã QR: Điểm danh (UTH_ID:... hoặc UTH:...)
@@ -606,7 +611,10 @@ export default function ScanPage() {
         signingAddress = signVault.address;
       } catch {
         const fallbackSign = await signAuthChallenge(identity, rawChallenge);
-        unifiedSignature = fallbackSign.signature;
+        unifiedSignature = fallbackSign.signature || '';
+        if (fallbackSign.signerAddress) {
+          signingAddress = fallbackSign.signerAddress;
+        }
       }
 
       const shortSig = `${unifiedSignature.slice(0, 14)}...${unifiedSignature.slice(-6)}`;

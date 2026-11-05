@@ -6,9 +6,8 @@ export const HOTSPOT_LAN_IP = '192.168.137.1';
 export const LAN_BACKEND_URL = `http://${DEFAULT_LAN_IP}:5000`;
 
 // 2. Đường dẫn HTTPS Tunnel công khai (Hoạt động xuyên cả 4G/5G và Wi-Fi trên iPhone mà không bị iOS ATS chặn)
-// Lưu ý: Quick Tunnel của Cloudflare đổi URL mỗi lần khởi động lại cloudflared. Ứng dụng sẽ tự dò (resolveBackendUrl)
-// sang LAN IP nếu Tunnel này đã chết, nên KHÔNG cần build lại .ipa chỉ vì đổi Tunnel.
-export const PUBLIC_TUNNEL_URL = 'https://governance-neck-fishing-hostel.trycloudflare.com';
+// Lưu ý: Ứng dụng sẽ tự dò (resolveBackendUrl) sang LAN IP nếu Tunnel này đã chết, nên KHÔNG cần build lại .ipa chỉ vì đổi Tunnel.
+export const PUBLIC_TUNNEL_URL = 'https://stale-pens-hug.loca.lt';
 
 const RESOLVED_KEY = 'uth_resolved_backend_url';
 let resolvedBaseUrl = null;
@@ -40,8 +39,8 @@ export function getBackendBaseUrl() {
   const host = window.location.hostname;
   const port = window.location.port;
 
-  // Nếu đang mở trên trình duyệt qua Vite Dev Server (5173) hoặc Cloudflare Tunnel
-  if (port === '5173' || host.includes('trycloudflare.com')) {
+  // Nếu đang mở trên trình duyệt qua Vite Dev Server (5173) hoặc Tunnel (Cloudflare / Localtunnel)
+  if (port === '5173' || host.includes('trycloudflare.com') || host.includes('loca.lt')) {
     return '';
   }
 
