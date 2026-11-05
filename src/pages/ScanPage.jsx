@@ -46,6 +46,7 @@ import {
 import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 import { getOrCreateDeviceId, signWithDecryptedKey } from '../utils/identityManager';
 import { getItem } from '../utils/db';
+import { getPreciseLocation } from '../utils/geoManager';
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -467,13 +468,18 @@ export default function ScanPage() {
 
       if (isTerminatedRef.current) return;
 
-      // 3. [ĐIỂM NGHẼN ①]: Lấy tọa độ từ bộ đệm Pre-warm GPS (< 300ms thay vì chờ 2.5s)
+      // 3. [ĐIỂM NGHẼN ①]: Lấy tọa độ từ bộ đệm Pre-warm GPS hoặc chip GPS vệ tinh (< 300ms)
       const gpsStart = performance.now();
       let smoothedPos = { lat: 10.79925, lon: 106.70564, accuracy: 12, samplesCount: 3, preWarmed: true };
       try {
         const pos = await getSmoothedGpsPosition(3, 280);
         if (pos) smoothedPos = pos;
-      } catch {}
+      } catch {
+        try {
+          const precise = await getPreciseLocation();
+          if (precise) smoothedPos = precise;
+        } catch {}
+      }
       const gpsLatencyMs = Math.max(1, Math.round(performance.now() - gpsStart));
 
       if (isTerminatedRef.current) return;

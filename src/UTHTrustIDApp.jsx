@@ -18,6 +18,7 @@ import { exportAttendanceToExcel } from './utils/exportAttendanceReport';
 import { useAutoLock } from './hooks/useAutoLock';
 import { getSocketUrl, smartFetch, DEFAULT_LAN_IP, retargetSocket } from './utils/backendUrl';
 import { getOrCreateDeviceId, signWithDecryptedKey } from './utils/identityManager';
+import { getPreciseLocation } from './utils/geoManager';
 
 // Địa chỉ IPv4 mạng LAN của máy tính Windows (ipconfig: 192.168.88.200) & tự động định tuyến đa môi trường
 export const BACKEND_IP = DEFAULT_LAN_IP;
@@ -54,9 +55,10 @@ export default function UTHTrustIDApp() {
     merkleProof: ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85']
   });
 
-  // PRE-WARM GPS VỊ TRÍ
+  // PRE-WARM GPS VỊ TRÍ & LƯU TRỮ VÀO INDEXEDDB
   const [coords, setCoords] = useState({ lat: 10.7992, lon: 106.7056 });
   useEffect(() => {
+    getPreciseLocation().then(pos => setCoords({ lat: pos.lat, lon: pos.lon })).catch(() => {});
     if (navigator.geolocation) {
       const watchId = navigator.geolocation.watchPosition(
         (pos) => setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),

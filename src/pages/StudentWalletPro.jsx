@@ -20,7 +20,8 @@ import {
   Shield,
   ToggleLeft,
   ToggleRight,
-  Smartphone
+  Smartphone,
+  MapPin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
@@ -31,6 +32,7 @@ import { initializeRandomIdentity } from '../utils/identityManager';
 import { smartFetch } from '../utils/backendUrl';
 import { setItem, getItem, removeItem } from '../utils/db';
 import FaceIDModal from '../components/FaceIDModal';
+import StudentMapView from '../components/StudentMapView';
 import '../styles/animations.css';
 
 export default function StudentWalletPro() {
@@ -54,6 +56,10 @@ export default function StudentWalletPro() {
   // Selective Disclosure / ZKP-lite state
   const [zkpMode, setZkpMode] = useState(false);
   const [zkpVerifiedBadge, setZkpVerifiedBadge] = useState('');
+
+  // Bản đồ GPS vị trí hiện diện phần cứng (Google Maps Iframe Embed)
+  const [showMap, setShowMap] = useState(false);
+  const [liveGpsCoords, setLiveGpsCoords] = useState(null);
 
   useEffect(() => {
     // Kiểm tra cảm biến phần cứng Face ID / Vân tay khi khởi động
@@ -662,6 +668,36 @@ export default function StudentWalletPro() {
             <div style={{ fontSize: '10px', color: '#64748B', marginTop: '6px', lineHeight: 1.4 }}>
               ✓ Khóa riêng tư <code>secp256k1</code> được bọc an toàn trong IndexedDB bằng <b>AES-GCM 256-bit</b> (PBKDF2 100K). Chỉ giải mã vào RAM khi vượt qua cổng sinh trắc học Face ID.
             </div>
+          </div>
+
+          {/* BẢN ĐỒ VỊ TRÍ HIỆN DIỆN GPS PHẦN CỨNG & GOOGLE MAPS */}
+          <div className="glass-card" style={{ borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showMap ? '10px' : '0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={17} style={{ color: '#38BDF8' }} />
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#E2E8F0' }}>
+                  Vị Trí Hiện Diện GPS (Google Maps)
+                </span>
+              </div>
+              <button
+                onClick={() => setShowMap(!showMap)}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.12)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38BDF8',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {showMap ? 'Thu Gọn' : 'Xem Bản Đồ'}
+              </button>
+            </div>
+            {showMap && (
+              <StudentMapView onCoordsUpdated={(coords) => setLiveGpsCoords(coords)} />
+            )}
           </div>
 
           {/* NÚT THAO TÁC: QUÉT MÃ ĐIỂM DANH NGAY & GỠ THẺ */}
