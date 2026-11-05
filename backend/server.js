@@ -238,6 +238,7 @@ io.on('connection', (socket) => {
 
     const spotNonce = "SPOT_" + Math.random().toString(36).substring(2, 8).toUpperCase();
     const expireAt = Date.now() + timeoutSec * 1000;
+    const validStudentIds = [];
 
     if (session) {
       session.activeSpotCheck = {
@@ -245,8 +246,9 @@ io.on('connection', (socket) => {
         expireAt
       };
 
-      // Đổi toàn bộ trạng thái sinh viên trong phòng sang PENDING_SPOTCHECK
-      for (const [, st] of session.attendees.entries()) {
+      // Đổi toàn bộ trạng thái sinh viên ĐÃ CÓ MẶT trong phòng sang PENDING_SPOTCHECK
+      for (const [sId, st] of session.attendees.entries()) {
+        validStudentIds.push(sId);
         st.status = 'PENDING_SPOTCHECK';
       }
 
@@ -262,10 +264,12 @@ io.on('connection', (socket) => {
       challenge: spotNonce,
       timeoutSec,
       timeoutSeconds: timeoutSec,
-      expireAt
+      expireAt,
+      targetStudents: validStudentIds,
+      validStudentIds: validStudentIds
     };
 
-    // Phát lệnh khẩn cấp xuống toàn bộ điện thoại sinh viên
+    // Chỉ phát lệnh kèm danh sách targetStudents hợp lệ xuống điện thoại sinh viên
     if (targetSid) {
       io.to(targetSid).emit('spot-check-start', spotPayload);
       io.to(targetSid).emit('spot-check-requested', spotPayload);
@@ -283,7 +287,7 @@ io.on('connection', (socket) => {
           const sess = activeSessions.get(targetSid);
           for (const [, st] of sess.attendees.entries()) {
             if (st.status === 'PENDING_SPOTCHECK') {
-              st.status = 'ABSENT'; // ĐÁNH VẮNG TỰ ĐỘNG SAU 60 GIÂY
+              st.status = 'ABSENT'; // ĐÁNH VẮNG TỰ ĐỘNG SAU 60 GIÂY NẾU KHÔNG TÁI XÁC THỰC
             }
           }
           const finalList = Array.from(sess.attendees.values());
@@ -301,13 +305,17 @@ io.on('connection', (socket) => {
     const targetSid = sessionId || latestOpenSessionId;
     const session = activeSessions.get(targetSid);
     if (!session || !session.activeSpotCheck || Date.now() > session.activeSpotCheck.expireAt) {
-      socket.emit('spot-check-failed', { message: 'Đã hết thời gian kiểm tra!' });
+      socket.emit('spot-check-failed', { message: 'Đã hết thời gian kiểm tra hoặc phiên không tồn tại!' });
       return;
     }
 
-    const attendee = session.attendees.get(studentId) || Array.from(session.attendees.values())[0];
+    // CHẶN NGAY LẬP TỨC: Kiểm tra sinh viên có trong danh sách đã có mặt ban đầu không
+    // Tuyệt đối không fallback sang sinh viên khác
+    const attendee = (session.attendees && studentId) ? session.attendees.get(studentId) : null;
     if (!attendee) {
-      socket.emit('spot-check-failed', { message: 'Sinh viên chưa có trong danh sách điểm danh của phòng này!' });
+      socket.emit('spot-check-failed', { 
+        message: 'TỪ CHỐI: Bạn chưa điểm danh thành công ban đầu, không có quyền tái kiểm tra!' 
+      });
       return;
     }
 
@@ -322,21 +330,21 @@ io.on('connection', (socket) => {
         attendee.spotCheckVerified = true;
         attendee.spotCheckTime = new Date().toLocaleTimeString('vi-VN', { hour12: false });
 
-        socket.emit('spot-check-confirmed', { studentId: attendee.mssv, time: attendee.spotCheckTime });
+        socket.emit('spot-check-confirmed', { studentId: attendee.mssv || attendee.studentId, time: attendee.spotCheckTime });
         // Báo cho máy chiếu giảng viên đổi màu xanh "✓ Có Mặt"
         io.to(targetSid).emit('attendee-updated', attendee);
         io.emit('attendee-updated', attendee);
         io.emit('spot-check-verified', {
           sessionId: targetSid,
-          studentId: attendee.mssv,
-          fullName: attendee.name,
+          studentId: attendee.mssv || attendee.studentId,
+          fullName: attendee.name || attendee.fullName,
           time: attendee.spotCheckTime
         });
       } else {
         socket.emit('spot-check-failed', { message: 'Chữ ký không khớp với thẻ sinh viên số!' });
       }
     } catch {
-      socket.emit('spot-check-failed', { message: 'Chữ ký không khớp!' });
+      socket.emit('spot-check-failed', { message: 'Chữ ký không hợp lệ!' });
     }
   });
 
@@ -1893,51 +1901,80 @@ app.post('/api/sessions/terminate', (req, res) => {
 // [TÁI KIỂM TRA ĐỘT XUẤT - SPOT-CHECK 60 GIÂY CHỐNG BỎ TIẾT VỀ SỚM]
 app.post('/api/faculty/spot-check', (req, res) => {
   const { sessionId, timeoutSeconds = 60 } = req.body;
+  const targetSid = sessionId || latestOpenSessionId;
+  const session = activeSessions.get(targetSid);
+
   const challenge = 'SPOT_CHECK_' + Date.now();
+  const validStudentIds = (session && session.attendees) ? Array.from(session.attendees.keys()) : [];
+
   const payload = {
-    sessionId: sessionId || null,
+    sessionId: targetSid || null,
     timeoutSeconds,
     challenge,
+    targetStudents: validStudentIds,
+    validStudentIds,
     timestamp: Date.now()
   };
 
-  if (sessionId) {
-    io.to(sessionId).emit('spot-check-requested', payload);
+  if (targetSid) {
+    io.to(targetSid).emit('spot-check-requested', payload);
+    io.to(targetSid).emit('spot-check-start', payload);
   }
   io.emit('spot-check-requested', payload);
+  io.emit('spot-check-start', payload);
 
   recordAuditLog(
     'FACULTY_VERIFIER',
     'Tái kiểm tra đột xuất (Spot-Check)',
     'Đã phát sóng',
-    `Yêu cầu sinh viên xác nhận lại Face ID / Touch ID trong ${timeoutSeconds}s (Phiên: ${sessionId || 'ALL'})`
+    `Yêu cầu ${validStudentIds.length} sinh viên đã có mặt xác nhận lại Face ID trong ${timeoutSeconds}s (Phiên: ${targetSid || 'ALL'})`
   );
 
   return res.json({
     success: true,
-    message: `Đã gửi lệnh tái kiểm tra đột xuất (${timeoutSeconds}s) tới toàn bộ thiết bị sinh viên!`,
+    message: `Đã gửi lệnh tái kiểm tra đột xuất (${timeoutSeconds}s) tới ${validStudentIds.length} sinh viên hợp lệ!`,
     ...payload
   });
 });
 
 app.post('/api/attendance/spot-check-verify', (req, res) => {
   const { sessionId, studentId, fullName, deviceId } = req.body;
+  const targetSid = sessionId || latestOpenSessionId;
+  const session = targetSid ? activeSessions.get(targetSid) : null;
+
+  if (!session) {
+    return res.status(404).json({ error: 'Không tìm thấy phiên học hoặc phiên đã kết thúc!' });
+  }
+
+  // CHẶN NGAY LẬP TỨC: Kiểm tra sinh viên có trong danh sách đã có mặt ban đầu không
+  const attendee = (session.attendees && studentId) ? session.attendees.get(studentId) : null;
+  if (!attendee) {
+    return res.status(403).json({ 
+      error: 'TỪ CHỐI: Bạn chưa điểm danh thành công ban đầu, không có quyền tái kiểm tra!' 
+    });
+  }
+
+  // Nếu hợp lệ -> Cập nhật trạng thái hiện diện tiếp tục
+  attendee.status = 'PRESENT';
+  attendee.spotCheckVerified = true;
+  attendee.spotCheckTime = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+
   const verifyPayload = {
-    sessionId: sessionId || null,
-    studentId: studentId || '2251120001',
-    fullName: fullName || 'Nguyễn Đức Hiển',
-    deviceId: deviceId || '',
-    time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+    sessionId: targetSid,
+    studentId: attendee.mssv || attendee.studentId,
+    fullName: attendee.name || attendee.fullName,
+    deviceId: deviceId || attendee.deviceId || '',
+    time: attendee.spotCheckTime,
     timestamp: Date.now()
   };
 
-  if (sessionId) {
-    io.to(sessionId).emit('spot-check-verified', verifyPayload);
-  }
+  io.to(targetSid).emit('spot-check-verified', verifyPayload);
   io.emit('spot-check-verified', verifyPayload);
+  io.to(targetSid).emit('attendee-updated', attendee);
+  io.emit('attendee-updated', attendee);
 
   recordAuditLog(
-    studentId || '2251120001',
+    studentId,
     'Xác nhận Spot-Check Face ID',
     'Thành công',
     `Sinh viên ${verifyPayload.fullName} (${verifyPayload.studentId}) đã xác thực lại sinh trắc học tại lớp`
@@ -1945,8 +1982,8 @@ app.post('/api/attendance/spot-check-verify', (req, res) => {
 
   return res.json({
     success: true,
-    message: 'Đã xác nhận có mặt đột xuất qua Face ID / Sinh trắc học thành công!',
-    ...verifyPayload
+    message: 'Xác nhận hiện diện tái kiểm tra thành công!',
+    record: attendee
   });
 });
 

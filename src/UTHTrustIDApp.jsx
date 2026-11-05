@@ -1,7 +1,7 @@
 // src/UTHTrustIDApp.jsx - Ứng Dụng Điều Phối Đồng Bộ Toàn Năng (Unified End-to-End Pipeline)
 // Đồng bộ 100% thời gian thực: Giảng viên mở phòng -> Xoay Nonce 20s -> Sinh viên quét QR + FaceID + Ký EIP-191
 // -> Hiện lên màn chiếu Giảng viên qua WebSocket -> Spot-check 60s (Quét lại FaceID hoặc tự động đánh VẮNG)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { ethers } from 'ethers';
 import { 
@@ -71,6 +71,10 @@ export default function UTHTrustIDApp() {
 
   // TRẠNG THÁI CON DẤU LIVENESS SAU KHI ĐIỂM DANH THÀNH CÔNG
   const [livenessActive, setLivenessActive] = useState(false);
+  const livenessActiveRef = useRef(false);
+  useEffect(() => {
+    livenessActiveRef.current = livenessActive;
+  }, [livenessActive]);
   const [livenessTimeStr, setLivenessTimeStr] = useState('08:30:00');
   const [livenessMs, setLivenessMs] = useState('000');
   const [dynamicHash, setDynamicHash] = useState('0x000');
@@ -109,6 +113,21 @@ export default function UTHTrustIDApp() {
 
   useEffect(() => {
     const onSpotCheckStart = (data) => {
+      // [QUY TẮC AN TOÀN THÔNG TIN ①]: Bỏ qua nếu sinh viên CHƯA điểm danh thành công ban đầu
+      if (!livenessActiveRef.current) {
+        console.warn('[SpotCheck] Từ chối kích hoạt: Sinh viên chưa điểm danh thành công ban đầu!');
+        return;
+      }
+
+      // [QUY TẮC AN TOÀN THÔNG TIN ②]: Kiểm tra MSSV có nằm trong danh sách targetStudents hợp lệ không
+      const targetStudents = data?.targetStudents || data?.validStudentIds;
+      if (Array.isArray(targetStudents) && targetStudents.length > 0) {
+        if (!targetStudents.includes(credential.studentId)) {
+          console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${credential.studentId} không thuộc danh sách tái kiểm tra.`);
+          return;
+        }
+      }
+
       if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
       setSpotCheckData(data);
       setSpotCountdown(data.timeoutSec || 60);

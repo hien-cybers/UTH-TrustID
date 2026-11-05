@@ -82,7 +82,15 @@ export default function ScanPage() {
   const isTerminatedRef = useRef(false);
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const hasCheckedInRef = useRef(false);
+  const myStudentIdRef = useRef('2251120000');
   const motionTelemetryRef = useRef({ beta: 42.5, gamma: -3.2, accelMag: 9.81 });
+
+  // Khởi tạo nạp trước MSSV của sinh viên từ IndexedDB
+  useEffect(() => {
+    getItem('uth_student_vc').then((vc) => {
+      if (vc?.studentId) myStudentIdRef.current = vc.studentId;
+    }).catch(() => {});
+  }, []);
 
   // [ĐIỂM NGHẼN ① & TẦNG 3 TELEMETRY]: Kích hoạt Pre-warm GPS nền + Cảm biến góc nghiêng/gia tốc
   useEffect(() => {
@@ -181,6 +189,22 @@ export default function ScanPage() {
 
       // Khi Giảng viên bấm "Tái Kiểm Tra Đột Xuất (Spot-Check)": Rung máy & yêu cầu quét lại FaceID trong 60s
       const handleSpotCheck = (payload) => {
+        // [QUY TẮC AN TOÀN THÔNG TIN ①]: Bỏ qua hoàn toàn nếu sinh viên CHƯA điểm danh thành công ban đầu
+        if (!hasCheckedInRef.current) {
+          console.warn('[SpotCheck] Từ chối kích hoạt: Sinh viên chưa điểm danh thành công ban đầu!');
+          return;
+        }
+
+        // [QUY TẮC AN TOÀN THÔNG TIN ②]: Kiểm tra MSSV có nằm trong danh sách targetStudents hợp lệ không
+        const targetStudents = payload?.targetStudents || payload?.validStudentIds;
+        const currentMssv = myStudentIdRef.current || '2251120000';
+        if (Array.isArray(targetStudents) && targetStudents.length > 0) {
+          if (!targetStudents.includes(currentMssv)) {
+            console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${currentMssv} không nằm trong danh sách được phép tái kiểm tra.`);
+            return;
+          }
+        }
+
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate([100, 50, 100, 50, 200]);
         }
@@ -264,7 +288,7 @@ export default function ScanPage() {
         signature: sig
       });
 
-      await smartFetch('/api/attendance/spot-check-verify', {
+      const verifyRes = await smartFetch('/api/attendance/spot-check-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -273,7 +297,14 @@ export default function ScanPage() {
           fullName,
           faceIdVerified: true
         })
-      }).catch(() => {});
+      }).catch(() => null);
+
+      if (verifyRes && !verifyRes.ok) {
+        const errData = await verifyRes.json().catch(() => ({}));
+        setSpotCheckRequest(null);
+        setSyncMessage(`❌ ${errData.error || 'Tái kiểm tra bị từ chối do chưa điểm danh hợp lệ ban đầu!'}`);
+        return;
+      }
 
       triggerScanSuccessFeedback();
       setSpotCheckRequest(null);
@@ -498,6 +529,7 @@ export default function ScanPage() {
       // 4. [ĐIỂM NGHẼN ②]: Hybrid Hardware ID (5 thành phần, hỗ trợ Fuzzy Matching >= 80% trên iOS Safari)
       const deviceId = await getDeviceFingerprint();
       const targetMssv = identity.student?.studentId || identity.student?.mssv || '2251120000';
+      myStudentIdRef.current = targetMssv;
       const studentFullName = identity.student?.fullName || 'Nguyễn Đức Hiển';
 
       let vc = null;
