@@ -588,7 +588,9 @@ export default function ScanPage() {
             studentData: {
               studentId: targetMssv,
               fullName: studentFullName,
-              major: identity.student?.major || 'An toàn Thông tin',
+              name: studentFullName,
+              major: identity.student?.major || vc?.major || 'An toàn Thông tin',
+              avatar: vc?.avatar || identity.student?.avatar,
               address: signingAddress,
               merkleRoot: vc?.merkleRoot
             },
@@ -637,7 +639,9 @@ export default function ScanPage() {
             studentData: {
               studentId: targetMssv,
               fullName: studentFullName,
-              major: identity.student?.major || 'An toàn Thông tin'
+              name: studentFullName,
+              major: identity.student?.major || vc?.major || 'An toàn Thông tin',
+              avatar: vc?.avatar || identity.student?.avatar
             },
             studentCoords: {
               lat: smoothedPos.lat,

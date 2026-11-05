@@ -717,6 +717,11 @@ export default function AppProView({ initialTab = 'wallet' }) {
     setUseLiveCamera(false);
     socketRef.current?.emit('close-session', { sessionId });
     try {
+      await fetch('/api/session/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
       await fetch('/api/attendance/session/lock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

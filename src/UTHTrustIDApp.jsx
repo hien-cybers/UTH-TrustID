@@ -200,12 +200,18 @@ export default function UTHTrustIDApp() {
     };
 
     socket.on('new-attendee', onNewAttendee);
+    socket.on('student-checked-in', onNewAttendee);
+    socket.on('session-closed', () => {
+      setFacultySession((prev) => (prev ? { ...prev, isClosed: true } : null));
+    });
     socket.on('nonce-updated', onNonceUpdated);
     socket.on('attendee-updated', onAttendeeUpdated);
     socket.on('spot-check-ended', onSpotCheckEnded);
 
     return () => {
       socket.off('new-attendee', onNewAttendee);
+      socket.off('student-checked-in', onNewAttendee);
+      socket.off('session-closed');
       socket.off('nonce-updated', onNonceUpdated);
       socket.off('attendee-updated', onAttendeeUpdated);
       socket.off('spot-check-ended', onSpotCheckEnded);
@@ -252,6 +258,10 @@ export default function UTHTrustIDApp() {
 
   const handleCloseFacultySession = async () => {
     if (facultySession?.id) {
+      const confirmClose = window.confirm("Bạn có chắc chắn muốn đóng phòng điểm danh này không?");
+      if (!confirmClose) return;
+
+      socket.emit('close-session', { sessionId: facultySession.id });
       try {
         await smartFetch('/api/session/close', {
           method: 'POST',
@@ -259,10 +269,9 @@ export default function UTHTrustIDApp() {
           body: JSON.stringify({ sessionId: facultySession.id })
         });
       } catch {}
+      setFacultySession((prev) => (prev ? { ...prev, isClosed: true } : null));
     }
     setIsFullscreen(false);
-    setFacultySession(null);
-    setAttendees([]);
   };
 
   // Sinh viên thực hiện Quét QR & Gửi lên Backend
@@ -552,11 +561,46 @@ export default function UTHTrustIDApp() {
                     </button>
                     <button
                       onClick={handleCloseFacultySession}
-                      style={{ flex: 1, padding: '10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#EF4444', borderRadius: '8px', fontWeight: 700, fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                      disabled={facultySession?.isClosed}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        background: facultySession?.isClosed ? 'rgba(255,255,255,0.06)' : 'rgba(239,68,68,0.15)',
+                        border: facultySession?.isClosed ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(239,68,68,0.3)',
+                        color: facultySession?.isClosed ? '#64748B' : '#EF4444',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '11px',
+                        cursor: facultySession?.isClosed ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
                     >
-                      <XCircle size={12} /> Đóng Phòng
+                      <XCircle size={12} /> {facultySession?.isClosed ? 'Phòng Đã Đóng' : 'Đóng Phòng'}
                     </button>
                   </div>
+
+                  {facultySession?.isClosed && (
+                    <button
+                      onClick={() => { setFacultySession(null); setAttendees([]); }}
+                      style={{
+                        width: '100%',
+                        marginTop: '8px',
+                        padding: '8px',
+                        background: 'rgba(56,189,248,0.15)',
+                        border: '1px solid rgba(56,189,248,0.3)',
+                        color: '#38BDF8',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '11px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + Mở Phiên Điểm Danh Mới
+                    </button>
+                  )}
                 </div>
 
                 {/* Danh sách sinh viên cập nhật thời gian thực & Xuất Báo Cáo Excel (.xlsx) */}
@@ -594,20 +638,34 @@ export default function UTHTrustIDApp() {
                   ) : (
                     attendees.map((st, i) => (
                       <div key={st.mssv || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#04060A', padding: '10px', borderRadius: '8px', marginBottom: '6px' }}>
-                        <div>
-                          <div style={{ fontSize: '12.5px', fontWeight: 700 }}>
-                            {st.name} ({st.mssv})
-                          </div>
-                          <div style={{ fontSize: '10.5px', color: '#64748B' }}>
-                            Cách máy chiếu: {st.dist}m • {st.network}
-                          </div>
-                          <div style={{ fontSize: '10.5px', color: st.status === 'PRESENT' ? '#10B981' : st.status === 'ABSENT' ? '#EF4444' : '#F59E0B', fontWeight: 700 }}>
-                            Trạng thái: {st.status === 'PRESENT' ? '✓ Có Mặt' : st.status === 'ABSENT' ? '✗ Vắng Mặt' : '⏳ Chờ Quét Lại...'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                          <img
+                            src={st.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                            alt="Avatar"
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '1px solid rgba(56,189,248,0.4)',
+                              flexShrink: 0
+                            }}
+                          />
+                          <div>
+                            <div style={{ fontSize: '12.5px', fontWeight: 700 }}>
+                              {st.name} ({st.mssv})
+                            </div>
+                            <div style={{ fontSize: '10.5px', color: '#64748B' }}>
+                              Cách máy chiếu: {st.dist}m • {st.network}
+                            </div>
+                            <div style={{ fontSize: '10.5px', color: st.status === 'PRESENT' ? '#10B981' : st.status === 'ABSENT' ? '#EF4444' : '#F59E0B', fontWeight: 700 }}>
+                              Trạng thái: {st.status === 'PRESENT' ? '✓ Có Mặt' : st.status === 'ABSENT' ? '✗ Vắng Mặt' : '⏳ Chờ Quét Lại...'}
+                            </div>
                           </div>
                         </div>
                         <button
                           onClick={() => setMapIframeStudent(st)}
-                          style={{ padding: '6px 8px', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)', color: '#38BDF8', borderRadius: '6px', fontSize: '10.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ padding: '6px 8px', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)', color: '#38BDF8', borderRadius: '6px', fontSize: '10.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}
                         >
                           <MapPin size={12} /> Maps
                         </button>

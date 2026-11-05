@@ -34,6 +34,7 @@ export default function FacultyPortalPro() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [networkPolicy, setNetworkPolicy] = useState('CAMPUS_WIFI_ONLY'); // 'CAMPUS_WIFI_ONLY' | 'ALLOW_ALL'
   const [session, setSession] = useState(null);
+  const [isClosed, setIsClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currentNonce, setCurrentNonce] = useState('');
   const [spotCheckStatusMsg, setSpotCheckStatusMsg] = useState('');
@@ -75,12 +76,13 @@ export default function FacultyPortalPro() {
             {
               mssv,
               name,
+              avatar: raw.avatar || raw.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
               lat,
               lon,
               dist: numericDist,
               network: raw.network || raw.networkMode || 'Wi-Fi UTH',
               ip: raw.ip || raw.clientIp || '10.12.4.155',
-              time: raw.time || new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+              time: raw.time || raw.checkInTime || new Date().toLocaleTimeString('vi-VN', { hour12: false }),
               status: raw.status || 'PRESENT',
               faceIdValid: true,
               spotCheckVerified: Boolean(raw.spotCheckVerified),
@@ -92,8 +94,16 @@ export default function FacultyPortalPro() {
         });
       };
 
+      // LẮNG NGHE SINH VIÊN QUÉT XONG -> NHẢY LÊN BẢNG TỨC THÌ (0ms trễ)
       socket.on('new-attendee', (record) => {
         addAttendeeRecord(record);
+      });
+      socket.on('student-checked-in', (record) => {
+        addAttendeeRecord(record);
+      });
+      socket.on('session-closed', () => {
+        setIsClosed(true);
+        setSession((prev) => (prev ? { ...prev, isClosed: true } : null));
       });
 
       socket.on('nonce-updated', ({ nonce }) => {
@@ -224,6 +234,7 @@ export default function FacultyPortalPro() {
     };
 
     setSession(newSession);
+    setIsClosed(false);
     setCurrentNonce(fallbackNonce);
     setTimeLeft(duration);
     setAttendees([]);
@@ -275,6 +286,11 @@ export default function FacultyPortalPro() {
 
   // Hủy / Đóng phiên ngay lập tức & Phát tín hiệu WebSocket 'session-closed'
   const handleCloseSession = async (isAuto = false) => {
+    if (!isAuto) {
+      const confirmClose = window.confirm("Bạn có chắc chắn muốn đóng phòng điểm danh này không?");
+      if (!confirmClose) return;
+    }
+
     if (session) {
       socketRef.current?.emit('close-session', { sessionId: session.id });
       try {
@@ -287,13 +303,14 @@ export default function FacultyPortalPro() {
     }
 
     setIsFullscreen(false);
-    setSession(null);
+    setIsClosed(true);
+    setSession((prev) => (prev ? { ...prev, isClosed: true } : null));
     setTimeLeft(0);
     setCurrentNonce('');
     setSpotCheckStatusMsg(
       isAuto
         ? '⏱️ Phiên điểm danh đã hết giờ và tự động khóa!'
-        : '🛑 Đã đóng phòng & phát lệnh ngắt camera tới toàn bộ máy sinh viên!'
+        : '🛑 Đã đóng phòng điểm danh thành công! Toàn bộ lượt quét muộn sẽ bị chặn.'
     );
   };
 
@@ -423,8 +440,16 @@ export default function FacultyPortalPro() {
           }
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: isFullscreen ? '560px' : '100%', marginBottom: '12px' }}>
-            <span style={{ fontSize: isFullscreen ? '14px' : '11px', color: '#10B981', fontWeight: 800 }}>
-              ● {session.mode === 'EXAM' ? 'PHÒNG THI LOCKDOWN (≤ 20m)' : 'LỚP HỌC ĐANG MỞ (≤ 35m)'}
+            <span style={{
+              fontSize: isFullscreen ? '14px' : '11px',
+              color: isClosed ? '#EF4444' : '#10B981',
+              fontWeight: 800,
+              background: isClosed ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+              padding: '2px 8px',
+              borderRadius: '6px',
+              border: isClosed ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(16,185,129,0.4)'
+            }}>
+              ● {isClosed ? 'ĐÃ ĐÓNG PHÒNG' : session.mode === 'EXAM' ? 'PHÒNG THI LOCKDOWN (≤ 20m)' : 'LỚP HỌC ĐANG MỞ (≤ 35m)'}
             </span>
 
             <button
@@ -505,26 +530,48 @@ export default function FacultyPortalPro() {
 
             <button
               onClick={() => handleCloseSession(false)}
+              disabled={isClosed}
               className="btn-press"
               style={{
                 flex: 1,
                 padding: isFullscreen ? '13px' : '10px',
-                background: 'rgba(239, 68, 68, 0.14)',
-                border: '1px solid rgba(239, 68, 68, 0.4)',
+                background: isClosed ? 'rgba(255,255,255,0.06)' : 'rgba(239, 68, 68, 0.14)',
+                border: isClosed ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(239, 68, 68, 0.4)',
                 borderRadius: '10px',
-                color: '#EF4444',
+                color: isClosed ? '#64748B' : '#EF4444',
                 fontSize: isFullscreen ? '13px' : '11px',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '5px',
+                cursor: isClosed ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <XCircle size={13} /> {isClosed ? 'Phòng Đã Đóng' : 'Đóng Phòng Điểm Danh'}
+            </button>
+          </div>
+
+          {isClosed && (
+            <button
+              onClick={() => { setSession(null); setIsClosed(false); }}
+              className="btn-press"
+              style={{
+                width: '100%',
+                marginTop: '8px',
+                padding: '9px 12px',
+                borderRadius: '10px',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                background: 'rgba(56, 189, 248, 0.15)',
+                color: '#38BDF8',
+                fontSize: '11.5px',
+                fontWeight: 700,
                 cursor: 'pointer'
               }}
             >
-              <XCircle size={13} /> Đóng Phòng Ngay
+              + Mở Phiên Điểm Danh Mới
             </button>
-          </div>
+          )}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
@@ -619,29 +666,44 @@ export default function FacultyPortalPro() {
                   padding: '10px 12px'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span>{item.name}</span>
-                      <span style={{
-                        fontSize: '10px',
-                        color: item.status === 'ABSENT' ? '#EF4444' : item.status === 'PENDING_SPOTCHECK' ? '#F59E0B' : '#10B981',
-                        fontWeight: 700
-                      }}>
-                        {item.status === 'ABSENT'
-                          ? '✗ Vắng Mặt'
-                          : item.status === 'PENDING_SPOTCHECK'
-                          ? '⏳ Chờ Quét Lại...'
-                          : item.spotCheckVerified
-                          ? '✓ Có Mặt (Đã quét lại FaceID)'
-                          : '✓ Có Mặt'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono', marginTop: '2px' }}>
-                      MSSV: {item.mssv} • Cách máy chiếu: <strong style={{ color: '#38BDF8' }}>{item.dist}m</strong>
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#64748B', marginTop: '2px' }}>
-                      Mạng: {item.network} ({item.ip}) • Lúc {item.time}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <img 
+                      src={item.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'} 
+                      alt="Ảnh thẻ SV" 
+                      style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '1.5px solid rgba(56, 189, 248, 0.5)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                        flexShrink: 0
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span>{item.name}</span>
+                        <span style={{
+                          fontSize: '10px',
+                          color: item.status === 'ABSENT' ? '#EF4444' : item.status === 'PENDING_SPOTCHECK' ? '#F59E0B' : '#10B981',
+                          fontWeight: 700
+                        }}>
+                          {item.status === 'ABSENT'
+                            ? '✗ Vắng Mặt'
+                            : item.status === 'PENDING_SPOTCHECK'
+                            ? '⏳ Chờ Quét Lại...'
+                            : item.spotCheckVerified
+                            ? '✓ Có Mặt (Đã quét lại FaceID)'
+                            : '✓ Có Mặt'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono', marginTop: '2px' }}>
+                        MSSV: <strong style={{ color: '#38BDF8' }}>{item.mssv}</strong> • Cách máy chiếu: {item.dist}m
+                      </div>
+                      <div style={{ fontSize: '10px', color: '#64748B', marginTop: '2px' }}>
+                        Mạng: {item.network} ({item.ip}) • Lúc {item.time}
+                      </div>
                     </div>
                   </div>
 

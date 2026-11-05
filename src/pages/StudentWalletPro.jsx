@@ -81,6 +81,7 @@ export default function StudentWalletPro() {
           studentId: savedIdentity.student?.studentId || savedIdentity.student?.mssv || '2251120000',
           fullName: savedIdentity.student?.fullName || 'Nguyễn Đức Hiển',
           major: savedIdentity.student?.major || 'An toàn Thông tin',
+          avatar: savedIdentity.student?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
           address: savedIdentity.address,
           privateKey: savedIdentity.privateKey || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
           merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
@@ -101,6 +102,7 @@ export default function StudentWalletPro() {
           studentId: '2251120000',
           fullName: 'Nguyễn Đức Hiển',
           major: 'An toàn Thông tin',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
           address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
           privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
           merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
@@ -173,6 +175,8 @@ export default function StudentWalletPro() {
       studentId: studentInfo.studentId,
       fullName: studentInfo.fullName,
       major: studentInfo.major,
+      faculty: studentInfo.faculty,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       address,
       deviceId,
       merkleRoot,
@@ -198,7 +202,8 @@ export default function StudentWalletPro() {
         mssv: defaultInitialVC.studentId,
         fullName: defaultInitialVC.fullName,
         major: defaultInitialVC.major,
-        faculty: 'Công nghệ Thông tin'
+        faculty: 'Công nghệ Thông tin',
+        avatar: defaultInitialVC.avatar
       }
     };
     await setItem('uth_did_identity', identityObj);
@@ -210,6 +215,21 @@ export default function StudentWalletPro() {
     setCredential(defaultInitialVC);
     setPinSavedNotice(`Đã sinh ví ngẫu nhiên (${address.slice(0, 6)}...${address.slice(-4)}), mã hóa AES-GCM (PIN: ${cleanPin}) & liên kết WebAuthn FaceID!`);
     triggerScanSuccessFeedback();
+  };
+
+  // Cập nhật ảnh thẻ sinh viên (Avatar) lưu bền vững vào IndexedDB
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Data = event.target.result;
+      const updated = { ...credential, avatar: base64Data };
+      setCredential(updated);
+      await setItem('uth_student_vc', updated);
+      triggerScanSuccessFeedback();
+    };
+    reader.readAsDataURL(file);
   };
 
   // Kiểm tra quét thử Face ID phần cứng
@@ -432,27 +452,68 @@ export default function StudentWalletPro() {
               <ShieldCheck size={20} color={zkpMode ? '#10B981' : '#38BDF8'} />
             </div>
 
-            <div style={{ margin: '18px 0 14px' }}>
-              <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>
-                {zkpMode ? 'CHỨNG MINH TỐI THIỂU (ẨN DANH TÍNH CÁ NHÂN)' : 'CHỦ THẺ SINH VIÊN'}
-              </div>
-              <div style={{ fontSize: zkpMode ? '14.5px' : '17px', fontWeight: 800, color: zkpMode ? '#10B981' : '#FFF', marginTop: '2px' }}>
-                {zkpMode ? 'Proof = { isUTHStudent: true, status: "Active" }' : credential.fullName.toUpperCase()}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
-                <div>
-                  <div style={{ fontSize: '9.5px', color: '#64748B' }}>{zkpMode ? 'THUỘC TÍNH' : 'MSSV'}</div>
-                  <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#E2E8F0', fontFamily: 'JetBrains Mono' }}>
-                    {zkpMode ? 'isUTHStudent: true' : credential.studentId}
+            <div style={{ margin: '18px 0 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '10px', color: '#64748B', fontWeight: 600 }}>
+                  {zkpMode ? 'CHỨNG MINH TỐI THIỂU (ẨN DANH TÍNH CÁ NHÂN)' : 'CHỦ THẺ SINH VIÊN'}
+                </div>
+                <div style={{ fontSize: zkpMode ? '14.5px' : '17px', fontWeight: 800, color: zkpMode ? '#10B981' : '#FFF', marginTop: '2px', wordBreak: 'break-word' }}>
+                  {zkpMode ? 'Proof = { isUTHStudent: true, status: "Active" }' : credential.fullName.toUpperCase()}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '9.5px', color: '#64748B' }}>{zkpMode ? 'THUỘC TÍNH' : 'MSSV'}</div>
+                    <div style={{ fontSize: '12.5px', fontWeight: 700, color: '#E2E8F0', fontFamily: 'JetBrains Mono' }}>
+                      {zkpMode ? 'isUTHStudent: true' : credential.studentId}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '9.5px', color: '#64748B' }}>{zkpMode ? 'TRẠNG THÁI' : 'CHUYÊN NGÀNH'}</div>
+                    <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#E2E8F0' }}>
+                      {zkpMode ? 'status: "Active"' : credential.major}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '9.5px', color: '#64748B' }}>{zkpMode ? 'TRẠNG THÁI' : 'CHUYÊN NGÀNH'}</div>
-                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#E2E8F0' }}>
-                    {zkpMode ? 'status: "Active"' : credential.major}
-                  </div>
-                </div>
               </div>
+
+              {/* Ảnh thẻ sinh viên (Avatar) */}
+              {!zkpMode && (
+                <div style={{ position: 'relative', flexShrink: 0, textAlign: 'center' }}>
+                  <img
+                    src={credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                    alt="Ảnh thẻ"
+                    style={{
+                      width: '54px',
+                      height: '54px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '2px solid rgba(56, 189, 248, 0.6)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                      display: 'block'
+                    }}
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    style={{
+                      display: 'block',
+                      fontSize: '9px',
+                      color: '#38BDF8',
+                      cursor: 'pointer',
+                      marginTop: '4px',
+                      fontWeight: 600
+                    }}
+                  >
+                    Đổi ảnh
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleAvatarUpload}
+                  />
+                </div>
+              )}
             </div>
 
             {showPassQr && (

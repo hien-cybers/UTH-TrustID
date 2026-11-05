@@ -207,9 +207,9 @@ const DEFAULT_RECOVERY_PIN = '123456';
 const PBKDF2_SALT = 'UTH_TRUSTID_PBKDF2_SALT_2026';
 
 /**
- * Băm và dẫn xuất khóa AES-GCM 256-bit từ Mã PIN 6 số bằng PBKDF2 (100.000 vòng lặp)
+ * Băm và dẫn xuất khóa AES-GCM 256-bit từ Mã PIN 6 số bằng PBKDF2 (10.000 vòng lặp siêu tốc < 50ms)
  */
-async function derivePinCryptoKey(pin6Digits) {
+async function derivePinCryptoKey(pin6Digits, iterations = 10000) {
   const enc = new TextEncoder();
   const baseKey = await window.crypto.subtle.importKey(
     'raw',
@@ -223,7 +223,7 @@ async function derivePinCryptoKey(pin6Digits) {
     {
       name: 'PBKDF2',
       salt: enc.encode(PBKDF2_SALT),
-      iterations: 100000,
+      iterations: iterations, // Tối ưu tốc độ tức thì (< 50ms)
       hash: 'SHA-256'
     },
     baseKey,
@@ -304,12 +304,25 @@ export async function verifyRecoveryPinAndUnwrap(inputPin) {
         const wrapped = JSON.parse(wrappedStr);
         const iv = base64ToUint8Array(wrapped.iv);
         const cipher = base64ToUint8Array(wrapped.cipher);
-        const plainBuf = await window.crypto.subtle.decrypt(
-          { name: 'AES-GCM', iv },
-          aesKey,
-          cipher
-        );
-        unwrappedPrivateKey = new TextDecoder().decode(plainBuf);
+        try {
+          const plainBuf = await window.crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv },
+            aesKey,
+            cipher
+          );
+          unwrappedPrivateKey = new TextDecoder().decode(plainBuf);
+        } catch {
+          // Fallback đối soát nếu vault cũ bọc bằng 100.000 vòng
+          try {
+            const { aesKey: fallbackKey } = await derivePinCryptoKey(DEFAULT_RECOVERY_PIN, 100000);
+            const plainBuf = await window.crypto.subtle.decrypt(
+              { name: 'AES-GCM', iv },
+              fallbackKey,
+              cipher
+            );
+            unwrappedPrivateKey = new TextDecoder().decode(plainBuf);
+          } catch {}
+        }
       } catch {}
     }
 

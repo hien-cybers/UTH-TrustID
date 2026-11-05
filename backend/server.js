@@ -12,7 +12,7 @@ import authRouter, { requireRole } from './routes/auth.js';
 const app = express();
 app.set('trust proxy', true);
 app.use(cors({ origin: '*' }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Hỗ trợ ảnh thẻ sinh viên Base64 dung lượng lớn
 
 // Gắn router xác thực Staff RBAC (Giảng viên & Admin)
 app.use('/api/auth', authRouter);
@@ -340,28 +340,34 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Khi Giảng viên bấm "Đóng Phòng & Hủy Mã Ngay", phát tín hiệu tức thời tới toàn bộ điện thoại trong phòng
-  socket.on('close-session', ({ sessionId } = {}) => {
-    if (sessionId) {
-      const sess = activeAttendanceSessions.get(sessionId);
-      if (sess) sess.locked = true;
-      activeSessions.delete(sessionId);
-      io.to(sessionId).emit('session-terminated', {
-        sessionId,
-        message: 'Phiên điểm danh đã kết thúc bởi giảng viên'
+  // XỬ LÝ NÚT ĐÓNG PHÒNG HỌC TỪ GIẢNG VIÊN (Socket broadcast tức thì 0ms)
+  socket.on('close-session', (payload = {}) => {
+    const targetSid = (typeof payload === 'string' ? payload : payload?.sessionId) || latestOpenSessionId;
+    if (targetSid && activeSessions.has(targetSid)) {
+      const session = activeSessions.get(targetSid);
+      session.status = 'CLOSED';
+      activeSessions.set(targetSid, session);
+      const legacySess = activeAttendanceSessions.get(targetSid);
+      if (legacySess) legacySess.locked = true;
+
+      // Báo ngay lập tức cho toàn bộ điện thoại sinh viên và màn hình giảng viên
+      io.to(targetSid).emit('session-closed', {
+        sessionId: targetSid,
+        message: 'Phiên điểm danh đã kết thúc bởi giảng viên!'
       });
-      io.to(sessionId).emit('session-closed', {
-        sessionId,
-        message: 'Phiên học đã kết thúc bởi giảng viên!'
+      io.to(targetSid).emit('session-terminated', {
+        sessionId: targetSid,
+        message: 'Phiên điểm danh đã kết thúc bởi giảng viên!'
       });
+      console.log(`[Socket] Session closed: ${targetSid}`);
     }
-    io.emit('session-terminated', {
-      sessionId: sessionId || null,
-      message: 'Phiên điểm danh đã kết thúc bởi giảng viên'
-    });
     io.emit('session-closed', {
-      sessionId: sessionId || null,
-      message: 'Phiên học đã kết thúc bởi giảng viên!'
+      sessionId: targetSid || null,
+      message: 'Phiên điểm danh đã kết thúc bởi giảng viên!'
+    });
+    io.emit('session-terminated', {
+      sessionId: targetSid || null,
+      message: 'Phiên điểm danh đã kết thúc bởi giảng viên!'
     });
   });
 });
@@ -2006,16 +2012,17 @@ app.post('/api/session/close', (req, res) => {
   const { sessionId } = req.body;
   const targetSid = sessionId || latestOpenSessionId;
   if (targetSid && activeSessions.has(targetSid)) {
-    activeSessions.delete(targetSid);
+    const session = activeSessions.get(targetSid);
+    session.status = 'CLOSED';
+    activeSessions.set(targetSid, session);
     const legacySess = activeAttendanceSessions.get(targetSid);
     if (legacySess) legacySess.locked = true;
-    if (latestOpenSessionId === targetSid) latestOpenSessionId = null;
 
-    io.to(targetSid).emit('session-closed', { sessionId: targetSid, message: 'Phiên học đã kết thúc bởi giảng viên!' });
-    io.to(targetSid).emit('session-terminated', { sessionId: targetSid, message: 'Phiên học đã kết thúc bởi giảng viên!' });
-    io.emit('session-closed', { sessionId: targetSid, message: 'Phiên học đã kết thúc bởi giảng viên!' });
-    io.emit('session-terminated', { sessionId: targetSid, message: 'Phiên học đã kết thúc bởi giảng viên!' });
-    return res.json({ success: true });
+    io.to(targetSid).emit('session-closed', { sessionId: targetSid, message: 'Phiên điểm danh đã kết thúc bởi giảng viên!' });
+    io.to(targetSid).emit('session-terminated', { sessionId: targetSid, message: 'Phiên điểm danh đã kết thúc bởi giảng viên!' });
+    io.emit('session-closed', { sessionId: targetSid, message: 'Phiên điểm danh đã kết thúc bởi giảng viên!' });
+    io.emit('session-terminated', { sessionId: targetSid, message: 'Phiên điểm danh đã kết thúc bởi giảng viên!' });
+    return res.json({ success: true, message: 'Đã đóng phòng điểm danh thành công!' });
   }
   return res.status(404).json({ error: 'Không tìm thấy phiên' });
 });
@@ -2184,22 +2191,29 @@ app.post('/api/attendance/submit', async (req, res) => {
       });
     }
 
-    // ĐIỂM DANH THÀNH CÔNG -> Lưu vào danh sách phòng
+    // ĐIỂM DANH THÀNH CÔNG -> Lưu vào danh sách phòng (kèm avatar ảnh thẻ sinh viên)
+    const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
     const attendeeRecord = {
       id: 'REC_' + Date.now(),
+      studentId: studentData.studentId,
       mssv: studentData.studentId,
-      name: studentData.fullName,
-      fullName: studentData.fullName,
-      major: studentData.major,
+      name: studentData.fullName || studentData.name,
+      fullName: studentData.fullName || studentData.name,
+      major: studentData.major || 'An toàn Thông tin',
+      avatar: studentData.avatar || studentData.photo || defaultAvatar,
       address: verifyAddr,
+      deviceId: deviceId,
       lat: sLat,
       lon: sLon,
       coordsStr: `${Number(sLat).toFixed(5)}, ${Number(sLon).toFixed(5)}`,
+      coords: { lat: sLat, lon: sLon },
       dist: Math.round(dist),
+      distance: `${Math.round(dist)}m`,
       ip: clientIP,
       network: session.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'Wi-Fi UTH' : 'Mobile Data / Wi-Fi',
       networkMode: session.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'Wi-Fi UTH' : 'Mobile Data / Wi-Fi',
       time: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+      checkInTime: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
       signatureHash: `${signature.slice(0, 14)}...${signature.slice(-6)}`,
       merkleVerified: true,
       status: 'PRESENT', // PRESENT | PENDING_SPOTCHECK | ABSENT
@@ -2208,9 +2222,11 @@ app.post('/api/attendance/submit', async (req, res) => {
 
     session.attendees.set(studentData.studentId, attendeeRecord);
 
-    // Bắn tín hiệu WebSocket cho máy chiếu của Giảng viên cập nhật ngay lập tức
+    // Bắn tín hiệu WebSocket cho máy chiếu của Giảng viên cập nhật ngay lập tức (0ms trễ)
     io.to(session.sessionId).emit('new-attendee', attendeeRecord);
+    io.to(session.sessionId).emit('student-checked-in', attendeeRecord);
     io.emit('new-attendee', attendeeRecord);
+    io.emit('student-checked-in', attendeeRecord);
     io.to(session.sessionId).emit('student-verified', attendeeRecord);
     io.emit('attendance-update', { sessionId: session.sessionId, attendee: attendeeRecord });
 
