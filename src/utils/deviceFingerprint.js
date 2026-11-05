@@ -96,7 +96,10 @@ function getCanvasShortHash() {
  * (làm thành phần thứ 5 thay đổi sau khi cập nhật iOS), 4/5 thành phần đầu vẫn khớp 100%
  * -> Điểm tương đồng Fuzzy Matching đạt 80% (>= ngưỡng 80%), KHÔNG từ chối nhầm sinh viên!
  */
+let cachedFingerprint = null;
+
 export async function getDeviceFingerprint() {
+  if (cachedFingerprint) return cachedFingerprint;
   try {
     // 1. Non-extractable Web Crypto API Tag (IndexedDB Hardware Anchor)
     const cryptoTag = await getOrCreateWebCryptoHardwareTag();
@@ -121,7 +124,8 @@ export async function getDeviceFingerprint() {
     // 5. Canvas Fingerprint (có thể dao động nhẹ trên iOS Safari Private/Updates)
     const canvasHash = getCanvasShortHash();
 
-    return `HYBRID:${cryptoTag}:${screenHash}:${platformHash}:${tzHash}:${canvasHash}`;
+    cachedFingerprint = `HYBRID:${cryptoTag}:${screenHash}:${platformHash}:${tzHash}:${canvasHash}`;
+    return cachedFingerprint;
   } catch (err) {
     console.warn('Fallback fingerprint used:', err);
     return ethers.id(navigator.userAgent + '_UTH_FALLBACK');

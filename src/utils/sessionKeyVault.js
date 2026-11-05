@@ -12,3 +12,4 @@ export function getActiveWallet() {
 export function clearActiveWallet() {
   activeDecryptedWallet = null;
 }
+

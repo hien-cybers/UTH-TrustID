@@ -12,6 +12,7 @@ export const PUBLIC_TUNNEL_URL = 'https://fuzzy-drinks-own.loca.lt';
 const RESOLVED_KEY = 'uth_resolved_backend_url';
 let resolvedBaseUrl = null;
 let resolvingPromise = null;
+let activeWorkingBase = null; // Ghi nhớ Base URL đã kết nối thành công để phản hồi tức thì (< 10ms)
 
 function isNativeShell() {
   if (typeof window === 'undefined') return false;
@@ -24,12 +25,12 @@ function isNativeShell() {
 
 /**
  * Xác định URL kết nối Backend chuẩn xác cho cả 3 môi trường:
- * - Trình duyệt máy tính (localhost:5173) -> dùng Vite Proxy ('') hoặc http://localhost:5000
+ * - Trình duyệt máy tính (localhost:5173) -> dùng Vite Proxy ('') hoặc http://127.0.0.1:5000
  * - Trình duyệt điện thoại qua Cloudflare Tunnel -> dùng chính origin HTTPS đó ('')
  * - Ứng dụng Native iOS (.ipa cài qua Sideloadly, hostname: trustid.ut.edu.vn) -> dùng PUBLIC_TUNNEL_URL hoặc LAN_BACKEND_URL
  */
 export function getBackendBaseUrl() {
-  if (typeof window === 'undefined') return 'http://localhost:5000';
+  if (typeof window === 'undefined') return 'http://127.0.0.1:5000';
 
   const savedCustom = localStorage.getItem('uth_custom_backend_url');
   if (savedCustom && savedCustom.trim()) {
@@ -54,7 +55,7 @@ export function getBackendBaseUrl() {
     return `http://${host}:5000`;
   }
 
-  return 'http://localhost:5000';
+  return 'http://127.0.0.1:5000';
 }
 
 export function getSocketUrl() {
@@ -65,7 +66,7 @@ export function getSocketUrl() {
   return base;
 }
 
-async function probeBase(base, timeoutMs = 2500) {
+async function probeBase(base, timeoutMs = 1500) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -95,12 +96,14 @@ export function resolveBackendUrl() {
     lastGood,
     LAN_BACKEND_URL,
     `http://${HOTSPOT_LAN_IP}:5000`,
+    'http://127.0.0.1:5000',
     PUBLIC_TUNNEL_URL
   ].filter(Boolean))];
 
-  resolvingPromise = Promise.any(candidates.map((c) => probeBase(c)))
+  resolvingPromise = Promise.any(candidates.map((c) => probeBase(c, 1500)))
     .then((base) => {
       resolvedBaseUrl = base;
+      activeWorkingBase = base;
       try { localStorage.setItem(RESOLVED_KEY, base); } catch {}
       return base;
     })
@@ -126,49 +129,78 @@ export async function retargetSocket(socket) {
   return socket;
 }
 
+async function fetchCandidate(url, options, timeoutMs = 1500) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(`Invalid content-type: ${contentType}`);
+    }
+    return { res, url };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 /**
- * Gọi API thông minh với cơ chế tự động Fallback:
- * Thử gọi qua Primary URL (Tunnel / Proxy) -> nếu lỗi mạng thì tự động gọi sang LAN IP (http://192.168.88.200:5000) -> Hotspot IP (http://192.168.137.1:5000)
+ * Gọi API thông minh siêu tốc (< 20ms) với cơ chế tự động Fallback tức thì:
+ * 1. Gọi trực tiếp Base URL đã xác thực (activeWorkingBase / primaryBase).
+ * 2. Nếu rớt mạng hoặc IP thay đổi: dò song song (Promise.any) các ứng viên (LAN, 127.0.0.1, Hotspot) với timeout 1.5s
+ *    thay vì duyệt tuần tự làm treo app 15 giây.
  */
 export async function smartFetch(path, options = {}) {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  if (isNativeShell()) {
+  if (isNativeShell() && !resolvedBaseUrl) {
     try { await resolveBackendUrl(); } catch {}
   }
   const primaryBase = getBackendBaseUrl();
 
   const candidates = [
+    activeWorkingBase ? `${activeWorkingBase}${cleanPath}` : null,
     `${primaryBase}${cleanPath}`,
+    `http://127.0.0.1:5000${cleanPath}`,
+    `http://127.0.0.1:4000${cleanPath}`,
     `http://${DEFAULT_LAN_IP}:5000${cleanPath}`,
     `http://${HOTSPOT_LAN_IP}:5000${cleanPath}`,
-    `${PUBLIC_TUNNEL_URL}${cleanPath}`,
-    `http://localhost:5000${cleanPath}`
-  ];
+    PUBLIC_TUNNEL_URL ? `${PUBLIC_TUNNEL_URL}${cleanPath}` : null
+  ].filter(Boolean);
 
-  // Loại bỏ các URL trùng lặp
   const uniqueUrls = [...new Set(candidates)];
 
-  let lastError = null;
-  for (const url of uniqueUrls) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-      const res = await fetch(url, {
-        ...options,
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      // Kiểm tra chắc chắn phản hồi là JSON chứ không phải trang index.html tĩnh của Capacitor
-      const contentType = res.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        return res;
-      }
-    } catch (err) {
-      lastError = err;
+  // Thử ngay URL đầu tiên (thường là working base hoặc origin hiện tại) với timeout ngắn
+  const firstUrl = uniqueUrls[0];
+  try {
+    const { res } = await fetchCandidate(firstUrl, options, 1500);
+    return res;
+  } catch {
+    // Nếu URL đầu tiên lỗi, reset activeWorkingBase nếu nó trùng
+    if (activeWorkingBase && firstUrl.startsWith(activeWorkingBase)) {
+      activeWorkingBase = null;
     }
   }
 
-  throw lastError || new Error('Không thể kết nối tới Backend Server');
+  // Thử song song tất cả các candidate còn lại (Promise.any) với timeout 1500ms
+  const remaining = uniqueUrls.slice(1);
+  if (remaining.length === 0) {
+    throw new Error('Không thể kết nối tới Backend Server');
+  }
+
+  try {
+    const { res, url } = await Promise.any(
+      remaining.map((u) => fetchCandidate(u, options, 1500))
+    );
+    try {
+      const parsed = new URL(url);
+      activeWorkingBase = `${parsed.protocol}//${parsed.host}`;
+    } catch {}
+    return res;
+  } catch {
+    throw new Error('Không thể kết nối tới Backend Server: Tất cả các địa chỉ mạng đều không phản hồi.');
+  }
 }
 

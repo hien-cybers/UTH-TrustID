@@ -20,3 +20,4 @@ export function getInitialThemeIsDark() {
   toggleTheme(isDark);
   return isDark;
 }
+
