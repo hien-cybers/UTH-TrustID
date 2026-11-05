@@ -1,5 +1,6 @@
 // src/utils/credentialStorage.js - Két lưu trữ Thẻ sinh viên số, Merkle Proof & Hàng đợi Điểm danh Offline 2 Lớp (Android SW Sync + iOS Visibility/Online Fallback)
 import { openDB } from 'idb';
+import { smartFetch } from './backendUrl';
 
 const DB_NAME = 'UTH_TrustID_DB';
 const DB_VERSION = 2;
@@ -165,7 +166,7 @@ export async function syncOfflineAttendanceFromIDB() {
 
   isSyncingInProgress = true;
   try {
-    const res = await fetch('/api/attendance/sync-offline', {
+    const res = await smartFetch('/api/attendance/sync-offline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ packets: pendingPackets })
