@@ -598,9 +598,12 @@ export default function ScanPage() {
             merkleProof: vc?.merkleProof || ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85']
           })
         });
-        const submitData = await submitRes.json();
+        let submitData = null;
+        try {
+          submitData = await submitRes.json();
+        } catch {}
 
-        if (submitRes.ok && submitData.success) {
+        if (submitRes.ok && submitData?.success) {
           setLivenessStampData({
             studentName: studentFullName.toUpperCase(),
             mssv: targetMssv,
@@ -625,73 +628,19 @@ export default function ScanPage() {
           return;
         }
 
-        const res = await smartFetch('/api/attendance/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            challengeNonce: nonce,
-            nonce,
-            timestamp: Date.now(),
-            did: identity.address,
-            studentId: targetMssv,
-            studentName: studentFullName,
-            studentData: {
-              studentId: targetMssv,
-              fullName: studentFullName,
-              name: studentFullName,
-              major: identity.student?.major || vc?.major || 'An toàn Thông tin',
-              avatar: vc?.avatar || identity.student?.avatar
-            },
-            studentCoords: {
-              lat: smoothedPos.lat,
-              lon: smoothedPos.lon,
-              accuracy: smoothedPos.accuracy
-            },
-            sessionCoords: !isNaN(sessionLat) && !isNaN(sessionLon) ? { lat: sessionLat, lon: sessionLon } : undefined,
-            networkPolicy: policy,
-            deviceId,
-            biometricVerified: true,
-            motionTelemetry: motionTelemetryRef.current,
-            signature: signResult.signature,
-            merkleProof: vc?.merkleProof || undefined,
-            leafHash: vc?.leafHash,
-            merkleRoot: vc?.merkleRoot
-          })
-        });
-
-        const data = await res.json();
-        if (res.ok && data.success) {
-          setLivenessStampData({
-            studentName: studentFullName.toUpperCase(),
-            mssv: targetMssv,
-            sessionId,
-            signatureHash: shortSig,
-            distance: `${distance}m`,
-            biometricVerified: true,
-            proximityWarning: data.proximityWarning || null
-          });
-
-          setScanStatus({
-            type: 'SUCCESS',
-            title: 'ĐIỂM DANH THÀNH CÔNG (VERIFIED BIOMETRICS)',
-            message: `Sinh viên ${studentFullName} (${targetMssv}) đã vượt qua cổng Sinh trắc học WebAuthn & ghi nhận vào sổ cái (Pre-warm GPS: ${gpsLatencyMs}ms • Fuzzy HW: ${Math.round((data.data?.hardwareSimilarity || 1) * 100)}%).`,
-            details: {
-              sessionId,
-              distance: `${distance}m (Pre-warm GPS ${gpsLatencyMs}ms)`,
-              time: new Date().toLocaleTimeString('vi-VN'),
-              signatureHash: shortSig,
-              merkleVerified: data.data?.merkleVerified !== false
-            }
-          });
-        } else {
+        // Nếu máy chủ từ chối có thông điệp lỗi (Ví dụ: hết hạn, ngoài phòng, chưa mở phòng...)
+        if (submitData?.error) {
           setScanStatus({
             type: 'ERROR',
-            title: data.code === 'SESSION_LOCKED' ? 'PHIÊN ĐIỂM DANH ĐÃ KẾT THÚC' : 'ĐIỂM DANH THẤT BẠI',
-            message: data.message || 'Mã phiên không hợp lệ hoặc đã hết hạn.'
+            title: 'ĐIỂM DANH THẤT BẠI',
+            message: submitData.error
           });
+          return;
         }
-      } catch {
+
+        throw new Error(submitData?.message || 'Lỗi gửi dữ liệu lên máy chủ');
+      } catch (networkErr) {
+        console.warn('Lỗi kết nối máy chủ, chuyển sang chế độ lưu offline vào IndexedDB:', networkErr);
         const ts = Date.now();
         await saveOfflineAttendanceToIDB({
           id: 'OFF_' + ts,
@@ -700,11 +649,11 @@ export default function ScanPage() {
           timestamp: ts,
           studentId: targetMssv,
           fullName: studentFullName,
-          address: identity.address,
-          deviceId,
+          address: signingAddress || identity.address,
+          deviceId: currentDeviceId,
           dist: distance,
-          signedPayload: signMsg,
-          signature: signResult.signature
+          signedPayload: rawChallenge,
+          signature: unifiedSignature
         });
         const updatedQueue = await getAllOfflineAttendanceFromIDB();
         setOfflineQueue(updatedQueue || []);
@@ -721,7 +670,7 @@ export default function ScanPage() {
         setScanStatus({
           type: 'SUCCESS',
           title: 'ĐÃ LƯU NGOẠI TUYẾN VÀO INDEXEDDB',
-          message: `Đã ký số EIP-191 và lưu vào IndexedDB để tự động đồng bộ qua 2 lớp khi có mạng.`,
+          message: `Chưa có kết nối máy chủ. Gói tin điểm danh đã được ký số EIP-191 và lưu vào IndexedDB an toàn để tự động đồng bộ khi có mạng.`,
           details: {
             sessionId,
             distance: `${distance}m`,
