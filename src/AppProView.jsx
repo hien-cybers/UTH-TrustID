@@ -240,9 +240,11 @@ export default function AppProView({ initialTab = 'wallet' }) {
       socket.on('session-terminated', (payload) => {
         setSessionActive(false);
         setUseLiveCamera(false);
-        setScanStatus('terminated');
         setTerminatedMsg(payload?.message || 'Phiên điểm danh đã kết thúc bởi giảng viên');
-        triggerSessionTerminatedFeedback();
+        if (!livenessActive) {
+          setScanStatus('terminated');
+          triggerSessionTerminatedFeedback();
+        }
       });
 
       const handleNewAttendee = (raw) => {

@@ -346,6 +346,7 @@ io.on('connection', (socket) => {
     if (targetSid && activeSessions.has(targetSid)) {
       const session = activeSessions.get(targetSid);
       session.status = 'CLOSED';
+      session.closedAt = Date.now(); // Ghi nhận thời điểm đóng phòng để ân hạn Grace Period 20s
       activeSessions.set(targetSid, session);
       const legacySess = activeAttendanceSessions.get(targetSid);
       if (legacySess) legacySess.locked = true;
@@ -2014,6 +2015,7 @@ app.post('/api/session/close', (req, res) => {
   if (targetSid && activeSessions.has(targetSid)) {
     const session = activeSessions.get(targetSid);
     session.status = 'CLOSED';
+    session.closedAt = Date.now(); // Ghi nhận thời điểm đóng phòng để ân hạn Grace Period 20s
     activeSessions.set(targetSid, session);
     const legacySess = activeAttendanceSessions.get(targetSid);
     if (legacySess) legacySess.locked = true;
@@ -2056,8 +2058,18 @@ app.post('/api/attendance/submit', async (req, res) => {
     const targetSid = (reqSid && activeSessions.has(reqSid)) ? reqSid : latestOpenSessionId;
     const session = targetSid ? activeSessions.get(targetSid) : null;
 
-    if (!session || session.status !== 'OPEN') {
-      return res.status(400).json({ error: 'Phòng học không tồn tại hoặc đã đóng! Giảng viên cần bấm "Mở Lớp Học / Phòng Thi" trước.' });
+    if (!session) {
+      return res.status(404).json({ error: 'Phòng học không tồn tại! Giảng viên cần bấm "Mở Lớp Học / Phòng Thi" trước.' });
+    }
+
+    // Nếu phòng đã đóng, kiểm tra thời gian ân hạn Grace Period (20 giây sau khi đóng)
+    if (session.status === 'CLOSED') {
+      const closedAt = session.closedAt || Date.now();
+      const reqTs = Number(timestamp) || Date.now();
+      if (reqTs > closedAt + 20000) {
+        return res.status(400).json({ error: 'Phiên điểm danh đã kết thúc hoàn toàn. Không thể ghi nhận thêm!' });
+      }
+      console.log(`[GracePeriod] Chấp thuận gói tin gửi trong thời gian ân hạn 20s cho SV ${studentData?.studentId}`);
     }
 
     // 1. Kiểm tra độ trễ gói tin (Chống Delay/Replay Attack - Giới hạn 30 giây)

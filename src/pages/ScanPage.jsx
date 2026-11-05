@@ -80,6 +80,8 @@ export default function ScanPage() {
 
   const socketRef = useRef(null);
   const isTerminatedRef = useRef(false);
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
+  const hasCheckedInRef = useRef(false);
   const motionTelemetryRef = useRef({ beta: 42.5, gamma: -3.2, accelMag: 9.81 });
 
   // [ĐIỂM NGHẼN ① & TẦNG 3 TELEMETRY]: Kích hoạt Pre-warm GPS nền + Cảm biến góc nghiêng/gia tốc
@@ -155,6 +157,12 @@ export default function ScanPage() {
       retargetSocket(socket).catch(() => {});
 
       const handleClosed = (payload) => {
+        // Nếu sinh viên ĐÃ điểm danh thành công: Giữ nguyên con dấu Liveness Stamp và giao diện thành công!
+        if (hasCheckedInRef.current) {
+          setIsScanning(false);
+          return;
+        }
+
         isTerminatedRef.current = true;
         setIsScanning(false);
         setLivenessStampData(null);
@@ -163,7 +171,7 @@ export default function ScanPage() {
         setScanStatus({
           type: 'ERROR',
           title: 'PHIÊN ĐIỂM DANH ĐÃ KẾT THÚC',
-          message: payload?.message || 'Phiên điểm danh đã kết thúc bởi giảng viên. Camera đã tự động tắt và không cho phép gửi thêm dữ liệu.',
+          message: payload?.message || 'Phiên điểm danh đã kết thúc bởi giảng viên. Camera đã tự động tắt.',
           details: payload?.sessionId ? { sessionId: payload.sessionId } : null
         });
       };
@@ -604,6 +612,8 @@ export default function ScanPage() {
         } catch {}
 
         if (submitRes.ok && submitData?.success) {
+          setHasCheckedIn(true);
+          hasCheckedInRef.current = true;
           setLivenessStampData({
             studentName: studentFullName.toUpperCase(),
             mssv: targetMssv,
