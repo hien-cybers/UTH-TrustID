@@ -13,6 +13,7 @@
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.6.0",
     "@capacitor/ios": "^8.6.0",
+    "@capgo/capacitor-native-biometric": "^8.9.1",
     "ethers": "^6.17.0",
     "html5-qrcode": "^2.3.8",
     "idb": "^8.0.4",

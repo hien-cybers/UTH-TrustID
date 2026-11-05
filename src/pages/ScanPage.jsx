@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import CameraScannerPro from '../components/CameraScannerPro';
 import ProofOfLivenessStamp from '../components/ProofOfLivenessStamp';
+import FaceIDModal from '../components/FaceIDModal';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -68,6 +69,12 @@ export default function ScanPage() {
   // Trạng thái Tái kiểm tra điểm danh đột xuất (Spot-Check 60s từ Giảng viên)
   const [spotCheckRequest, setSpotCheckRequest] = useState(null);
   const [spotCheckCountdown, setSpotCheckCountdown] = useState(0);
+
+  // Trạng thái Xác thực Sinh trắc học Face ID (Apple Laser Scan & Native Biometric)
+  const [showFaceIdModal, setShowFaceIdModal] = useState(false);
+  const [faceIdReason, setFaceIdReason] = useState('Mở khóa Private Key trong RAM để ký điểm danh EIP-191');
+  const [pendingQrPayload, setPendingQrPayload] = useState(null);
+  const [isSpotCheckFaceId, setIsSpotCheckFaceId] = useState(false);
 
   const socketRef = useRef(null);
   const isTerminatedRef = useRef(false);
@@ -208,15 +215,19 @@ export default function ScanPage() {
     return () => clearInterval(t);
   }, [spotCheckRequest, spotCheckCountdown]);
 
-  const handleConfirmSpotCheckFaceId = async () => {
+  // Kích hoạt Modal Face ID khi Giảng viên yêu cầu Tái kiểm tra đột xuất
+  const handleConfirmSpotCheckFaceId = () => {
+    if (!spotCheckRequest) return;
+    setFaceIdReason('Xác thực lại Face ID cho đợt kiểm tra đột xuất (Spot-Check 60s)');
+    setIsSpotCheckFaceId(true);
+    setShowFaceIdModal(true);
+  };
+
+  // Ký số và gửi xác nhận Spot-Check sau khi vượt qua Face ID hoặc PIN dự phòng
+  const executeSpotCheckSubmit = async () => {
     if (!spotCheckRequest) return;
     try {
       const targetSpotNonce = spotCheckRequest.spotNonce || spotCheckRequest.challenge || 'SPOT_CHECK';
-      const verified = await authenticateWithFallback(
-        targetSpotNonce,
-        requestPinFallbackModal
-      );
-      if (!verified) return;
 
       let studentId = '2251120000';
       let fullName = 'Nguyễn Đức Hiển';
@@ -228,12 +239,19 @@ export default function ScanPage() {
         if (vc.privateKey) privateKey = vc.privateKey;
       } catch {}
 
-      const sigRes = await signAuthChallenge({ privateKey }, targetSpotNonce);
+      let sig = '';
+      try {
+        const signVault = await signWithDecryptedKey('123456', targetSpotNonce);
+        sig = signVault.signature;
+      } catch {
+        const sigRes = await signAuthChallenge({ privateKey }, targetSpotNonce);
+        sig = sigRes.signature;
+      }
 
       socketRef.current?.emit('submit-spot-check', {
         sessionId: spotCheckRequest.sessionId || 'SES_A2301',
         studentId,
-        signature: sigRes.signature
+        signature: sig
       });
 
       await smartFetch('/api/attendance/spot-check-verify', {
@@ -250,7 +268,9 @@ export default function ScanPage() {
       triggerScanSuccessFeedback();
       setSpotCheckRequest(null);
       setSyncMessage(`✓ Đã hoàn tất xác thực lại FaceID (Spot-Check) lúc ${new Date().toLocaleTimeString('vi-VN')}!`);
-    } catch {}
+    } catch (e) {
+      console.error('Lỗi spot check:', e);
+    }
   };
 
   const handleBackgroundSync = async () => {
@@ -325,14 +345,51 @@ export default function ScanPage() {
     navigate('/wallet');
   }, [navigate]);
 
+  // Khi Camera hoặc nút Quét Thử Nhanh quét được mã QR
   const handleScanSuccess = async (qrResult) => {
     if (isTerminatedRef.current) return;
 
     setIsScanning(false);
+    setPendingQrPayload(qrResult);
+    setFaceIdReason('Mở khóa Private Key trong RAM để ký điểm danh EIP-191');
+    setIsSpotCheckFaceId(false);
+    setShowFaceIdModal(true);
+  };
+
+  // Xác thực Face ID thành công
+  const handleFaceIdSuccess = async () => {
+    setShowFaceIdModal(false);
+    if (isSpotCheckFaceId) {
+      await executeSpotCheckSubmit();
+    } else if (pendingQrPayload) {
+      await executeAttendanceSubmission(pendingQrPayload);
+    }
+  };
+
+  // Người dùng chọn phương thức Fallback sang Mã PIN 6 số (123456)
+  const handleFaceIdFallbackPin = () => {
+    setShowFaceIdModal(false);
+    requestPinFallbackModal().then(async (pinSuccess) => {
+      if (pinSuccess) {
+        if (isSpotCheckFaceId) {
+          await executeSpotCheckSubmit();
+        } else if (pendingQrPayload) {
+          await executeAttendanceSubmission(pendingQrPayload);
+        }
+      } else {
+        setIsScanning(true);
+      }
+    });
+  };
+
+  // Tiến trình trích xuất toạ độ GPS, ký số EIP-191 và gửi lên Backend
+  const executeAttendanceSubmission = async (qrResult) => {
+    if (isTerminatedRef.current) return;
+
     setScanStatus({
       type: 'PROCESSING',
-      title: 'ĐANG XÁC THỰC SINH TRẮC HỌC (WEBAUTHN PASSKEY)...',
-      message: 'Đang kiểm tra FaceID / TouchID để mở khóa Private Key trong RAM...'
+      title: 'ĐANG XỬ LÝ ĐIỂM DANH MẬT MÃ...',
+      message: 'Đang trích xuất toạ độ GPS, đối soát chữ ký EIP-191 và Merkle Proof...'
     });
 
     let identity = getSavedIdentity();
@@ -398,29 +455,6 @@ export default function ScanPage() {
           role: 'STUDENT',
           studentId: identity.student?.studentId || '2251120000'
         });
-      }
-
-      // [BƯỚC 1 - CRYPTOGRAPHIC BIOMETRIC GATE]:
-      // Gọi WebAuthn (`verifyBiometricPresence`) kèm cơ chế Seamless Re-enrollment bằng Mã PIN 6 số (`authenticateWithFallback`)
-      let biometricVerified = false;
-      try {
-        biometricVerified = await authenticateWithFallback(nonce, requestPinFallbackModal);
-      } catch (bioErr) {
-        setScanStatus({
-          type: 'ERROR',
-          title: 'TỪ CHỐI MỞ KHÓA SINH TRẮC HỌC (WEBAUTHN BLOCKED)',
-          message: `Không thể mở khóa Private Key để ký số: ${bioErr.message || 'Xác thực FaceID/Vân tay hoặc Mã PIN bị hủy!'}`
-        });
-        return;
-      }
-
-      if (!biometricVerified) {
-        setScanStatus({
-          type: 'ERROR',
-          title: 'XÁC THỰC SINH TRẮC HỌC THẤT BẠI',
-          message: 'Bạn đã hủy xác thực FaceID/TouchID và Mã PIN dự phòng. Private Key vẫn được khóa an toàn trong IndexedDB.'
-        });
-        return;
       }
 
       // [BƯỚC 2]: Rung phản hồi Haptic [40, 60, 40] & Âm thanh Beep khi vượt qua Sinh trắc học
@@ -1052,6 +1086,20 @@ export default function ScanPage() {
           </div>
         </div>
       )}
+
+      {/* Modal Face ID Apple Laser Scanning & Native Biometric */}
+      <FaceIDModal
+        isOpen={showFaceIdModal}
+        onSuccess={handleFaceIdSuccess}
+        onCancel={() => {
+          setShowFaceIdModal(false);
+          setIsScanning(true);
+        }}
+        onFallbackPin={handleFaceIdFallbackPin}
+        studentName="Nguyễn Đức Hiển"
+        studentId="2251120000"
+        reason={faceIdReason}
+      />
 
     </div>
   );

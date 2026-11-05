@@ -6,13 +6,15 @@ import { io } from 'socket.io-client';
 import { ethers } from 'ethers';
 import { 
   ShieldCheck, Wallet, Scan, Radio, MapPin, Wifi, Smartphone, 
-  X, RotateCw, Play, XCircle, AlertTriangle, CheckCircle2, Maximize2, Minimize2
+  X, RotateCw, Play, XCircle, AlertTriangle, CheckCircle2, Maximize2, Minimize2, FileSpreadsheet
 } from 'lucide-react';
 import { verifyBiometricPresence } from './utils/webauthnHelper';
 import SplashScreen from './components/SplashScreen';
 import LiveClock from './components/LiveClock';
 import CameraScannerPro from './components/CameraScannerPro';
 import LockScreenModal from './components/LockScreenModal';
+import FaceIDModal from './components/FaceIDModal';
+import { exportAttendanceToExcel } from './utils/exportAttendanceReport';
 import { useAutoLock } from './hooks/useAutoLock';
 import { getSocketUrl, smartFetch, DEFAULT_LAN_IP, retargetSocket } from './utils/backendUrl';
 import { getOrCreateDeviceId, signWithDecryptedKey } from './utils/identityManager';
@@ -34,6 +36,12 @@ export default function UTHTrustIDApp() {
   const { isLocked, unlock } = useAutoLock(30000);
   const [activeTab, setActiveTab] = useState('wallet'); // 'wallet' | 'scan' | 'faculty'
   const [showCameraScanner, setShowCameraScanner] = useState(false);
+
+  // Trạng thái Xác thực Sinh trắc học Face ID Apple Laser Scanning & Native Biometric
+  const [showFaceIdModal, setShowFaceIdModal] = useState(false);
+  const [faceIdReason, setFaceIdReason] = useState('Mở khóa Private Key trong RAM để ký điểm danh EIP-191');
+  const [pendingScanPayload, setPendingScanPayload] = useState(null);
+  const [isSpotCheckFaceId, setIsSpotCheckFaceId] = useState(false);
 
   // DỮ LIỆU DANH TÍNH SINH VIÊN (HOLDER) - KHỚP TOÁN HỌC 100% VỚI PRIVATE KEY & MERKLE ROOT
   const [credential] = useState({
@@ -139,10 +147,17 @@ export default function UTHTrustIDApp() {
     return () => clearInterval(timer);
   }, [spotCheckData, spotCountdown]);
 
-  // Sinh viên quét FaceID phản hồi Spot-check
-  const handleConfirmSpotCheck = async () => {
+  // Sinh viên quét FaceID phản hồi Spot-check -> Mở Modal Face ID Apple / Native Biometric
+  const handleConfirmSpotCheck = () => {
+    if (!spotCheckData) return;
+    setFaceIdReason('Xác thực lại Face ID cho đợt kiểm tra đột xuất (Spot-Check 60s)');
+    setIsSpotCheckFaceId(true);
+    setShowFaceIdModal(true);
+  };
+
+  // Ký số và gửi phản hồi Spot-Check
+  const executeSpotCheckSubmit = async () => {
     try {
-      await verifyBiometricPresence(spotCheckData.spotNonce);
       let sig = '';
       try {
         const signRes = await signWithDecryptedKey('123456', spotCheckData.spotNonce);
@@ -156,8 +171,9 @@ export default function UTHTrustIDApp() {
         studentId: credential.studentId,
         signature: sig
       });
+      setSpotCheckData(null);
     } catch (e) {
-      alert('Lỗi FaceID: ' + e.message);
+      alert('Lỗi FaceID Spot-Check: ' + e.message);
     }
   };
 
@@ -284,10 +300,18 @@ export default function UTHTrustIDApp() {
       }
 
       setShowCameraScanner(false);
+      setPendingScanPayload({ targetSessionId, targetNonce });
+      setFaceIdReason('Mở khóa Private Key trong RAM để ký điểm danh EIP-191');
+      setIsSpotCheckFaceId(false);
+      setShowFaceIdModal(true);
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
 
-      // 1. Quét FaceID qua WebAuthn
-      await verifyBiometricPresence(targetNonce);
-
+  // Ký số EIP-191 và gửi điểm danh sau khi Face ID đã xác thực
+  const executeAttendanceSubmit = async ({ targetSessionId, targetNonce }) => {
+    try {
       // 2. Ký thông điệp EIP-191 chuẩn ngữ cảnh (Toạ độ, Device ID, Timestamp)
       const timestamp = Date.now();
       const deviceId = getOrCreateDeviceId();
@@ -333,11 +357,36 @@ export default function UTHTrustIDApp() {
           studentId: credential.studentId
         });
         setLivenessActive(true);
+        setActiveTab('wallet');
       } else {
-        alert('❌ Từ chối điểm danh: ' + data.error);
+        alert('❌ Từ chối điểm danh: ' + (data.message || data.error));
       }
     } catch (err) {
-      alert('Lỗi: ' + err.message);
+      alert('Lỗi gửi điểm danh: ' + err.message);
+    }
+  };
+
+  // Xác thực Face ID thành công
+  const handleFaceIdSuccess = async () => {
+    setShowFaceIdModal(false);
+    if (isSpotCheckFaceId) {
+      await executeSpotCheckSubmit();
+    } else if (pendingScanPayload) {
+      await executeAttendanceSubmit(pendingScanPayload);
+    }
+  };
+
+  const handleFaceIdFallbackPin = async () => {
+    setShowFaceIdModal(false);
+    const pin = prompt('Nhập mã PIN dự phòng 6 chữ số:');
+    if (pin === '123456') {
+      if (isSpotCheckFaceId) {
+        await executeSpotCheckSubmit();
+      } else if (pendingScanPayload) {
+        await executeAttendanceSubmit(pendingScanPayload);
+      }
+    } else if (pin !== null) {
+      alert('Mã PIN không chính xác (mặc định là 123456)');
     }
   };
 
@@ -508,10 +557,33 @@ export default function UTHTrustIDApp() {
                   </div>
                 </div>
 
-                {/* Danh sách sinh viên cập nhật thời gian thực */}
+                {/* Danh sách sinh viên cập nhật thời gian thực & Xuất Báo Cáo Excel (.xlsx) */}
                 <div style={{ background: '#0A0E17', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '14px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94A3B8', marginBottom: '10px' }}>
-                    SINH VIÊN ĐÃ ĐIỂM DANH ({attendees.length})
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#94A3B8' }}>
+                      SINH VIÊN ĐÃ ĐIỂM DANH ({attendees.length})
+                    </div>
+                    {attendees.length > 0 && (
+                      <button
+                        onClick={() => exportAttendanceToExcel(attendees, { sessionId: facultySession?.id, roomName: 'Phòng A2-301 (Lab ATTT)' })}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: 'rgba(16,185,129,0.15)',
+                          border: '1px solid rgba(16,185,129,0.3)',
+                          color: '#10B981',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <FileSpreadsheet size={12} />
+                        <span>Xuất Excel (.xlsx)</span>
+                      </button>
+                    )}
                   </div>
                   {attendees.length === 0 ? (
                     <div style={{ fontSize: '11.5px', color: '#64748B', textAlign: 'center', padding: '14px 0' }}>
@@ -601,6 +673,17 @@ export default function UTHTrustIDApp() {
           <Radio size={18} /><span style={{ fontSize: '10px', marginTop: 2 }}>Giảng Viên</span>
         </button>
       </nav>
+
+      {/* MODAL FACE ID APPLE LASER SCANNING & NATIVE BIOMETRIC */}
+      <FaceIDModal
+        isOpen={showFaceIdModal}
+        onSuccess={handleFaceIdSuccess}
+        onCancel={() => setShowFaceIdModal(false)}
+        onFallbackPin={handleFaceIdFallbackPin}
+        studentName={credential.fullName}
+        studentId={credential.studentId}
+        reason={faceIdReason}
+      />
 
     </div>
   );

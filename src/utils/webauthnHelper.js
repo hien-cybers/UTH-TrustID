@@ -83,13 +83,38 @@ export async function registerBiometric(studentId = '2251120000') {
 
 /**
  * 2. Xác thực FaceID / TouchID trước khi giải phóng Private Key ký EIP-191
+ * Hỗ trợ đồng thời 2 tầng:
+ * - Native iOS / Android: Gọi trực tiếp Secure Enclave / LocalAuthentication qua @capgo/capacitor-native-biometric
+ * - Web / PWA / Browser: Gọi FIDO2 WebAuthn API hoặc giao diện mô phỏng Apple Face ID
  */
-export async function verifyBiometricPresence(challengeNonce = 'UTH_CHALLENGE') {
+export async function verifyBiometricPresence(challengeNonce = 'UTH_CHALLENGE', reason = 'UTH-TrustID: Xác thực Face ID để mở khóa ví DID và ký số EIP-191') {
   // Hỗ trợ chế độ mô phỏng "Sinh viên vừa đổi FaceID/Vân tay mới trong Cài đặt iPhone/Android"
   if (localStorage.getItem('uth_simulate_biometric_invalidated') === 'true') {
     const simulatedErr = new Error('Dữ liệu sinh trắc học trên thiết bị đã thay đổi (Biometric State Invalidation)');
     simulatedErr.name = 'InvalidStateError';
     throw simulatedErr;
+  }
+
+  // 1. Kiểm tra môi trường Capacitor Native (iOS / Android)
+  try {
+    const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
+    const available = await NativeBiometric.isAvailable();
+    if (available && available.isAvailable) {
+      await NativeBiometric.verifyIdentity({
+        reason: reason,
+        title: 'Xác Thực Sinh Trắc Học Face ID',
+        subtitle: 'UTH TrustID Biometric Gate',
+        description: 'Vui lòng nhìn vào camera / Face ID để mở khóa ví DID'
+      });
+      return true;
+    }
+  } catch (nativeErr) {
+    if (nativeErr?.message?.includes('cancel') || nativeErr?.code === 'userCancel') {
+      const cancelErr = new Error('Người dùng đã hủy xác thực sinh trắc học Face ID');
+      cancelErr.name = 'NotAllowedError';
+      throw cancelErr;
+    }
+    // Nếu NativeBiometric không khả dụng (ví dụ chạy trên web), tiếp tục luồng WebAuthn bên dưới
   }
 
   if (typeof window === 'undefined' || !window.PublicKeyCredential) {

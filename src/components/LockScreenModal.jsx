@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Lock, Fingerprint, AlertCircle } from 'lucide-react';
 import { verifyBiometricPresence } from '../utils/webauthnHelper';
+import FaceIDModal from './FaceIDModal';
 
 const CORRECT_PIN = '123456'; // Mã PIN chuẩn
 
@@ -9,16 +10,12 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [attempts, setAttempts] = useState(0);
+  const [showFaceModal, setShowFaceModal] = useState(false);
 
   // Xử lý xác thực lại bằng FaceID/WebAuthn
   const handleBioUnlock = async () => {
-    try {
-      setErrorMsg('');
-      await verifyBiometricPresence('RE_AUTH_CHALLENGE_' + Date.now());
-      onUnlockSuccess();
-    } catch (err) {
-      setErrorMsg('Không nhận diện được khuôn mặt/vân tay. Vui lòng nhập mã PIN.');
-    }
+    setErrorMsg('');
+    setShowFaceModal(true);
   };
 
   // Xử lý kiểm tra mã PIN
@@ -179,6 +176,19 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
         <Fingerprint size={16} />
         Mở khóa bằng FaceID / Vân tay
       </button>
+
+      {/* Modal Face ID Apple / Native Biometric */}
+      <FaceIDModal
+        isOpen={showFaceModal}
+        onSuccess={() => {
+          setShowFaceModal(false);
+          onUnlockSuccess();
+        }}
+        onCancel={() => setShowFaceModal(false)}
+        onFallbackPin={() => setShowFaceModal(false)}
+        studentName={studentName}
+        reason="Mở khóa bảo mật ứng dụng UTH-TrustID"
+      />
     </div>
   );
 }
