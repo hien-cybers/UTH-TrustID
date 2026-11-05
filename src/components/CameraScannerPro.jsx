@@ -247,24 +247,25 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
   }, [startCamera, stopCamera]);
 
   return (
-    <div style={{
+    <div className="glass-card" style={{
       position: 'relative',
       width: '100%',
       maxWidth: '380px',
       margin: '0 auto',
-      background: '#0F1420',
+      background: 'var(--bg-card)',
       borderRadius: '20px',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
+      border: '1px solid var(--border-hairline)',
       padding: '16px',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      boxShadow: 'var(--shadow-card)'
     }}>
       {/* Canvas ẩn phục vụ giải mã khung hình jsQR */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {/* Header Modal */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: '#FFF' }}>
-          <Camera size={16} color="#38BDF8" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+          <Camera size={16} color="var(--accent-cyan)" />
           <span>Quét mã QR xác thực</span>
         </div>
         {onClose && (
@@ -273,7 +274,7 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
               stopCamera();
               if (onCloseRef.current) onCloseRef.current();
             }}
-            style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 4 }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
           >
             <X size={18} />
           </button>

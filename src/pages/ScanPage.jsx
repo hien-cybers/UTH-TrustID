@@ -880,19 +880,19 @@ export default function ScanPage() {
           className="glass-card"
           style={{
             borderColor: 'rgba(245, 158, 11, 0.65)',
-            background: 'linear-gradient(145deg, rgba(180, 83, 9, 0.35) 0%, #0A0E17 75%)',
+            background: 'var(--tint-amber)',
             padding: '14px'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#FCD34D' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--tone-amber)' }}>
               📢 YÊU CẦU TÁI KIỂM TRA ĐỘT XUẤT (SPOT-CHECK)
             </span>
             <span style={{ fontSize: '11.5px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#F59E0B' }}>
               Còn {spotCheckCountdown}s
             </span>
           </div>
-          <p style={{ fontSize: '11px', color: '#E2E8F0', margin: '0 0 10px', lineHeight: 1.45 }}>
+          <p style={{ fontSize: '11px', color: 'var(--text-main)', margin: '0 0 10px', lineHeight: 1.45 }}>
             Giảng viên vừa kích hoạt lệnh kiểm tra hiện diện giữa giờ. Vui lòng xác thực lại <b>FaceID / TouchID</b> trong vòng 60 giây để không bị đánh vắng:
           </p>
           <button
@@ -926,17 +926,17 @@ export default function ScanPage() {
           className="glass-card"
           style={{
             borderColor: 'rgba(245, 158, 11, 0.55)',
-            background: 'linear-gradient(145deg, rgba(120, 53, 15, 0.35) 0%, #0A0E17 70%)',
+            background: 'var(--tint-amber)',
             padding: '16px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <KeyRound size={18} color="#F59E0B" />
-            <h3 style={{ fontSize: '13.5px', fontWeight: 800, color: '#FCD34D', margin: 0 }}>
+            <h3 style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--tone-amber)', margin: 0 }}>
               Cập Nhật Lại Liên Kết FaceID / Vân Tay
             </h3>
           </div>
-          <p style={{ fontSize: '11.5px', color: '#E2E8F0', lineHeight: 1.45, margin: '0 0 10px' }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-main)', lineHeight: 1.45, margin: '0 0 10px' }}>
             Dữ liệu sinh trắc học trên thiết bị đã thay đổi (<code>InvalidStateError</code>). Nhập <b>Mã PIN cá nhân 6 số</b> để giải mã khóa <code>AES-GCM 256-bit</code> và kích hoạt lại FaceID mới mà không mất thẻ số:
           </p>
 
@@ -987,9 +987,9 @@ export default function ScanPage() {
               style={{
                 padding: '10px 14px',
                 borderRadius: '10px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                background: 'transparent',
-                color: '#94A3B8',
+                border: '1px solid var(--border-neutral)',
+                background: 'var(--bg-inset)',
+                color: 'var(--text-muted)',
                 fontWeight: 600,
                 fontSize: '12px',
                 cursor: 'pointer'
@@ -1062,10 +1062,10 @@ export default function ScanPage() {
         <div className="glass-card" style={{ borderColor: 'rgba(56, 189, 248, 0.38)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
             <div>
-              <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#FFF' }}>
+              <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
                 Hàng Đợi IndexedDB ({offlineQueue.length} gói chữ ký)
               </div>
-              <div style={{ fontSize: '10px', color: '#64748B', marginTop: '2px' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '2px' }}>
                 Auto-Sync 2 Lớp: Android SW Sync + iOS online/visibilitychange
               </div>
             </div>

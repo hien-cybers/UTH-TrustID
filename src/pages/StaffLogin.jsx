@@ -197,8 +197,8 @@ export default function StaffLogin({ onLoginSuccess }) {
         </form>
 
         {/* Nút đăng nhập mẫu nhanh (Quick Fill for Demo) */}
-        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #162032' }}>
-          <div style={{ fontSize: '10.5px', color: '#8492a6', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-hairline)' }}>
+          <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Nạp nhanh tài khoản thử nghiệm (RBAC):
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -209,9 +209,9 @@ export default function StaffLogin({ onLoginSuccess }) {
                 width: '100%',
                 padding: '7px 10px',
                 borderRadius: '6px',
-                background: 'rgba(56, 189, 248, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
-                color: '#38bdf8',
+                background: 'var(--tint-cyan)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: 'var(--tone-sky)',
                 fontSize: '11px',
                 fontWeight: 600,
                 textAlign: 'left',
@@ -222,7 +222,7 @@ export default function StaffLogin({ onLoginSuccess }) {
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <GraduationCap size={14} color="#38bdf8" />
+                <GraduationCap size={14} color="var(--tone-sky)" />
                 <span>Giảng Viên: giangvien@ut.edu.vn</span>
               </span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Pass: 123456)</span>
@@ -235,9 +235,9 @@ export default function StaffLogin({ onLoginSuccess }) {
                 width: '100%',
                 padding: '7px 10px',
                 borderRadius: '6px',
-                background: 'rgba(0, 230, 118, 0.08)',
-                border: '1px solid rgba(0, 230, 118, 0.25)',
-                color: '#00e676',
+                background: 'var(--tint-green)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                color: 'var(--tone-green)',
                 fontSize: '11px',
                 fontWeight: 600,
                 textAlign: 'left',
@@ -248,7 +248,7 @@ export default function StaffLogin({ onLoginSuccess }) {
               }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShieldCheck size={14} color="#00e676" />
+                <ShieldCheck size={14} color="var(--tone-green)" />
                 <span>Root Admin: admin@ut.edu.vn</span>
               </span>
               <span style={{ fontSize: '10px', opacity: 0.8 }}>(Pass: 123456)</span>
@@ -256,7 +256,7 @@ export default function StaffLogin({ onLoginSuccess }) {
           </div>
         </div>
 
-        <div style={{ marginTop: '16px', paddingTop: '10px', borderTop: '1px solid #162032', fontSize: '11px', color: '#64748b', textAlign: 'center', lineHeight: '1.45' }}>
+        <div style={{ marginTop: '16px', paddingTop: '10px', borderTop: '1px solid var(--border-hairline)', fontSize: '11px', color: 'var(--text-dim)', textAlign: 'center', lineHeight: '1.45' }}>
           Sinh viên không sử dụng cổng này. Mở tab <strong>Ví Sinh Viên</strong> để xuất trình thẻ số DID.
         </div>
 

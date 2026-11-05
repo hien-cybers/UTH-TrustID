@@ -58,8 +58,6 @@ export default function ProofOfLivenessStamp({
         padding: '15px',
         borderRadius: '20px',
         border: proximityWarning ? '1px solid rgba(245, 158, 11, 0.65)' : '1px solid rgba(16, 185, 129, 0.48)',
-        background: 'linear-gradient(145deg, rgba(6, 78, 59, 0.42) 0%, rgba(10, 14, 23, 0.96) 65%, #04060A 100%)',
-        boxShadow: '0 12px 32px rgba(16, 185, 129, 0.22)',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -177,8 +175,8 @@ export default function ProofOfLivenessStamp({
           display: 'flex',
           alignItems: 'center',
           gap: '11px',
-          background: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.09)',
+          background: 'var(--bg-inset)',
+          border: '1px solid var(--border-hairline)',
           borderRadius: '14px',
           padding: '10px 12px',
           marginBottom: '10px'
@@ -197,14 +195,14 @@ export default function ProofOfLivenessStamp({
           }}
         />
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: '9px', color: '#38BDF8', fontWeight: 700, letterSpacing: '0.4px' }}>
+          <div style={{ fontSize: '9px', color: 'var(--tone-sky)', fontWeight: 700, letterSpacing: '0.4px' }}>
             HỒ SƠ ĐỐI SOÁT TRỰC QUAN (VC HOLDER)
           </div>
           <div
             style={{
               fontSize: '15px',
               fontWeight: 800,
-              color: '#FFF',
+              color: 'var(--text-main)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -217,7 +215,7 @@ export default function ProofOfLivenessStamp({
             <span style={{ fontSize: '12px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#10B981' }}>
               MSSV: {mssv}
             </span>
-            <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', color: '#94A3B8' }}>
+            <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', color: 'var(--text-muted)' }}>
               {sessionId} ({distance})
             </span>
           </div>
@@ -227,7 +225,7 @@ export default function ProofOfLivenessStamp({
       {/* Đồng hồ Mili-giây + Mã Hash Động Đổi Mỗi Giây (1s) */}
       <div
         style={{
-          background: 'rgba(4, 6, 10, 0.82)',
+          background: 'var(--bg-inset)',
           border: '1px solid rgba(16, 185, 129, 0.32)',
           borderRadius: '14px',
           padding: '10px 12px',
@@ -280,13 +278,13 @@ export default function ProofOfLivenessStamp({
             display: 'flex',
             alignItems: 'flex-start',
             gap: '6px',
-            background: 'rgba(245, 158, 11, 0.14)',
+            background: 'var(--tint-amber)',
             border: '1px solid rgba(245, 158, 11, 0.45)',
             borderRadius: '10px',
             padding: '8px 10px',
             marginBottom: '8px',
             fontSize: '10px',
-            color: '#FCD34D',
+            color: 'var(--tone-amber)',
             lineHeight: 1.4
           }}
         >

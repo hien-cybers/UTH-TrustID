@@ -21,15 +21,16 @@ const LiveClock = memo(function LiveClock({ showIcon = true, style = {} }) {
         gap: '4px',
         fontSize: '10.5px',
         fontFamily: 'JetBrains Mono, monospace',
-        color: '#94A3B8',
-        background: 'rgba(255, 255, 255, 0.05)',
+        color: 'var(--text-muted)',
+        background: 'var(--bg-inset)',
         padding: '3px 7px',
         borderRadius: '10px',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        border: '1px solid var(--border-hairline)',
+        fontWeight: 600,
         ...style
       }}
     >
-      {showIcon && <Clock size={11} color="#38BDF8" />}
+      {showIcon && <Clock size={11} color="var(--accent-cyan)" />}
       <span>{currentTime.toLocaleTimeString('vi-VN', { hour12: false })}</span>
     </div>
   );

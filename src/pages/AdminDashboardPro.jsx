@@ -397,12 +397,13 @@ export default function AdminDashboardPro() {
                   <span style={{ fontSize: '9.5px', color: '#64748B' }}>{merkleResult.timestamp}</span>
                 </div>
                 <div style={{
-                  background: '#04060A',
+                  background: 'var(--bg-code)',
+                  border: '1px solid var(--border-hairline)',
                   padding: '7px 9px',
                   borderRadius: '6px',
                   fontFamily: 'JetBrains Mono',
                   fontSize: '10px',
-                  color: '#67E8F9',
+                  color: 'var(--tone-cyan)',
                   wordBreak: 'break-all',
                   display: 'flex',
                   justifyContent: 'space-between',

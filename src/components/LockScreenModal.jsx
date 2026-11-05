@@ -47,7 +47,7 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
         left: 0,
         width: '100vw',
         height: '100dvh',
-        background: 'rgba(4, 6, 10, 0.98)',
+        background: 'var(--bg-header)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         display: 'flex',
@@ -72,22 +72,22 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
           marginBottom: '16px'
         }}
       >
-        <Lock size={30} color="#38BDF8" />
+        <Lock size={30} color="var(--accent-cyan)" />
       </div>
 
-      <div style={{ fontSize: '18px', fontWeight: 800, color: '#FFF', marginBottom: '6px' }}>
+      <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '6px' }}>
         Ứng Dụng Đã Khóa
       </div>
       <div
         style={{
           fontSize: '12.5px',
-          color: '#94A3B8',
+          color: 'var(--text-muted)',
           textAlign: 'center',
           marginBottom: '24px'
         }}
       >
         Phiên đăng nhập tạm khóa để bảo vệ thẻ số của{' '}
-        <strong style={{ color: '#FFF' }}>{studentName}</strong>.
+        <strong style={{ color: 'var(--text-main)' }}>{studentName}</strong>.
       </div>
 
       {/* Form nhập PIN chuẩn hóa */}
@@ -107,9 +107,9 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
             width: '100%',
             padding: '12px',
             borderRadius: '12px',
-            background: '#0F172A',
-            border: errorMsg ? '1px solid #EF4444' : '1px solid rgba(255, 255, 255, 0.15)',
-            color: '#FFF',
+            background: 'var(--bg-card)',
+            border: errorMsg ? '1px solid #EF4444' : '1px solid var(--border-hairline)',
+            color: 'var(--text-main)',
             fontSize: '18px',
             textAlign: 'center',
             letterSpacing: '6px',
@@ -143,11 +143,11 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
             width: '100%',
             padding: '12px',
             borderRadius: '12px',
-            background: pin.length === 6 ? '#0284C7' : '#1E293B',
-            color: pin.length === 6 ? '#FFF' : '#64748B',
+            background: pin.length === 6 ? '#0284C7' : 'var(--bg-inset)',
+            color: pin.length === 6 ? '#FFF' : 'var(--text-dim)',
             fontWeight: 700,
             fontSize: '13px',
-            border: 'none',
+            border: pin.length === 6 ? 'none' : '1px solid var(--border-hairline)',
             cursor: pin.length === 6 ? 'pointer' : 'not-allowed',
             marginBottom: '12px'
           }}
@@ -163,9 +163,9 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguy�
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          background: 'transparent',
+          background: 'var(--tint-cyan)',
           border: '1px solid rgba(56, 189, 248, 0.3)',
-          color: '#38BDF8',
+          color: 'var(--tone-sky)',
           padding: '10px 18px',
           borderRadius: '20px',
           fontSize: '12px',

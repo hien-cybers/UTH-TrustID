@@ -25,6 +25,30 @@
   --accent-green: #10B981;
   --accent-amber: #F59E0B;
   --accent-rose: #F43F5E;
+
+  /* Màu chữ nhấn theo ngữ nghĩa (tự đổi độ đậm theo nền Sáng/Tối để luôn đủ tương phản) */
+  --tone-cyan: #22D3EE;
+  --tone-sky: #38BDF8;
+  --tone-blue: #60A5FA;
+  --tone-green: #34D399;
+  --tone-amber: #FCD34D;
+  --tone-rose: #FB7185;
+  --tone-red: #F87171;
+  --tone-purple: #C084FC;
+
+  /* Nền nhạt cho banner cảnh báo / thông tin */
+  --tint-amber: rgba(245, 158, 11, 0.12);
+  --tint-cyan: rgba(6, 182, 212, 0.12);
+  --tint-green: rgba(16, 185, 129, 0.12);
+  --tint-rose: rgba(244, 63, 94, 0.12);
+  --tint-neutral: rgba(255, 255, 255, 0.06);
+  --border-neutral: rgba(255, 255, 255, 0.12);
+
+  /* Modal / bảng nổi */
+  --bg-modal: #0F172A;
+  --bg-modal-footer: #020617;
+  --bg-code: #020617;
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 /* Light Mode chuẩn Design System (bg-slate-100 / bg-white / border-slate-200 / text-slate-900) */
@@ -35,29 +59,69 @@ html:not(.dark),
   --bg-card: #FFFFFF;
   --bg-card-elevated: #F8FAFC;
   --bg-inset: #F8FAFC;
-  --bg-header: rgba(255, 255, 255, 0.95);
+  --bg-header: rgba(255, 255, 255, 0.96);
   --border-hairline: #E2E8F0;
-  --border-active: rgba(6, 182, 212, 0.45);
+  --border-active: rgba(8, 145, 178, 0.45);
 
   --text-main: #0F172A;
   --text-muted: #475569;
   --text-dim: #64748B;
+
+  --accent-cyan: #0891B2;
+  --accent-blue: #0369A1;
+  --accent-green: #059669;
+  --accent-amber: #D97706;
+  --accent-rose: #E11D48;
+
+  --tone-cyan: #0E7490;
+  --tone-sky: #0369A1;
+  --tone-blue: #1D4ED8;
+  --tone-green: #047857;
+  --tone-amber: #B45309;
+  --tone-rose: #BE123C;
+  --tone-red: #B91C1C;
+  --tone-purple: #7E22CE;
+
+  --tint-amber: #FFFBEB;
+  --tint-cyan: #ECFEFF;
+  --tint-green: #ECFDF5;
+  --tint-rose: #FFF1F2;
+  --tint-neutral: #F1F5F9;
+  --border-neutral: #CBD5E1;
+
+  --bg-modal: #FFFFFF;
+  --bg-modal-footer: #F8FAFC;
+  --bg-code: #F1F5F9;
+  --shadow-card: 0 2px 10px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 html:not(.dark) .glass-card,
 html:not(.dark) .native-card,
 [data-theme="light"] .glass-card,
 [data-theme="light"] .native-card {
-  background: #FFFFFF !important;
-  border-color: #E2E8F0 !important;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: var(--shadow-card);
   color: #0F172A;
 }
 
+/* Trong Light Mode: mọi chữ "trắng/xám sáng" kiểu inline cũ trên nền trắng đều được ép về màu chữ chuẩn */
+html:not(.dark) .glass-card [style*="color: rgb(255, 255, 255)"]:not(button):not(button *),
+html:not(.dark) .glass-card [style*="color: rgb(226, 232, 240)"],
+html:not(.dark) .glass-card [style*="color: rgb(241, 245, 249)"],
+html:not(.dark) .glass-card [style*="color: rgb(248, 250, 252)"] {
+  color: var(--text-main) !important;
+}
+
+/* Thanh cuộn Light Mode */
+html:not(.dark) ::-webkit-scrollbar-track { background: #E2E8F0; }
+html:not(.dark) ::-webkit-scrollbar-thumb { background: #94A3B8; }
+
 html:not(.dark) .bottom-nav,
 [data-theme="light"] .bottom-nav {
-  background: rgba(255, 255, 255, 0.96) !important;
+  background: rgba(255, 255, 255, 0.97) !important;
   border-top: 1px solid #E2E8F0 !important;
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.05);
 }
 
 html:not(.dark) .pro-input,
@@ -65,6 +129,16 @@ html:not(.dark) .pro-input,
   background: #F8FAFC !important;
   border-color: #CBD5E1 !important;
   color: #0F172A !important;
+}
+
+html:not(.dark) .pro-input::placeholder {
+  color: #94A3B8;
+}
+
+/* Light Mode: khung điện thoại có bóng mềm, không viền đen */
+html:not(.dark) .mobile-viewport,
+html:not(.dark) .app-container {
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12) !important;
 }
 
 *, *::before, *::after {
@@ -204,6 +278,16 @@ html, body {
   box-shadow: 0 16px 36px -10px rgba(2, 132, 199, 0.35);
 }
 
+html:not(.dark) .hero-pass,
+html:not(.dark) .sheen-card,
+[data-theme="light"] .hero-pass,
+[data-theme="light"] .sheen-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 55%, #EFF6FF 100%) !important;
+  border: 1px solid #BAE6FD !important;
+  box-shadow: 0 10px 28px -8px rgba(2, 132, 199, 0.14) !important;
+  color: #0F172A;
+}
+
 .hero-pass::after,
 .sheen-card::after {
   content: '';
@@ -215,6 +299,13 @@ html, body {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
   animation: sheenLight 7s infinite ease-in-out;
   pointer-events: none;
+}
+
+html:not(.dark) .hero-pass::after,
+html:not(.dark) .sheen-card::after,
+[data-theme="light"] .hero-pass::after,
+[data-theme="light"] .sheen-card::after {
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.10), transparent);
 }
 
 /* Tia laser quét camera */

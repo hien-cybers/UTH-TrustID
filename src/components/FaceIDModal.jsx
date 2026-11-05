@@ -106,7 +106,7 @@ export default function FaceIDModal({
         style={{
           width: '100%',
           maxWidth: '340px',
-          background: 'linear-gradient(160deg, rgba(15, 23, 42, 0.98), rgba(6, 11, 23, 0.98))',
+          background: 'var(--bg-modal)',
           border: scanState === 'SUCCESS' ? '1px solid rgba(16, 185, 129, 0.6)' : '1px solid rgba(56, 189, 248, 0.35)',
           borderRadius: '24px',
           padding: '28px 22px 20px',
@@ -122,15 +122,15 @@ export default function FaceIDModal({
             position: 'absolute',
             top: '14px',
             right: '14px',
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: 'none',
+            background: 'var(--bg-inset)',
+            border: '1px solid var(--border-hairline)',
             borderRadius: '50%',
             width: '28px',
             height: '28px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#94A3B8',
+            color: 'var(--text-muted)',
             cursor: 'pointer'
           }}
         >
@@ -208,10 +208,10 @@ export default function FaceIDModal({
         </div>
 
         {/* Tiêu đề trạng thái */}
-        <div style={{ fontSize: '17px', fontWeight: 800, color: '#FFF', marginBottom: '4px' }}>
+        <div style={{ fontSize: '17px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '4px' }}>
           {scanState === 'SUCCESS' ? 'Xác Thực Face ID Thành Công' : 'Nhận Diện Face ID'}
         </div>
-        <div style={{ fontSize: '11.5px', color: '#94A3B8', marginBottom: '16px', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: 1.4 }}>
           {scanState === 'SUCCESS' ? (
             <span style={{ color: '#10B981', fontWeight: 600 }}>✓ Khóa riêng tư EIP-191 đã được giải phóng trong RAM!</span>
           ) : (
@@ -222,26 +222,26 @@ export default function FaceIDModal({
         {/* Thông tin sinh viên & Vùng bảo mật phần cứng */}
         <div
           style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-inset)',
+            border: '1px solid var(--border-hairline)',
             borderRadius: '12px',
             padding: '10px 12px',
             textAlign: 'left',
             marginBottom: '16px',
             fontSize: '11px',
-            color: '#94A3B8'
+            color: 'var(--text-muted)'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ color: '#64748B' }}>Sinh viên:</span>
-            <span style={{ color: '#FFF', fontWeight: 700 }}>{studentName}</span>
+            <span style={{ color: 'var(--text-dim)' }}>Sinh viên:</span>
+            <span style={{ color: 'var(--text-main)', fontWeight: 700 }}>{studentName}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ color: '#64748B' }}>MSSV:</span>
-            <span style={{ color: '#38BDF8', fontFamily: 'JetBrains Mono', fontWeight: 700 }}>{studentId}</span>
+            <span style={{ color: 'var(--text-dim)' }}>MSSV:</span>
+            <span style={{ color: 'var(--tone-sky)', fontFamily: 'JetBrains Mono', fontWeight: 700 }}>{studentId}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: '#64748B' }}>Phần cứng:</span>
+            <span style={{ color: 'var(--text-dim)' }}>Phần cứng:</span>
             <span style={{ color: '#10B981', fontWeight: 600 }}>Apple Secure Enclave</span>
           </div>
         </div>
@@ -256,9 +256,9 @@ export default function FaceIDModal({
               }}
               className="btn-press"
               style={{
-                background: 'rgba(56, 189, 248, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
-                color: '#38BDF8',
+                background: 'rgba(56, 189, 248, 0.1)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                color: 'var(--tone-sky)',
                 borderRadius: '10px',
                 padding: '8px 14px',
                 fontSize: '11px',
@@ -278,9 +278,9 @@ export default function FaceIDModal({
             onClick={onCancel}
             className="btn-press"
             style={{
-              background: 'transparent',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              color: '#94A3B8',
+              background: 'var(--bg-inset)',
+              border: '1px solid var(--border-hairline)',
+              color: 'var(--text-muted)',
               borderRadius: '10px',
               padding: '8px 14px',
               fontSize: '11px',

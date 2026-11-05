@@ -875,9 +875,9 @@ export default function FacultyPortalPro() {
         <div style={{
           padding: '9px 11px',
           borderRadius: '10px',
-          background: 'rgba(245, 158, 11, 0.12)',
+          background: 'var(--tint-amber)',
           border: '1px solid rgba(245, 158, 11, 0.35)',
-          color: '#FCD34D',
+          color: 'var(--tone-amber)',
           fontSize: '11px',
           fontWeight: 700,
           marginBottom: '12px',
@@ -1055,25 +1055,25 @@ export default function FacultyPortalPro() {
           <div style={{
             width: '100%',
             maxWidth: '400px',
-            background: '#0A0E17',
+            background: 'var(--bg-modal)',
             border: '1px solid rgba(56, 189, 248, 0.35)',
             borderRadius: '20px',
             overflow: 'hidden',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.85)'
+            boxShadow: '0 12px 40px rgba(0,0,0,0.45)'
           }}>
             {/* Header Modal */}
-            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-hairline)' }}>
               <div>
-                <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFF' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
                   Vị trí: {selectedStudentLocation.name} ({selectedStudentLocation.mssv})
                 </div>
-                <div style={{ fontSize: '10.5px', color: '#94A3B8', fontFamily: 'JetBrains Mono', marginTop: '2px' }}>
+                <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono', marginTop: '2px' }}>
                   Toạ độ: {selectedStudentLocation.lat}, {selectedStudentLocation.lon} (Cách {selectedStudentLocation.dist}m)
                 </div>
               </div>
               <button
                 onClick={() => setSelectedStudentLocation(null)}
-                style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
               >
                 <X size={18} />
               </button>
@@ -1095,7 +1095,7 @@ export default function FacultyPortalPro() {
             </div>
 
             {/* Footer Modal */}
-            <div style={{ padding: '10px 14px', background: '#04060A', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '10px 14px', background: 'var(--bg-modal-footer)', borderTop: '1px solid var(--border-hairline)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '11px', fontWeight: 700, color: selectedStudentLocation.dist <= 20 ? '#10B981' : '#F59E0B' }}>
                 {selectedStudentLocation.dist <= 20
                   ? '● Nằm trong vùng an toàn phòng thi (≤ 20m)'
@@ -1103,7 +1103,7 @@ export default function FacultyPortalPro() {
               </span>
               <button
                 onClick={() => setSelectedStudentLocation(null)}
-                style={{ padding: '5px 12px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '6px', color: '#FFF', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                style={{ padding: '5px 12px', background: 'var(--bg-inset)', border: '1px solid var(--border-hairline)', borderRadius: '6px', color: 'var(--text-main)', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
               >
                 Đóng
               </button>

@@ -55,10 +55,10 @@ export default function StudentMapView({ onCoordsUpdated }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px 16px',
-        background: 'rgba(15, 23, 42, 0.75)',
-        border: '1px solid rgba(56, 189, 248, 0.25)',
+        background: 'var(--bg-inset)',
+        border: '1px solid var(--border-hairline)',
         borderRadius: '16px',
-        color: '#38BDF8',
+        color: 'var(--tone-sky)',
         fontSize: '12px',
         fontWeight: 600,
         gap: '8px'
@@ -73,7 +73,7 @@ export default function StudentMapView({ onCoordsUpdated }) {
     return (
       <div style={{
         padding: '16px',
-        background: 'rgba(239, 68, 68, 0.1)',
+        background: 'var(--tint-rose)',
         border: '1px solid rgba(239, 68, 68, 0.3)',
         borderRadius: '16px',
         color: '#EF4444',
@@ -83,16 +83,16 @@ export default function StudentMapView({ onCoordsUpdated }) {
           <AlertCircle size={15} />
           <span>Không thể xác định toạ độ GPS vệ tinh</span>
         </div>
-        <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#FCA5A5', lineHeight: 1.4 }}>
+        <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'var(--tone-rose)', lineHeight: 1.4 }}>
           {error}
         </p>
         <button
           onClick={fetchAndSaveLocation}
           style={{
             padding: '6px 12px',
-            background: 'rgba(239, 68, 68, 0.2)',
+            background: 'rgba(239, 68, 68, 0.16)',
             border: '1px solid rgba(239, 68, 68, 0.4)',
-            color: '#FFF',
+            color: '#EF4444',
             borderRadius: '8px',
             fontSize: '11px',
             fontWeight: 700,
@@ -113,11 +113,10 @@ export default function StudentMapView({ onCoordsUpdated }) {
       display: 'flex',
       flexDirection: 'column',
       gap: '10px',
-      background: 'rgba(10, 14, 23, 0.85)',
-      border: '1px solid rgba(56, 189, 248, 0.25)',
+      background: 'var(--bg-inset)',
+      border: '1px solid var(--border-hairline)',
       padding: '14px',
-      borderRadius: '16px',
-      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+      borderRadius: '16px'
     }}>
       {/* Header trạng thái */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
@@ -130,9 +129,9 @@ export default function StudentMapView({ onCoordsUpdated }) {
             boxShadow: '0 0 8px #10B981',
             display: 'inline-block'
           }} />
-          <span style={{ fontWeight: 700, color: '#E2E8F0' }}>Toạ độ GPS thực tế:</span>
+          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Toạ độ GPS thực tế:</span>
         </div>
-        <span style={{ color: '#38BDF8', fontFamily: 'JetBrains Mono', fontSize: '10.5px', fontWeight: 700 }}>
+        <span style={{ color: 'var(--tone-sky)', fontFamily: 'JetBrains Mono', fontSize: '10.5px', fontWeight: 700 }}>
           Sai số: ±{coords.accuracy ? Math.round(coords.accuracy) : 5}m {coords.isCached ? '(IDB Cache)' : ''}
         </span>
       </div>
@@ -141,11 +140,11 @@ export default function StudentMapView({ onCoordsUpdated }) {
       <div style={{
         fontSize: '10.5px',
         fontFamily: 'JetBrains Mono',
-        color: '#94A3B8',
-        background: '#04060A',
+        color: 'var(--text-muted)',
+        background: 'var(--bg-card)',
         padding: '8px 10px',
         borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        border: '1px solid var(--border-hairline)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
@@ -156,7 +155,7 @@ export default function StudentMapView({ onCoordsUpdated }) {
         <div>
           Lon: <span style={{ color: '#10B981', fontWeight: 700 }}>{Number(coords.lon).toFixed(6)}</span>
         </div>
-        <div style={{ color: '#38BDF8', fontSize: '9.5px' }}>
+        <div style={{ color: 'var(--tone-sky)', fontSize: '9.5px' }}>
           {coords.altitude ? `Alt: ${Math.round(coords.altitude)}m` : 'Campus UTH'}
         </div>
       </div>
@@ -167,7 +166,7 @@ export default function StudentMapView({ onCoordsUpdated }) {
         height: '210px',
         borderRadius: '12px',
         overflow: 'hidden',
-        border: '1px solid rgba(56, 189, 248, 0.2)',
+        border: '1px solid var(--border-hairline)',
         position: 'relative'
       }}>
         <iframe
@@ -193,7 +192,7 @@ export default function StudentMapView({ onCoordsUpdated }) {
           padding: '9px',
           background: 'rgba(56, 189, 248, 0.12)',
           border: '1px solid rgba(56, 189, 248, 0.3)',
-          color: '#38BDF8',
+          color: 'var(--tone-sky)',
           fontSize: '11px',
           fontWeight: 700,
           borderRadius: '10px',
