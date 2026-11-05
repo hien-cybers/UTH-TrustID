@@ -45,6 +45,7 @@ import {
 } from '../utils/webauthnHelper';
 import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 import { getOrCreateDeviceId, signWithDecryptedKey } from '../utils/identityManager';
+import { getItem } from '../utils/db';
 
 export default function ScanPage() {
   const navigate = useNavigate();
@@ -233,7 +234,7 @@ export default function ScanPage() {
       let fullName = 'Nguyễn Đức Hiển';
       let privateKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
       try {
-        const vc = JSON.parse(localStorage.getItem('uth_student_vc') || localStorage.getItem('uth_vc_storage') || '{}');
+        const vc = (await getItem('uth_student_vc')) || (await getItem('uth_vc_storage')) || {};
         if (vc.studentId) studentId = vc.studentId;
         if (vc.fullName) fullName = vc.fullName;
         if (vc.privateKey) privateKey = vc.privateKey;
@@ -394,10 +395,11 @@ export default function ScanPage() {
 
     let identity = getSavedIdentity();
     if (!identity || !identity.address) {
-      const savedVCStr = localStorage.getItem('uth_student_vc') || localStorage.getItem('uth_vc_storage');
-      if (savedVCStr) {
+      let savedVC = await getItem('uth_student_vc');
+      if (!savedVC) savedVC = await getItem('uth_vc_storage');
+      if (savedVC) {
         try {
-          const vc = JSON.parse(savedVCStr);
+          const vc = typeof savedVC === 'string' ? JSON.parse(savedVC) : savedVC;
           identity = {
             address: vc.address,
             privateKey: vc.privateKey,

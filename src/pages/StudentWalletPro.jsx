@@ -29,6 +29,7 @@ import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
 import { registerBiometric, setupRecoveryPinAndWrapKey, checkBiometricAvailability, verifyBiometricPresence } from '../utils/webauthnHelper';
 import { initializeRandomIdentity } from '../utils/identityManager';
 import { smartFetch } from '../utils/backendUrl';
+import { setItem, getItem, removeItem } from '../utils/db';
 import FaceIDModal from '../components/FaceIDModal';
 import '../styles/animations.css';
 
@@ -60,59 +61,55 @@ export default function StudentWalletPro() {
       setBioHardwareInfo(info);
     });
 
-    const savedVC = localStorage.getItem('uth_student_vc');
-    if (savedVC) {
-      try {
-        setCredential(JSON.parse(savedVC));
+    const loadInitialVC = async () => {
+      // 1. Ưu tiên đọc từ két IndexedDB an toàn (UTHTRUSTID_DB / identity_vault)
+      const savedVC = await getItem('uth_student_vc');
+      if (savedVC) {
+        setCredential(savedVC);
         return;
-      } catch {}
-    }
+      }
 
-    const savedIdentity = localStorage.getItem('uth_did_identity');
-    if (savedIdentity) {
-      try {
-        const id = JSON.parse(savedIdentity);
-        if (id && id.address) {
-          const autoVC = {
-            studentId: id.student?.studentId || id.student?.mssv || '2251120000',
-            fullName: id.student?.fullName || 'Nguyễn Đức Hiển',
-            major: id.student?.major || 'An toàn Thông tin',
-            address: id.address,
-            privateKey: id.privateKey || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-            merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
-            merkleProof: [
-              '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
-              '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
-            ],
-            issuedAt: new Date().toLocaleDateString('vi-VN')
-          };
-          setCredential(autoVC);
-          localStorage.setItem('uth_student_vc', JSON.stringify(autoVC));
-          return;
-        }
-      } catch {}
-    }
+      const savedIdentity = await getItem('uth_did_identity');
+      if (savedIdentity && savedIdentity.address) {
+        const autoVC = {
+          studentId: savedIdentity.student?.studentId || savedIdentity.student?.mssv || '2251120000',
+          fullName: savedIdentity.student?.fullName || 'Nguyễn Đức Hiển',
+          major: savedIdentity.student?.major || 'An toàn Thông tin',
+          address: savedIdentity.address,
+          privateKey: savedIdentity.privateKey || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+          merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
+          merkleProof: [
+            '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
+            '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
+          ],
+          issuedAt: new Date().toLocaleDateString('vi-VN')
+        };
+        setCredential(autoVC);
+        await setItem('uth_student_vc', autoVC);
+        return;
+      }
 
-    // Tự động khôi phục Thẻ Sinh viên số khi cài đè (Update) qua Sideloadly / đổi hostname
-    // trừ khi người dùng chủ động bấm "Gỡ thẻ số khỏi máy này" để test Onboarding
-    if (localStorage.getItem('uth_vc_explicitly_removed') !== 'true') {
-      const preservedVC = {
-        studentId: '2251120000',
-        fullName: 'Nguyễn Đức Hiển',
-        major: 'An toàn Thông tin',
-        address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
-        privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-        merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
-        merkleProof: [
-          '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
-          '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
-        ],
-        issuedAt: new Date().toLocaleDateString('vi-VN')
-      };
-      setCredential(preservedVC);
-      localStorage.setItem('uth_student_vc', JSON.stringify(preservedVC));
-      localStorage.setItem('uth_vc_storage', JSON.stringify(preservedVC));
-    }
+      // Tự động khôi phục Thẻ Sinh viên số khi cài đè (Update) qua Sideloadly / đổi hostname
+      if (localStorage.getItem('uth_vc_explicitly_removed') !== 'true') {
+        const preservedVC = {
+          studentId: '2251120000',
+          fullName: 'Nguyễn Đức Hiển',
+          major: 'An toàn Thông tin',
+          address: '0x1D9b6938A3f073e3426052C7016155D85040Ed1D',
+          privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+          merkleRoot: '0x78ab3199fe01cb29019234812349012398412039481203948120394812039481',
+          merkleProof: [
+            '0x1f82e5b7e2e87c09e3a890b5037d6e42ecf14659b81b28d494916a41f8793b1a',
+            '0x9c412e87f8b91c01e2a890b5037d6e42ecf14659b81b28d494916a41f87988ff'
+          ],
+          issuedAt: new Date().toLocaleDateString('vi-VN')
+        };
+        setCredential(preservedVC);
+        await setItem('uth_student_vc', preservedVC);
+      }
+    };
+
+    loadInitialVC();
   }, []);
 
   // KÍCH HOẠT THẺ LẦN ĐẦU (First-time Onboarding + WebAuthn Passkey + AES-GCM Key Wrapping)
@@ -183,9 +180,10 @@ export default function StudentWalletPro() {
     } catch {}
 
     localStorage.removeItem('uth_vc_explicitly_removed');
-    localStorage.setItem('uth_student_vc', JSON.stringify(defaultInitialVC));
-    localStorage.setItem('uth_vc_storage', JSON.stringify(defaultInitialVC));
-    localStorage.removeItem('uth_did_private_key');
+    // Lưu thẻ số VC vào IndexedDB (UTHTRUSTID_DB / identity_vault)
+    await setItem('uth_student_vc', defaultInitialVC);
+    await setItem('uth_vc_storage', defaultInitialVC);
+    await removeItem('uth_did_private_key');
 
     const identityObj = {
       address: defaultInitialVC.address,
@@ -197,7 +195,7 @@ export default function StudentWalletPro() {
         faculty: 'Công nghệ Thông tin'
       }
     };
-    localStorage.setItem('uth_did_identity', JSON.stringify(identityObj));
+    await setItem('uth_did_identity', identityObj);
 
     try {
       await saveCredentialToStorage(defaultInitialVC);
@@ -254,13 +252,14 @@ export default function StudentWalletPro() {
     }
   };
 
-  const handleRevokeLocal = () => {
+  const handleRevokeLocal = async () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa Thẻ số khỏi thiết bị này để thử lại kích hoạt lần đầu?')) {
       localStorage.setItem('uth_vc_explicitly_removed', 'true');
-      localStorage.removeItem('uth_student_vc');
-      localStorage.removeItem('uth_vc_storage');
-      localStorage.removeItem('uth_did_private_key');
-      localStorage.removeItem('uth_did_identity');
+      await removeItem('uth_student_vc');
+      await removeItem('uth_secure_vault');
+      await removeItem('uth_vc_storage');
+      await removeItem('uth_did_private_key');
+      await removeItem('uth_did_identity');
       setCredential(null);
       setZkpMode(false);
       setPinSavedNotice('');

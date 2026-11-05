@@ -2,8 +2,10 @@
 // 1. Loại bỏ hoàn toàn Private Key tĩnh 0xac09...ff80
 // 2. Sinh ngẫu nhiên 100% ví mới (ethers.Wallet.createRandom())
 // 3. Khóa được mã hóa bằng AES-GCM 256-bit với khóa dẫn xuất từ PIN (PBKDF2 100.000 vòng)
-// 4. Chỉ giải mã tạm thời trong RAM khi cần ký số (RAM-Only ephemeral key), sau đó hủy ngay lập tức
+// 4. Lưu trữ an toàn trong IndexedDB (UTHTRUSTID_DB / identity_vault) qua db.js
+// 5. Chỉ giải mã tạm thời trong RAM khi cần ký số (RAM-Only ephemeral key), sau đó hủy ngay lập tức
 import { ethers } from 'ethers';
+import { setItem, getItem, removeItem } from './db';
 
 // 1. Lấy hoặc tạo Device ID cố định cho thiết bị
 export function getOrCreateDeviceId() {
@@ -78,34 +80,34 @@ export async function initializeRandomIdentity(studentInfo = {}, userPin = '1234
     createdAt: Date.now()
   };
 
-  localStorage.setItem('uth_secure_vault', JSON.stringify(secureVault));
+  // Lưu trữ an toàn kho khóa đã mã hóa AES-GCM vào IndexedDB (thay thế hoàn toàn plaintext storage)
+  await setItem('uth_secure_vault', secureVault);
 
   // Tiêu hủy triệt để mọi key plaintext cũ trong storage
-  localStorage.removeItem('uth_did_private_key');
+  await removeItem('uth_did_private_key');
 
   return { address: randomWallet.address, deviceId, wallet: randomWallet };
 }
 
 // 4. Giải mã tạm thời vào RAM để ký số rồi hủy ngay (Ephemeral Key in RAM)
 export async function signWithDecryptedKey(userPin, messageHashOrString) {
-  const vaultStr = localStorage.getItem('uth_secure_vault');
+  let vault = await getItem('uth_secure_vault');
+  if (typeof vault === 'string') {
+    try { vault = JSON.parse(vault); } catch {}
+  }
 
   // Nếu chưa có vault nhưng có thẻ cũ, tự động mã hóa vào vault bằng PIN
-  if (!vaultStr) {
-    const legacyVcStr = localStorage.getItem('uth_student_vc');
-    if (legacyVcStr) {
-      try {
-        const legacyVc = JSON.parse(legacyVcStr);
-        if (legacyVc.privateKey) {
-          await initializeRandomIdentity(legacyVc, userPin, legacyVc.privateKey);
-          return await signWithDecryptedKey(userPin, messageHashOrString);
-        }
-      } catch {}
+  if (!vault) {
+    let legacyVc = await getItem('uth_student_vc');
+    if (typeof legacyVc === 'string') {
+      try { legacyVc = JSON.parse(legacyVc); } catch {}
+    }
+    if (legacyVc && legacyVc.privateKey) {
+      await initializeRandomIdentity(legacyVc, userPin, legacyVc.privateKey);
+      return await signWithDecryptedKey(userPin, messageHashOrString);
     }
     throw new Error('Chưa khởi tạo ví danh tính!');
   }
-
-  const vault = JSON.parse(vaultStr);
   const salt = new Uint8Array(vault.salt);
   const iv = new Uint8Array(vault.iv);
   const cipherText = new Uint8Array(vault.cipherText);
