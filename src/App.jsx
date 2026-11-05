@@ -18,12 +18,13 @@ import { useAutoLock } from './hooks/useAutoLock';
 import { startPreWarmGps } from './utils/gpsDriftFilter';
 import './styles/appPro.css';
 
-import { Key, LogOut, ShieldAlert, Lock } from 'lucide-react';
+import { Key, LogOut, ShieldAlert, Lock, Sun, Moon } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
+  const [theme, setTheme] = useState(() => localStorage.getItem('uth_theme') || 'dark');
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('uth_staff_user');
@@ -32,6 +33,11 @@ export default function App() {
       return null;
     }
   });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('uth_theme', theme);
+  }, [theme]);
 
   // Pre-load GPS chạy nền ngay khi Splash Screen đang hiển thị để ứng dụng sẵn sàng tức thì
   useEffect(() => {
@@ -46,26 +52,8 @@ export default function App() {
     setCurrentUser(null);
   };
 
-  const handleQuickRoleSwitch = (targetRole) => {
-    if (targetRole === 'STUDENT') {
-      localStorage.removeItem('uth_staff_user');
-      localStorage.removeItem('uth_staff_token');
-      setCurrentUser(null);
-      return;
-    }
-    if (targetRole === 'FACULTY') {
-      const gvUser = { id: 'GV001', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY', email: 'giangvien@ut.edu.vn' };
-      localStorage.setItem('uth_staff_user', JSON.stringify(gvUser));
-      localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
-      setCurrentUser(gvUser);
-      return;
-    }
-    if (targetRole === 'ADMIN') {
-      const admUser = { id: 'ADM001', fullName: 'Quản Trị Viên Hệ Thống', role: 'ADMIN', email: 'admin@ut.edu.vn' };
-      localStorage.setItem('uth_staff_user', JSON.stringify(admUser));
-      localStorage.setItem('uth_staff_token', 'mock_jwt_token_2026');
-      setCurrentUser(admUser);
-    }
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   return (
@@ -94,11 +82,11 @@ export default function App() {
           position: 'sticky',
           top: 0,
           zIndex: 50,
-          background: 'rgba(10, 14, 23, 0.95)',
+          background: 'var(--bg-header, rgba(10, 14, 23, 0.95))',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '12px 16px',
+          borderBottom: '1px solid var(--border-hairline)',
+          padding: '11px 15px',
           width: '100%'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
@@ -107,20 +95,39 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
               <UthTrustLogo size={30} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', color: '#FFF', whiteSpace: 'nowrap' }}>
+                <div style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                   UTH TRUST<span style={{ color: '#38BDF8' }}>ID</span>
                 </div>
-                <div style={{ fontSize: '9px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: '9px', color: 'var(--text-dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
                   {currentUser
-                    ? (currentUser.role === 'ADMIN' ? 'ROLE: ROOT ADMIN' : 'ROLE: GIẢNG VIÊN')
-                    : 'ROLE: SINH VIÊN (DID)'}
+                    ? (currentUser.role === 'ADMIN' ? 'ROLE: ROOT ISSUER' : 'ROLE: VERIFIER (GV)')
+                    : 'ROLE: HOLDER (SINH VIÊN)'}
                 </div>
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Trạng thái Phân Quyền RBAC */}
+            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Dark/Light Mode + Trạng thái Phân Quyền RBAC */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <LiveClock />
+
+              <button
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Chuyển sang Chế độ Sáng (Light Mode)' : 'Chuyển sang Chế độ Tối (Dark Mode)'}
+                className="btn-press"
+                style={{
+                  padding: '5px 7px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-hairline)',
+                  background: 'rgba(56, 189, 248, 0.08)',
+                  color: '#38BDF8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
+              </button>
 
               <button
                 onClick={lockNow}
@@ -152,12 +159,12 @@ export default function App() {
                     color: currentUser.role === 'ADMIN' ? '#10B981' : '#38BDF8',
                     border: currentUser.role === 'ADMIN' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)'
                   }}>
-                    {currentUser.role === 'ADMIN' ? 'Admin' : 'GV'}
+                    {currentUser.role === 'ADMIN' ? 'Issuer' : 'Verifier'}
                   </span>
 
                   <button
                     onClick={handleLogout}
-                    title="Đăng xuất tài khoản công vụ"
+                    title="Đăng xuất tài khoản công vụ (Quay về chế độ Sinh viên)"
                     className="btn-press"
                     style={{
                       padding: '4px 7px',
@@ -201,80 +208,14 @@ export default function App() {
             </div>
 
           </div>
-
-          {/* Thanh Chuyển Nhanh Vai Trò 1-Chạm (Sinh Viên | Giảng Viên | Quản Trị Admin) */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gap: '6px',
-            marginTop: '9px',
-            padding: '4px',
-            borderRadius: '10px',
-            background: 'rgba(4, 6, 10, 0.85)',
-            border: '1px solid rgba(255, 255, 255, 0.06)'
-          }}>
-            <NavLink
-              to="/wallet"
-              onClick={() => handleQuickRoleSwitch('STUDENT')}
-              style={{
-                padding: '5px 8px',
-                borderRadius: '7px',
-                textAlign: 'center',
-                fontSize: '10.5px',
-                fontWeight: 700,
-                textDecoration: 'none',
-                transition: 'all 0.15s ease',
-                background: !currentUser ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-                color: !currentUser ? '#38BDF8' : '#64748B',
-                border: !currentUser ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid transparent'
-              }}
-            >
-              Sinh Viên (DID)
-            </NavLink>
-            <NavLink
-              to="/faculty"
-              onClick={() => handleQuickRoleSwitch('FACULTY')}
-              style={{
-                padding: '5px 8px',
-                borderRadius: '7px',
-                textAlign: 'center',
-                fontSize: '10.5px',
-                fontWeight: 700,
-                textDecoration: 'none',
-                transition: 'all 0.15s ease',
-                background: currentUser?.role === 'FACULTY' ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-                color: currentUser?.role === 'FACULTY' ? '#38BDF8' : '#64748B',
-                border: currentUser?.role === 'FACULTY' ? '1px solid rgba(56, 189, 248, 0.35)' : '1px solid transparent'
-              }}
-            >
-              Giảng Viên (QR)
-            </NavLink>
-            <NavLink
-              to="/admin"
-              onClick={() => handleQuickRoleSwitch('ADMIN')}
-              style={{
-                padding: '5px 8px',
-                borderRadius: '7px',
-                textAlign: 'center',
-                fontSize: '10.5px',
-                fontWeight: 700,
-                textDecoration: 'none',
-                transition: 'all 0.15s ease',
-                background: currentUser?.role === 'ADMIN' ? 'rgba(16, 185, 129, 0.18)' : 'transparent',
-                color: currentUser?.role === 'ADMIN' ? '#10B981' : '#64748B',
-                border: currentUser?.role === 'ADMIN' ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid transparent'
-              }}
-            >
-              Root Admin
-            </NavLink>
-          </div>
         </header>
 
         {/* Vùng Nội Dung Cuộn Bên Trong Khung Điện Thoại */}
         <main className="mobile-scroll-body">
           <Routes>
-            {/* 1. VAI TRÒ SINH VIÊN (KHÔNG CẦN TÀI KHOẢN - PASSWORDLESS DID) */}
-            <Route path="/" element={<Navigate to="/wallet" replace />} />
+            {/* 1. VAI TRÒ HOLDER - SINH VIÊN (/student & /wallet) */}
+            <Route path="/" element={<Navigate to="/student" replace />} />
+            <Route path="/student" element={<StudentWalletPro />} />
             <Route path="/wallet" element={<StudentWalletPro />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/all-in-one" element={<UTHTrustIDApp />} />

@@ -42,7 +42,7 @@ export function startPreWarmGps() {
         }
       },
       () => {},
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     );
   } catch {}
 }
@@ -183,7 +183,7 @@ export function getSmoothedGpsPosition(maxSamples = 3, maxWaitMs = 260) {
           clearTimeout(timer);
           finalize();
         },
-        { enableHighAccuracy: true, maximumAge: 3000, timeout: 260 }
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 260 }
       );
     } catch {
       clearTimeout(timer);

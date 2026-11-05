@@ -2104,12 +2104,10 @@ app.post('/api/attendance/submit', async (req, res) => {
     const clientIP = Array.isArray(rawIp) ? rawIp[0] : String(rawIp).split(',')[0].trim();
 
     const isTestPipeline = reqSid && String(reqSid).startsWith('SES_TEST_');
-    const targetSid = (reqSid && activeSessions.has(reqSid)) ? reqSid : latestOpenSessionId;
-    let session = targetSid ? activeSessions.get(targetSid) : null;
 
     // Tự động cấp phòng ảo tức thì cho kịch bản chạy chẩn đoán kiểm thử tự động (E2E Automated Diagnostic)
-    if (!session && isTestPipeline) {
-      session = {
+    if (isTestPipeline && !activeSessions.has(reqSid)) {
+      const autoSession = {
         sessionId: reqSid,
         roomName: 'Phòng Tự Động Kiểm Thử E2E',
         coords: studentCoords || { lat: 10.7992, lon: 106.7056 },
@@ -2120,9 +2118,12 @@ app.post('/api/attendance/submit', async (req, res) => {
         attendees: new Map(),
         status: 'OPEN'
       };
-      activeSessions.set(reqSid, session);
+      activeSessions.set(reqSid, autoSession);
       latestOpenSessionId = reqSid;
     }
+
+    const targetSid = (reqSid && activeSessions.has(reqSid)) ? reqSid : latestOpenSessionId;
+    let session = targetSid ? activeSessions.get(targetSid) : null;
 
     if (!session) {
       return res.status(404).json({ error: 'Phòng học không tồn tại! Giảng viên cần bấm "Mở Lớp Học / Phòng Thi" trước.' });

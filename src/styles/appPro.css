@@ -9,6 +9,7 @@
   --bg-root: #04060A;
   --bg-card: #0A0E17;
   --bg-card-elevated: #111726;
+  --bg-header: rgba(10, 14, 23, 0.95);
   --border-hairline: rgba(255, 255, 255, 0.08);
   --border-active: rgba(56, 189, 248, 0.35);
   
@@ -21,6 +22,33 @@
   --accent-green: #10B981;
   --accent-amber: #F59E0B;
   --accent-rose: #F43F5E;
+}
+
+/* Chế độ Sáng (Light Mode - bg-slate-50 đồng bộ) */
+[data-theme="light"] {
+  --bg-root: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-elevated: #F1F5F9;
+  --bg-header: rgba(255, 255, 255, 0.94);
+  --border-hairline: rgba(15, 23, 42, 0.1);
+  --border-active: rgba(2, 132, 199, 0.45);
+
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  --text-dim: #64748B;
+}
+
+[data-theme="light"] .glass-card,
+[data-theme="light"] .native-card {
+  background: #FFFFFF !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  color: #0F172A;
+}
+
+[data-theme="light"] .bottom-nav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
 }
 
 *, *::before, *::after {

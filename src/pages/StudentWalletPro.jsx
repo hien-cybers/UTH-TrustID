@@ -456,21 +456,45 @@ export default function StudentWalletPro() {
           <div 
             className="hero-pass"
             style={{
-              borderColor: zkpMode ? 'rgba(16, 185, 129, 0.45)' : 'rgba(56, 189, 248, 0.28)'
+              borderColor: zkpMode ? 'rgba(16, 185, 129, 0.45)' : 'rgba(56, 189, 248, 0.35)',
+              clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)'
             }}
           >
             <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', opacity: 0.05, pointerEvents: 'none' }}>
               <Cpu size={160} />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Sparkles size={13} color={zkpMode ? '#10B981' : '#38BDF8'} />
-                <span style={{ fontSize: '10px', color: zkpMode ? '#10B981' : '#38BDF8', fontWeight: 700, letterSpacing: '0.6px' }}>
-                  {zkpMode ? 'SELECTIVE DISCLOSURE (ZKP-LITE)' : 'W3C VERIFIABLE CREDENTIAL'}
+                <span style={{ fontSize: '10px', color: zkpMode ? '#10B981' : '#38BDF8', fontWeight: 800, letterSpacing: '0.6px' }}>
+                  {zkpMode ? 'SELECTIVE DISCLOSURE (ZKP)' : 'ĐH GIAO THÔNG VẬN TẢI TP.HCM (UTH)'}
                 </span>
               </div>
-              <ShieldCheck size={20} color={zkpMode ? '#10B981' : '#38BDF8'} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{
+                  fontSize: '8.5px',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '6px',
+                  background: 'rgba(56, 189, 248, 0.14)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  color: '#38BDF8'
+                }}>
+                  FIDO2 Verified
+                </span>
+                <span style={{
+                  fontSize: '8.5px',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '6px',
+                  background: 'rgba(16, 185, 129, 0.14)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  color: '#10B981'
+                }}>
+                  Merkle Active
+                </span>
+              </div>
             </div>
 
             <div style={{ margin: '18px 0 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
@@ -772,9 +796,6 @@ export default function StudentWalletPro() {
             <div style={{ background: '#04060A', padding: '7px 9px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '9.5px', color: '#67E8F9', fontFamily: 'JetBrains Mono', wordBreak: 'break-all' }}>
               Merkle Root: {credential.merkleRoot.slice(0, 26)}...
             </div>
-            <div style={{ fontSize: '10px', color: '#64748B', marginTop: '6px', lineHeight: 1.4 }}>
-              ✓ Khóa riêng tư <code>secp256k1</code> được bọc an toàn trong IndexedDB bằng <b>AES-GCM 256-bit</b> (PBKDF2 100K). Chỉ giải mã vào RAM khi vượt qua cổng sinh trắc học Face ID.
-            </div>
           </div>
 
           {/* BẢN ĐỒ VỊ TRÍ HIỆN DIỆN GPS PHẦN CỨNG & GOOGLE MAPS */}
@@ -782,7 +803,7 @@ export default function StudentWalletPro() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showMap ? '10px' : '0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={17} style={{ color: '#38BDF8' }} />
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#E2E8F0' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
                   Vị Trí Hiện Diện GPS (Google Maps)
                 </span>
               </div>
@@ -807,39 +828,14 @@ export default function StudentWalletPro() {
             )}
           </div>
 
-          {/* NÚT THAO TÁC: QUÉT MÃ ĐIỂM DANH NGAY & GỠ THẺ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button
-              onClick={() => navigate('/scan')}
-              className="btn-press"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #0284C7, #0369A1)',
-                color: '#FFF',
-                fontWeight: 700,
-                fontSize: '13px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)'
-              }}
-            >
-              <QrCode size={16} /> Mở Camera Quét Mã Điểm Danh
-            </button>
-
-            <button
-              onClick={handleRevokeLocal}
-              className="btn-press"
-              style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', color: '#EF4444', fontSize: '11.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-            >
-              <Trash2 size={13} /> Gỡ thẻ số khỏi máy này
-            </button>
-          </div>
+          {/* NÚT GỠ THẺ SỐ KHỎI MÁY */}
+          <button
+            onClick={handleRevokeLocal}
+            className="btn-press"
+            style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '10px', color: '#EF4444', fontSize: '11.5px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+          >
+            <Trash2 size={13} /> Gỡ thẻ số khỏi máy này
+          </button>
         </div>
       )}
 

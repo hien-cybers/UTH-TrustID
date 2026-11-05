@@ -60,77 +60,57 @@ export default function MobileNavigation({ currentUser }) {
       `}</style>
 
       <nav className="bottom-nav">
-        {/* LUỒNG 1: SINH VIÊN (KHÔNG ĐĂNG NHẬP - PASSWORDLESS DID) */}
+        {/* ROLE 1: HOLDER - SINH VIÊN (MOBILE APP) — Chỉ hiển thị Thẻ số, Quét QR và Dịch vụ cá nhân */}
         {role === 'STUDENT' && (
           <>
-            <NavLink to="/wallet" className={getTabClass}>
+            <NavLink to="/student" className={getTabClass}>
               <Wallet size={18} strokeWidth={2} />
-              <span>Ví Số DID</span>
+              <span>Thẻ Sinh Viên</span>
             </NavLink>
 
             <NavLink to="/scan" className={getTabClass}>
               <QrCode size={18} strokeWidth={2} />
-              <span>Quét Mã</span>
+              <span>Quét QR</span>
             </NavLink>
 
             <NavLink to="/services" className={getTabClass}>
               <LayoutGrid size={18} strokeWidth={2} />
-              <span>Dịch Vụ</span>
-            </NavLink>
-
-            <NavLink to="/login" className={getTabClass}>
-              <Lock size={18} strokeWidth={2} />
-              <span>Cán Bộ</span>
+              <span>Dịch Vụ Số</span>
             </NavLink>
           </>
         )}
 
-        {/* LUỒNG 2: GIẢNG VIÊN (ROLE = FACULTY) */}
+        {/* ROLE 2: VERIFIER - GIẢNG VIÊN / GIÁM THỊ (WEB PORTAL) */}
         {role === 'FACULTY' && (
           <>
             <NavLink to="/faculty" className={getTabClass}>
               <Radio size={18} strokeWidth={2} />
-              <span>Phòng Học</span>
+              <span>Phòng Học QR</span>
             </NavLink>
 
             <NavLink to="/services" className={getTabClass}>
               <LayoutGrid size={18} strokeWidth={2} />
               <span>Tra Cứu SV</span>
             </NavLink>
-
-            <NavLink to="/scan" className={getTabClass}>
-              <QrCode size={18} strokeWidth={2} />
-              <span>Máy Quét</span>
-            </NavLink>
-
-            <NavLink to="/wallet" className={getTabClass}>
-              <Wallet size={18} strokeWidth={2} />
-              <span>Ví Thử</span>
-            </NavLink>
           </>
         )}
 
-        {/* LUỒNG 3: QUẢN TRỊ VIÊN (ROLE = ADMIN) */}
+        {/* ROLE 3: ROOT ISSUER - NHÀ TRƯỜNG / KHẢO THÍ (QUẢN TRỊ TẬP TRUNG) */}
         {role === 'ADMIN' && (
           <>
             <NavLink to="/admin" className={getTabClass}>
               <ShieldCheck size={18} strokeWidth={2} />
-              <span>Quản Trị</span>
+              <span>Root Issuer</span>
             </NavLink>
 
             <NavLink to="/faculty" className={getTabClass}>
               <Radio size={18} strokeWidth={2} />
-              <span>Phòng Học</span>
+              <span>Phòng Học QR</span>
             </NavLink>
 
             <NavLink to="/services" className={getTabClass}>
               <LayoutGrid size={18} strokeWidth={2} />
-              <span>Dịch Vụ</span>
-            </NavLink>
-
-            <NavLink to="/wallet" className={getTabClass}>
-              <Wallet size={18} strokeWidth={2} />
-              <span>Ví Mẫu</span>
+              <span>Tra Cứu SV</span>
             </NavLink>
           </>
         )}
