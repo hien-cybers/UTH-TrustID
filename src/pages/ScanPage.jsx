@@ -59,6 +59,8 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
   const [showServerUrlBar, setShowServerUrlBar] = useState(false);
   const [phoneNetworkMode, setPhoneNetworkMode] = useState('4G'); // '4G' | 'WIFI'
   const [sessionNetworkMode, setSessionNetworkMode] = useState('CAMPUS_WIFI'); // Đồng bộ với Giảng viên ('CAMPUS_WIFI' | 'CELLULAR_ANY')
+  const [sessionRadius, setSessionRadius] = useState(35); // Bán kính Geofencing hiện tại của phòng học (mét)
+  const [simDistanceMeters, setSimDistanceMeters] = useState('8'); // Khoảng cách GPS thực nghiệm ('8', '85', 'REAL_GPS', hoặc số mét bất kỳ)
 
   // Trạng thái Offline Proof-of-Presence (IndexedDB)
   const [isOfflineMode, setIsOfflineMode] = useState(() => !navigator.onLine);
@@ -177,12 +179,16 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         .then((d) => {
           if (d?.success && d?.session) {
             const netMode = d.session.networkMode || (d.session.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY');
+            const rMeters = Number(d.session.radius || d.session.maxRadius || 35);
             activeSessionRef.current = {
               sessionId: d.session.sessionId,
               nonce: d.session.nonce,
-              networkMode: netMode
+              networkMode: netMode,
+              radius: rMeters,
+              coords: d.session.coords || { lat: 10.7992, lon: 106.7056 }
             };
             setSessionNetworkMode(netMode);
+            setSessionRadius(rMeters);
             socket.emit('join-session', {
               sessionId: d.session.sessionId,
               role: 'STUDENT',
@@ -195,12 +201,16 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
       socket.on('session-created', (payload) => {
         if (payload?.sessionId) {
           const netMode = payload.networkMode || (payload.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY');
+          const rMeters = Number(payload.maxRadius || payload.radius || 35);
           activeSessionRef.current = {
             sessionId: payload.sessionId,
             nonce: payload.nonce || 'NONCE_LIVE',
-            networkMode: netMode
+            networkMode: netMode,
+            radius: rMeters,
+            coords: payload.coords || { lat: 10.7992, lon: 106.7056 }
           };
           setSessionNetworkMode(netMode);
+          setSessionRadius(rMeters);
           socket.emit('join-session', {
             sessionId: payload.sessionId,
             role: 'STUDENT',
@@ -215,6 +225,18 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           activeSessionRef.current = {
             ...(activeSessionRef.current || {}),
             networkMode: payload.networkMode
+          };
+        }
+      });
+
+      socket.on('radius-updated', (payload) => {
+        if (payload?.maxRadiusMeters || payload?.radius) {
+          const rMeters = Number(payload.maxRadiusMeters || payload.radius);
+          setSessionRadius(rMeters);
+          activeSessionRef.current = {
+            ...(activeSessionRef.current || {}),
+            radius: rMeters,
+            coords: payload.centerCoords || activeSessionRef.current?.coords
           };
         }
       });
@@ -658,6 +680,10 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
 
       // 3. [ĐIỂM NGHẼN ①]: Lấy tọa độ tức thì từ Pre-warm GPS / sessionStorage (< 5ms, không chờ bắt vệ tinh lâu)
       const gpsStart = performance.now();
+      const centerLat = activeSessionRef.current?.coords?.lat ?? sessionLat ?? 10.7992;
+      const centerLon = activeSessionRef.current?.coords?.lon ?? sessionLon ?? 106.7056;
+      const allowedR = activeSessionRef.current?.radius ?? sessionRadius ?? 35;
+
       let smoothedPos = {
         lat: parseFloat(sessionStorage.getItem('cached_lat') || '10.79925') || 10.79925,
         lon: parseFloat(sessionStorage.getItem('cached_lon') || '106.70564') || 106.70564,
@@ -665,16 +691,35 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         samplesCount: 3,
         preWarmed: true
       };
-      try {
-        const pos = await getSmoothedGpsPosition(2, 35);
-        if (pos) smoothedPos = pos;
-      } catch {}
+
+      if (simDistanceMeters === 'REAL_GPS') {
+        try {
+          const pos = await getSmoothedGpsPosition(2, allowedR);
+          if (pos) smoothedPos = pos;
+        } catch {}
+      } else {
+        // Tính tọa độ cách tâm phòng chính xác X mét theo công thức Haversine (1 độ vĩ tuyến ≈ 111,139m)
+        const targetDistMeters = Math.max(0, Number(simDistanceMeters) || 8);
+        const deltaLat = targetDistMeters / 111139;
+        smoothedPos = {
+          lat: Number((centerLat + deltaLat).toFixed(6)),
+          lon: Number(centerLon.toFixed(6)),
+          accuracy: 5,
+          samplesCount: 3,
+          preWarmed: true
+        };
+      }
       const gpsLatencyMs = Math.max(1, Math.round(performance.now() - gpsStart));
 
       if (isTerminatedRef.current) return;
 
-      const driftEval = evaluateGpsDriftTolerance(sessionLat, sessionLon, smoothedPos, 35);
-      const distance = driftEval.withinRange !== false ? (driftEval.effectiveDistance || 8) : 8;
+      const driftEval = evaluateGpsDriftTolerance(centerLat, centerLon, smoothedPos, allowedR);
+      const distance =
+        simDistanceMeters !== 'REAL_GPS'
+          ? Math.max(0, Math.round(Number(simDistanceMeters) || 8))
+          : driftEval.withinRange !== false
+          ? (driftEval.effectiveDistance || 8)
+          : Math.round(driftEval.rawDistance || 85);
 
       // 4. [ĐIỂM NGHẼN ②]: Hybrid Hardware ID (5 thành phần, hỗ trợ Fuzzy Matching >= 80% trên iOS Safari)
       const deviceId = await getDeviceFingerprint();
@@ -1170,12 +1215,107 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           <span>
             Chính sách Giảng viên:{' '}
             <b style={{ color: sessionNetworkMode === 'CAMPUS_WIFI' ? '#F59E0B' : '#10B981' }}>
-              {sessionNetworkMode === 'CAMPUS_WIFI' ? '📶 Ràng buộc Wi-Fi trường (TN1)' : '🌐 Mạng 4G/5G Tự do (TN2)'}
+              {sessionNetworkMode === 'CAMPUS_WIFI' ? `📶 Wi-Fi Trường (R ≤ ${sessionRadius}m)` : `🌐 4G/5G Tự do (R ≤ ${sessionRadius}m)`}
             </b>
           </span>
           <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9.5px', color: '#06B6D4' }}>
             {serverUrlInput.replace(/^https?:\/\//, '')}
           </span>
+        </div>
+
+        {/* BỘ CHỈNH KHOẢNG CÁCH GPS THỰC NGHIỆM (MÉT) TRÊN ĐIỆN THOẠI ĐỂ TEST TRONG LỚP / NGOÀI LỚP */}
+        <div
+          style={{
+            marginTop: '7px',
+            paddingTop: '7px',
+            borderTop: '1px solid var(--border-hairline)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '5px',
+            flexWrap: 'wrap'
+          }}
+        >
+          <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-main)' }}>
+            📏 Test GPS (R ≤ {sessionRadius}m):
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setSimDistanceMeters('8')}
+              className="btn-press"
+              style={{
+                padding: '3px 7px',
+                borderRadius: '6px',
+                fontSize: '9.5px',
+                fontWeight: 800,
+                border: simDistanceMeters === '8' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
+                background: simDistanceMeters === '8' ? 'rgba(16, 185, 129, 0.16)' : 'var(--bg-inset)',
+                color: simDistanceMeters === '8' ? '#10B981' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              📍 Trong lớp (8m)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSimDistanceMeters('85')}
+              className="btn-press"
+              style={{
+                padding: '3px 7px',
+                borderRadius: '6px',
+                fontSize: '9.5px',
+                fontWeight: 800,
+                border: simDistanceMeters === '85' ? '1px solid #F43F5E' : '1px solid var(--border-hairline)',
+                background: simDistanceMeters === '85' ? 'rgba(244, 63, 94, 0.16)' : 'var(--bg-inset)',
+                color: simDistanceMeters === '85' ? '#F43F5E' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              🏃 Ngoài lớp (85m)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSimDistanceMeters('REAL_GPS')}
+              className="btn-press"
+              style={{
+                padding: '3px 7px',
+                borderRadius: '6px',
+                fontSize: '9.5px',
+                fontWeight: 800,
+                border: simDistanceMeters === 'REAL_GPS' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
+                background: simDistanceMeters === 'REAL_GPS' ? 'rgba(6, 182, 212, 0.16)' : 'var(--bg-inset)',
+                color: simDistanceMeters === 'REAL_GPS' ? '#06B6D4' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              🛰️ GPS Thật
+            </button>
+            {simDistanceMeters !== 'REAL_GPS' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={50000}
+                  value={simDistanceMeters}
+                  onChange={(e) => setSimDistanceMeters(e.target.value)}
+                  style={{
+                    width: '48px',
+                    padding: '2px 4px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(6, 182, 212, 0.4)',
+                    background: 'var(--bg-inset)',
+                    color: '#06B6D4',
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '9.5px',
+                    textAlign: 'center'
+                  }}
+                  title="Nhập khoảng cách mét bất kỳ của sinh viên tới máy chiếu"
+                />
+                <span style={{ fontSize: '9.5px', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono' }}>m</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {showServerUrlBar && (

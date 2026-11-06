@@ -105,7 +105,9 @@ export default function FacultyDashboard({
   const [adminStatusMsg, setAdminStatusMsg] = useState('');
   const [auditLogs, setAuditLogs] = useState([]);
   const [networkBlockNotice, setNetworkBlockNotice] = useState(null);
+  const [geofenceBlockNotice, setGeofenceBlockNotice] = useState(null);
   const [latestVerifiedNotice, setLatestVerifiedNotice] = useState(null);
+  const [gpsSyncMsg, setGpsSyncMsg] = useState('');
 
   // Canvas radar ref
   const canvasRef = useRef(null);
@@ -164,6 +166,7 @@ export default function FacultyDashboard({
         return [mapped, ...prev];
       });
       setNetworkBlockNotice(null);
+      setGeofenceBlockNotice(null);
       setLatestVerifiedNotice({
         studentId: sid,
         name: mapped.name,
@@ -184,9 +187,26 @@ export default function FacultyDashboard({
       }
     });
 
+    socket.on('geofence-blocked', (payload) => {
+      if (payload) {
+        setGeofenceBlockNotice(payload);
+      }
+    });
+
     socket.on('network-mode-updated', (payload) => {
       if (payload?.networkMode) {
         setSessionConfig((prev) => ({ ...prev, networkMode: payload.networkMode }));
+      }
+    });
+
+    socket.on('radius-updated', (payload) => {
+      if (payload?.maxRadiusMeters || payload?.radius) {
+        const nextR = Number(payload.maxRadiusMeters || payload.radius);
+        setSessionConfig((prev) => ({
+          ...prev,
+          maxRadiusMeters: nextR,
+          centerCoords: payload.centerCoords || prev.centerCoords
+        }));
       }
     });
 
@@ -236,6 +256,53 @@ export default function FacultyDashboard({
         })
       });
     } catch {}
+  };
+
+  // Điều chỉnh nóng Bán kính Geofencing cho phép (tính bằng mét: 5m, 15m, 35m, 100m, 500m, 10000m...)
+  const handleUpdateLiveRadius = async (nextRadiusMeters, nextCenterCoords = null) => {
+    const parsedRadius = Math.max(1, Math.min(50000, Number(nextRadiusMeters) || 35));
+    setSessionConfig((prev) => ({
+      ...prev,
+      maxRadiusMeters: parsedRadius,
+      centerCoords: nextCenterCoords || prev.centerCoords
+    }));
+    if (geofenceBlockNotice && parsedRadius >= (geofenceBlockNotice.distance || 0)) {
+      setGeofenceBlockNotice(null);
+    }
+    try {
+      await smartFetch('/api/session/radius', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          maxRadiusMeters: parsedRadius,
+          centerCoords: nextCenterCoords || sessionConfig.centerCoords
+        })
+      });
+    } catch {}
+  };
+
+  // Lấy tọa độ GPS thực tế hiện tại của Laptop làm tâm phòng học (Dùng khi test ở nhà / quán cafe / hội trường)
+  const handleSyncLaptopGpsCenter = () => {
+    if (!navigator.geolocation) {
+      setGpsSyncMsg('Trình duyệt không hỗ trợ Geolocation');
+      return;
+    }
+    setGpsSyncMsg('Đang lấy tọa độ GPS của Laptop...');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          lat: Number(pos.coords.latitude.toFixed(6)),
+          lon: Number(pos.coords.longitude.toFixed(6))
+        };
+        handleUpdateLiveRadius(sessionConfig.maxRadiusMeters, coords);
+        setGpsSyncMsg(`✓ Đã lấy tâm GPS hiện tại: ${coords.lat}, ${coords.lon}`);
+      },
+      () => {
+        setGpsSyncMsg('Không lấy được GPS trình duyệt, giữ nguyên tọa độ tâm hiện tại.');
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
   };
 
   // Khởi tạo phiên học lên Backend và bật máy chiếu
@@ -640,6 +707,35 @@ export default function FacultyDashboard({
                 </button>
               </div>
 
+              {/* CHỈNH NÓNG BÁN KÍNH GEOFENCING (MÉT) NGAY TRÊN HEADER ĐỂ TEST TRONG PHÒNG / NGOÀI PHÒNG */}
+              <div className="flex items-center bg-slate-950 px-2 py-1 rounded-xl border border-cyan-500/30 gap-1.5">
+                <span className="text-[10px] font-mono text-cyan-300 font-bold">📏 Bán kính R:</span>
+                {[5, 15, 35, 100, 500, 5000].map((rVal) => (
+                  <button
+                    key={rVal}
+                    type="button"
+                    onClick={() => handleUpdateLiveRadius(rVal)}
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border-none ${
+                      Number(sessionConfig.maxRadiusMeters) === rVal
+                        ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                        : 'bg-slate-900 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {rVal}m
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min={1}
+                  max={50000}
+                  value={sessionConfig.maxRadiusMeters}
+                  onChange={(e) => handleUpdateLiveRadius(e.target.value)}
+                  className="w-16 px-1.5 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-[10px] font-mono text-cyan-300 text-center outline-none focus:border-cyan-400"
+                  title="Nhập số mét bán kính bất kỳ để test"
+                />
+                <span className="text-[10px] font-mono text-slate-400">m</span>
+              </div>
+
               <div className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border flex items-center gap-2 ${
                 isSessionOpen 
                   ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400' 
@@ -766,9 +862,64 @@ export default function FacultyDashboard({
                   }`}
                 >
                   <p className="text-xs font-bold m-0">🌐 4G/5G &amp; Tự do</p>
-                  <p className="text-[10px] text-slate-500 mt-1 mb-0">Siết chặt Geofencing bán kính R ≤ 35m</p>
+                  <p className="text-[10px] text-slate-500 mt-1 mb-0">Siết chặt Geofencing bán kính R ≤ {sessionConfig.maxRadiusMeters}m</p>
                 </button>
               </div>
+            </div>
+
+            {/* TÙY CHỈNH BÁN KÍNH GEOFENCING (MÉT) & TÂM TỌA ĐỘ PHÒNG HỌC ĐỂ TEST */}
+            <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="text-xs font-mono text-cyan-300 font-bold">
+                  📏 Bán kính Geofencing cho phép (R = {sessionConfig.maxRadiusMeters}m)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSyncLaptopGpsCenter}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/25 cursor-pointer"
+                >
+                  📍 Lấy GPS Laptop làm tâm phòng
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { val: 5, label: '5m (Siết chặt)' },
+                  { val: 15, label: '15m' },
+                  { val: 35, label: '35m (Chuẩn)' },
+                  { val: 100, label: '100m' },
+                  { val: 500, label: '500m' },
+                  { val: 5000, label: '5000m (Test từ xa)' }
+                ].map((opt) => (
+                  <button
+                    key={opt.val}
+                    type="button"
+                    onClick={() => handleUpdateLiveRadius(opt.val)}
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer border ${
+                      Number(sessionConfig.maxRadiusMeters) === opt.val
+                        ? 'bg-cyan-400 text-slate-950 border-cyan-300 shadow-sm'
+                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+                <div className="flex items-center gap-1 ml-auto">
+                  <input
+                    type="number"
+                    min={1}
+                    max={50000}
+                    value={sessionConfig.maxRadiusMeters}
+                    onChange={(e) => handleUpdateLiveRadius(e.target.value)}
+                    className="w-20 p-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-cyan-300 text-center outline-none focus:border-cyan-400"
+                  />
+                  <span className="text-xs font-mono text-slate-400">mét</span>
+                </div>
+              </div>
+
+              {gpsSyncMsg && (
+                <p className="text-[10px] font-mono text-emerald-400 m-0">{gpsSyncMsg}</p>
+              )}
             </div>
 
             <button
@@ -849,7 +1000,7 @@ export default function FacultyDashboard({
                       ? 'bg-amber-500/15 border-amber-500/50 text-amber-300'
                       : 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
                   }`}>
-                    <span>{sessionConfig.networkMode === 'CAMPUS_WIFI' ? '📶 RÀNG BUỘC WI-FI TRƯỜNG (CHẶN 4G)' : '🌐 MẠNG 4G/5G TỰ DO (GPS R ≤ 35M)'}</span>
+                    <span>{sessionConfig.networkMode === 'CAMPUS_WIFI' ? `📶 RÀNG BUỘC WI-FI TRƯỜNG (CHẶN 4G • R ≤ ${sessionConfig.maxRadiusMeters}M)` : `🌐 MẠNG 4G/5G TỰ DO (GPS R ≤ ${sessionConfig.maxRadiusMeters}M)`}</span>
                   </div>
                 </div>
 
@@ -874,8 +1025,29 @@ export default function FacultyDashboard({
                   </div>
                 )}
 
+                {/* Cảnh báo đỏ thời gian thực khi Sinh viên đứng ngoài bán kính phòng học (Geofence Violation) */}
+                {geofenceBlockNotice && (
+                  <div className="w-full max-w-xl mb-3 p-3 rounded-2xl bg-amber-500/20 border-2 border-amber-500 text-amber-200 flex items-center justify-between gap-3 animate-pulse">
+                    <div>
+                      <p className="text-xs font-black text-amber-300 m-0">
+                        📍 [GEOFENCE BLOCK] — SV: {geofenceBlockNotice.fullName} ({geofenceBlockNotice.studentId})
+                      </p>
+                      <p className="text-xs font-bold text-white mt-0.5 mb-0">
+                        {geofenceBlockNotice.message}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateLiveRadius(Math.max(100, (geofenceBlockNotice.distance || 85) + 15))}
+                      className="px-3 py-1.5 rounded-xl bg-cyan-400 text-slate-950 font-black text-[11px] whitespace-nowrap cursor-pointer border-none"
+                    >
+                      Mở rộng R lên {Math.max(100, (geofenceBlockNotice.distance || 85) + 15)}m ➔
+                    </button>
+                  </div>
+                )}
+
                 {/* Thông báo xanh khi Điện thoại 4G quét thành công ở Thực nghiệm 2 */}
-                {!networkBlockNotice && latestVerifiedNotice && (
+                {!networkBlockNotice && !geofenceBlockNotice && latestVerifiedNotice && (
                   <div className="w-full max-w-xl mb-3 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 flex items-center justify-between text-xs font-bold">
                     <span>
                       ✅ Đã xác thực Face ID &amp; ghim tọa độ Radar: {latestVerifiedNotice.name} ({latestVerifiedNotice.studentId}) • Cách tâm {latestVerifiedNotice.distance}m ({latestVerifiedNotice.network})
@@ -903,7 +1075,7 @@ export default function FacultyDashboard({
                   <div className="mt-2.5 text-center">
                     <p className="text-xs font-mono font-bold text-slate-950 truncate max-w-xs m-0">{currentNonce}</p>
                     <p className="text-[10px] font-mono text-slate-600 m-0">
-                      {sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Chế độ: Ràng buộc Wi-Fi trường' : 'Chế độ: Mạng 4G/5G + GPS Haversine'}
+                      {sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Chế độ: Ràng buộc Wi-Fi trường' : `Chế độ: Mạng 4G/5G + GPS Haversine (R ≤ ${sessionConfig.maxRadiusMeters}m)`}
                     </p>
                   </div>
                 </div>
@@ -927,14 +1099,25 @@ export default function FacultyDashboard({
             {/* TAB 2: CANVAS RADAR XOAY 360 ĐỘ */}
             {activeTab === 'RADAR' && (
               <div className="flex-1 min-h-[460px] rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col relative overflow-hidden shadow-2xl">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
                   <div>
                     <h3 className="text-sm font-bold text-white m-0">Radar Hiện Diện Không Gian (Haversine Formula)</h3>
-                    <p className="text-xs text-slate-400 m-0">Tâm phòng: {sessionConfig.room} • Bán kính an toàn: {sessionConfig.maxRadiusMeters}m</p>
+                    <p className="text-xs text-slate-400 m-0">
+                      Tâm phòng: {sessionConfig.room} ({sessionConfig.centerCoords.lat}, {sessionConfig.centerCoords.lon}) • Bán kính an toàn: <strong className="text-cyan-300">{sessionConfig.maxRadiusMeters}m</strong>
+                    </p>
                   </div>
-                  <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
-                    GPS Fix: ±3.2m
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSyncLaptopGpsCenter}
+                      className="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-xs font-bold hover:bg-cyan-500/25 cursor-pointer"
+                    >
+                      📍 Lấy GPS Laptop làm tâm
+                    </button>
+                    <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                      GPS Fix: ±3.2m
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex-1 flex items-center justify-center relative">
@@ -945,8 +1128,8 @@ export default function FacultyDashboard({
                     className="rounded-2xl border border-slate-800/80 bg-[#040814]"
                   />
                   <div className="absolute bottom-3 left-4 text-[11px] font-mono text-slate-400 bg-slate-950/90 p-2 rounded-xl border border-slate-800">
-                    <p className="text-emerald-400 m-0">● Trong phòng (&le; 35m)</p>
-                    <p className="text-rose-400 m-0">● Ngoài phòng (Nghi vấn)</p>
+                    <p className="text-emerald-400 m-0">● Trong phòng (&le; {sessionConfig.maxRadiusMeters}m)</p>
+                    <p className="text-rose-400 m-0">● Ngoài phòng (&gt; {sessionConfig.maxRadiusMeters}m - Nghi vấn)</p>
                   </div>
                 </div>
               </div>
