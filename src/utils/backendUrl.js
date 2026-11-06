@@ -1,18 +1,39 @@
-// src/utils/backendUrl.js - Bộ Định Tuyến Kết Nối Backend & Socket.io Đa Môi Trường (iPhone IPA, LAN Wi-Fi, 4G Tunnel & Localhost)
+// src/utils/backendUrl.js - Bộ Định Tuyến Kết Nối Backend & Socket.io Đa Môi Trường (iPhone IPA, LAN Wi-Fi, 4G LocalTunnel & Localhost)
 
 // 1. Địa chỉ IPv4 mạng LAN của máy tính Windows (ipconfig) & Cổng 5000
 export const DEFAULT_LAN_IP = '192.168.88.200';
 export const HOTSPOT_LAN_IP = '192.168.137.1';
 export const LAN_BACKEND_URL = `http://${DEFAULT_LAN_IP}:5000`;
 
-// 2. Đường dẫn HTTPS Tunnel công khai (Hoạt động xuyên cả 4G/5G và Wi-Fi trên iPhone mà không bị iOS ATS chặn)
-// Lưu ý: Ứng dụng sẽ tự dò (resolveBackendUrl) sang LAN IP nếu Tunnel này đã chết, nên KHÔNG cần build lại .ipa chỉ vì đổi Tunnel.
-export const PUBLIC_TUNNEL_URL = 'https://fuzzy-drinks-own.loca.lt';
+// 2. Đường dẫn HTTPS LocalTunnel công khai (npx localtunnel --port 5000 --subdomain uth-trustid-demo)
+// Hoạt động xuyên cả mạng 4G/5G và Wi-Fi trường cho kịch bản thực nghiệm NCKH
+export const SERVER_URL = 'https://uth-trustid-demo.loca.lt';
+export const PUBLIC_TUNNEL_URL = SERVER_URL;
 
 const RESOLVED_KEY = 'uth_resolved_backend_url';
 let resolvedBaseUrl = null;
 let resolvingPromise = null;
 let activeWorkingBase = null; // Ghi nhớ Base URL đã kết nối thành công để phản hồi tức thì (< 10ms)
+
+export function getCustomServerUrl() {
+  if (typeof window === 'undefined') return SERVER_URL;
+  return (localStorage.getItem('uth_custom_backend_url') || '').trim() || SERVER_URL;
+}
+
+export function setCustomServerUrl(url) {
+  if (typeof window === 'undefined') return;
+  const clean = (url || '').trim().replace(/\/+$/, '');
+  if (clean) {
+    localStorage.setItem('uth_custom_backend_url', clean);
+    resolvedBaseUrl = clean;
+    activeWorkingBase = clean;
+  } else {
+    localStorage.removeItem('uth_custom_backend_url');
+    resolvedBaseUrl = null;
+    activeWorkingBase = null;
+  }
+  window.dispatchEvent(new CustomEvent('uth-backend-url-changed', { detail: clean || SERVER_URL }));
+}
 
 function isNativeShell() {
   if (typeof window === 'undefined') return false;
@@ -40,14 +61,14 @@ export function getBackendBaseUrl() {
   const host = window.location.hostname;
   const port = window.location.port;
 
-  // Nếu đang mở trên trình duyệt qua Vite Dev Server (5173) hoặc Tunnel (Cloudflare / Localtunnel)
-  if (port === '5173' || host.includes('trycloudflare.com') || host.includes('loca.lt')) {
+  // Nếu đang mở trên trình duyệt qua Vite Dev Server (5173 Mobile / 5174 Web Portal) hoặc Tunnel (Cloudflare / Localtunnel)
+  if (port === '5173' || port === '5174' || host.includes('trycloudflare.com') || host.includes('loca.lt')) {
     return '';
   }
 
   // Nếu đang chạy trong Native App iOS (.ipa) với hostname 'trustid.ut.edu.vn' hoặc 'capacitor://'
   if (isNativeShell()) {
-    return resolvedBaseUrl || LAN_BACKEND_URL;
+    return resolvedBaseUrl || SERVER_URL || LAN_BACKEND_URL;
   }
 
   // Nếu mở trực tiếp trên trình duyệt qua IP LAN
@@ -70,7 +91,13 @@ async function probeBase(base, timeoutMs = 1500) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${base}/api/session/active`, { signal: controller.signal, cache: 'no-store' });
+    const res = await fetch(`${base}/api/session/active`, {
+      signal: controller.signal,
+      cache: 'no-store',
+      headers: {
+        'Bypass-Tunnel-Reminder': 'true'
+      }
+    });
     const ct = res.headers.get('content-type') || '';
     if (!ct.includes('application/json')) throw new Error('not-json');
     return base;
@@ -94,20 +121,20 @@ export function resolveBackendUrl() {
   const candidates = [...new Set([
     custom,
     lastGood,
+    SERVER_URL,
     LAN_BACKEND_URL,
     `http://${HOTSPOT_LAN_IP}:5000`,
-    'http://127.0.0.1:5000',
-    PUBLIC_TUNNEL_URL
+    'http://127.0.0.1:5000'
   ].filter(Boolean))];
 
-  resolvingPromise = Promise.any(candidates.map((c) => probeBase(c, 1500)))
+  resolvingPromise = Promise.any(candidates.map((c) => probeBase(c, 1800)))
     .then((base) => {
       resolvedBaseUrl = base;
       activeWorkingBase = base;
       try { localStorage.setItem(RESOLVED_KEY, base); } catch {}
       return base;
     })
-    .catch(() => PUBLIC_TUNNEL_URL)
+    .catch(() => SERVER_URL)
     .finally(() => { resolvingPromise = null; });
 
   return resolvingPromise;
@@ -117,9 +144,9 @@ export function resolveBackendUrl() {
  * Chuyển hướng một Socket.IO client đã tạo sang Backend vừa dò được (nếu khác URL ban đầu).
  * Socket.IO v4: Manager.open() dùng this.uri nên chỉ cần đổi uri rồi kết nối lại.
  */
-export async function retargetSocket(socket) {
-  if (!socket || !isNativeShell()) return socket;
-  const base = await resolveBackendUrl();
+export async function retargetSocket(socket, forcedBase) {
+  if (!socket) return socket;
+  const base = forcedBase || (isNativeShell() ? await resolveBackendUrl() : getBackendBaseUrl());
   const manager = socket.io;
   if (base && manager && manager.uri !== base) {
     manager.uri = base;
@@ -129,12 +156,17 @@ export async function retargetSocket(socket) {
   return socket;
 }
 
-async function fetchCandidate(url, options, timeoutMs = 1500) {
+async function fetchCandidate(url, options, timeoutMs = 1800) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    const mergedHeaders = {
+      'Bypass-Tunnel-Reminder': 'true',
+      ...(options?.headers || {})
+    };
     const res = await fetch(url, {
       ...options,
+      headers: mergedHeaders,
       signal: controller.signal
     });
     const contentType = res.headers.get('content-type') || '';

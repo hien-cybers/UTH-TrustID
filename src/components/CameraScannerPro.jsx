@@ -12,6 +12,12 @@ function parseQrPayload(decodedText) {
   if (typeof decodedText === 'string' && (decodedText.startsWith('UTH_ID:') || decodedText.startsWith('UTH:'))) {
     const parts = decodedText.split(':');
     const isUthId = parts[0] === 'UTH_ID';
+    let serverUrl = '';
+    if (isUthId && parts[7]) {
+      try {
+        serverUrl = decodeURIComponent(parts.slice(7).join(':'));
+      } catch {}
+    }
     return {
       type: 'ATTENDANCE_QR',
       prefix: parts[0],
@@ -21,6 +27,7 @@ function parseQrPayload(decodedText) {
       sessionLon: parseFloat(parts[4]),
       timestamp: isUthId ? parseInt(parts[5], 10) : undefined,
       policy: (isUthId ? parts[6] : parts[5]) || 'HYBRID_4G_5G',
+      serverUrl,
       raw: decodedText
     };
   }

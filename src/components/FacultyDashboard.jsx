@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { io } from 'socket.io-client';
-import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
+import { getSocketUrl, smartFetch, retargetSocket, SERVER_URL } from '../utils/backendUrl';
 import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
 
@@ -102,6 +102,8 @@ export default function FacultyDashboard({
 ]`);
   const [revokeAddressInput, setRevokeAddressInput] = useState('0x1D9b6938A3f073e3426052C7016155D85040Ed1D');
   const [adminStatusMsg, setAdminStatusMsg] = useState('');
+  const [networkBlockNotice, setNetworkBlockNotice] = useState(null);
+  const [latestVerifiedNotice, setLatestVerifiedNotice] = useState(null);
 
   // Canvas radar ref
   const canvasRef = useRef(null);
@@ -159,12 +161,32 @@ export default function FacultyDashboard({
         }
         return [mapped, ...prev];
       });
+      setNetworkBlockNotice(null);
+      setLatestVerifiedNotice({
+        studentId: sid,
+        name: mapped.name,
+        distance: mapped.distance,
+        network: mapped.network,
+        time: mapped.checkInTime
+      });
     };
 
     socket.on('new-attendee', upsertAttendee);
     socket.on('student-checked-in', upsertAttendee);
     socket.on('student-verified', upsertAttendee);
     socket.on('attendee-updated', upsertAttendee);
+
+    socket.on('network-enforcement-blocked', (payload) => {
+      if (payload) {
+        setNetworkBlockNotice(payload);
+      }
+    });
+
+    socket.on('network-mode-updated', (payload) => {
+      if (payload?.networkMode) {
+        setSessionConfig((prev) => ({ ...prev, networkMode: payload.networkMode }));
+      }
+    });
 
     socket.on('nonce-updated', (payload) => {
       if (payload?.nonce) {
@@ -195,6 +217,24 @@ export default function FacultyDashboard({
       socket.disconnect();
     };
   }, []);
+
+  // Chuyển đổi nóng chế độ Kiểm soát kết nối mạng (Thực nghiệm 1: Wi-Fi trường vs Thực nghiệm 2: 4G/5G)
+  const handleSwitchLiveNetworkMode = async (nextMode) => {
+    setSessionConfig((prev) => ({ ...prev, networkMode: nextMode }));
+    if (nextMode === 'CELLULAR_ANY') {
+      setNetworkBlockNotice(null);
+    }
+    try {
+      await smartFetch('/api/session/network-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          networkMode: nextMode
+        })
+      });
+    } catch {}
+  };
 
   // Khởi tạo phiên học lên Backend và bật máy chiếu
   const handleStartProjectorSession = async () => {
@@ -485,10 +525,10 @@ export default function FacultyDashboard({
     return acc;
   }, {});
 
-  // Chuỗi QR chuẩn UTH_ID để điện thoại sinh viên quét trực tiếp từ Stage Mode
+  // Chuỗi QR chuẩn UTH_ID để điện thoại sinh viên quét trực tiếp từ Stage Mode (Nhúng kèm SERVER_URL LocalTunnel cho điện thoại 4G)
   const qrPayloadString = `UTH_ID:${sessionId}:${currentNonce}:${sessionConfig.centerCoords.lat}:${sessionConfig.centerCoords.lon}:${Date.now()}:${
     sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'CAMPUS_WIFI_ONLY' : 'HYBRID_4G_5G'
-  }`;
+  }:${encodeURIComponent(SERVER_URL)}`;
 
   return (
     <div className="min-h-screen bg-[#040814] text-slate-100 flex flex-col font-sans select-none">
@@ -501,15 +541,43 @@ export default function FacultyDashboard({
           </div>
           <div>
             <h1 className="text-sm font-black tracking-wider text-white m-0">TRUSTID COMMAND CENTER</h1>
-            <p className="text-[10px] font-mono text-cyan-400 m-0">FACULTY &amp; ADMIN WEB PORTAL • ZERO-TRUST ARCHITECTURE</p>
+            <p className="text-[10px] font-mono text-cyan-400 m-0">
+              FACULTY &amp; ADMIN WEB PORTAL • TUNNEL: <span className="text-emerald-400">{SERVER_URL}</span>
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {isCreated && (
             <>
               <div className="px-3 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono">
                 Lớp: <span className="font-bold text-cyan-300">{sessionConfig.courseCode}</span> • Phòng: <span className="text-white">{sessionConfig.room}</span>
+              </div>
+
+              {/* CHUYỂN ĐỔI NÓNG THỰC NGHIỆM 1 (WI-FI TRƯỜNG) & THỰC NGHIỆM 2 (4G/5G) NGAY TRÊN HEADER */}
+              <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-cyan-500/30 gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchLiveNetworkMode('CAMPUS_WIFI')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                    sessionConfig.networkMode === 'CAMPUS_WIFI'
+                      ? 'bg-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                      : 'bg-transparent text-slate-400 hover:text-white'
+                  }`}
+                >
+                  📶 TN1: Ràng buộc Wi-Fi Trường
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchLiveNetworkMode('CELLULAR_ANY')}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                    sessionConfig.networkMode !== 'CAMPUS_WIFI'
+                      ? 'bg-emerald-400 text-slate-950 shadow-[0_0_12px_rgba(52,211,153,0.4)]'
+                      : 'bg-transparent text-slate-400 hover:text-white'
+                  }`}
+                >
+                  🌐 TN2: Mạng 4G/5G (Tự do)
+                </button>
               </div>
 
               <div className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border flex items-center gap-2 ${
@@ -680,30 +748,80 @@ export default function FacultyDashboard({
 
             {/* TAB 1: STAGE MODE (MÁY CHIẾU) */}
             {activeTab === 'STAGE' && (
-              <div className="flex-1 min-h-[460px] rounded-3xl bg-[#081226] border border-cyan-500/30 p-8 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
-                <div className="absolute top-4 left-6 text-left">
-                  <p className="text-xs font-mono text-slate-400 m-0">CHALLENGE-RESPONSE TOTP</p>
-                  <p className="text-sm font-bold text-white m-0">{sessionConfig.courseName}</p>
+              <div className="flex-1 min-h-[460px] rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
+                <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div className="text-left">
+                    <p className="text-xs font-mono text-slate-400 m-0">CHALLENGE-RESPONSE TOTP • {sessionConfig.room}</p>
+                    <p className="text-sm font-bold text-white m-0">{sessionConfig.courseName}</p>
+                  </div>
+
+                  {/* Nhãn trạng thái Kiểm soát kết nối mạng (Network Enforcement) trên màn chiếu */}
+                  <div className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-2 ${
+                    sessionConfig.networkMode === 'CAMPUS_WIFI'
+                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-300'
+                      : 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
+                  }`}>
+                    <span>{sessionConfig.networkMode === 'CAMPUS_WIFI' ? '📶 RÀNG BUỘC WI-FI TRƯỜNG (CHẶN 4G)' : '🌐 MẠNG 4G/5G TỰ DO (GPS R ≤ 35M)'}</span>
+                  </div>
                 </div>
 
-                <div className="relative p-6 bg-white rounded-3xl shadow-[0_0_50px_rgba(0,242,254,0.2)] border-4 border-cyan-400 flex flex-col items-center mt-4">
-                  <div className="w-64 h-64 bg-white rounded-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
+                {/* Cảnh báo đỏ thời gian thực khi Điện thoại 4G quét QR ở Thực nghiệm 1 */}
+                {networkBlockNotice && (
+                  <div className="w-full max-w-xl mb-3 p-3 rounded-2xl bg-rose-500/20 border-2 border-rose-500 text-rose-200 flex items-center justify-between gap-3 animate-pulse">
+                    <div>
+                      <p className="text-xs font-black text-rose-400 m-0">
+                        🚨 [NETWORK ENFORCEMENT BLOCK] — SV: {networkBlockNotice.fullName} ({networkBlockNotice.studentId})
+                      </p>
+                      <p className="text-xs font-bold text-white mt-0.5 mb-0">
+                        {networkBlockNotice.message}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchLiveNetworkMode('CELLULAR_ANY')}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-400 text-slate-950 font-black text-[11px] whitespace-nowrap cursor-pointer border-none"
+                    >
+                      Chuyển sang 4G/5G ➔
+                    </button>
+                  </div>
+                )}
+
+                {/* Thông báo xanh khi Điện thoại 4G quét thành công ở Thực nghiệm 2 */}
+                {!networkBlockNotice && latestVerifiedNotice && (
+                  <div className="w-full max-w-xl mb-3 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 flex items-center justify-between text-xs font-bold">
+                    <span>
+                      ✅ Đã xác thực Face ID &amp; ghim tọa độ Radar: {latestVerifiedNotice.name} ({latestVerifiedNotice.studentId}) • Cách tâm {latestVerifiedNotice.distance}m ({latestVerifiedNotice.network})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('RADAR')}
+                      className="px-2.5 py-1 rounded-lg bg-cyan-400 text-slate-950 font-black text-[11px] cursor-pointer border-none"
+                    >
+                      Xem Radar 360°
+                    </button>
+                  </div>
+                )}
+
+                <div className="relative p-5 bg-white rounded-3xl shadow-[0_0_50px_rgba(0,242,254,0.2)] border-4 border-cyan-400 flex flex-col items-center">
+                  <div className="w-60 h-60 bg-white rounded-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
                     <QRCodeCanvas
                       value={qrPayloadString}
-                      size={240}
+                      size={224}
                       level="L"
                       includeMargin={false}
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/20 to-transparent pointer-events-none animate-pulse" />
                   </div>
-                  <div className="mt-3 text-center">
+                  <div className="mt-2.5 text-center">
                     <p className="text-xs font-mono font-bold text-slate-950 truncate max-w-xs m-0">{currentNonce}</p>
-                    <p className="text-[10px] font-mono text-slate-600 m-0">Độ phức tạp Merkle Root: O(log N)</p>
+                    <p className="text-[10px] font-mono text-slate-600 m-0">
+                      {sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Chế độ: Ràng buộc Wi-Fi trường' : 'Chế độ: Mạng 4G/5G + GPS Haversine'}
+                    </p>
                   </div>
                 </div>
 
                 {/* Thanh đếm lùi */}
-                <div className="w-80 mt-6 space-y-1.5 text-center">
+                <div className="w-80 mt-4 space-y-1.5 text-center">
                   <div className="flex justify-between text-xs font-mono">
                     <span className="text-slate-400">Tự động xoay mã sau:</span>
                     <span className="text-cyan-400 font-bold">{timerProgress}s</span>

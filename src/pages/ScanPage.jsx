@@ -43,7 +43,7 @@ import {
   setSimulatedBiometricInvalidation,
   isSimulatedBiometricInvalidated
 } from '../utils/webauthnHelper';
-import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
+import { getSocketUrl, smartFetch, retargetSocket, SERVER_URL, getCustomServerUrl, setCustomServerUrl } from '../utils/backendUrl';
 import { getOrCreateDeviceId, signWithDecryptedKey } from '../utils/identityManager';
 import { getItem } from '../utils/db';
 import { getPreciseLocation } from '../utils/geoManager';
@@ -53,6 +53,12 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
   const [scanStatus, setScanStatus] = useState(null);
   const [isScanning, setIsScanning] = useState(true);
   const [livenessStampData, setLivenessStampData] = useState(null);
+
+  // Cấu hình SERVER_URL LocalTunnel & Chế độ Mạng Điện Thoại (Thực nghiệm 1 & 2 trước Hội đồng NCKH)
+  const [serverUrlInput, setServerUrlInput] = useState(() => getCustomServerUrl());
+  const [showServerUrlBar, setShowServerUrlBar] = useState(false);
+  const [phoneNetworkMode, setPhoneNetworkMode] = useState('4G'); // '4G' | 'WIFI'
+  const [sessionNetworkMode, setSessionNetworkMode] = useState('CAMPUS_WIFI'); // Đồng bộ với Giảng viên ('CAMPUS_WIFI' | 'CELLULAR_ANY')
 
   // Trạng thái Offline Proof-of-Presence (IndexedDB)
   const [isOfflineMode, setIsOfflineMode] = useState(() => !navigator.onLine);
@@ -170,10 +176,13 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         .then((r) => r.json())
         .then((d) => {
           if (d?.success && d?.session) {
+            const netMode = d.session.networkMode || (d.session.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY');
             activeSessionRef.current = {
               sessionId: d.session.sessionId,
-              nonce: d.session.nonce
+              nonce: d.session.nonce,
+              networkMode: netMode
             };
+            setSessionNetworkMode(netMode);
             socket.emit('join-session', {
               sessionId: d.session.sessionId,
               role: 'STUDENT',
@@ -185,10 +194,13 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
 
       socket.on('session-created', (payload) => {
         if (payload?.sessionId) {
+          const netMode = payload.networkMode || (payload.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY');
           activeSessionRef.current = {
             sessionId: payload.sessionId,
-            nonce: payload.nonce || 'NONCE_LIVE'
+            nonce: payload.nonce || 'NONCE_LIVE',
+            networkMode: netMode
           };
+          setSessionNetworkMode(netMode);
           socket.emit('join-session', {
             sessionId: payload.sessionId,
             role: 'STUDENT',
@@ -197,9 +209,20 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         }
       });
 
+      socket.on('network-mode-updated', (payload) => {
+        if (payload?.networkMode) {
+          setSessionNetworkMode(payload.networkMode);
+          activeSessionRef.current = {
+            ...(activeSessionRef.current || {}),
+            networkMode: payload.networkMode
+          };
+        }
+      });
+
       socket.on('nonce-updated', (payload) => {
         if (payload?.nonce) {
           activeSessionRef.current = {
+            ...(activeSessionRef.current || {}),
             sessionId: payload.sessionId || activeSessionRef.current?.sessionId || 'SES_A2301',
             nonce: payload.nonce
           };
@@ -443,6 +466,68 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
   const handleScanSuccess = async (qrResult) => {
     if (isTerminatedRef.current) return;
 
+    // Tự động nhận diện SERVER_URL LocalTunnel nếu được nhúng trong mã QR trên màn chiếu Giảng viên
+    const parsedServerUrl = qrResult?.serverUrl || '';
+    if (parsedServerUrl && parsedServerUrl.startsWith('http')) {
+      setServerUrlInput(parsedServerUrl);
+    }
+
+    // Kiểm tra chính sách mạng của phòng học (Từ QR payload hoặc từ trạng thái phiên đồng bộ)
+    const rawStr = typeof qrResult === 'string' ? qrResult : (qrResult?.raw || '');
+    const qrPolicy =
+      qrResult?.policy ||
+      (rawStr.includes('CAMPUS_WIFI_ONLY') ? 'CAMPUS_WIFI_ONLY' : '');
+    const effectiveRoomNetMode =
+      qrPolicy === 'CAMPUS_WIFI_ONLY'
+        ? 'CAMPUS_WIFI'
+        : qrPolicy === 'HYBRID_4G_5G'
+        ? 'CELLULAR_ANY'
+        : (activeSessionRef.current?.networkMode || sessionNetworkMode);
+
+    // [THỰC NGHIỆM 1 - CHẾ ĐỘ WI-FI TRƯỜNG]:
+    // Nếu Web Giảng viên đang bật "Ràng buộc Wi-Fi trường" mà điện thoại đang bật 4G -> Từ chối ngay lập tức!
+    const isAttendanceScan =
+      qrResult?.type === 'ATTENDANCE_QR' ||
+      rawStr.startsWith('UTH_ID:') ||
+      rawStr.startsWith('UTH:');
+
+    if (isAttendanceScan && effectiveRoomNetMode === 'CAMPUS_WIFI' && phoneNetworkMode === '4G') {
+      setIsScanning(false);
+      setLivenessStampData(null);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+      }
+      triggerSessionTerminatedFeedback();
+
+      const blockMsg = 'Từ chối: Thiết bị không thuộc mạng Wi-Fi chỉ định của phòng học!';
+      setScanStatus({
+        type: 'ERROR',
+        title: 'CHẶN KẾT NỐI 4G/5G (NETWORK ENFORCEMENT)',
+        message: blockMsg,
+        details: {
+          sessionId: qrResult?.sessionId || activeSessionRef.current?.sessionId || 'SES_A2301',
+          distance: 'Mạng di động 4G/5G (LocalTunnel)',
+          time: new Date().toLocaleTimeString('vi-VN'),
+          signatureHash: 'BLOCKED_BY_WIFI_POLICY'
+        }
+      });
+
+      // Báo ngay lên màn chiếu Giảng viên để Hội đồng NCKH thấy cảnh báo chặn trực tiếp
+      smartFetch('/api/attendance/network-blocked', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: qrResult?.sessionId || activeSessionRef.current?.sessionId || 'SES_A2301',
+          studentId: myStudentIdRef.current || '2251120000',
+          fullName: 'Nguyễn Đức Hiển',
+          clientNetwork: '4G/5G Cellular (LocalTunnel)',
+          reason: blockMsg
+        })
+      }).catch(() => {});
+      return;
+    }
+
+    // [THỰC NGHIỆM 2 - CHẾ ĐỘ 4G / TỰ DO]: Mở xác thực Face ID tức thì!
     setIsScanning(false);
     setPendingQrPayload(qrResult);
     setFaceIdReason('Mở khóa Private Key trong RAM để ký điểm danh EIP-191');
@@ -689,6 +774,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
             nonce,
             timestamp,
             deviceId: currentDeviceId,
+            clientNetwork: phoneNetworkMode,
             studentCoords: {
               lat: smoothedPos.lat,
               lon: smoothedPos.lon
@@ -1006,6 +1092,124 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.4 }}>
           WebAuthn Biometric Gate • Key Wrapping AES-GCM + PIN 6 Số • Pre-warm GPS (<code>&lt; 300ms</code>)
         </p>
+      </div>
+
+      {/* BẢNG THỰC NGHIỆM NCKH: KIỂM SOÁT KẾT NỐI MẠNG (4G LOCALTUNNEL VS WI-FI TRƯỜNG) */}
+      <div
+        className="glass-card"
+        style={{
+          padding: '10px 12px',
+          borderRadius: '14px',
+          border: sessionNetworkMode === 'CAMPUS_WIFI' && phoneNetworkMode === '4G'
+            ? '1px solid rgba(245, 158, 11, 0.5)'
+            : '1px solid rgba(6, 182, 212, 0.35)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+              🌐 Mạng Điện Thoại:
+            </span>
+            <button
+              type="button"
+              onClick={() => setPhoneNetworkMode('4G')}
+              className="btn-press"
+              style={{
+                padding: '3px 8px',
+                borderRadius: '7px',
+                fontSize: '10px',
+                fontWeight: 800,
+                border: phoneNetworkMode === '4G' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
+                background: phoneNetworkMode === '4G' ? 'rgba(6, 182, 212, 0.16)' : 'var(--bg-inset)',
+                color: phoneNetworkMode === '4G' ? '#06B6D4' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              📱 Đang bật 4G/5G
+            </button>
+            <button
+              type="button"
+              onClick={() => setPhoneNetworkMode('WIFI')}
+              className="btn-press"
+              style={{
+                padding: '3px 8px',
+                borderRadius: '7px',
+                fontSize: '10px',
+                fontWeight: 800,
+                border: phoneNetworkMode === 'WIFI' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
+                background: phoneNetworkMode === 'WIFI' ? 'rgba(16, 185, 129, 0.16)' : 'var(--bg-inset)',
+                color: phoneNetworkMode === 'WIFI' ? '#10B981' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              📶 Wi-Fi Trường
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowServerUrlBar((v) => !v)}
+            className="btn-press"
+            style={{
+              padding: '3px 7px',
+              borderRadius: '7px',
+              fontSize: '9.5px',
+              fontFamily: 'JetBrains Mono',
+              fontWeight: 700,
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              background: 'rgba(16, 185, 129, 0.1)',
+              color: '#10B981',
+              cursor: 'pointer'
+            }}
+          >
+            SERVER_URL ⚙
+          </button>
+        </div>
+
+        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)' }}>
+          <span>
+            Chính sách Giảng viên:{' '}
+            <b style={{ color: sessionNetworkMode === 'CAMPUS_WIFI' ? '#F59E0B' : '#10B981' }}>
+              {sessionNetworkMode === 'CAMPUS_WIFI' ? '📶 Ràng buộc Wi-Fi trường (TN1)' : '🌐 Mạng 4G/5G Tự do (TN2)'}
+            </b>
+          </span>
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9.5px', color: '#06B6D4' }}>
+            {serverUrlInput.replace(/^https?:\/\//, '')}
+          </span>
+        </div>
+
+        {showServerUrlBar && (
+          <div style={{ marginTop: '8px', display: 'flex', gap: '6px' }}>
+            <input
+              type="text"
+              value={serverUrlInput}
+              onChange={(e) => setServerUrlInput(e.target.value)}
+              placeholder="https://uth-trustid-demo.loca.lt"
+              className="pro-input"
+              style={{ flex: 1, fontSize: '11px', fontFamily: 'JetBrains Mono', padding: '6px 8px' }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setCustomServerUrl(serverUrlInput);
+                setShowServerUrlBar(false);
+              }}
+              className="btn-press"
+              style={{
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#06B6D4',
+                color: '#040814',
+                fontSize: '10.5px',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Lưu URL
+            </button>
+          </div>
+        )}
       </div>
 
       {/* BANNER TÁI KIỂM TRA ĐIỂM DANH ĐỘT XUẤT (SPOT-CHECK 60S TỪ GIẢNG VIÊN) */}

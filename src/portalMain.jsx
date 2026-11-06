@@ -14,3 +14,4 @@ createRoot(document.getElementById('portal-root')).render(
     <FacultyDashboard initialMode={isRootAdminPath ? 'ADMIN' : 'FACULTY'} />
   </React.StrictMode>
 );
+
