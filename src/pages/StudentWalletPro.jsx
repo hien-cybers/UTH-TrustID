@@ -33,7 +33,6 @@ import { smartFetch } from '../utils/backendUrl';
 import { setItem, getItem, removeItem } from '../utils/db';
 import { setActiveWallet } from '../utils/sessionKeyVault';
 import FaceIDModal from '../components/FaceIDModal';
-import StudentMapView from '../components/StudentMapView';
 import StudentCardClean from '../components/StudentCardClean';
 import '../styles/animations.css';
 
@@ -58,10 +57,6 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
   // Selective Disclosure / ZKP-lite state
   const [zkpMode, setZkpMode] = useState(false);
   const [zkpVerifiedBadge, setZkpVerifiedBadge] = useState('');
-
-  // Bản đồ GPS vị trí hiện diện phần cứng (Google Maps Iframe Embed)
-  const [showMap, setShowMap] = useState(false);
-  const [liveGpsCoords, setLiveGpsCoords] = useState(null);
 
   useEffect(() => {
     // Kiểm tra cảm biến phần cứng Face ID / Vân tay khi khởi động
@@ -569,28 +564,6 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
             <div className="bg-slate-50 dark:bg-slate-950 py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-[9.5px] text-cyan-600 dark:text-cyan-400 font-mono break-all">
               Merkle Root: {credential.merkleRoot.slice(0, 26)}...
             </div>
-          </div>
-
-          {/* BẢN ĐỒ VỊ TRÍ HIỆN DIỆN GPS PHẦN CỨNG & GOOGLE MAPS */}
-          <div className="stagger-4 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-white border-slate-200 text-slate-900 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100">
-            <div className="flex justify-between items-center" style={{ marginBottom: showMap ? '10px' : '0' }}>
-              <div className="flex items-center gap-2">
-                <MapPin size={17} className="text-cyan-500" />
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  Vị Trí Hiện Diện GPS (Google Maps)
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowMap(!showMap)}
-                className="bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer"
-              >
-                {showMap ? 'Thu Gọn' : 'Xem Bản Đồ'}
-              </button>
-            </div>
-            {showMap && (
-              <StudentMapView onCoordsUpdated={(coords) => setLiveGpsCoords(coords)} />
-            )}
           </div>
 
           {/* NÚT GỠ THẺ SỐ KHỎI MÁY */}

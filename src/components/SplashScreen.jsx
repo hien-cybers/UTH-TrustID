@@ -18,15 +18,15 @@ export default function SplashScreen({ onFinish }) {
     }
     sessionStorage.setItem('uth_splash_shown', 'true');
 
-    // 1. Sau 0.45 giây thì bắt đầu hiệu ứng tan dần (Fade out & Scale up)
+    // 1. Sau 2.2 giây thì bắt đầu hiệu ứng tan dần (Fade out & Scale up) để người dùng kịp quan sát trọn vẹn hiệu ứng logo + thanh tiến trình
     const fadeTimer = setTimeout(() => {
       setFading(true);
-    }, 450);
+    }, 2200);
 
-    // 2. Sau 0.65 giây thì hủy hoàn toàn splash screen khỏi DOM
+    // 2. Sau 2.75 giây thì hủy hoàn toàn splash screen khỏi DOM
     const removeTimer = setTimeout(() => {
       if (onFinishRef.current) onFinishRef.current();
-    }, 650);
+    }, 2750);
 
     return () => {
       clearTimeout(fadeTimer);

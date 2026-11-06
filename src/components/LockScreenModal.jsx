@@ -1,7 +1,7 @@
 // src/components/LockScreenModal.jsx
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Lock, Fingerprint, AlertCircle } from 'lucide-react';
-import { verifyBiometricPresence } from '../utils/webauthnHelper';
 import FaceIDModal from './FaceIDModal';
 
 const CORRECT_PIN = '123456'; // MÃ£ PIN chuáº©n
@@ -39,12 +39,11 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguyá»
     }
   };
 
-  return (
+  const content = (
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
+        inset: 0,
         width: '100vw',
         height: '100dvh',
         background: 'var(--bg-header)',
@@ -54,7 +53,7 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguyá»
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 99999,
+        zIndex: 99998,
         padding: '24px',
         boxSizing: 'border-box'
       }}
@@ -191,5 +190,7 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguyá»
       />
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 }
 

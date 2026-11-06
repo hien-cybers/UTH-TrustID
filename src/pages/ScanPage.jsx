@@ -1123,7 +1123,7 @@ export default function ScanPage() {
             {scanStatus.message}
           </p>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button
               onClick={() => {
                 isTerminatedRef.current = false;
@@ -1131,15 +1131,33 @@ export default function ScanPage() {
                 setLivenessStampData(null);
                 setIsScanning(true);
               }}
-              className="native-btn-primary btn-press"
-              style={{ padding: '10px' }}
+              className="btn-press"
+              style={{
+                padding: '10.5px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #06B6D4, #0284C7)',
+                color: '#FFF',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
             >
               <span>Quét Lại</span>
             </button>
             <button
               onClick={() => navigate('/wallet')}
-              className="native-btn-secondary btn-press"
-              style={{ padding: '10px' }}
+              className="btn-press"
+              style={{
+                padding: '10.5px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-hairline)',
+                background: 'var(--bg-inset)',
+                color: 'var(--text-main)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
             >
               <span>Về Ví Số</span>
             </button>

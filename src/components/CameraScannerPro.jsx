@@ -250,12 +250,11 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
     <div className="glass-card" style={{
       position: 'relative',
       width: '100%',
-      maxWidth: '380px',
       margin: '0 auto',
       background: 'var(--bg-card)',
-      borderRadius: '20px',
+      borderRadius: '18px',
       border: '1px solid var(--border-hairline)',
-      padding: '16px',
+      padding: '14px',
       boxSizing: 'border-box',
       boxShadow: 'var(--shadow-card)'
     }}>
@@ -263,7 +262,7 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {/* Header Modal */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
           <Camera size={16} color="var(--accent-cyan)" />
           <span>Quét mã QR xác thực</span>
@@ -286,9 +285,9 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
         position: 'relative',
         width: '100%',
         aspectRatio: '1 / 1',
-        borderRadius: '16px',
+        borderRadius: '14px',
         overflow: 'hidden',
-        background: '#000',
+        background: '#020617',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -307,25 +306,36 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
           }}
         />
 
-        {/* Khung ngắm định vị qrbox 220x220 và vạch quét laser */}
+        {/* Khung ngắm định vị qrbox 220x220 căn tâm tuyệt đối và vạch quét laser */}
         {!errorMsg && (
           <div style={{
             position: 'absolute',
-            width: '220px',
-            height: '220px',
-            border: '2px dashed rgba(56, 189, 248, 0.65)',
-            borderRadius: '16px',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             pointerEvents: 'none'
           }}>
             <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '5%',
-              width: '90%',
-              height: '2px',
-              background: '#38BDF8',
-              boxShadow: '0 0 10px #38BDF8'
-            }} />
+              position: 'relative',
+              width: '216px',
+              height: '216px',
+              border: '2px dashed rgba(56, 189, 248, 0.75)',
+              borderRadius: '18px',
+              boxShadow: '0 0 0 9999px rgba(2, 6, 23, 0.35)'
+            }}>
+              <div
+                className="laser-bar"
+                style={{
+                  position: 'absolute',
+                  left: '6%',
+                  width: '88%',
+                  height: '2px',
+                  background: 'linear-gradient(90deg, transparent, #38BDF8, #67E8F9, transparent)',
+                  boxShadow: '0 0 12px #38BDF8'
+                }}
+              />
+            </div>
           </div>
         )}
 

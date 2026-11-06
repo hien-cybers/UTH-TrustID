@@ -459,10 +459,6 @@ export default function UTHTrustIDApp() {
               </div>
               <div style={{ fontSize: '10.5px', color: '#64748B', fontFamily: 'monospace', wordBreak: 'break-all' }}>{credential.address}</div>
             </div>
-
-            <div style={{ background: '#0A0E17', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '11.5px', color: '#94A3B8' }}>
-              🛰️ Toạ độ GPS nền: <span style={{ color: '#38BDF8', fontFamily: 'monospace' }}>{coords.lat.toFixed(4)}, {coords.lon.toFixed(4)}</span>
-            </div>
           </div>
         )}
 
