@@ -1,6 +1,5 @@
 // src/components/FacultyDashboard.jsx - Web Command Center dành cho Giảng viên & Quản trị viên (Stage QR Laser, Canvas Radar 360°, IDS Audit, Spot-Check 60s, CSV Export & Root Admin Merkle/Revoke)
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { io } from 'socket.io-client';
 import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
@@ -8,10 +7,8 @@ import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
 
 export default function FacultyDashboard({
-  initialMode = 'FACULTY', // 'FACULTY' | 'ADMIN'
-  onSwitchMobileView
+  initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
 }) {
-  const navigate = useNavigate();
 
   // Cấu hình phiên học
   const [sessionConfig, setSessionConfig] = useState({
@@ -544,21 +541,9 @@ export default function FacultyDashboard({
             </>
           )}
 
-          {onSwitchMobileView && (
-            <button
-              onClick={onSwitchMobileView}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 cursor-pointer"
-            >
-              📱 Chế Độ Mobile
-            </button>
-          )}
-
-          <button
-            onClick={() => navigate('/student')}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:text-cyan-300 cursor-pointer"
-          >
-            🎓 Ví Sinh Viên
-          </button>
+          <span className="px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-[11px] font-mono text-cyan-300">
+            PORTAL: VERIFIER &amp; ISSUER NODE
+          </span>
         </div>
       </header>
 
@@ -1018,3 +1003,4 @@ export default function FacultyDashboard({
     </div>
   );
 }
+

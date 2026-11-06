@@ -1,26 +1,24 @@
-// src/pages/ServicePortal.jsx - Cổng Dịch Vụ & Thẩm Tra Danh Tính UTH (Công khai cho SV & Phân quyền Cán bộ)
+// src/pages/ServicePortal.jsx - Cổng Dịch Vụ Số & Thẩm Tra Danh Tính Sinh Viên (Isolated Holder Node)
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { INITIAL_STUDENTS } from '../data/studentsData';
-import FacultyPortalPro from './FacultyPortalPro';
 import LoginPortal from '../components/LoginPortal';
 import { 
   Building2, 
   Search, 
   FileText, 
   QrCode, 
-  Target, 
   BookOpen, 
-  Lock, 
   CheckCircle2, 
   AlertTriangle 
 } from 'lucide-react';
 
-export default function ServicePortal({ currentUser }) {
-  const navigate = useNavigate();
+export default function ServicePortal() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'lookup';
-  const [activeTab, setActiveTab] = useState(initialTab); // 'lookup' | 'services' | 'attendance' | 'weblogin'
+  const [activeTab, setActiveTab] = useState(
+    ['lookup', 'services', 'weblogin'].includes(initialTab) ? initialTab : 'lookup'
+  ); // 'lookup' | 'services' | 'weblogin'
   
   // State phục vụ Tra cứu
   const [searchMssv, setSearchMssv] = useState('');
@@ -29,7 +27,7 @@ export default function ServicePortal({ currentUser }) {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['lookup', 'services', 'attendance', 'weblogin'].includes(tabParam)) {
+    if (tabParam && ['lookup', 'services', 'weblogin'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -159,32 +157,23 @@ export default function ServicePortal({ currentUser }) {
           </div>
 
           <div>
-            {currentUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 230, 118, 0.08)', border: '1px solid rgba(0, 230, 118, 0.3)', padding: '5px 10px', borderRadius: '8px' }}>
-                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
-                  Đang trực: {currentUser.fullName} ({currentUser.role})
-                </span>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '5px 10px', borderRadius: '8px' }}>
-                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#0284c7', display: 'inline-block' }} />
-                <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: 600 }}>
-                  Chế độ Sinh Viên / Khách
-                </span>
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '5px 10px', borderRadius: '8px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#0284c7', display: 'inline-block' }} />
+              <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: 600 }}>
+                HOLDER NODE • Sinh Viên
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* 4 Tab Điều Hướng Gọn Trong Khung Điện Thoại */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '12px', borderTop: '1px solid var(--border-hairline)', paddingTop: '10px' }}>
+        {/* 3 Tab Điều Hướng Sinh Viên Gọn Trong Khung Điện Thoại */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '12px', borderTop: '1px solid var(--border-hairline)', paddingTop: '10px' }}>
           <button
             onClick={() => switchTab('lookup')}
             className="btn-press"
             style={{
-              padding: '8px 10px',
-              fontSize: '11.5px',
+              padding: '8px 6px',
+              fontSize: '11px',
               fontWeight: 700,
               borderRadius: '8px',
               border: activeTab === 'lookup' ? '1px solid #0284c7' : '1px solid var(--border-hairline)',
@@ -195,19 +184,19 @@ export default function ServicePortal({ currentUser }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '5px'
             }}
           >
-            <Search size={14} />
-            <span>Tra Cứu Thẻ Số</span>
+            <Search size={13} />
+            <span>Tra Cứu Thẻ</span>
           </button>
 
           <button
             onClick={() => switchTab('services')}
             className="btn-press"
             style={{
-              padding: '8px 10px',
-              fontSize: '11.5px',
+              padding: '8px 6px',
+              fontSize: '11px',
               fontWeight: 700,
               borderRadius: '8px',
               border: activeTab === 'services' ? '1px solid #0284c7' : '1px solid var(--border-hairline)',
@@ -218,19 +207,19 @@ export default function ServicePortal({ currentUser }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '5px'
             }}
           >
-            <FileText size={14} />
-            <span>Dịch Vụ Một Chạm</span>
+            <FileText size={13} />
+            <span>Dịch Vụ Số</span>
           </button>
 
           <button
             onClick={() => switchTab('weblogin')}
             className="btn-press"
             style={{
-              padding: '8px 10px',
-              fontSize: '11.5px',
+              padding: '8px 6px',
+              fontSize: '11px',
               fontWeight: 700,
               borderRadius: '8px',
               border: activeTab === 'weblogin' ? '1px solid #0284c7' : '1px solid var(--border-hairline)',
@@ -241,34 +230,11 @@ export default function ServicePortal({ currentUser }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '5px'
             }}
           >
-            <QrCode size={14} />
-            <span>Đăng Nhập Web QR</span>
-          </button>
-
-          <button
-            onClick={() => switchTab('attendance')}
-            className="btn-press"
-            style={{
-              padding: '8px 10px',
-              fontSize: '11.5px',
-              fontWeight: 700,
-              borderRadius: '8px',
-              border: activeTab === 'attendance' ? '1px solid #10b981' : '1px solid var(--border-hairline)',
-              cursor: 'pointer',
-              background: activeTab === 'attendance' ? 'rgba(16, 185, 129, 0.14)' : 'var(--bg-inset)',
-              color: activeTab === 'attendance' ? '#10b981' : 'var(--text-muted)',
-              transition: 'all 0.15s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px'
-            }}
-          >
-            <Target size={14} />
-            <span>Mở Phòng Điểm Danh</span>
+            <QrCode size={13} />
+            <span>Web Login QR</span>
           </button>
         </div>
       </div>
@@ -506,62 +472,6 @@ export default function ServicePortal({ currentUser }) {
             </p>
           </div>
           <LoginPortal />
-        </div>
-      )}
-
-      {/* TAB 4: MỞ PHÒNG ĐIỂM DANH (Có khóa bảo vệ nếu chưa đăng nhập Giảng viên) */}
-      {activeTab === 'attendance' && (
-        <div className="stagger-2">
-          {currentUser ? (
-            <div>
-              <div className="glass-card" style={{ borderRadius: '14px', padding: '14px 16px', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 2px', color: 'var(--text-main)' }}>
-                    Bảng Điều Khiển Phiên Của Giảng Viên & Cán Bộ
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)' }}>
-                    Quyền hạn: <strong>{currentUser.role}</strong> • Cán bộ: <strong>{currentUser.fullName}</strong> ({currentUser.email})
-                  </p>
-                </div>
-                <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                  ✓ Đã xác thực phân quyền RBAC
-                </span>
-              </div>
-
-              {/* Nhúng toàn bộ bộ điều khiển điểm danh Giảng viên */}
-              <FacultyPortalPro />
-            </div>
-          ) : (
-            <div className="glass-card" style={{ borderRadius: '16px', padding: '32px 20px', textAlign: 'center' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                <Lock size={36} color="#0284c7" strokeWidth={1.8} />
-              </div>
-              <h4 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', color: 'var(--text-main)' }}>
-                Khu Vực Dành Riêng Cho Cán Bộ / Giảng Viên
-              </h4>
-              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '0 auto 20px', lineHeight: 1.55, maxWidth: '440px' }}>
-                Sinh viên không có quyền mở phòng điểm danh hay phòng thi. Nếu bạn là Cán bộ hoặc Giảng viên phụ trách môn học, vui lòng đăng nhập tài khoản công vụ để bật mã QR xoay vòng và kích hoạt bộ thu GPS.
-              </p>
-              <button
-                onClick={() => navigate('/login')}
-                className="btn-press"
-                style={{
-                  padding: '10px 24px',
-                  background: 'linear-gradient(90deg, #0284c7 0%, #00b4db 100%)',
-                  border: 'none',
-                  color: '#fff',
-                  borderRadius: '8px',
-                  fontSize: '12.5px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                Đăng Nhập Cán Bộ (Email @ut.edu.vn)
-              </button>
-            </div>
-          )}
         </div>
       )}
 

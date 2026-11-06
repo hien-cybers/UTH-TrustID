@@ -1,18 +1,13 @@
-// src/App.jsx - UTH-TrustID Native Mobile App (Splash Screen Động, Phân Tách Role RBAC, Safe Area Tai Thỏ & Global Fault-Tolerant Spot-Check 60s)
+// src/App.jsx - UTH-TrustID Native Mobile App (Isolated Holder Node - Sinh Viên, Safe Area Tai Thỏ & Global Fault-Tolerant Spot-Check 60s)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 import SplashScreen from './components/SplashScreen';
 import StudentWalletPro from './pages/StudentWalletPro';
-import FacultyPortalPro from './pages/FacultyPortalPro';
-import FacultyDashboard from './components/FacultyDashboard';
 import ScanPage from './pages/ScanPage';
 import ServicePortal from './pages/ServicePortal';
-import AdminDashboardPro from './pages/AdminDashboardPro';
-import StaffLogin from './pages/StaffLogin';
-import UTHTrustIDApp from './UTHTrustIDApp';
 import MobileNavigation from './components/MobileNavigation';
 import UthTrustLogo from './components/UthTrustLogo';
 import LiveClock from './components/LiveClock';
@@ -29,22 +24,13 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { Key, LogOut, ShieldAlert, Lock, Sun, Moon, Fingerprint, CheckCircle2, Minimize2 } from 'lucide-react';
+import { ShieldCheck, Lock, Sun, Moon, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const [widescreenFacultyMode, setWidescreenFacultyMode] = useState(true);
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
   const [theme, setTheme] = useState(() => (getInitialThemeIsDark() ? 'dark' : 'light'));
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('uth_staff_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
 
   useEffect(() => {
     applyRootTheme(theme === 'dark');
@@ -320,13 +306,6 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('uth_staff_user');
-    localStorage.removeItem('uth_staff_token');
-    clearActiveWallet();
-    setCurrentUser(null);
-  };
-
   const handleLockSession = () => {
     clearActiveWallet();
     lockNow();
@@ -335,6 +314,73 @@ export default function App() {
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
+
+  const portalHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  const facultyPortalUrl = `https://${portalHost}:5174`;
+
+  // Màn hình cô lập miền đặc quyền (Privilege Domain Separation) nếu ai đó truy cập đường dẫn Cán bộ từ Mobile App
+  const renderPrivilegeSeparationGuard = () => (
+    <div className="glass-card animate-fade-scale" style={{ borderRadius: '18px', padding: '24px 18px', textAlign: 'center', marginTop: '12px' }}>
+      <div style={{
+        width: '48px',
+        height: '48px',
+        borderRadius: '14px',
+        background: 'rgba(6, 182, 212, 0.14)',
+        border: '1px solid rgba(6, 182, 212, 0.35)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 12px',
+        color: '#06B6D4'
+      }}>
+        <ShieldCheck size={24} />
+      </div>
+      <div style={{
+        display: 'inline-block',
+        padding: '3px 10px',
+        borderRadius: '999px',
+        background: 'rgba(16, 185, 129, 0.12)',
+        border: '1px solid rgba(16, 185, 129, 0.35)',
+        color: '#10B981',
+        fontSize: '10px',
+        fontWeight: 800,
+        letterSpacing: '0.5px',
+        marginBottom: '8px'
+      }}>
+        ZERO-TRUST • PRIVILEGE DOMAIN SEPARATION
+      </div>
+      <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 8px' }}>
+        Cổng Giảng Viên & Admin Đã Tách Sang Web Portal Độc Lập
+      </h3>
+      <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.55, margin: '0 0 14px' }}>
+        Để ngăn chặn dịch ngược mã nguồn (Reverse Engineering) trên gói APK/IPA Sinh viên, toàn bộ <b>Faculty & Admin Command Center</b> đã được cô lập sang miền độc lập trên Laptop/PC (<b>Port 5174</b>).
+      </p>
+      <a
+        href={facultyPortalUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="btn-press"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '7px',
+          width: '100%',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, #0284C7, #06B6D4)',
+          color: '#FFFFFF',
+          fontSize: '12.5px',
+          fontWeight: 800,
+          textDecoration: 'none',
+          boxShadow: '0 6px 20px rgba(6, 182, 212, 0.3)'
+        }}
+      >
+        <ExternalLink size={15} />
+        <span>Mở Web Portal Giảng Viên ({facultyPortalUrl})</span>
+      </a>
+    </div>
+  );
 
   return (
     <div className="w-full min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col items-center justify-center">
@@ -351,7 +397,7 @@ export default function App() {
         />
       )}
 
-      {/* Giao diện chính của ứng dụng được nạp sẵn ngầm bên dưới */}
+      {/* Giao diện chính của ứng dụng Sinh viên (Holder Node) */}
       <BrowserRouter>
       {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
       <div className="mobile-viewport mobile-app-root bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
@@ -377,14 +423,12 @@ export default function App() {
                   UTH TRUST<span className="text-cyan-500">ID</span>
                 </div>
                 <div className="text-slate-500 dark:text-slate-400" style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                  {currentUser
-                    ? (currentUser.role === 'ADMIN' ? 'ROLE: ROOT ISSUER' : 'ROLE: VERIFIER (GV)')
-                    : 'ROLE: HOLDER (SINH VIÊN)'}
+                  HOLDER NODE • SINH VIÊN
                 </div>
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Dark/Light Mode + Trạng thái Phân Quyền RBAC */}
+            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Dark/Light Mode + Huy hiệu Holder FIDO2 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <LiveClock />
 
@@ -420,67 +464,30 @@ export default function App() {
                 <Lock size={12} />
               </button>
 
-              {currentUser ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '3px 7px',
-                    borderRadius: '6px',
-                    background: currentUser.role === 'ADMIN' ? 'rgba(16, 185, 129, 0.14)' : 'rgba(56, 189, 248, 0.14)',
-                    color: currentUser.role === 'ADMIN' ? '#10B981' : '#0284C7',
-                    border: currentUser.role === 'ADMIN' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)'
-                  }}>
-                    {currentUser.role === 'ADMIN' ? 'Issuer' : 'Verifier'}
-                  </span>
-
-                  <button
-                    onClick={handleLogout}
-                    title="Đăng xuất tài khoản công vụ (Quay về chế độ Sinh viên)"
-                    className="btn-press"
-                    style={{
-                      padding: '4px 7px',
-                      borderRadius: '7px',
-                      border: '1px solid rgba(244, 63, 94, 0.35)',
-                      background: 'rgba(244, 63, 94, 0.12)',
-                      color: '#F43F5E',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3px'
-                    }}
-                  >
-                    <LogOut size={11} />
-                  </button>
-                </div>
-              ) : (
-                <NavLink
-                  to="/login"
-                  className="btn-press bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400"
-                  style={{
-                    padding: '5px 8px',
-                    borderRadius: '8px',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Key size={11} />
-                  <span>Cán Bộ</span>
-                </NavLink>
-              )}
+              <span
+                title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
+                className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                style={{
+                  padding: '4px 7px',
+                  borderRadius: '8px',
+                  fontSize: '9.5px',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  letterSpacing: '0.3px'
+                }}
+              >
+                <ShieldCheck size={11} />
+                <span>FIDO2</span>
+              </span>
             </div>
 
           </div>
         </header>
 
         {/* 2. BANNER CẢNH BÁO KHẨN CẤP GHIM TRÊN MỌI MÀN HÌNH NẾU ĐANG TRONG 60S SPOT-CHECK */}
-        {spotCheckState.isActive && !spotCheckState.isModalOpen && !currentUser && (
+        {spotCheckState.isActive && !spotCheckState.isModalOpen && (
           <div
             onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
             className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-amber-500/20 border border-amber-500/50 backdrop-blur-md flex items-center justify-between cursor-pointer animate-pulse shadow-lg"
@@ -503,7 +510,7 @@ export default function App() {
         )}
 
         {/* Thông báo hoàn tất Spot-check toàn cục */}
-        {spotVerifiedNotice && !currentUser && (
+        {spotVerifiedNotice && (
           <div className="mx-3 mt-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" />
             <span>{spotVerifiedNotice}</span>
@@ -546,84 +553,28 @@ export default function App() {
                 />
               }
             />
-            <Route path="/all-in-one" element={<UTHTrustIDApp />} />
 
-            {/* 2. CỔNG DỊCH VỤ & TRA CỨU (MỞ CHO SINH VIÊN, PHÂN QUYỀN TÍNH NĂNG CÁN BỘ) */}
-            <Route path="/services" element={<ServicePortal currentUser={currentUser} />} />
+            {/* 2. CỔNG DỊCH VỤ SỐ SINH VIÊN */}
+            <Route path="/services" element={<ServicePortal />} />
             <Route path="/portal" element={<Navigate to="/services" replace />} />
 
-            {/* 3. CỔNG ĐĂNG NHẬP CÁN BỘ (RBAC LOGIN GUARD) */}
-            <Route path="/login" element={<StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />} />
-
-            {/* 4. VAI TRÒ GIẢNG VIÊN: MẶC ĐỊNH MỞ COMMAND CENTER 16:9 (FacultyDashboard.jsx) */}
-            <Route
-              path="/faculty"
-              element={
-                widescreenFacultyMode && typeof document !== 'undefined' ? (
-                  createPortal(
-                    <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
-                      <FacultyDashboard
-                        initialMode="FACULTY"
-                        onSwitchMobileView={() => setWidescreenFacultyMode(false)}
-                      />
-                    </div>,
-                    document.body
-                  )
-                ) : (
-                  <FacultyPortalPro onSwitchWidescreen={() => setWidescreenFacultyMode(true)} />
-                )
-              }
-            />
-            <Route
-              path="/command-center"
-              element={
-                typeof document !== 'undefined' ? (
-                  createPortal(
-                    <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
-                      <FacultyDashboard
-                        initialMode="FACULTY"
-                        onSwitchMobileView={() => setWidescreenFacultyMode(false)}
-                      />
-                    </div>,
-                    document.body
-                  )
-                ) : (
-                  <FacultyDashboard initialMode="FACULTY" />
-                )
-              }
-            />
-
-            {/* 5. VAI TRÒ QUẢN TRỊ VIÊN ROOT ADMIN: TÍCH HỢP COMMAND CENTER 16:9 & MOBILE ADMIN */}
-            <Route
-              path="/admin"
-              element={
-                widescreenFacultyMode && typeof document !== 'undefined' ? (
-                  createPortal(
-                    <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
-                      <FacultyDashboard
-                        initialMode="ADMIN"
-                        onSwitchMobileView={() => setWidescreenFacultyMode(false)}
-                      />
-                    </div>,
-                    document.body
-                  )
-                ) : (
-                  <AdminDashboardPro onSwitchWidescreen={() => setWidescreenFacultyMode(true)} />
-                )
-              }
-            />
+            {/* 3. MIỀN ĐẶC QUYỀN GIẢNG VIÊN / ADMIN ĐÃ ĐƯỢC TÁCH SANG PORT 5174 */}
+            <Route path="/login" element={renderPrivilegeSeparationGuard()} />
+            <Route path="/faculty" element={renderPrivilegeSeparationGuard()} />
+            <Route path="/command-center" element={renderPrivilegeSeparationGuard()} />
+            <Route path="/admin" element={renderPrivilegeSeparationGuard()} />
 
             <Route path="*" element={<Navigate to="/wallet" replace />} />
           </Routes>
         </main>
 
-        {/* Thanh Điều Hướng Dưới Cùng Tự Động Tách Theo Vai Trò (RBAC) & Tích Hợp Safe Area */}
-        <MobileNavigation currentUser={currentUser} />
+        {/* Thanh Điều Hướng Dưới Cùng Dành Riêng Cho Sinh Viên (Holder Node) */}
+        <MobileNavigation />
 
       </div>
 
       {/* MODAL SPOT-CHECK KHẨN CẤP TOÀN CỤC (CHỐNG CLICK-OUTSIDE MẤT LƯỢT) */}
-      {spotCheckState.isActive && spotCheckState.isModalOpen && !currentUser && typeof document !== 'undefined' && createPortal(
+      {spotCheckState.isActive && spotCheckState.isModalOpen && typeof document !== 'undefined' && createPortal(
         <div
           style={{
             position: 'fixed',

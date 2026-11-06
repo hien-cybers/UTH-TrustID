@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "portal": "vite --config vite.portal.config.js --host --port 5174",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"
