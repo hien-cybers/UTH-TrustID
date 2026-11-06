@@ -22,7 +22,8 @@ export default function FacultyDashboard({
   });
 
   const [sessionId, setSessionId] = useState("SES_A2301");
-  const [isCreated, setIsCreated] = useState(initialMode === 'ADMIN');
+  const [staffRole, setStaffRole] = useState(initialMode === 'ADMIN' ? 'ADMIN' : 'FACULTY'); // 'FACULTY' | 'ADMIN'
+  const [isCreated, setIsCreated] = useState(true);
   const [isSessionOpen, setIsSessionOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(initialMode === 'ADMIN' ? 'ADMIN' : 'STAGE'); // 'STAGE' | 'RADAR' | 'IDS' | 'ADMIN'
   
@@ -100,8 +101,9 @@ export default function FacultyDashboard({
     "address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
   }
 ]`);
-  const [revokeAddressInput, setRevokeAddressInput] = useState('0x1D9b6938A3f073e3426052C7016155D85040Ed1D');
+  const [revokeAddressInput, setRevokeAddressInput] = useState('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
   const [adminStatusMsg, setAdminStatusMsg] = useState('');
+  const [auditLogs, setAuditLogs] = useState([]);
   const [networkBlockNotice, setNetworkBlockNotice] = useState(null);
   const [latestVerifiedNotice, setLatestVerifiedNotice] = useState(null);
 
@@ -495,6 +497,22 @@ export default function FacultyDashboard({
     }
   };
 
+  const fetchAdminAuditLogs = async () => {
+    try {
+      const res = await smartFetch('/api/admin/audit-logs');
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.auditLogs)) {
+        setAuditLogs(data.auditLogs);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (activeTab === 'ADMIN') {
+      fetchAdminAuditLogs();
+    }
+  }, [activeTab]);
+
   const handleAdminRevokeWallet = async () => {
     if (!revokeAddressInput.trim()) return;
     const addr = revokeAddressInput.trim();
@@ -504,19 +522,61 @@ export default function FacultyDashboard({
         currentRevoked.push(addr);
         localStorage.setItem('uth_revoked_keys', JSON.stringify(currentRevoked));
       }
-      await smartFetch('/api/admin/revoke-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: addr })
-      }).catch(() => {});
+      // Thu hồi đồng thời địa chỉ nhập vào và cả 2 địa chỉ mặc định của thẻ sinh viên 2251120000 nếu đang demo
+      const targets = addr.toLowerCase() === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' || addr.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+        ? ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x1D9b6938A3f073e3426052C7016155D85040Ed1D']
+        : [addr];
+
+      for (const tAddr of targets) {
+        await smartFetch('/api/admin/revoke-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress: tAddr })
+        }).catch(() => {});
+      }
+
       setAdminStats(prev => ({
         ...prev,
         activeDID: Math.max(0, prev.activeDID - 1),
         revokedDID: prev.revokedDID + 1
       }));
-      setAdminStatusMsg(`✓ Đã thực thi revokeKey(${addr.slice(0, 10)}...) trên Sổ bộ Thu hồi mà không làm xáo trộn Merkle Root!`);
+      setAdminStatusMsg(`🚫 Đã thực thi revokeKey(${addr.slice(0, 10)}...)! Thiết bị iOS giữ khóa này sẽ bị chặn điểm danh ngay lập tức.`);
+      fetchAdminAuditLogs();
     } catch (err) {
       setAdminStatusMsg(`❌ Lỗi thu hồi: ${err.message}`);
+    }
+  };
+
+  const handleAdminUnrevokeWallet = async () => {
+    if (!revokeAddressInput.trim()) return;
+    const addr = revokeAddressInput.trim();
+    try {
+      const currentRevoked = JSON.parse(localStorage.getItem('uth_revoked_keys') || '[]').filter(
+        (k) => k.toLowerCase() !== addr.toLowerCase()
+      );
+      localStorage.setItem('uth_revoked_keys', JSON.stringify(currentRevoked));
+
+      const targets = addr.toLowerCase() === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' || addr.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+        ? ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x1D9b6938A3f073e3426052C7016155D85040Ed1D']
+        : [addr];
+
+      for (const tAddr of targets) {
+        await smartFetch('/api/admin/unrevoke-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress: tAddr })
+        }).catch(() => {});
+      }
+
+      setAdminStats(prev => ({
+        ...prev,
+        activeDID: prev.activeDID + 1,
+        revokedDID: Math.max(0, prev.revokedDID - 1)
+      }));
+      setAdminStatusMsg(`🔓 Đã khôi phục trạng thái Hợp lệ (Active) cho ví ${addr.slice(0, 10)}...! Thiết bị iOS có thể điểm danh trở lại.`);
+      fetchAdminAuditLogs();
+    } catch (err) {
+      setAdminStatusMsg(`❌ Lỗi khôi phục: ${err.message}`);
     }
   };
 
@@ -609,9 +669,37 @@ export default function FacultyDashboard({
             </>
           )}
 
-          <span className="px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-[11px] font-mono text-cyan-300">
-            PORTAL: VERIFIER &amp; ISSUER NODE
-          </span>
+          {/* BỘ CHUYỂN ĐỔI CẤP ĐỘ ĐẶC QUYỀN CÁN BỘ (RBAC ROLE SWITCHER) */}
+          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-cyan-500/30 gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setStaffRole('FACULTY');
+                setActiveTab('STAGE');
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                staffRole === 'FACULTY'
+                  ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              👨‍🏫 Giảng Viên (Verifier)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStaffRole('ADMIN');
+                setActiveTab('ADMIN');
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                staffRole === 'ADMIN'
+                  ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              🏛️ Root Admin (Issuer)
+            </button>
+          </div>
         </div>
       </header>
 
@@ -970,29 +1058,52 @@ export default function FacultyDashboard({
 
                   {/* Sổ bộ thu hồi khóa độc lập */}
                   <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex flex-col justify-between gap-3">
-                    <div className="space-y-2.5">
-                      <div className="text-xs font-bold text-rose-300">2. Thu Hồi Khóa Độc Lập (Decoupled Revocation)</div>
+                    <div className="space-y-2">
+                      <div className="text-xs font-bold text-rose-300">2. Thu Hồi &amp; Khôi Phục Khóa Thiết Bị iOS (Decoupled Revocation)</div>
                       <p className="text-[11px] text-slate-400 m-0 leading-relaxed">
-                        Vô hiệu hóa địa chỉ ví bị mất máy qua mapping <code>isRevoked[address] = true</code> mà giữ nguyên Merkle Root của toàn trường:
+                        Vô hiệu hóa ngay lập tức thẻ sinh viên trên iPhone bị báo mất máy (<code>isRevoked[address] = true</code>) mà giữ nguyên Merkle Root của toàn trường:
                       </p>
                       <div>
-                        <label className="text-[10px] font-mono text-slate-400">Địa chỉ Ví cần thu hồi (0x...):</label>
+                        <label className="text-[10px] font-mono text-slate-400">Địa chỉ Ví thiết bị iOS (SV 2251120000 - Nguyễn Đức Hiển):</label>
                         <input
                           value={revokeAddressInput}
                           onChange={(e) => setRevokeAddressInput(e.target.value)}
-                          className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-rose-300 focus:border-rose-400 outline-none"
+                          className="w-full mt-1 p-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-rose-300 focus:border-rose-400 outline-none"
                         />
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleAdminRevokeWallet}
-                      className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs cursor-pointer border-none"
-                    >
-                      🚫 Thực Thi revokeKey() Vĩnh Viễn
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={handleAdminRevokeWallet}
+                        className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs cursor-pointer border-none"
+                      >
+                        🚫 Thu Hồi Khóa Thiết Bị iOS (revokeKey)
+                      </button>
+                      <button
+                        onClick={handleAdminUnrevokeWallet}
+                        className="w-full py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs cursor-pointer"
+                      >
+                        🔓 Khôi Phục Khóa Thiết Bị iOS (unrevokeKey)
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* Sổ cái Audit Logs thời gian thực từ Backend */}
+                {auditLogs.length > 0 && (
+                  <div className="p-3 rounded-2xl bg-[#040814] border border-slate-800 space-y-1.5 max-h-36 overflow-y-auto">
+                    <div className="text-[11px] font-mono font-bold text-cyan-300">
+                      📜 Sổ Cái Kiểm Toán An Ninh Thời Gian Thực (Live Backend Audit Logs)
+                    </div>
+                    {auditLogs.slice(0, 6).map((log) => (
+                      <div key={log.id} className="text-[10.5px] font-mono text-slate-300 flex justify-between border-b border-slate-900 pb-1">
+                        <span>[{log.time}] <b className="text-emerald-300">{log.action}</b>: {log.detail}</span>
+                        <span className="text-cyan-400 ml-2">{log.result}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
