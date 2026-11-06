@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { io } from 'socket.io-client';
 import {
@@ -17,9 +18,11 @@ import {
   Clock,
   ShieldAlert,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
-import { NETWORK_CONFIG, subscribeToAuthEvents } from '../services/did';
+import { NETWORK_CONFIG, subscribeToAuthEvents, getSavedIdentity, signAuthChallenge, publishAuthSuccess } from '../services/did';
+import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 
 export default function LoginPortal() {
   const [challengeData, setChallengeData] = useState(null);
@@ -39,27 +42,31 @@ export default function LoginPortal() {
   const [revokeLoading, setRevokeLoading] = useState(false);
   const [revokeMsg, setRevokeMsg] = useState('');
 
-  // Khởi tạo kết nối WebSocket Socket.io (kết nối trực tiếp qua proxy Vite)
+  // Khởi tạo kết nối WebSocket Socket.io (hỗ trợ đa thiết bị LAN/Mobile/Tunnel)
   useEffect(() => {
-    const socket = io({
+    const socket = io(getSocketUrl(), {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 10,
+      secure: true,
+      rejectUnauthorized: false
     });
     socketRef.current = socket;
 
+    const handleBackendChanged = (e) => {
+      if (e?.detail) retargetSocket(socket, e.detail);
+    };
+    window.addEventListener('uth-backend-url-changed', handleBackendChanged);
+
     socket.on('connect', () => {
       setSocketConnected(true);
-      console.log('[Portal] Socket.io connected:', socket.id);
     });
 
     socket.on('disconnect', () => {
       setSocketConnected(false);
-      console.log('[Portal] Socket.io disconnected');
     });
 
     // Lắng nghe sự kiện đăng nhập thành công từ WebSocket
     socket.on('auth-success', (authData) => {
-      console.log('[Portal] Received auth-success via Socket.io:', authData);
       setAuthenticatedSession(authData);
     });
 
@@ -71,6 +78,7 @@ export default function LoginPortal() {
     generateNewSession();
 
     return () => {
+      window.removeEventListener('uth-backend-url-changed', handleBackendChanged);
       unsubscribeBroadcast();
       socket.disconnect();
     };
@@ -104,7 +112,7 @@ export default function LoginPortal() {
     let messageToSign = '';
 
     try {
-      const res = await fetch('/api/auth/challenge');
+      const res = await smartFetch('/api/auth/challenge');
       if (res.ok) {
         const data = await res.json();
         if (data.challenge) {
@@ -147,6 +155,57 @@ export default function LoginPortal() {
     generateNewSession();
   };
 
+  const handleQuickDemoSignIn = async () => {
+    if (!challengeData?.nonce) return;
+    let identity = getSavedIdentity();
+    if (!identity || !identity.address) {
+      identity = {
+        address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+        privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+        student: {
+          studentId: '2251120000',
+          fullName: 'Nguyễn Đức Hiển',
+          major: 'An toàn Thông tin'
+        }
+      };
+    }
+    try {
+      const signed = await signAuthChallenge(identity, challengeData.nonce);
+      const res = await smartFetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challenge: challengeData.nonce,
+          signature: signed.signature,
+          studentData: {
+            studentId: identity.student?.studentId || '2251120000',
+            fullName: identity.student?.fullName || 'Nguyễn Đức Hiển',
+            major: identity.student?.major || 'An toàn Thông tin',
+            address: signed.signerAddress || identity.address
+          }
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAuthenticatedSession(data);
+        publishAuthSuccess(data);
+        return;
+      }
+    } catch {}
+    // Fallback local demo
+    const fallbackAuth = {
+      token: `jwt_uth_session_${Date.now()}`,
+      user: {
+        address: identity.address,
+        studentId: identity.student?.studentId || '2251120000',
+        fullName: identity.student?.fullName || 'Nguyễn Đức Hiển',
+        major: identity.student?.major || 'An toàn Thông tin'
+      },
+      timestamp: Date.now()
+    };
+    setAuthenticatedSession(fallbackAuth);
+  };
+
   const handleRemoteSelfRevoke = async (e) => {
     e.preventDefault();
     if (!revokeAddress || !revokeToken) {
@@ -156,7 +215,7 @@ export default function LoginPortal() {
     setRevokeLoading(true);
     setRevokeMsg('');
     try {
-      const res = await fetch('/api/identity/self-revoke', {
+      const res = await smartFetch('/api/identity/self-revoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -356,6 +415,15 @@ export default function LoginPortal() {
             </span>
           </div>
 
+          <button
+            type="button"
+            onClick={handleQuickDemoSignIn}
+            className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white text-xs font-bold shadow-md flex items-center justify-center space-x-1.5 transition active:scale-[0.98]"
+          >
+            <Zap size={14} />
+            <span>Ký Số EIP-191 Đăng Nhập Nhanh (1-Chạm Trên Thiết Bị Này)</span>
+          </button>
+
           <div className="flex items-center space-x-4 mt-3">
             <button
               onClick={generateNewSession}
@@ -378,9 +446,9 @@ export default function LoginPortal() {
         </>
       )}
 
-      {/* MODAL THU HỒI TỪ XA TRÊN CỔNG DỊCH VỤ WEB */}
-      {showSelfRevokeModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      {/* MODAL THU HỒI TỪ XA TRÊN CỔNG DỊCH VỤ WEB (PORTAL) */}
+      {showSelfRevokeModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <form
             onSubmit={handleRemoteSelfRevoke}
             className="w-full max-w-sm bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-900/60 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95"
@@ -409,7 +477,7 @@ export default function LoginPortal() {
                 type="text"
                 value={revokeAddress}
                 onChange={(e) => setRevokeAddress(e.target.value)}
-                placeholder="0x1D9b6938A3f073e3426052C7016155D85040Ed1D"
+                placeholder="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-mono text-slate-900 dark:text-slate-200 focus:outline-none focus:border-rose-500"
               />
             </div>
@@ -420,7 +488,7 @@ export default function LoginPortal() {
                 type="text"
                 value={revokeToken}
                 onChange={(e) => setRevokeToken(e.target.value)}
-                placeholder="EMERGENCY_UTH_..."
+                placeholder="EMERGENCY_UTH_9999"
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-mono text-amber-700 dark:text-amber-300 focus:outline-none focus:border-rose-500"
               />
             </div>
@@ -449,7 +517,8 @@ export default function LoginPortal() {
               </button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

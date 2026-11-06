@@ -40,9 +40,16 @@ export default function ServicePortal({ currentUser }) {
   };
 
   // Xử lý tra cứu hồ sơ (Sinh viên, Giảng viên hoặc Quản trị viên đều dùng được)
-  const handleLookup = () => {
-    if (!searchMssv.trim()) return;
-    const cleanId = searchMssv.trim();
+  const handleLookup = (overrideQuery) => {
+    const rawQuery = typeof overrideQuery === 'string' ? overrideQuery : searchMssv;
+    if (!rawQuery.trim()) return;
+    const cleanId = rawQuery.trim();
+
+    // Tra cứu danh sách khóa đã bị thu hồi (Revoked)
+    let revokedList = [];
+    try {
+      revokedList = JSON.parse(localStorage.getItem('uth_revoked_keys') || '[]').map((k) => String(k).toLowerCase());
+    } catch {}
 
     // Tra cứu trong cơ sở dữ liệu mẫu sinh viên
     const found = INITIAL_STUDENTS.find(s => s.mssv === cleanId || s.didAddress.toLowerCase() === cleanId.toLowerCase());
@@ -57,24 +64,46 @@ export default function ServicePortal({ currentUser }) {
       }
     } catch {}
 
-    if (found || batchMatch) {
+    // Tra cứu ví sinh viên đang hoạt động trên thiết bị này
+    let activeWalletMatch = null;
+    try {
+      const activeIdentity = JSON.parse(localStorage.getItem('uth_did_identity_v1') || 'null');
+      if (
+        activeIdentity &&
+        (activeIdentity.student?.studentId === cleanId ||
+          activeIdentity.address?.toLowerCase() === cleanId.toLowerCase())
+      ) {
+        activeWalletMatch = {
+          studentId: activeIdentity.student?.studentId || '2251120000',
+          fullName: activeIdentity.student?.fullName || 'Nguyễn Đức Hiển',
+          major: activeIdentity.student?.major || 'An toàn Thông tin',
+          address: activeIdentity.address
+        };
+      }
+    } catch {}
+
+    if (found || batchMatch || activeWalletMatch) {
       const student = found || {
-        mssv: batchMatch.studentId,
-        fullName: batchMatch.fullName,
-        major: batchMatch.major,
-        didAddress: batchMatch.address,
+        mssv: (batchMatch || activeWalletMatch).studentId,
+        fullName: (batchMatch || activeWalletMatch).fullName,
+        major: (batchMatch || activeWalletMatch).major,
+        didAddress: (batchMatch || activeWalletMatch).address,
         status: 'Active'
       };
+
+      const isRevoked =
+        student.status === 'Revoked' ||
+        revokedList.includes(String(student.didAddress || '').toLowerCase());
 
       setSearchResult({
         studentId: student.mssv,
         fullName: student.fullName,
         major: student.major,
         faculty: 'Công nghệ Thông tin & ATTT',
-        cardStatus: student.status || 'Active',
+        cardStatus: isRevoked ? 'Revoked' : 'Active',
         walletAddress: student.didAddress,
-        merkleVerified: true,
-        merkleRoot: batchMatch?.merkleRoot || localStorage.getItem('uth_latest_merkle_root') || '0x48ceb244dad760041a45c0ca30bc51dc6d51e83c7fd99a4e950f5dfcc9ef3a86',
+        merkleVerified: !isRevoked,
+        merkleRoot: batchMatch?.merkleRoot || localStorage.getItem('uth_latest_merkle_root') || '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2',
         leafHash: batchMatch?.leafHash || '0xLeafHashSolidityPackedKeccak256',
         cohort: '2022 - 2026'
       });
@@ -292,10 +321,10 @@ export default function ServicePortal({ currentUser }) {
           {/* Gợi ý tra cứu nhanh */}
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Thử nhanh:</span>
-            {['2251120000', '2251120001', '2251120002'].map(id => (
+            {['2251120000', '2251120001', '2251120002', '2251120005'].map(id => (
               <button
                 key={id}
-                onClick={() => { setSearchMssv(id); }}
+                onClick={() => { setSearchMssv(id); handleLookup(id); }}
                 style={{
                   padding: '2px 8px',
                   borderRadius: '4px',

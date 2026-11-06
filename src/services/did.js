@@ -324,6 +324,8 @@ export function broadcastAuthSuccess(data) {
   localStorage.setItem(STORAGE_KEYS.AUTH_EVENT, JSON.stringify({ ...data, _t: Date.now() }));
 }
 
+export const publishAuthSuccess = broadcastAuthSuccess;
+
 export function subscribeToAuthEvents(onSuccess) {
   let channel = null;
 

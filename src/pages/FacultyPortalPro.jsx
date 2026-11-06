@@ -1,5 +1,6 @@
 // src/pages/FacultyPortalPro.jsx - Cổng Giảng Viên Toàn Năng (Projector Fullscreen, Network Policy, Google Maps Iframe, Spot-Check 60s & Excel Export)
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Clock, 
   QrCode, 
@@ -640,33 +641,34 @@ export default function FacultyPortalPro() {
             </div>
           </div>
         </div>
-      ) : (
-        <div
-          className={isFullscreen ? '' : 'glass-card stagger-2 card-interactive'}
-          style={
-            isFullscreen
-              ? {
-                  position: 'fixed',
-                  inset: 0,
-                  width: '100vw',
-                  height: '100dvh',
-                  background: '#04060A',
-                  zIndex: 9999,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '24px',
-                  textAlign: 'center'
-                }
-              : {
-                  borderRadius: '20px',
-                  padding: '16px 14px',
-                  textAlign: 'center',
-                  marginBottom: '12px'
-                }
-          }
-        >
+      ) : ((() => {
+        const qrPanel = (
+          <div
+            className={isFullscreen ? '' : 'glass-card stagger-2 card-interactive'}
+            style={
+              isFullscreen
+                ? {
+                    position: 'fixed',
+                    inset: 0,
+                    width: '100vw',
+                    height: '100dvh',
+                    background: 'var(--bg-modal)',
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '24px',
+                    textAlign: 'center'
+                  }
+                : {
+                    borderRadius: '20px',
+                    padding: '16px 14px',
+                    textAlign: 'center',
+                    marginBottom: '12px'
+                  }
+            }
+          >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: isFullscreen ? '560px' : '100%', marginBottom: '8px' }}>
             <span style={{
               fontSize: isFullscreen ? '14px' : '11px',
@@ -848,6 +850,7 @@ export default function FacultyPortalPro() {
 
           <button
             onClick={() => {
+              setIsFullscreen(false);
               setSession(null);
               setIsSessionCreated(false);
               setIsClosed(false);
@@ -855,6 +858,7 @@ export default function FacultyPortalPro() {
             className="btn-press"
             style={{
               width: '100%',
+              maxWidth: isFullscreen ? '460px' : '100%',
               marginTop: '8px',
               padding: '8px 12px',
               borderRadius: '10px',
@@ -869,7 +873,9 @@ export default function FacultyPortalPro() {
             ⚙ Thiết Lập / Tạo Phiên Điểm Danh Mới
           </button>
         </div>
-      )}
+        );
+        return isFullscreen && typeof document !== 'undefined' ? createPortal(qrPanel, document.body) : qrPanel;
+      })())}
 
       {spotCheckStatusMsg && (
         <div style={{
@@ -1035,8 +1041,8 @@ export default function FacultyPortalPro() {
         </button>
       </div>
 
-      {/* 4. MODAL NHÚNG TRỰC TIẾP GOOGLE MAPS IFRAME */}
-      {selectedStudentLocation && (
+      {/* 4. MODAL NHÚNG TRỰC TIẾP GOOGLE MAPS IFRAME (PORTAL) */}
+      {selectedStudentLocation && typeof document !== 'undefined' && createPortal(
         <div style={{
           position: 'fixed',
           top: 0,
@@ -1049,7 +1055,7 @@ export default function FacultyPortalPro() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          zIndex: 1000,
+          zIndex: 9999,
           padding: '16px'
         }}>
           <div style={{
@@ -1109,7 +1115,8 @@ export default function FacultyPortalPro() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
