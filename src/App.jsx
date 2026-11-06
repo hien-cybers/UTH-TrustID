@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 import SplashScreen from './components/SplashScreen';
 import StudentWalletPro from './pages/StudentWalletPro';
 import FacultyPortalPro from './pages/FacultyPortalPro';
+import FacultyAdminDashboard from './components/FacultyAdminDashboard';
 import ScanPage from './pages/ScanPage';
 import ServicePortal from './pages/ServicePortal';
 import AdminDashboardPro from './pages/AdminDashboardPro';
@@ -32,6 +33,7 @@ import { Key, LogOut, ShieldAlert, Lock, Sun, Moon, Fingerprint, CheckCircle2, M
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [widescreenFacultyMode, setWidescreenFacultyMode] = useState(true);
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
   const [theme, setTheme] = useState(() => (getInitialThemeIsDark() ? 'dark' : 'light'));
@@ -553,14 +555,34 @@ export default function App() {
             {/* 3. CỔNG ĐĂNG NHẬP CÁN BỘ (RBAC LOGIN GUARD) */}
             <Route path="/login" element={<StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />} />
 
-            {/* 4. VAI TRÒ GIẢNG VIÊN (CHỈ MỞ KHI ĐÃ ĐĂNG NHẬP FACULTY HOẶC ADMIN) */}
+            {/* 4. VAI TRÒ GIẢNG VIÊN: MẶC ĐỊNH MỞ COMMAND CENTER 16:9 TOÀN MÀN HÌNH CHO MÁY CHIẾU LAPTOP/PC */}
             <Route
               path="/faculty"
               element={
-                currentUser && (currentUser.role === 'FACULTY' || currentUser.role === 'ADMIN') ? (
-                  <FacultyPortalPro />
+                widescreenFacultyMode && typeof document !== 'undefined' ? (
+                  createPortal(
+                    <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
+                      <FacultyAdminDashboard onSwitchMobileView={() => setWidescreenFacultyMode(false)} />
+                    </div>,
+                    document.body
+                  )
                 ) : (
-                  <StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />
+                  <FacultyPortalPro onSwitchWidescreen={() => setWidescreenFacultyMode(true)} />
+                )
+              }
+            />
+            <Route
+              path="/command-center"
+              element={
+                typeof document !== 'undefined' ? (
+                  createPortal(
+                    <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
+                      <FacultyAdminDashboard onSwitchMobileView={() => setWidescreenFacultyMode(false)} />
+                    </div>,
+                    document.body
+                  )
+                ) : (
+                  <FacultyAdminDashboard />
                 )
               }
             />

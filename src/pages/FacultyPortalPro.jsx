@@ -24,7 +24,7 @@ import { exportAttendanceToExcel } from '../utils/exportAttendanceReport';
 import { getSocketUrl, smartFetch, retargetSocket } from '../utils/backendUrl';
 import '../styles/animations.css';
 
-export default function FacultyPortalPro() {
+export default function FacultyPortalPro({ onSwitchWidescreen }) {
   // 1. Đồng hồ thời gian thực (nhảy từng giây)
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   useEffect(() => {
@@ -461,6 +461,31 @@ export default function FacultyPortalPro() {
         <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '3px 0 0', color: 'var(--text-main)' }}>
           Quản Lý Phiên Điểm Danh &amp; Phòng Thi
         </h1>
+        {onSwitchWidescreen && (
+          <button
+            type="button"
+            onClick={onSwitchWidescreen}
+            className="btn-press"
+            style={{
+              marginTop: '8px',
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              border: '1px solid rgba(6, 182, 212, 0.45)',
+              background: 'rgba(6, 182, 212, 0.12)',
+              color: '#06B6D4',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🖥️ Mở Command Center 16:9 (Chế Độ Máy Chiếu Laptop/PC)</span>
+          </button>
+        )}
       </div>
 
       {/* 1. FORM THIẾT LẬP PHIÊN ĐIỂM DANH HOẶC KHU VỰC PHÁT MÃ QR XOAY VÒNG */}
