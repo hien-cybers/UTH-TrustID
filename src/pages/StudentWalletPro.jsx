@@ -36,7 +36,12 @@ import FaceIDModal from '../components/FaceIDModal';
 import StudentCardClean from '../components/StudentCardClean';
 import '../styles/animations.css';
 
-export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
+export default function StudentWalletPro({
+  isDarkMode = true,
+  onToggleTheme,
+  spotCheckState,
+  onTriggerSpotCheckFaceID
+}) {
   const navigate = useNavigate();
   const [credential, setCredential] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -467,6 +472,8 @@ export default function StudentWalletPro({ isDarkMode = true, onToggleTheme }) {
             onAvatarChange={!zkpMode ? handleAvatarUpload : undefined}
             isDarkMode={isDarkMode}
             onToggleTheme={onToggleTheme}
+            spotCheckState={spotCheckState}
+            onTriggerSpotCheckFaceID={onTriggerSpotCheckFaceID}
           />
 
           {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}

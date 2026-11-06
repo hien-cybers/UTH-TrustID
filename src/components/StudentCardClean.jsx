@@ -13,7 +13,9 @@ export default function StudentCardClean({
     status: "ACTIVE"
   },
   onScanClick,
-  onAvatarChange
+  onAvatarChange,
+  spotCheckState,
+  onTriggerSpotCheckFaceID
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -116,17 +118,27 @@ export default function StudentCardClean({
         </div>
       </div>
 
-      {/* Nút Quét Điểm Danh Thực Hiện Tức Thì (<50ms) */}
-      <button
-        type="button"
-        onClick={onScanClick}
-        className="btn-press mt-3.5 w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm tracking-wide text-slate-950 bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2.5 border-none cursor-pointer"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-        </svg>
-        Quét QR Điểm Danh Ngay
-      </button>
+      {/* Trong giao diện Thẻ sinh viên: Nếu đang có lệnh Spot-check 60s -> Hiển thị nút Tái Xác Thực Ngay */}
+      {spotCheckState?.isActive ? (
+        <button
+          type="button"
+          onClick={() => onTriggerSpotCheckFaceID && onTriggerSpotCheckFaceID()}
+          className="mt-4 w-full py-3.5 px-4 rounded-2xl font-bold text-sm tracking-wide text-slate-950 bg-amber-400 hover:bg-amber-300 active:scale-[0.98] transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 animate-bounce border-none cursor-pointer"
+        >
+          ⚡ Xác Thực Lại Face ID ({spotCheckState.countdown}s)
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onScanClick}
+          className="btn-press mt-4 w-full py-3.5 px-4 rounded-2xl font-semibold text-sm tracking-wide text-white bg-cyan-600 hover:bg-cyan-500 active:scale-[0.98] transition-all shadow-md shadow-cyan-600/20 flex items-center justify-center gap-2 border-none cursor-pointer"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+          </svg>
+          Quét QR Điểm Danh
+        </button>
+      )}
     </div>
   );
 }

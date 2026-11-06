@@ -48,7 +48,7 @@ import { getOrCreateDeviceId, signWithDecryptedKey } from '../utils/identityMana
 import { getItem } from '../utils/db';
 import { getPreciseLocation } from '../utils/geoManager';
 
-export default function ScanPage() {
+export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
   const navigate = useNavigate();
   const [scanStatus, setScanStatus] = useState(null);
   const [isScanning, setIsScanning] = useState(true);
@@ -80,8 +80,8 @@ export default function ScanPage() {
 
   const socketRef = useRef(null);
   const isTerminatedRef = useRef(false);
-  const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  const hasCheckedInRef = useRef(false);
+  const [hasCheckedIn, setHasCheckedIn] = useState(() => Boolean(sessionStorage.getItem('uth_checked_in_session')));
+  const hasCheckedInRef = useRef(Boolean(sessionStorage.getItem('uth_checked_in_session')));
   const myStudentIdRef = useRef('2251120000');
   const activeSessionRef = useRef(null);
   const motionTelemetryRef = useRef({ beta: 42.5, gamma: -3.2, accelMag: 9.81 });
@@ -278,6 +278,13 @@ export default function ScanPage() {
 
   // Đếm lùi 60s cho lệnh Tái kiểm tra điểm danh đột xuất (Spot-Check)
   useEffect(() => {
+    if (spotCheckState && !spotCheckState.isActive && spotCheckRequest) {
+      setSpotCheckRequest(null);
+      setSpotCheckCountdown(0);
+    }
+  }, [spotCheckState?.isActive]);
+
+  useEffect(() => {
     if (!spotCheckRequest || spotCheckCountdown <= 0) return;
     const t = setInterval(() => {
       setSpotCheckCountdown((c) => {
@@ -293,6 +300,10 @@ export default function ScanPage() {
 
   // Kích hoạt Modal Face ID khi Giảng viên yêu cầu Tái kiểm tra đột xuất
   const handleConfirmSpotCheckFaceId = () => {
+    if (onTriggerSpotCheckFaceID && spotCheckState?.isActive) {
+      onTriggerSpotCheckFaceID();
+      return;
+    }
     if (!spotCheckRequest) return;
     setFaceIdReason('Xác thực lại Face ID cho đợt kiểm tra đột xuất (Spot-Check 60s)');
     setIsSpotCheckFaceId(true);
@@ -703,6 +714,16 @@ export default function ScanPage() {
         if (submitRes.ok && submitData?.success) {
           setHasCheckedIn(true);
           hasCheckedInRef.current = true;
+          try {
+            const checkedInMeta = {
+              sessionId: submitData.record?.sessionId || sessionId,
+              studentId: targetMssv,
+              fullName: studentFullName,
+              timestamp: Date.now()
+            };
+            sessionStorage.setItem('uth_checked_in_session', JSON.stringify(checkedInMeta));
+            window.dispatchEvent(new CustomEvent('uth-student-checked-in', { detail: checkedInMeta }));
+          } catch {}
           setLivenessStampData({
             studentName: studentFullName.toUpperCase(),
             mssv: targetMssv,
@@ -988,7 +1009,7 @@ export default function ScanPage() {
       </div>
 
       {/* BANNER TÁI KIỂM TRA ĐIỂM DANH ĐỘT XUẤT (SPOT-CHECK 60S TỪ GIẢNG VIÊN) */}
-      {spotCheckRequest && (
+      {(spotCheckState?.isActive || spotCheckRequest) && (
         <div
           className="glass-card"
           style={{
@@ -1002,7 +1023,7 @@ export default function ScanPage() {
               📢 YÊU CẦU TÁI KIỂM TRA ĐỘT XUẤT (SPOT-CHECK)
             </span>
             <span style={{ fontSize: '11.5px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#F59E0B' }}>
-              Còn {spotCheckCountdown}s
+              Còn {spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s
             </span>
           </div>
           <p style={{ fontSize: '11px', color: 'var(--text-main)', margin: '0 0 10px', lineHeight: 1.45 }}>
@@ -1028,7 +1049,7 @@ export default function ScanPage() {
             }}
           >
             <Fingerprint size={15} />
-            <span>Xác Thực Lại FaceID Ngay ({spotCheckCountdown}s)</span>
+            <span>⚡ Xác Thực Lại Face ID ({spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s)</span>
           </button>
         </div>
       )}
