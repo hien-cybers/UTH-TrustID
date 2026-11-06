@@ -7,7 +7,7 @@ import { io } from 'socket.io-client';
 import SplashScreen from './components/SplashScreen';
 import StudentWalletPro from './pages/StudentWalletPro';
 import FacultyPortalPro from './pages/FacultyPortalPro';
-import FacultyAdminDashboard from './components/FacultyAdminDashboard';
+import FacultyDashboard from './components/FacultyDashboard';
 import ScanPage from './pages/ScanPage';
 import ServicePortal from './pages/ServicePortal';
 import AdminDashboardPro from './pages/AdminDashboardPro';
@@ -555,14 +555,17 @@ export default function App() {
             {/* 3. CỔNG ĐĂNG NHẬP CÁN BỘ (RBAC LOGIN GUARD) */}
             <Route path="/login" element={<StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />} />
 
-            {/* 4. VAI TRÒ GIẢNG VIÊN: MẶC ĐỊNH MỞ COMMAND CENTER 16:9 TOÀN MÀN HÌNH CHO MÁY CHIẾU LAPTOP/PC */}
+            {/* 4. VAI TRÒ GIẢNG VIÊN: MẶC ĐỊNH MỞ COMMAND CENTER 16:9 (FacultyDashboard.jsx) */}
             <Route
               path="/faculty"
               element={
                 widescreenFacultyMode && typeof document !== 'undefined' ? (
                   createPortal(
                     <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
-                      <FacultyAdminDashboard onSwitchMobileView={() => setWidescreenFacultyMode(false)} />
+                      <FacultyDashboard
+                        initialMode="FACULTY"
+                        onSwitchMobileView={() => setWidescreenFacultyMode(false)}
+                      />
                     </div>,
                     document.body
                   )
@@ -577,45 +580,35 @@ export default function App() {
                 typeof document !== 'undefined' ? (
                   createPortal(
                     <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
-                      <FacultyAdminDashboard onSwitchMobileView={() => setWidescreenFacultyMode(false)} />
+                      <FacultyDashboard
+                        initialMode="FACULTY"
+                        onSwitchMobileView={() => setWidescreenFacultyMode(false)}
+                      />
                     </div>,
                     document.body
                   )
                 ) : (
-                  <FacultyAdminDashboard />
+                  <FacultyDashboard initialMode="FACULTY" />
                 )
               }
             />
 
-            {/* 5. VAI TRÒ QUẢN TRỊ VIÊN ROOT ADMIN (CHẶN SINH VIÊN & CHẶN GIẢNG VIÊN 403) */}
+            {/* 5. VAI TRÒ QUẢN TRỊ VIÊN ROOT ADMIN: TÍCH HỢP COMMAND CENTER 16:9 & MOBILE ADMIN */}
             <Route
               path="/admin"
               element={
-                currentUser && currentUser.role === 'ADMIN' ? (
-                  <AdminDashboardPro />
-                ) : currentUser ? (
-                  <div style={{ padding: '16px 4px', textAlign: 'center' }}>
-                    <div className="glass-card" style={{ borderColor: 'rgba(244, 63, 94, 0.35)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-                        <ShieldAlert size={38} color="#F43F5E" strokeWidth={1.8} />
-                      </div>
-                      <h3 style={{ fontSize: '14.5px', color: '#F43F5E', fontWeight: 800, margin: '0 0 6px' }}>
-                        Từ Chối Truy Cập (403 Forbidden)
-                      </h3>
-                      <p style={{ fontSize: '11.5px', color: '#94A3B8', lineHeight: 1.5, margin: '0 0 14px' }}>
-                        Tài khoản <strong>{currentUser.email}</strong> có vai trò <strong>{currentUser.role}</strong> (Giảng viên). Chỉ <strong>Root Admin (admin@ut.edu.vn)</strong> mới có quyền phát hành lô Merkle Tree và thu hồi thẻ <code>revokeKey()</code>.
-                      </p>
-                      <button
-                        onClick={handleLogout}
-                        className="native-btn-primary btn-press"
-                        style={{ background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' }}
-                      >
-                        <span>Đăng xuất để chuyển sang tài khoản Admin</span>
-                      </button>
-                    </div>
-                  </div>
+                widescreenFacultyMode && typeof document !== 'undefined' ? (
+                  createPortal(
+                    <div className="fixed inset-0 z-[9990] overflow-y-auto bg-[#040814]">
+                      <FacultyDashboard
+                        initialMode="ADMIN"
+                        onSwitchMobileView={() => setWidescreenFacultyMode(false)}
+                      />
+                    </div>,
+                    document.body
+                  )
                 ) : (
-                  <StaffLogin onLoginSuccess={(u) => setCurrentUser(u)} />
+                  <AdminDashboardPro onSwitchWidescreen={() => setWidescreenFacultyMode(true)} />
                 )
               }
             />

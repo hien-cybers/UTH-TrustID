@@ -28,7 +28,7 @@ import { saveCredentialToStorage } from '../utils/credentialStorage';
 import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
 import { smartFetch } from '../utils/backendUrl';
 
-export default function AdminDashboardPro() {
+export default function AdminDashboardPro({ onSwitchWidescreen }) {
   const [stats, setStats] = useState({
     totalDID: 1240,
     activeDID: 1238,
@@ -284,6 +284,31 @@ export default function AdminDashboardPro() {
         <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--text-muted)' }}>
           Sổ bộ Thu hồi Độc lập 2 Tầng (Static Merkle Root + <code>mapping isRevoked</code>)
         </p>
+        {onSwitchWidescreen && (
+          <button
+            type="button"
+            onClick={onSwitchWidescreen}
+            className="btn-press"
+            style={{
+              marginTop: '8px',
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              border: '1px solid rgba(16, 185, 129, 0.45)',
+              background: 'rgba(16, 185, 129, 0.12)',
+              color: '#10B981',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🖥️ Mở Command Center 16:9 (Giao Diện Quản Trị &amp; Máy Chiếu)</span>
+          </button>
+        )}
       </div>
 
       {/* 1. BẢNG ĐIỀU KHIỂN AN NINH (SECURITY CONSOLE - #11) */}
