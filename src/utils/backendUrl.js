@@ -160,8 +160,16 @@ async function fetchCandidate(url, options, timeoutMs = 1800) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
   try {
+    let facultyToken = '';
+    try {
+      if (typeof window !== 'undefined') {
+        facultyToken = localStorage.getItem('faculty_token') || localStorage.getItem('uth_staff_token') || '';
+      }
+    } catch {}
+
     const mergedHeaders = {
       'Bypass-Tunnel-Reminder': 'true',
+      ...(facultyToken ? { Authorization: `Bearer ${facultyToken}` } : {}),
       ...(options?.headers || {})
     };
     const res = await fetch(url, {

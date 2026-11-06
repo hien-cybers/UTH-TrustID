@@ -9,6 +9,19 @@ import { saveCredentialToStorage } from '../utils/credentialStorage';
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
 }) {
+  // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên & Admin)
+  const [token, setToken] = useState(() => localStorage.getItem('faculty_token') || null);
+  const [facultyUser, setFacultyUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem('faculty_user');
+      return raw ? JSON.parse(raw) : { email: 'giangvien@uth.edu.vn', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY' };
+    } catch {
+      return { email: 'giangvien@uth.edu.vn', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY' };
+    }
+  });
+  const [loginForm, setLoginForm] = useState({ email: 'giangvien@uth.edu.vn', password: 'Admin@2026' });
+  const [authError, setAuthError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   // Cấu hình phiên học
   const [sessionConfig, setSessionConfig] = useState({
@@ -657,6 +670,226 @@ export default function FacultyDashboard({
     sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'CAMPUS_WIFI_ONLY' : 'HYBRID_4G_5G'
   }:${encodeURIComponent(SERVER_URL)}`;
 
+  // Xử lý Đăng nhập Quản trị tập trung (Centralized RBAC + JWT Bearer Token)
+  const handleLogin = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setAuthError('');
+    setLoginLoading(true);
+    try {
+      const res = await smartFetch('/api/auth/faculty/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'Đăng nhập thất bại');
+
+      const resolvedRole = data.role || data.user?.role || 'FACULTY';
+      const userObj = data.user || {
+        email: loginForm.email,
+        fullName: resolvedRole === 'ADMIN' ? 'Quản Trị Viên Tối Cao' : 'TS. Trần Thế Vinh',
+        role: resolvedRole
+      };
+
+      localStorage.setItem('faculty_token', data.token);
+      localStorage.setItem('faculty_user', JSON.stringify(userObj));
+      setToken(data.token);
+      setFacultyUser(userObj);
+      setStaffRole(resolvedRole);
+      if (resolvedRole === 'ADMIN') {
+        setActiveTab('ADMIN');
+      } else {
+        setActiveTab('STAGE');
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Không thể kết nối máy chủ xác thực');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('faculty_token');
+    localStorage.removeItem('faculty_user');
+    setToken(null);
+    setAuthError('');
+  };
+
+  // NẾU CHƯA ĐĂNG NHẬP: HIỆN CỔNG XÁC THỰC QUẢN TRỊ TẬP TRUNG (LOGIN GATE - ZERO TRUST RBAC)
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-[#040814] text-slate-100 flex items-center justify-center p-4 font-sans select-none">
+        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          {/* CỘT TRÁI (7 CỘT): SƠ ĐỒ KIẾN TRÚC ZERO-TRUST ĐỐI XỨNG 2 PHÍA */}
+          <div className="lg:col-span-7 p-7 rounded-3xl bg-[#081226] border border-cyan-500/25 shadow-2xl flex flex-col justify-between space-y-5">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center font-black text-cyan-400 text-base shadow-[0_0_15px_rgba(0,242,254,0.3)]">
+                  U
+                </div>
+                <div>
+                  <h1 className="text-base font-black tracking-wider text-white m-0">
+                    KIẾN TRÚC XÁC THỰC KÉP ZERO-TRUST &amp; W3C DID
+                  </h1>
+                  <p className="text-[11px] font-mono text-cyan-400 m-0">
+                    CENTRALIZED RBAC (ISSUER/VERIFIER) + ACCOUNT-LESS SSI (HOLDER)
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed m-0">
+                Hệ thống phân tách hoàn toàn miền xác thực giữa <strong className="text-cyan-300">Cán bộ Quản trị</strong> và <strong className="text-emerald-300">Sinh viên</strong> nhằm triệt tiêu bề mặt tấn công mật khẩu tập trung nhưng vẫn kiểm soát chặt chẽ đặc quyền học vụ:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Khối 1: Giảng viên & Admin */}
+              <div className="p-4 rounded-2xl bg-slate-950/90 border border-cyan-500/35 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
+                    ISSUER &amp; VERIFIER
+                  </span>
+                  <span className="text-[10px] font-mono text-amber-400 font-bold">🔐 Bắt buộc JWT</span>
+                </div>
+                <h3 className="text-xs font-bold text-white m-0">
+                  1. Phía Giảng Viên &amp; Admin (Web Portal)
+                </h3>
+                <ul className="text-[11px] text-slate-400 space-y-1 pl-4 m-0">
+                  <li>Xác thực tập trung qua <strong className="text-slate-200">Email trường (@uth.edu.vn) + Mật khẩu</strong>.</li>
+                  <li>Backend cấp <strong className="text-cyan-300">JWT Bearer Token (8h)</strong> gắn vai trò <code>FACULTY</code> / <code>ADMIN</code>.</li>
+                  <li>Bảo vệ các API đặc quyền: Tạo phòng, xoay Nonce, phát lệnh Spot-check, cấp Merkle Root &amp; thu hồi khóa (<code>revokeKey</code>).</li>
+                </ul>
+              </div>
+
+              {/* Khối 2: Sinh viên */}
+              <div className="p-4 rounded-2xl bg-slate-950/90 border border-emerald-500/35 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
+                    HOLDER NODE (iOS/MOBILE)
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold">⚡ Account-less SSI</span>
+                </div>
+                <h3 className="text-xs font-bold text-white m-0">
+                  2. Phía Sinh Viên (Không Tài Khoản)
+                </h3>
+                <ul className="text-[11px] text-slate-400 space-y-1 pl-4 m-0">
+                  <li><strong className="text-emerald-300">Không Username/Password tập trung</strong> (Chống lộ lọt &amp; Brute-force).</li>
+                  <li>Danh tính là cặp khóa <code>secp256k1</code> (<code>did:ethr:0x...</code>) lưu trong thiết bị.</li>
+                  <li>Mở khóa bằng <strong className="text-slate-200">Face ID (WebAuthn)</strong> để ký số <strong>EIP-191</strong> + <strong>Merkle Proof</strong>.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 flex items-center justify-between text-[11px] font-mono text-slate-400">
+              <span>🌐 LocalTunnel: <strong className="text-emerald-400">{SERVER_URL}</strong></span>
+              <span className="text-cyan-300">Middleware: requireFacultyAuth (JWT)</span>
+            </div>
+          </div>
+
+          {/* CỘT PHẢI (5 CỘT): FORM ĐĂNG NHẬP GIẢNG VIÊN & ADMIN */}
+          <form
+            onSubmit={handleLogin}
+            className="lg:col-span-5 p-8 rounded-3xl bg-[#081226] border border-cyan-500/40 space-y-4 shadow-[0_0_50px_rgba(0,242,254,0.12)] flex flex-col justify-between"
+          >
+            <div className="space-y-4">
+              <div className="text-center space-y-1 border-b border-slate-800 pb-3">
+                <h2 className="text-lg font-black text-white tracking-wide m-0">
+                  CỔNG GIẢNG VIÊN &amp; ADMIN
+                </h2>
+                <p className="text-[11px] font-mono text-cyan-400 m-0">
+                  XÁC THỰC QUYỀN ĐIỀU PHỐI HỆ THỐNG (JWT RBAC)
+                </p>
+              </div>
+
+              {/* Nút điền nhanh tài khoản mẫu để Demo trước Hội đồng NCKH */}
+              <div>
+                <span className="text-[10px] font-mono text-slate-400 block mb-1.5">
+                  ⚡ Chọn nhanh tài khoản thực nghiệm NCKH:
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginForm({ email: 'giangvien@uth.edu.vn', password: 'Admin@2026' });
+                      setAuthError('');
+                    }}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      loginForm.email.startsWith('giangvien')
+                        ? 'border-cyan-400 bg-cyan-500/15 text-cyan-300'
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <p className="text-[11px] font-bold m-0">👨‍🏫 Giảng Viên</p>
+                    <p className="text-[9.5px] font-mono text-slate-400 truncate m-0">giangvien@uth.edu.vn</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginForm({ email: 'admin@uth.edu.vn', password: 'Admin@2026' });
+                      setAuthError('');
+                    }}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                      loginForm.email.startsWith('admin')
+                        ? 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <p className="text-[11px] font-bold m-0">🏛️ Root Admin</p>
+                    <p className="text-[9.5px] font-mono text-slate-400 truncate m-0">admin@uth.edu.vn</p>
+                  </button>
+                </div>
+              </div>
+
+              {authError && (
+                <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs text-center font-semibold">
+                  ⚠️ {authError}
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-mono text-slate-400">Email Giảng viên / Quản trị viên</label>
+                <input
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  placeholder="giangvien@uth.edu.vn"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-mono text-slate-400">Mật khẩu (Mặc định: Admin@2026)</label>
+                <input
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:border-cyan-400 outline-none"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-2">
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="w-full py-3.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs tracking-wide shadow-lg shadow-cyan-500/25 active:scale-95 transition-all cursor-pointer border-none"
+              >
+                {loginLoading ? '⏳ ĐANG XÁC THỰC JWT...' : '🔐 ĐĂNG NHẬP QUẢN TRỊ & CẤP JWT'}
+              </button>
+              <p className="text-[10px] font-mono text-slate-500 text-center m-0">
+                Token JWT có hiệu lực 8 giờ • Ghi vết vào Sổ cái Audit Logs
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#040814] text-slate-100 flex flex-col font-sans select-none">
       
@@ -669,7 +902,7 @@ export default function FacultyDashboard({
           <div>
             <h1 className="text-sm font-black tracking-wider text-white m-0">TRUSTID COMMAND CENTER</h1>
             <p className="text-[10px] font-mono text-cyan-400 m-0">
-              FACULTY &amp; ADMIN WEB PORTAL • TUNNEL: <span className="text-emerald-400">{SERVER_URL}</span>
+              JWT AUTH: <span className="text-emerald-400">{facultyUser?.email || 'giangvien@uth.edu.vn'}</span> • TUNNEL: <span className="text-cyan-300">{SERVER_URL}</span>
             </p>
           </div>
         </div>
@@ -796,6 +1029,15 @@ export default function FacultyDashboard({
               🏛️ Root Admin (Issuer)
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold border border-rose-500/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 cursor-pointer"
+            title="Đăng xuất khỏi phiên JWT Giảng viên / Admin"
+          >
+            🚪 Đăng Xuất
+          </button>
         </div>
       </header>
 
