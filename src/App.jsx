@@ -44,11 +44,14 @@ export default function App() {
     courseCode: 'IT402.N01',
     courseName: 'An toàn Mạng máy tính & Ứng dụng',
     room: 'A2-301',
-    sessionNumber: 4,
+    sessionNumber: 3,
     radius: 35,
     networkMode: 'CELLULAR_ANY',
     nonce: 'NONCE_LIVE'
   });
+
+  // Danh mục Lớp học phần phân cấp 1 - N (1 Lớp học -> Nhiều Buổi học con) đồng bộ từ Backend
+  const [coursesCatalog, setCoursesCatalog] = useState([]);
 
   // Pre-warm GPS chạy nền ngay khi App mount để lấy sẵn toạ độ trong sessionStorage + RAM (< 5ms khi quét QR)
   useEffect(() => {
@@ -180,6 +183,22 @@ export default function App() {
       const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
       globalSocketRef.current = socket;
       retargetSocket(socket).catch(() => {});
+
+      // Đồng bộ danh mục Lớp học phần 1 - N (1 Lớp -> N Buổi học) từ Backend
+      smartFetch('/api/courses')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.success && Array.isArray(d.courses)) {
+            setCoursesCatalog(d.courses);
+          }
+        })
+        .catch(() => {});
+
+      socket.on('courses-updated', (payload) => {
+        if (Array.isArray(payload?.courses)) {
+          setCoursesCatalog(payload.courses);
+        }
+      });
 
       // Kiểm tra phiên đang mở & Backend Grace Spot-Check khi vừa mở lại app
       smartFetch('/api/session/active')
@@ -579,6 +598,7 @@ export default function App() {
                 <StudentWalletPro
                   isDarkMode={true}
                   activeCourseSession={activeCourseSession}
+                  coursesCatalog={coursesCatalog}
                   spotCheckState={spotCheckState}
                   onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
                 />
@@ -590,6 +610,7 @@ export default function App() {
                 <StudentWalletPro
                   isDarkMode={true}
                   activeCourseSession={activeCourseSession}
+                  coursesCatalog={coursesCatalog}
                   spotCheckState={spotCheckState}
                   onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
                 />
@@ -600,6 +621,7 @@ export default function App() {
               element={
                 <ScanPage
                   activeCourseSession={activeCourseSession}
+                  coursesCatalog={coursesCatalog}
                   spotCheckState={spotCheckState}
                   onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
                 />
@@ -621,7 +643,7 @@ export default function App() {
         </main>
 
         {/* Thanh Điều Hướng Dưới Cùng Dành Riêng Cho Sinh Viên (Holder Node) */}
-        <MobileNavigation />
+        <MobileNavigation activeCourseSession={activeCourseSession} />
 
       </div>
 

@@ -14,6 +14,7 @@ export default function StudentCardClean({
   },
   onScanClick,
   onAvatarChange,
+  activeCourseSession,
   spotCheckState,
   onTriggerSpotCheckFaceID
 }) {
@@ -131,9 +132,11 @@ export default function StudentCardClean({
         <button
           type="button"
           onClick={onScanClick}
-          className="btn-press mt-4 w-full py-3.5 px-4 rounded-2xl font-semibold text-sm tracking-wide text-white bg-cyan-600 hover:bg-cyan-500 active:scale-[0.98] transition-all shadow-md shadow-cyan-600/20 flex items-center justify-center gap-2 border-none cursor-pointer"
+          className="btn-press mt-4 w-full py-3.5 px-4 rounded-2xl font-bold text-sm tracking-wide text-slate-950 bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 active:scale-[0.98] transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 border-none cursor-pointer"
         >
-          Quét QR Điểm Danh
+          {activeCourseSession?.isOpen
+            ? `Quét QR Điểm Danh • ${activeCourseSession.courseCode || 'IT402.N01'} (Buổi ${activeCourseSession.sessionNumber || 1})`
+            : 'Quét QR Điểm Danh'}
         </button>
       )}
     </div>

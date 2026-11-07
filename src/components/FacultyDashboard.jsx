@@ -40,27 +40,33 @@ export default function FacultyDashboard({
   const [authError, setAuthError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Mô hình Dữ liệu Chuẩn 2 Thực Thể:
-  // 1. Thực thể Lớp học (Classroom / Course - Tồn tại lâu dài suốt học kỳ 15 tuần)
-  // 2. Thực thể Buổi điểm danh (AttendanceSession - Tạo và tích lũy theo từng buổi dạy)
+  // Mô hình Kiến Trúc Phân Cấp 1 - N (1 Lớp học -> Nhiều Buổi học con):
+  // Cấp 1 - Lớp học (Course / Classroom - Tạo 1 lần đầu kỳ, dùng xuyên suốt 15 tuần)
+  // Cấp 2 - Buổi học (ClassSession - Nằm trực tiếp bên trong từng Lớp học)
   const INITIAL_COURSES_DB = [
     {
       id: 'CLS_IT402_N01',
+      courseId: 'CLS_IT402_N01',
       courseCode: 'IT402.N01',
       courseName: 'An toàn Mạng máy tính & Ứng dụng',
       defaultRoom: 'A2-301',
       defaultRadius: 35,
       defaultNetworkMode: 'CAMPUS_WIFI',
       schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
-      totalStudents: 65,
+      totalStudents: 50,
       createdAt: '2026-09-05',
       sessions: [
         {
           sessionId: 'SES_IT402_B01',
+          sessionIndex: 1,
           sessionNumber: 1,
-          sessionDate: '2026-10-18',
+          date: '2026-09-15',
+          sessionDate: '2026-09-15',
+          networkMode: 'CAMPUS_WIFI',
+          status: 'COMPLETED',
           nonce: 'NONCE_B01_9A2F',
           attendees: [
+            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '13:31:15', distance: 6, status: 'VERIFIED' },
             { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '13:32:10', distance: 5, status: 'VERIFIED' },
             { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '13:33:45', distance: 11, status: 'VERIFIED' },
             { studentId: '2251120003', name: 'Lê Hoàng Quân', major: 'Hệ thống Thông tin', checkInTime: '13:35:12', distance: 18, status: 'VERIFIED' }
@@ -68,29 +74,24 @@ export default function FacultyDashboard({
         },
         {
           sessionId: 'SES_IT402_B02',
+          sessionIndex: 2,
           sessionNumber: 2,
-          sessionDate: '2026-10-25',
+          date: '2026-09-22',
+          sessionDate: '2026-09-22',
+          networkMode: 'CAMPUS_WIFI',
+          status: 'COMPLETED',
           nonce: 'NONCE_B02_4C8E',
           attendees: [
+            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '13:30:40', distance: 7, status: 'VERIFIED' },
             { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '13:31:04', distance: 6, status: 'VERIFIED' },
             { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '13:34:20', distance: 9, status: 'VERIFIED' }
-          ]
-        },
-        {
-          sessionId: 'SES_IT402_B03',
-          sessionNumber: 3,
-          sessionDate: '2026-11-01',
-          nonce: 'NONCE_B03_7D1B',
-          attendees: [
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '13:30:50', distance: 4, status: 'VERIFIED' },
-            { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '13:32:18', distance: 12, status: 'VERIFIED' },
-            { studentId: '2251120003', name: 'Lê Hoàng Quân', major: 'Hệ thống Thông tin', checkInTime: '13:36:05', distance: 14, status: 'VERIFIED' }
           ]
         }
       ]
     },
     {
       id: 'CLS_IT308_M11',
+      courseId: 'CLS_IT308_M11',
       courseCode: 'IT308.M11',
       courseName: 'Mật mã học & Ứng dụng Blockchain',
       defaultRoom: 'B1-204',
@@ -102,29 +103,24 @@ export default function FacultyDashboard({
       sessions: [
         {
           sessionId: 'SES_IT308_B01',
+          sessionIndex: 1,
           sessionNumber: 1,
-          sessionDate: '2026-10-22',
+          date: '2026-09-18',
+          sessionDate: '2026-09-18',
+          networkMode: 'CAMPUS_WIFI',
+          status: 'COMPLETED',
           nonce: 'NONCE_M11_3F7A',
           attendees: [
+            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '07:32:10', distance: 5, status: 'VERIFIED' },
             { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '07:33:15', distance: 8, status: 'VERIFIED' },
             { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '07:35:02', distance: 10, status: 'VERIFIED' }
-          ]
-        },
-        {
-          sessionId: 'SES_IT308_B02',
-          sessionNumber: 2,
-          sessionDate: '2026-10-29',
-          nonce: 'NONCE_M11_8B2C',
-          attendees: [
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '07:31:40', distance: 7, status: 'VERIFIED' },
-            { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '07:32:55', distance: 11, status: 'VERIFIED' },
-            { studentId: '2251120003', name: 'Lê Hoàng Quân', major: 'Hệ thống Thông tin', checkInTime: '07:37:19', distance: 19, status: 'VERIFIED' }
           ]
         }
       ]
     },
     {
       id: 'CLS_IT415_P02',
+      courseId: 'CLS_IT415_P02',
       courseCode: 'IT415.P02',
       courseName: 'Bảo mật Web & Hệ thống Phân tán',
       defaultRoom: 'A3-402',
@@ -136,12 +132,16 @@ export default function FacultyDashboard({
       sessions: [
         {
           sessionId: 'SES_IT415_B01',
+          sessionIndex: 1,
           sessionNumber: 1,
-          sessionDate: '2026-10-30',
+          date: '2026-09-25',
+          sessionDate: '2026-09-25',
+          networkMode: 'CELLULAR_ANY',
+          status: 'COMPLETED',
           nonce: 'NONCE_P02_5E9D',
           attendees: [
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '09:32:11', distance: 9, status: 'VERIFIED' },
-            { studentId: '2251120003', name: 'Lê Hoàng Quân', major: 'Hệ thống Thông tin', checkInTime: '09:34:48', distance: 16, status: 'VERIFIED' }
+            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '09:31:45', distance: 8, status: 'VERIFIED' },
+            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '09:32:11', distance: 9, status: 'VERIFIED' }
           ]
         }
       ]
@@ -150,7 +150,7 @@ export default function FacultyDashboard({
 
   const [courses, setCourses] = useState(() => {
     try {
-      const saved = localStorage.getItem('uth_courses_catalog_v2');
+      const saved = localStorage.getItem('uth_courses_catalog_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -162,8 +162,14 @@ export default function FacultyDashboard({
   const saveCoursesToStorage = (nextCourses) => {
     setCourses(nextCourses);
     try {
+      localStorage.setItem('uth_courses_catalog_v3', JSON.stringify(nextCourses));
       localStorage.setItem('uth_courses_catalog_v2', JSON.stringify(nextCourses));
     } catch {}
+    smartFetch('/api/courses/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courses: nextCourses })
+    }).catch(() => {});
   };
 
   const [activeCourseId, setActiveCourseId] = useState('CLS_IT402_N01');
@@ -602,19 +608,45 @@ export default function FacultyDashboard({
     setCourseToDelete(null);
   };
 
-  // Bắt đầu buổi điểm danh mới từ Thẻ Lớp Học Phần (Tái sử dụng thông số đã lưu, chuyển thẳng sang Màn Chiếu QR)
-  const handleStartSessionFromCourse = async (course) => {
-    const targetCourse = course || courses.find((c) => c.id === activeCourseId) || courses[0];
+  // Tạo buổi học mới (ClassSession) nằm trực tiếp bên trong Lớp học phần (Course) tương ứng -> Mở Màn Chiếu QR + Radar
+  const handleCreateNewSession = async (courseOrId) => {
+    const targetCourse =
+      typeof courseOrId === 'string'
+        ? courses.find((c) => (c.courseId || c.id) === courseOrId)
+        : courseOrId || courses.find((c) => (c.courseId || c.id) === activeCourseId) || courses[0];
     if (!targetCourse) return;
 
+    const targetId = targetCourse.courseId || targetCourse.id;
     const existingSessions = Array.isArray(targetCourse.sessions) ? targetCourse.sessions : [];
-    const nextSessionNumber = existingSessions.length + 1;
+    const nextIndex = existingSessions.length + 1;
     const cleanRoom = (targetCourse.defaultRoom || 'A2301').replace(/[^A-Z0-9]/gi, '').toUpperCase();
-    const newSid = `SES_${cleanRoom}_B${String(nextSessionNumber).padStart(2, '0')}`;
+    const newSid = `SES_${cleanRoom}_B${String(nextIndex).padStart(2, '0')}`;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const newSession = {
+      sessionId: newSid,
+      sessionIndex: nextIndex,
+      sessionNumber: nextIndex,
+      date: todayStr,
+      sessionDate: todayStr,
+      networkMode: targetCourse.defaultNetworkMode || 'CAMPUS_WIFI',
+      status: 'LIVE',
+      nonce: currentNonce,
+      attendees: []
+    };
+
+    // Cập nhật buổi học mới trực tiếp vào mảng sessions của lớp đó (Kiến trúc 1 - N)
+    const updatedCourses = courses.map((c) =>
+      (c.courseId || c.id) === targetId
+        ? { ...c, sessions: [...(c.sessions || []), newSession] }
+        : c
+    );
+    saveCoursesToStorage(updatedCourses);
 
     const nextConfig = {
       ...sessionConfig,
-      sessionNumber: nextSessionNumber,
+      sessionNumber: nextIndex,
+      sessionIndex: nextIndex,
       courseCode: targetCourse.courseCode,
       courseName: targetCourse.courseName,
       room: targetCourse.defaultRoom,
@@ -622,9 +654,11 @@ export default function FacultyDashboard({
       networkMode: targetCourse.defaultNetworkMode || 'CAMPUS_WIFI'
     };
 
-    setActiveCourseId(targetCourse.id);
+    setActiveCourseId(targetId);
+    setHistoryCourseId(targetId);
     setSessionConfig(nextConfig);
     setSessionId(newSid);
+    setAttendees([]);
     setIsCreated(true);
     setIsSessionOpen(true);
     setActiveTab('STAGE');
@@ -636,8 +670,8 @@ export default function FacultyDashboard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: newSid,
-          classId: targetCourse.id,
-          sessionNumber: nextSessionNumber,
+          classId: targetId,
+          sessionNumber: nextIndex,
           courseCode: nextConfig.courseCode,
           courseName: nextConfig.courseName,
           room: nextConfig.room,
@@ -656,18 +690,74 @@ export default function FacultyDashboard({
     } catch {}
   };
 
+  const handleStartSessionFromCourse = (course) => handleCreateNewSession(course);
+
+  // Mở lại Màn Chiếu QR cho một buổi học đã có bên trong Lớp học phần
+  const handleReopenExistingSession = async (course, sessionObj) => {
+    if (!course || !sessionObj) return;
+    const targetId = course.courseId || course.id;
+    const sNum = Number(sessionObj.sessionIndex || sessionObj.sessionNumber || 1);
+    const nextConfig = {
+      ...sessionConfig,
+      sessionNumber: sNum,
+      sessionIndex: sNum,
+      courseCode: course.courseCode,
+      courseName: course.courseName,
+      room: course.defaultRoom,
+      maxRadiusMeters: Number(course.defaultRadius) || 35,
+      networkMode: sessionObj.networkMode || course.defaultNetworkMode || 'CAMPUS_WIFI'
+    };
+
+    setActiveCourseId(targetId);
+    setHistoryCourseId(targetId);
+    setSessionConfig(nextConfig);
+    setSessionId(sessionObj.sessionId);
+    setAttendees(
+      (sessionObj.attendees || []).map((a) => ({
+        studentId: a.studentId,
+        name: a.name,
+        major: a.major || 'An toàn Thông tin',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        coords: { lat: 10.799215, lon: 106.70562 },
+        distance: Number(a.distance || 6),
+        gpsAccuracy: 6.2,
+        isMockGps: false,
+        network: 'UTH_STUDENT_SECURE',
+        deviceId: `DEV_${a.studentId}`,
+        checkInTime: a.checkInTime || '13:30:00',
+        spotCheckStatus: 'VERIFIED'
+      }))
+    );
+    setIsCreated(true);
+    setIsSessionOpen(true);
+    setActiveTab('STAGE');
+    setTimerProgress(ROTATE_INTERVAL);
+
+    try {
+      await smartFetch('/api/session/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionObj.sessionId,
+          classId: targetId,
+          sessionNumber: sNum,
+          courseCode: nextConfig.courseCode,
+          courseName: nextConfig.courseName,
+          room: nextConfig.room,
+          centerCoords: nextConfig.centerCoords,
+          maxRadiusMeters: nextConfig.maxRadiusMeters,
+          networkMode: nextConfig.networkMode,
+          campusSsid: nextConfig.campusSsid
+        })
+      });
+    } catch {}
+  };
+
   // Khởi tạo phiên học lên Backend và bật máy chiếu
   const handleStartProjectorSession = async () => {
-    const activeCourse = courses.find((c) => c.id === activeCourseId);
+    const activeCourse = courses.find((c) => (c.courseId || c.id) === activeCourseId);
     if (activeCourse) {
-      return handleStartSessionFromCourse({
-        ...activeCourse,
-        courseCode: sessionConfig.courseCode,
-        courseName: sessionConfig.courseName,
-        defaultRoom: sessionConfig.room,
-        defaultRadius: sessionConfig.maxRadiusMeters,
-        defaultNetworkMode: sessionConfig.networkMode
-      });
+      return handleCreateNewSession(activeCourse);
     }
     const newSid = 'SES_' + (sessionConfig.room || 'A2301').replace(/[^A-Z0-9]/gi, '').toUpperCase();
     setSessionId(newSid);
@@ -676,17 +766,24 @@ export default function FacultyDashboard({
     setTimerProgress(ROTATE_INTERVAL);
   };
 
-  // Kết thúc buổi học hiện tại, lưu lịch sử AttendanceSession vào Lớp học phần và quay về Course Hub
+  // Kết thúc buổi học hiện tại, lưu lịch sử ClassSession vào Lớp học phần và quay về Trang Chi Tiết Lớp Học (Màn hình 2)
   const handleFinishAndSaveSession = () => {
     const todayStr = new Date().toISOString().slice(0, 10);
     const updatedCourses = courses.map((c) => {
-      if (c.id !== activeCourseId && c.courseCode !== sessionConfig.courseCode) return c;
+      if ((c.courseId || c.id) !== activeCourseId && c.courseCode !== sessionConfig.courseCode) return c;
       const existingSessions = Array.isArray(c.sessions) ? c.sessions : [];
       const alreadyIdx = existingSessions.findIndex((s) => s.sessionId === sessionId);
+      const sNum = alreadyIdx >= 0
+        ? (existingSessions[alreadyIdx].sessionIndex || existingSessions[alreadyIdx].sessionNumber)
+        : (sessionConfig.sessionNumber || existingSessions.length + 1);
       const newSessionRecord = {
         sessionId,
-        sessionNumber: alreadyIdx >= 0 ? existingSessions[alreadyIdx].sessionNumber : existingSessions.length + 1,
-        sessionDate: todayStr,
+        sessionIndex: sNum,
+        sessionNumber: sNum,
+        date: alreadyIdx >= 0 ? (existingSessions[alreadyIdx].date || existingSessions[alreadyIdx].sessionDate || todayStr) : todayStr,
+        sessionDate: alreadyIdx >= 0 ? (existingSessions[alreadyIdx].sessionDate || existingSessions[alreadyIdx].date || todayStr) : todayStr,
+        networkMode: sessionConfig.networkMode,
+        status: 'COMPLETED',
         nonce: currentNonce,
         attendees: attendees.map((a) => ({
           studentId: a.studentId,
@@ -717,8 +814,27 @@ export default function FacultyDashboard({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId })
     }).catch(() => {});
+    setHistoryCourseId(activeCourseId);
+    setSelectedHistorySessionId('ALL');
     setIsCreated(false);
     setIsSessionOpen(false);
+  };
+
+  // Xuất file CSV cho riêng 1 Buổi học (ClassSession) bên trong Lớp
+  const handleExportSingleSessionCSV = (course, ses) => {
+    if (!course || !ses) return;
+    const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
+    const sDate = ses.date || ses.sessionDate || '';
+    let csv = `\uFEFFMSSV,HoVaTen,ChuyenNganh,GioDiemDanh,KhoangCachGPS(m),TrangThai\n`;
+    (ses.attendees || []).forEach((st) => {
+      csv += `${st.studentId},"${st.name}","${st.major || 'CNTT'}","${st.checkInTime || ''}","${st.distance ?? 0}m","${st.status || 'VERIFIED'}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `DiemDanh_${course.courseCode}_Buoi_${sIdx}_${sDate}.csv`;
+    link.click();
   };
 
   // Xuất file Excel (.CSV chuẩn UTF-8 BOM) tổng hợp chuyên cần cả học kỳ của một Lớp học phần
@@ -1735,9 +1851,9 @@ export default function FacultyDashboard({
                 type="button"
                 onClick={handleFinishAndSaveSession}
                 className="px-3.5 py-2 rounded-full text-xs font-semibold border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 cursor-pointer"
-                title="Lưu kết quả buổi điểm danh hôm nay vào lịch sử lớp học phần và quay về Danh mục lớp"
+                title="Lưu kết quả buổi học hiện tại vào lớp học phần và quay về Trang Chi Tiết Lớp Học"
               >
-                Lưu Buổi Học &amp; Về Danh Mục Lớp
+                Lưu Buổi Học Thứ {sessionConfig.sessionNumber || 1} &amp; Về Chi Tiết Lớp
               </button>
             </>
           )}
@@ -1952,12 +2068,15 @@ export default function FacultyDashboard({
             </section>
           )}
 
-          {/* ==================== CHẾ ĐỘ XEM LỊCH SỬ & BÁO CÁO CHUYÊN CẦN CẢ KỲ CỦA 1 LỚP HỌC PHẦN ==================== */}
+          {/* ==================== MÀN HÌNH 2: TRANG CHI TIẾT LỚP HỌC (INSIDE CLASS VIEW — QUAN HỆ PHÂN CẤP 1 LỚP -> N BUỔI HỌC) ==================== */}
           {historyCourseId ? (
             (() => {
-              const targetCourse = courses.find((c) => c.id === historyCourseId);
+              const targetCourse = courses.find((c) => (c.courseId || c.id) === historyCourseId);
               if (!targetCourse) return null;
               const sessionList = Array.isArray(targetCourse.sessions) ? targetCourse.sessions : [];
+              const nextSessionIndex = sessionList.length + 1;
+              const totalClassStudents = Number(targetCourse.totalStudents) || 50;
+
               const studentSummaryMap = new Map();
               sessionList.forEach((ses) => {
                 (ses.attendees || []).forEach((st) => {
@@ -1979,189 +2098,297 @@ export default function FacultyDashboard({
                   : sessionList.find((s) => s.sessionId === selectedHistorySessionId);
 
               return (
-                <section className="w-full p-7 rounded-3xl bg-[#081226] border border-cyan-500/35 shadow-2xl space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <section className="w-full p-7 rounded-3xl bg-[#081226] border border-cyan-500/35 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+                  {/* KHU VỰC TRÊN: THÔNG TIN LỚP HỌC PHẦN + NÚT THÊM BUỔI HỌC MỚI + XUẤT BÁO CÁO CẢ HỌC KỲ */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
                     <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="px-3 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 font-mono text-xs font-bold text-cyan-300">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setHistoryCourseId(null)}
+                          className="px-3 py-1 rounded-lg bg-[#040814] border border-slate-700 hover:border-cyan-400 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
+                        >
+                          ← Danh Sách Lớp Học
+                        </button>
+                        <span className="px-3 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/35 font-mono text-xs font-bold text-cyan-300">
                           {targetCourse.courseCode}
                         </span>
+                        <span className="px-3 py-1 rounded-lg bg-[#040814] border border-slate-800 text-xs font-semibold text-slate-200">
+                          Phòng {targetCourse.defaultRoom} • Bán kính R ≤ {targetCourse.defaultRadius}m
+                        </span>
                         <span className="text-xs text-slate-300">
-                          Phòng {targetCourse.defaultRoom} • {targetCourse.schedule}
+                          {targetCourse.schedule}
                         </span>
                       </div>
-                      <h2 className="text-lg font-bold text-white mt-1.5 mb-0">
-                        Sổ Điểm Chuyên Cần &amp; Lịch Sử Điểm Danh — {targetCourse.courseName}
+                      <h2 className="text-xl font-bold text-white mt-2.5 mb-0">
+                        {targetCourse.courseCode} — {targetCourse.courseName}
                       </h2>
+                      <p className="text-xs text-slate-300 mt-1 mb-0">
+                        Sĩ số biên chế: <strong className="text-white">{totalClassStudents} sinh viên</strong> • Đã tổ chức: <strong className="text-emerald-400">{sessionList.length} buổi học</strong>
+                      </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="flex flex-wrap items-center gap-3">
                       <button
                         type="button"
                         onClick={() => handleExportSemesterCSV(targetCourse)}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer"
+                        className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer transition-all"
                       >
-                        Xuất Báo Cáo Chuyên Cần Cả Kỳ (.CSV)
+                        Xuất Báo Cáo Cả Học Kỳ (.CSV)
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleStartSessionFromCourse(targetCourse)}
-                        className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none"
+                        onClick={() => handleCreateNewSession(targetCourse)}
+                        className="px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg transition-all"
                       >
-                        Bắt Đầu Điểm Danh Buổi Mới (Buổi {sessionList.length + 1})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setHistoryCourseId(null)}
-                        className="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:text-white font-semibold text-xs cursor-pointer"
-                      >
-                        Quay Lại Danh Mục Lớp
+                        + Thêm Buổi Học Mới (Buổi thứ {nextSessionIndex})
                       </button>
                     </div>
                   </div>
 
-                  {/* Thanh chọn xem Tổng hợp cả kỳ hoặc từng buổi học */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedHistorySessionId('ALL')}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
-                        selectedHistorySessionId === 'ALL'
-                          ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
-                          : 'bg-[#040814] text-slate-300 border-slate-800 hover:text-white'
-                      }`}
-                    >
-                      Tổng Hợp Chuyên Cần Cả Kỳ ({sessionList.length} buổi)
-                    </button>
-                    {sessionList.map((ses) => (
-                      <button
-                        key={ses.sessionId}
-                        type="button"
-                        onClick={() => setSelectedHistorySessionId(ses.sessionId)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
-                          selectedHistorySessionId === ses.sessionId
-                            ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
-                            : 'bg-[#040814] text-slate-300 border-slate-800 hover:text-white'
-                        }`}
-                      >
-                        Buổi {ses.sessionNumber} ({ses.sessionDate}) • {ses.attendees?.length || 0} SV
-                      </button>
-                    ))}
-                  </div>
-
-                  {selectedHistorySessionId === 'ALL' ? (
-                    <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#040814]">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-300">
-                            <th className="p-3.5 font-semibold">MSSV</th>
-                            <th className="p-3.5 font-semibold">Họ và Tên Sinh Viên</th>
-                            <th className="p-3.5 font-semibold">Chuyên Ngành</th>
-                            {sessionList.map((s) => (
-                              <th key={s.sessionId} className="p-3.5 font-semibold text-center">
-                                Buổi {s.sessionNumber}
-                                <span className="block text-slate-400 font-normal">{s.sessionDate}</span>
-                              </th>
-                            ))}
-                            <th className="p-3.5 font-semibold text-center">Tổng Có Mặt</th>
-                            <th className="p-3.5 font-semibold text-right">Tỷ Lệ Chuyên Cần</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {summaryRows.length === 0 ? (
-                            <tr>
-                              <td colSpan={5 + sessionList.length} className="p-8 text-center text-slate-400">
-                                Chưa có dữ liệu điểm danh nào cho lớp học phần này.
-                              </td>
-                            </tr>
-                          ) : (
-                            summaryRows.map((row) => {
-                              const attendedCount = Object.keys(row.sessionsAttended).length;
-                              const ratio = sessionList.length > 0 ? Math.round((attendedCount / sessionList.length) * 100) : 100;
-                              return (
-                                <tr key={row.studentId} className="border-b border-slate-800/70 hover:bg-slate-900/40">
-                                  <td className="p-3.5 font-mono font-semibold text-cyan-300">{row.studentId}</td>
-                                  <td className="p-3.5 font-semibold text-white">{row.name}</td>
-                                  <td className="p-3.5 text-slate-300">{row.major}</td>
-                                  {sessionList.map((s) => {
-                                    const rec = row.sessionsAttended[s.sessionId];
-                                    return (
-                                      <td key={s.sessionId} className="p-3.5 text-center">
-                                        {rec ? (
-                                          <span className="px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-300 font-mono text-xs font-semibold">
-                                            Có mặt ({rec.checkInTime})
-                                          </span>
-                                        ) : (
-                                          <span className="px-2.5 py-1 rounded-md bg-rose-500/15 text-rose-300 text-xs font-semibold">
-                                            Vắng
-                                          </span>
-                                        )}
-                                      </td>
-                                    );
-                                  })}
-                                  <td className="p-3.5 text-center font-mono font-bold text-white">
-                                    {attendedCount} / {sessionList.length}
-                                  </td>
-                                  <td className="p-3.5 text-right font-mono font-bold text-emerald-400">
-                                    {ratio}%
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          )}
-                        </tbody>
-                      </table>
+                  {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC CON BÊN TRONG LỚP (HIERARCHICAL CLASS SESSIONS) */}
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold text-white m-0">
+                        Danh Sách Các Buổi Học Trong Lớp ({sessionList.length} buổi)
+                      </h3>
+                      <span className="text-xs text-slate-400">
+                        Bấm vào từng buổi học để xem chi tiết danh sách sinh viên hoặc xuất báo cáo riêng
+                      </span>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs text-slate-300">
-                        <span>
-                          Chi tiết <strong>Buổi {selectedSessionObj?.sessionNumber}</strong> • Ngày: <strong>{selectedSessionObj?.sessionDate}</strong> • Mã phiên: <code className="text-cyan-300">{selectedSessionObj?.sessionId}</code>
-                        </span>
-                        <span>Tổng số sinh viên đã điểm danh: <strong>{selectedSessionObj?.attendees?.length || 0} SV</strong></span>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {(selectedSessionObj?.attendees || []).map((st) => (
-                          <div key={st.studentId} className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-semibold text-white m-0">{st.name}</p>
-                              <p className="text-xs font-mono text-cyan-300 mt-0.5 mb-0">
-                                {st.studentId} • Lúc {st.checkInTime}
-                              </p>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      {sessionList.map((ses) => {
+                        const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
+                        const sDate = ses.date || ses.sessionDate || '';
+                        const presentCount = ses.attendees?.length || 0;
+                        const ratePercent = Math.min(100, Math.round((presentCount / totalClassStudents) * 100));
+                        const isSelected = selectedHistorySessionId === ses.sessionId;
+
+                        return (
+                          <div
+                            key={ses.sessionId}
+                            className={`p-4 rounded-2xl border transition-all flex flex-wrap items-center justify-between gap-4 ${
+                              isSelected
+                                ? 'bg-[#0D2B52]/75 border-cyan-400 shadow-lg'
+                                : 'bg-[#040814] border-slate-800 hover:border-cyan-500/40'
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-center gap-3.5">
+                              <span className="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/35 font-mono text-xs font-bold text-cyan-300">
+                                Buổi {sIdx} ({sDate})
+                              </span>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-white">
+                                    {presentCount}/{totalClassStudents} sinh viên có mặt
+                                  </span>
+                                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
+                                    Tỷ lệ {ratePercent}%
+                                  </span>
+                                  <span className="px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 text-xs font-medium">
+                                    Đã xong
+                                  </span>
+                                </div>
+                                <div className="text-xs text-slate-400 mt-0.5 font-mono">
+                                  Mã phiên: {ses.sessionId} • Phòng {targetCourse.defaultRoom}
+                                </div>
+                              </div>
                             </div>
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                              Cách tâm {st.distance}m
-                            </span>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedHistorySessionId(isSelected ? 'ALL' : ses.sessionId)
+                                }
+                                className={`px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
+                                  isSelected
+                                    ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
+                                    : 'bg-[#081226] text-cyan-300 border-cyan-500/30 hover:border-cyan-400'
+                                }`}
+                              >
+                                {isSelected ? 'Đang xem chi tiết' : 'Xem chi tiết'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleExportSingleSessionCSV(targetCourse, ses)}
+                                className="px-3.5 py-2 rounded-xl bg-[#081226] hover:bg-slate-900 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
+                              >
+                                Xuất CSV Buổi {sIdx}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleReopenExistingSession(targetCourse, ses)}
+                                className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold cursor-pointer transition-all"
+                              >
+                                Mở Màn Chiếu QR
+                              </button>
+                            </div>
                           </div>
-                        ))}
+                        );
+                      })}
+
+                      {/* Hàng nút Tạo Buổi Mới nằm trực tiếp cuối danh sách buổi học của lớp */}
+                      <button
+                        type="button"
+                        onClick={() => handleCreateNewSession(targetCourse)}
+                        className="w-full p-4 rounded-2xl border border-dashed border-cyan-500/45 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-300 font-bold text-xs cursor-pointer transition-all flex items-center justify-between"
+                      >
+                        <span>+ Bấm tạo buổi học mới tại đây (Buổi thứ {nextSessionIndex} — {new Date().toISOString().slice(0, 10)})</span>
+                        <span className="px-3 py-1 rounded-lg bg-cyan-400 text-slate-950 font-bold">
+                          Mở Màn Chiếu QR + Radar →
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* KHU VỰC DƯỚI: BẢNG DỮ LIỆU ĐỐI SOÁT (TỔNG HỢP CẢ HỌC KỲ HOẶC CHI TIẾT BUỔI ĐANG CHỌN) */}
+                  <div className="space-y-3 pt-2 border-t border-slate-800">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedHistorySessionId('ALL')}
+                          className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
+                            selectedHistorySessionId === 'ALL'
+                              ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
+                              : 'bg-[#040814] text-slate-300 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          Bảng Tổng Hợp Chuyên Cần Cả Học Kỳ
+                        </button>
+                        {selectedSessionObj && (
+                          <span className="px-3.5 py-2 rounded-xl bg-[#040814] border border-cyan-500/40 text-cyan-300 text-xs font-semibold">
+                            Đang xem: Buổi {selectedSessionObj.sessionIndex || selectedSessionObj.sessionNumber} ({selectedSessionObj.date || selectedSessionObj.sessionDate})
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )}
+
+                    {selectedHistorySessionId === 'ALL' ? (
+                      <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#040814]">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-300">
+                              <th className="p-3.5 font-semibold">MSSV</th>
+                              <th className="p-3.5 font-semibold">Họ và Tên Sinh Viên</th>
+                              <th className="p-3.5 font-semibold">Chuyên Ngành</th>
+                              {sessionList.map((s) => (
+                                <th key={s.sessionId} className="p-3.5 font-semibold text-center">
+                                  Buổi {s.sessionIndex || s.sessionNumber}
+                                  <span className="block text-slate-400 font-normal">{s.date || s.sessionDate}</span>
+                                </th>
+                              ))}
+                              <th className="p-3.5 font-semibold text-center">Tổng Có Mặt</th>
+                              <th className="p-3.5 font-semibold text-right">Tỷ Lệ Chuyên Cần</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {summaryRows.length === 0 ? (
+                              <tr>
+                                <td colSpan={5 + sessionList.length} className="p-8 text-center text-slate-400">
+                                  Chưa có dữ liệu điểm danh nào cho lớp học phần này.
+                                </td>
+                              </tr>
+                            ) : (
+                              summaryRows.map((row) => {
+                                const attendedCount = Object.keys(row.sessionsAttended).length;
+                                const ratio = sessionList.length > 0 ? Math.round((attendedCount / sessionList.length) * 100) : 100;
+                                return (
+                                  <tr key={row.studentId} className="border-b border-slate-800/70 hover:bg-slate-900/40">
+                                    <td className="p-3.5 font-mono font-semibold text-cyan-300">{row.studentId}</td>
+                                    <td className="p-3.5 font-semibold text-white">{row.name}</td>
+                                    <td className="p-3.5 text-slate-300">{row.major}</td>
+                                    {sessionList.map((s) => {
+                                      const rec = row.sessionsAttended[s.sessionId];
+                                      return (
+                                        <td key={s.sessionId} className="p-3.5 text-center">
+                                          {rec ? (
+                                            <span className="px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-300 font-mono text-xs font-semibold">
+                                              Có mặt ({rec.checkInTime})
+                                            </span>
+                                          ) : (
+                                            <span className="px-2.5 py-1 rounded-md bg-rose-500/15 text-rose-300 text-xs font-semibold">
+                                              Vắng
+                                            </span>
+                                          )}
+                                        </td>
+                                      );
+                                    })}
+                                    <td className="p-3.5 text-center font-mono font-bold text-white">
+                                      {attendedCount} / {sessionList.length}
+                                    </td>
+                                    <td className="p-3.5 text-right font-mono font-bold text-emerald-400">
+                                      {ratio}%
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs text-slate-300">
+                          <span>
+                            Chi tiết <strong>Buổi {selectedSessionObj?.sessionIndex || selectedSessionObj?.sessionNumber}</strong> • Ngày: <strong>{selectedSessionObj?.date || selectedSessionObj?.sessionDate}</strong> • Mã phiên: <code className="text-cyan-300">{selectedSessionObj?.sessionId}</code>
+                          </span>
+                          <span>Tổng số sinh viên có mặt: <strong>{selectedSessionObj?.attendees?.length || 0} / {totalClassStudents} SV</strong></span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {(selectedSessionObj?.attendees || []).map((st) => (
+                            <div key={st.studentId} className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-semibold text-white m-0">{st.name}</p>
+                                <p className="text-xs font-mono text-cyan-300 mt-0.5 mb-0">
+                                  {st.studentId} • Lúc {st.checkInTime}
+                                </p>
+                              </div>
+                              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                                Cách tâm {st.distance}m
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </section>
               );
             })()
           ) : (
-            /* ==================== DANH SÁCH THẺ LỚP HỌC PHẦN (CLASS CARDS GRID - RỘNG CÂN XỨNG 3 CỘT) ==================== */
+            /* ==================== MÀN HÌNH 1: DANH SÁCH LỚP HỌC PHẦN (COURSE HUB — CHỌN LỚP ĐỂ MỞ CHI TIẾT BÊN TRONG) ==================== */
             <section className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-bold text-white m-0">
-                    Danh Mục Lớp Học Phần Trong Học Kỳ
+                    Danh Sách Lớp Học Phần (Course Hub)
                   </h2>
                   <p className="text-xs text-slate-300 mt-0.5 mb-0">
-                    Chọn lớp học phần để bắt đầu buổi điểm danh mới hoặc tra cứu lịch sử chuyên cần tích lũy
+                    Chọn một lớp học phần để vào Trang Chi Tiết Lớp, quản lý các buổi học con (Buổi 1, Buổi 2,...) và thêm buổi điểm danh mới
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {courses.map((course) => {
-                  const completedSessions = course.sessions?.length || 0;
-                  const latestSession = completedSessions > 0 ? course.sessions[completedSessions - 1] : null;
+                  const cid = course.courseId || course.id;
+                  const sessionList = Array.isArray(course.sessions) ? course.sessions : [];
+                  const completedSessions = sessionList.length;
+                  const totalStudentsCount = Number(course.totalStudents) || 50;
+
                   return (
                     <div
-                      key={course.id}
-                      className="p-6 rounded-3xl bg-[#081226] border border-slate-800 hover:border-cyan-500/40 shadow-2xl flex flex-col justify-between gap-5 transition-all"
+                      key={cid}
+                      onClick={() => {
+                        setHistoryCourseId(cid);
+                        setSelectedHistorySessionId('ALL');
+                      }}
+                      className="p-6 rounded-3xl bg-[#081226] border border-slate-800 hover:border-cyan-400/60 shadow-2xl flex flex-col justify-between gap-5 transition-all cursor-pointer"
                     >
                       <div className="space-y-4">
                         {/* Hàng trên cùng: Mã lớp + Phòng học */}
@@ -2189,13 +2416,13 @@ export default function FacultyDashboard({
                           <div>
                             <span className="text-xs text-slate-400 block">Sĩ số lớp</span>
                             <strong className="text-sm font-bold text-white font-mono mt-0.5 block">
-                              {course.totalStudents} SV
+                              {totalStudentsCount} SV
                             </strong>
                           </div>
                           <div className="border-x border-slate-800">
-                            <span className="text-xs text-slate-400 block">Đã điểm danh</span>
+                            <span className="text-xs text-slate-400 block">Số buổi đã dạy</span>
                             <strong className="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">
-                              {completedSessions} / 15 buổi
+                              {completedSessions} buổi
                             </strong>
                           </div>
                           <div>
@@ -2206,46 +2433,53 @@ export default function FacultyDashboard({
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between text-xs text-slate-300 px-1">
-                          <span>Buổi gần nhất:</span>
-                          <span className="font-medium text-white">
-                            {latestSession
-                              ? `Buổi ${latestSession.sessionNumber} (${latestSession.sessionDate}) • ${latestSession.attendees?.length || 0} SV`
-                              : 'Chưa có buổi điểm danh'}
-                          </span>
+                        {/* Cây phân cấp thu gọn các buổi học bên trong lớp */}
+                        <div className="p-3.5 rounded-2xl bg-[#040814]/90 border border-slate-800/80 space-y-1.5">
+                          <div className="text-xs font-semibold text-slate-300 mb-1">
+                            Các buổi điểm danh trong lớp:
+                          </div>
+                          {sessionList.length === 0 ? (
+                            <div className="text-xs text-slate-400">
+                              Chưa có buổi học nào — Bấm vào lớp để thêm Buổi 1
+                            </div>
+                          ) : (
+                            sessionList.slice(-2).map((s) => (
+                              <div key={s.sessionId} className="flex items-center justify-between text-xs text-slate-300">
+                                <span className="font-mono text-cyan-300">
+                                  • Buổi {s.sessionIndex || s.sessionNumber} ({s.date || s.sessionDate})
+                                </span>
+                                <span className="text-emerald-400 font-semibold">
+                                  Đã xong ({s.attendees?.length || 0}/{totalStudentsCount} SV)
+                                </span>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
 
-                      {/* Cụm 3 nút hành động trên từng Thẻ Lớp Học Phần */}
-                      <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
+                      {/* Cụm nút hành động: Mở Chi Tiết Lớp Học (Màn hình 2) hoặc Xóa Lớp */}
+                      <div
+                        className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-800/80"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
                           type="button"
-                          onClick={() => handleStartSessionFromCourse(course)}
-                          className="w-full py-3.5 px-4 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-md transition-all"
+                          onClick={() => {
+                            setHistoryCourseId(cid);
+                            setSelectedHistorySessionId('ALL');
+                          }}
+                          className="col-span-3 py-3 px-4 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-md transition-all"
                         >
-                          Bắt Đầu Điểm Danh Buổi Mới (Buổi {completedSessions + 1})
+                          Mở Chi Tiết Lớp Học ({completedSessions} buổi) →
                         </button>
 
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setHistoryCourseId(course.id);
-                              setSelectedHistorySessionId('ALL');
-                            }}
-                            className="col-span-2 py-2.5 px-3 rounded-xl bg-[#040814] hover:bg-slate-900 border border-slate-700 hover:border-cyan-500/40 text-slate-200 hover:text-white font-semibold text-xs cursor-pointer transition-all"
-                          >
-                            Xem Lịch Sử / Xuất Báo Cáo
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setCourseToDelete(course)}
-                            className="col-span-1 py-2.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold text-xs cursor-pointer transition-all"
-                          >
-                            Xóa Lớp
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCourseToDelete(course)}
+                          className="col-span-1 py-3 px-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold text-xs cursor-pointer transition-all"
+                        >
+                          Xóa Lớp
+                        </button>
                       </div>
                     </div>
                   );
@@ -2701,19 +2935,19 @@ export default function FacultyDashboard({
               {activeTab === 'STAGE' && staffRole === 'FACULTY' && isCreated && (
                 <div className="flex-1 rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col justify-between shadow-2xl gap-5">
                   
-                  {/* Thanh tiêu đề trên cùng của Màn Chiếu */}
+                  {/* Thanh tiêu đề trên cùng của Màn Chiếu (Màn hình 3: IT402.N01 • BUỔI HỌC THỨ N) */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800/90">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-xs font-bold text-cyan-300">
-                          Mã QR Động (TOTP 35s)
+                          {sessionConfig.courseCode} • BUỔI HỌC THỨ {sessionConfig.sessionNumber || 1}
                         </span>
                         <span className="text-xs text-slate-300">
                           Phòng <strong className="text-white">{sessionConfig.room}</strong> • Mã phiên: <code className="text-cyan-300">{sessionId}</code>
                         </span>
                       </div>
                       <h2 className="text-lg font-bold text-white mt-1.5 mb-0">
-                        {sessionConfig.courseCode} — {sessionConfig.courseName}
+                        {sessionConfig.courseCode} • BUỔI HỌC THỨ {sessionConfig.sessionNumber || 1} — {sessionConfig.courseName}
                       </h2>
                     </div>
 

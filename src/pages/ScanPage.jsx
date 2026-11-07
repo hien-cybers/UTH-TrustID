@@ -1191,33 +1191,33 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         </div>
       </div>
 
-      {/* THÔNG TIN LỚP HỌC PHẦN ĐANG ĐIỂM DANH (ĐỒNG BỘ TRỰC TIẾP VỚI COURSE HUB GIẢNG VIÊN) */}
+      {/* THÔNG TIN LỚP HỌC PHẦN & BUỔI HỌC ĐANG ĐIỂM DANH (ĐỒNG BỘ CẤU TRÚC 1 LỚP -> N BUỔI HỌC) */}
       <div
         className="glass-card"
         style={{
-          padding: '11px 13px',
-          borderRadius: '14px',
-          border: '1px solid rgba(56, 189, 248, 0.38)',
-          background: 'rgba(8, 18, 38, 0.92)'
+          padding: '12px 14px',
+          borderRadius: '16px',
+          border: '1px solid rgba(56, 189, 248, 0.42)',
+          background: 'linear-gradient(135deg, rgba(13, 43, 82, 0.85), rgba(8, 18, 38, 0.95))'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
           <span
             style={{
-              padding: '2px 8px',
-              borderRadius: '6px',
-              background: 'rgba(56, 189, 248, 0.16)',
-              border: '1px solid rgba(56, 189, 248, 0.4)',
+              padding: '3px 9px',
+              borderRadius: '7px',
+              background: 'rgba(56, 189, 248, 0.18)',
+              border: '1px solid rgba(56, 189, 248, 0.45)',
               color: '#38BDF8',
-              fontSize: '10px',
+              fontSize: '10.5px',
               fontFamily: 'JetBrains Mono',
               fontWeight: 800
             }}
           >
-            {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'}
+            {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
           </span>
-          <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#10B981' }}>
-            Buổi {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 4} • Phòng {courseMeta.room || activeCourseSession?.room || 'A2-301'}
+          <span style={{ fontSize: '10.5px', fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#10B981' }}>
+            Phòng {courseMeta.room || activeCourseSession?.room || 'A2-301'}
           </span>
         </div>
         <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>

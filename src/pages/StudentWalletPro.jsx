@@ -39,6 +39,7 @@ import '../styles/animations.css';
 export default function StudentWalletPro({
   isDarkMode = true,
   activeCourseSession,
+  coursesCatalog = [],
   spotCheckState,
   onTriggerSpotCheckFaceID
 }) {
@@ -46,6 +47,7 @@ export default function StudentWalletPro({
   const [credential, setCredential] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showPassQr, setShowPassQr] = useState(false);
+  const [expandedCourseId, setExpandedCourseId] = useState('CLS_IT402_N01');
 
   // Sinh trắc học phần cứng (Face ID / Touch ID / Keystore)
   const [bioEnabled, setBioEnabled] = useState(true);
@@ -467,38 +469,211 @@ export default function StudentWalletPro({
             }}
             onScanClick={() => navigate('/scan')}
             onAvatarChange={!zkpMode ? handleAvatarUpload : undefined}
+            activeCourseSession={activeCourseSession}
             spotCheckState={spotCheckState}
             onTriggerSpotCheckFaceID={onTriggerSpotCheckFaceID}
           />
 
-          {/* LỚP HỌC PHẦN ĐANG MỞ ĐIỂM DANH (ĐỒNG BỘ TỪ COURSE HUB GIẢNG VIÊN) */}
+          {/* LỚP HỌC PHẦN & BUỔI HỌC ĐANG MỞ ĐIỂM DANH (ĐỒNG BỘ TRỰC TIẾP TỪ GIẢNG VIÊN) */}
           {activeCourseSession?.isOpen && (
-            <div className="card-interactive rounded-2xl p-3.5 border shadow-sm bg-[#081226] border-cyan-500/35 text-slate-100">
+            <div className="card-interactive rounded-2xl p-4 border shadow-lg bg-gradient-to-br from-[#0D2B52]/90 via-[#081226] to-[#041529] border-cyan-400/45 text-slate-100">
               <div className="flex justify-between items-center gap-2 mb-1.5">
-                <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-[10px] font-mono font-bold">
-                  {activeCourseSession.courseCode || 'IT402.N01'}
+                <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10.5px] font-mono font-extrabold">
+                  {activeCourseSession.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {activeCourseSession.sessionNumber || 1}
                 </span>
-                <span className="text-[10px] font-mono font-bold text-emerald-400">
-                  Buổi {activeCourseSession.sessionNumber || 1} • Đang mở QR
+                <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  Đang mở QR
                 </span>
               </div>
-              <div className="text-xs font-extrabold text-slate-100 mb-1">
+              <div className="text-xs font-extrabold text-white mb-2">
                 {activeCourseSession.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
               </div>
-              <div className="flex justify-between items-center text-[10.5px] text-slate-400">
+              <div className="flex justify-between items-center gap-2 pt-2 border-t border-slate-800/80 text-[10.5px] text-slate-300">
                 <span>
-                  Phòng: <b className="text-slate-200">{activeCourseSession.room || 'A2-301'}</b> • Bán kính: <b className="text-cyan-300">R ≤ {activeCourseSession.radius || 35}m</b>
+                  Phòng <b className="text-white">{activeCourseSession.room || 'A2-301'}</b> • <b className="text-cyan-300">R ≤ {activeCourseSession.radius || 35}m</b> • {activeCourseSession.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G'}
                 </span>
                 <button
                   type="button"
                   onClick={() => navigate('/scan')}
-                  className="btn-press px-2.5 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-bold cursor-pointer"
+                  className="btn-press px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-[10.5px] font-extrabold border-none cursor-pointer"
                 >
-                  Vào Quét QR
+                  Quét QR Ngay
                 </button>
               </div>
             </div>
           )}
+
+          {/* SỔ CHUYÊN CẦN HỌC KỲ (KIẾN TRÚC PHÂN CẤP 1 LỚP HỌC -> NHIỀU BUỔI HỌC CON) */}
+          {(() => {
+            const fallbackCourses = [
+              {
+                courseId: 'CLS_IT402_N01',
+                courseCode: 'IT402.N01',
+                courseName: 'An toàn Mạng máy tính & Ứng dụng',
+                defaultRoom: 'A2-301',
+                schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
+                sessions: [
+                  {
+                    sessionId: 'SES_IT402_B01',
+                    sessionIndex: 1,
+                    date: '2026-09-15',
+                    attendees: [{ studentId: '2251120000', checkInTime: '13:31:15', distance: 6 }]
+                  },
+                  {
+                    sessionId: 'SES_IT402_B02',
+                    sessionIndex: 2,
+                    date: '2026-09-22',
+                    attendees: [{ studentId: '2251120000', checkInTime: '13:30:40', distance: 7 }]
+                  }
+                ]
+              },
+              {
+                courseId: 'CLS_IT308_M11',
+                courseCode: 'IT308.M11',
+                courseName: 'Mật mã học & Ứng dụng Blockchain',
+                defaultRoom: 'B1-204',
+                schedule: 'Thứ 5 • Ca 1 (07:30 - 10:00)',
+                sessions: [
+                  {
+                    sessionId: 'SES_IT308_B01',
+                    sessionIndex: 1,
+                    date: '2026-09-18',
+                    attendees: [{ studentId: '2251120000', checkInTime: '07:32:10', distance: 5 }]
+                  }
+                ]
+              }
+            ];
+            const displayCourses =
+              Array.isArray(coursesCatalog) && coursesCatalog.length > 0 ? coursesCatalog : fallbackCourses;
+            const myMssv = credential?.studentId || '2251120000';
+
+            return (
+              <div className="stagger-2 rounded-2xl p-4 border shadow-sm bg-[#081226] border-slate-800 text-slate-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-extrabold text-white m-0">
+                      Lớp Học Phần &amp; Lịch Sử Buổi Học (1 → N)
+                    </h3>
+                    <p className="text-[10px] text-slate-400 m-0 mt-0.5">
+                      Chạm vào từng lớp để xem danh sách các buổi điểm danh con bên trong
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold">
+                    {displayCourses.length} lớp
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {displayCourses.map((course) => {
+                    const cid = course.courseId || course.id;
+                    const sesList = Array.isArray(course.sessions) ? course.sessions : [];
+                    const isExpanded = expandedCourseId === cid;
+                    const myAttendedCount = sesList.filter((s) =>
+                      (s.attendees || []).some((a) => (a.studentId || a.mssv) === myMssv)
+                    ).length;
+                    const isCourseLive =
+                      activeCourseSession?.isOpen &&
+                      (activeCourseSession.classId === cid || activeCourseSession.courseCode === course.courseCode);
+
+                    return (
+                      <div
+                        key={cid}
+                        className={`rounded-xl border transition-all overflow-hidden ${
+                          isExpanded
+                            ? 'bg-[#040814] border-cyan-500/45'
+                            : 'bg-[#040814]/80 border-slate-800'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setExpandedCourseId(isExpanded ? null : cid)}
+                          className="w-full p-3 text-left bg-transparent border-none cursor-pointer flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/35 font-mono text-[10px] font-bold text-cyan-300">
+                                {course.courseCode}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                Phòng {course.defaultRoom}
+                              </span>
+                              {isCourseLive && (
+                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[9.5px] font-bold">
+                                  Buổi {activeCourseSession.sessionNumber} đang mở
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs font-bold text-white truncate mt-1">
+                              {course.courseName}
+                            </div>
+                          </div>
+
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-mono text-xs font-extrabold text-emerald-400">
+                              {myAttendedCount}/{sesList.length} buổi
+                            </div>
+                            <div className="text-[9.5px] text-slate-400">
+                              {isExpanded ? 'Thu gọn ▲' : 'Xem buổi ▼'}
+                            </div>
+                          </div>
+                        </button>
+
+                        {isExpanded && (
+                          <div className="px-3 pb-3 pt-1 border-t border-slate-800/80 space-y-1.5">
+                            {sesList.map((ses) => {
+                              const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
+                              const sDate = ses.date || ses.sessionDate || '';
+                              const myRec = (ses.attendees || []).find(
+                                (a) => (a.studentId || a.mssv) === myMssv
+                              );
+                              return (
+                                <div
+                                  key={ses.sessionId}
+                                  className="p-2.5 rounded-lg bg-[#081226] border border-slate-800/90 flex items-center justify-between gap-2 text-[10.5px]"
+                                >
+                                  <div>
+                                    <span className="font-mono font-bold text-cyan-300">
+                                      Buổi {sIdx} ({sDate})
+                                    </span>
+                                    {myRec && (
+                                      <span className="block text-[9.5px] text-slate-400 font-mono mt-0.5">
+                                        Lúc {myRec.checkInTime} • Cách tâm {myRec.distance}m
+                                      </span>
+                                    )}
+                                  </div>
+                                  {myRec ? (
+                                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-[10px]">
+                                      Đã điểm danh
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold text-[10px]">
+                                      Chưa có mặt
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+
+                            {isCourseLive && (
+                              <button
+                                type="button"
+                                onClick={() => navigate('/scan')}
+                                className="btn-press w-full py-2 px-3 rounded-lg bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-bold text-[10.5px] cursor-pointer flex items-center justify-between"
+                              >
+                                <span>+ Buổi {activeCourseSession.sessionNumber} đang mở điểm danh</span>
+                                <span className="underline">Quét QR ngay →</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}
           <div className="stagger-2 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-[#081226] border-slate-800 text-slate-100">

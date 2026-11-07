@@ -1,9 +1,9 @@
-// src/components/MobileNavigation.jsx - Thanh Điều Hướng Holder Node (Sinh Viên) & Tích Hợp Safe Area (env(safe-area-inset-bottom))
+// src/components/MobileNavigation.jsx - Thanh Điều Hướng Holder Node (Sinh Viên) Chuẩn Dark Neon & Đồng Bộ Buổi Điểm Danh
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Wallet, LayoutGrid, QrCode } from 'lucide-react';
 
-export default function MobileNavigation() {
+export default function MobileNavigation({ activeCourseSession }) {
   const getTabClass = ({ isActive }) =>
     `tab-item btn-press ${isActive ? 'tab-active' : ''}`;
 
@@ -17,19 +17,19 @@ export default function MobileNavigation() {
           transform: translateX(-50%);
           width: 100%;
           max-width: 430px;
-          /* Tự động cộng thêm độ cao của thanh gạt Home Indicator trên iPhone */
-          height: calc(60px + env(safe-area-inset-bottom, 0px));
-          padding: 0 6px env(safe-area-inset-bottom, 0px);
-          background: var(--bg-header, rgba(15, 23, 42, 0.95));
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-top: 1px solid var(--border-hairline, rgba(255, 255, 255, 0.08));
+          height: calc(64px + env(safe-area-inset-bottom, 0px));
+          padding: 4px 10px env(safe-area-inset-bottom, 0px);
+          background: rgba(6, 18, 36, 0.96);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(56, 189, 248, 0.25);
           display: flex;
           justify-content: space-around;
           align-items: center;
+          gap: 6px;
           z-index: 100;
           box-sizing: border-box;
-          transition: background-color 0.2s ease, border-color 0.2s ease;
+          box-shadow: 0 -8px 28px rgba(0, 8, 20, 0.65);
         }
 
         @media (max-width: 480px) {
@@ -39,35 +39,59 @@ export default function MobileNavigation() {
         }
 
         .tab-item {
+          position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           gap: 3px;
           text-decoration: none;
-          color: var(--text-dim, #64748B);
-          font-size: 10px;
+          color: #94A3B8;
+          font-size: 10.5px;
           font-weight: 600;
-          transition: color 0.15s ease, transform 0.15s ease;
+          transition: all 0.2s ease;
           width: 33.33%;
-          height: 60px;
+          height: 50px;
+          border-radius: 14px;
         }
 
         .tab-active {
-          color: #06B6D4 !important;
+          color: #38BDF8 !important;
+          background: rgba(56, 189, 248, 0.12);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          font-weight: 700;
         }
       `}</style>
 
       <nav className="bottom-nav">
-        {/* HOLDER NODE - SINH VIÊN (MOBILE APP) — Chỉ chứa Thẻ Sinh Viên, Quét QR và Dịch Vụ Số */}
         <NavLink to="/student" className={getTabClass}>
           <Wallet size={18} strokeWidth={2} />
-          <span>Thẻ Sinh Viên</span>
+          <span>Ví &amp; Lớp Học</span>
         </NavLink>
 
         <NavLink to="/scan" className={getTabClass}>
-          <QrCode size={18} strokeWidth={2} />
-          <span>Quét QR</span>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <QrCode size={18} strokeWidth={2.2} />
+            {activeCourseSession?.isOpen && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: -3,
+                  right: -8,
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: '#10B981',
+                  boxShadow: '0 0 8px #10B981'
+                }}
+              />
+            )}
+          </div>
+          <span>
+            {activeCourseSession?.isOpen
+              ? `Quét QR (Buổi ${activeCourseSession.sessionNumber || 1})`
+              : 'Quét QR'}
+          </span>
         </NavLink>
 
         <NavLink to="/services" className={getTabClass}>
