@@ -48,7 +48,7 @@ import { getOrCreateDeviceId, signWithDecryptedKey } from '../utils/identityMana
 import { getItem } from '../utils/db';
 import { getPreciseLocation } from '../utils/geoManager';
 
-export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
+export default function ScanPage({ activeCourseSession, spotCheckState, onTriggerSpotCheckFaceID }) {
   const navigate = useNavigate();
   const [scanStatus, setScanStatus] = useState(null);
   const [isScanning, setIsScanning] = useState(true);
@@ -60,7 +60,14 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
   const [phoneNetworkMode, setPhoneNetworkMode] = useState('4G'); // '4G' | 'WIFI'
   const [sessionNetworkMode, setSessionNetworkMode] = useState('CAMPUS_WIFI'); // Đồng bộ với Giảng viên ('CAMPUS_WIFI' | 'CELLULAR_ANY')
   const [sessionRadius, setSessionRadius] = useState(35); // Bán kính Geofencing hiện tại của phòng học (mét)
-  const [simDistanceMeters, setSimDistanceMeters] = useState('8'); // Khoảng cách GPS thực nghiệm ('8', '85', 'REAL_GPS', hoặc số mét bất kỳ)
+  const [simDistanceMeters, setSimDistanceMeters] = useState('8'); // Khoảng cách GPS thực nghiệm ('8', '85', 'FAKE_GPS', 'REAL_GPS', hoặc số mét bất kỳ)
+  const [courseMeta, setCourseMeta] = useState({
+    classId: activeCourseSession?.classId || 'CLS_IT402_N01',
+    courseCode: activeCourseSession?.courseCode || 'IT402.N01',
+    courseName: activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+    room: activeCourseSession?.room || 'A2-301',
+    sessionNumber: activeCourseSession?.sessionNumber || 4
+  });
 
   // Trạng thái Offline Proof-of-Presence (IndexedDB)
   const [isOfflineMode, setIsOfflineMode] = useState(() => !navigator.onLine);
@@ -183,10 +190,22 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
             activeSessionRef.current = {
               sessionId: d.session.sessionId,
               nonce: d.session.nonce,
+              classId: d.session.classId || 'CLS_IT402_N01',
+              courseCode: d.session.courseCode || 'IT402.N01',
+              courseName: d.session.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+              room: d.session.room || 'A2-301',
+              sessionNumber: Number(d.session.sessionNumber || 1),
               networkMode: netMode,
               radius: rMeters,
               coords: d.session.coords || { lat: 10.7992, lon: 106.7056 }
             };
+            setCourseMeta({
+              classId: d.session.classId || 'CLS_IT402_N01',
+              courseCode: d.session.courseCode || 'IT402.N01',
+              courseName: d.session.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+              room: d.session.room || 'A2-301',
+              sessionNumber: Number(d.session.sessionNumber || 1)
+            });
             setSessionNetworkMode(netMode);
             setSessionRadius(rMeters);
             socket.emit('join-session', {
@@ -205,10 +224,22 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           activeSessionRef.current = {
             sessionId: payload.sessionId,
             nonce: payload.nonce || 'NONCE_LIVE',
+            classId: payload.classId || 'CLS_IT402_N01',
+            courseCode: payload.courseCode || 'IT402.N01',
+            courseName: payload.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+            room: payload.room || 'A2-301',
+            sessionNumber: Number(payload.sessionNumber || 1),
             networkMode: netMode,
             radius: rMeters,
             coords: payload.coords || { lat: 10.7992, lon: 106.7056 }
           };
+          setCourseMeta({
+            classId: payload.classId || 'CLS_IT402_N01',
+            courseCode: payload.courseCode || 'IT402.N01',
+            courseName: payload.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+            room: payload.room || 'A2-301',
+            sessionNumber: Number(payload.sessionNumber || 1)
+          });
           setSessionNetworkMode(netMode);
           setSessionRadius(rMeters);
           socket.emit('join-session', {
@@ -308,11 +339,11 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
       socket.on('spot-check-confirmed', () => {
         triggerScanSuccessFeedback();
         setSpotCheckRequest(null);
-        setSyncMessage(`✓ Đã hoàn tất xác thực lại FaceID (Spot-Check) lúc ${new Date().toLocaleTimeString('vi-VN')}!`);
+        setSyncMessage(`Đã hoàn tất xác thực lại FaceID (Spot-Check) lúc ${new Date().toLocaleTimeString('vi-VN')}!`);
       });
 
       socket.on('spot-check-failed', ({ message }) => {
-        setSyncMessage(`❌ Spot-Check thất bại: ${message}`);
+        setSyncMessage(`Spot-Check thất bại: ${message}`);
       });
 
       return () => {
@@ -400,13 +431,13 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
       if (verifyRes && !verifyRes.ok) {
         const errData = await verifyRes.json().catch(() => ({}));
         setSpotCheckRequest(null);
-        setSyncMessage(`❌ ${errData.error || 'Tái kiểm tra bị từ chối do chưa điểm danh hợp lệ ban đầu!'}`);
+        setSyncMessage(errData.error || 'Tái kiểm tra bị từ chối do chưa điểm danh hợp lệ ban đầu!');
         return;
       }
 
       triggerScanSuccessFeedback();
       setSpotCheckRequest(null);
-      setSyncMessage(`✓ Đã hoàn tất xác thực lại FaceID (Spot-Check) lúc ${new Date().toLocaleTimeString('vi-VN')}!`);
+      setSyncMessage(`Đã hoàn tất xác thực lại FaceID (Spot-Check) lúc ${new Date().toLocaleTimeString('vi-VN')}!`);
     } catch (e) {
       console.error('Lỗi spot check:', e);
     }
@@ -684,10 +715,12 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
       const centerLon = activeSessionRef.current?.coords?.lon ?? sessionLon ?? 106.7056;
       const allowedR = activeSessionRef.current?.radius ?? sessionRadius ?? 35;
 
+      const isFakeGpsSimulated = simDistanceMeters === 'FAKE_GPS';
       let smoothedPos = {
         lat: parseFloat(sessionStorage.getItem('cached_lat') || '10.79925') || 10.79925,
         lon: parseFloat(sessionStorage.getItem('cached_lon') || '106.70564') || 106.70564,
-        accuracy: 12,
+        accuracy: isFakeGpsSimulated ? 0.0 : 8.4,
+        isMock: isFakeGpsSimulated,
         samplesCount: 3,
         preWarmed: true
       };
@@ -695,16 +728,17 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
       if (simDistanceMeters === 'REAL_GPS') {
         try {
           const pos = await getSmoothedGpsPosition(2, allowedR);
-          if (pos) smoothedPos = pos;
+          if (pos) smoothedPos = { ...pos, isMock: Boolean(pos.isMock) };
         } catch {}
       } else {
         // Tính tọa độ cách tâm phòng chính xác X mét theo công thức Haversine (1 độ vĩ tuyến ≈ 111,139m)
-        const targetDistMeters = Math.max(0, Number(simDistanceMeters) || 8);
+        const targetDistMeters = isFakeGpsSimulated ? 2 : Math.max(0, Number(simDistanceMeters) || 8);
         const deltaLat = targetDistMeters / 111139;
         smoothedPos = {
           lat: Number((centerLat + deltaLat).toFixed(6)),
           lon: Number(centerLon.toFixed(6)),
-          accuracy: 5,
+          accuracy: isFakeGpsSimulated ? 0.0 : 6.8,
+          isMock: isFakeGpsSimulated,
           samplesCount: 3,
           preWarmed: true
         };
@@ -715,7 +749,9 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
 
       const driftEval = evaluateGpsDriftTolerance(centerLat, centerLon, smoothedPos, allowedR);
       const distance =
-        simDistanceMeters !== 'REAL_GPS'
+        isFakeGpsSimulated
+          ? 2
+          : simDistanceMeters !== 'REAL_GPS'
           ? Math.max(0, Math.round(Number(simDistanceMeters) || 8))
           : driftEval.withinRange !== false
           ? (driftEval.effectiveDistance || 8)
@@ -820,9 +856,15 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
             timestamp,
             deviceId: currentDeviceId,
             clientNetwork: phoneNetworkMode,
+            gpsTelemetry: {
+              accuracy: smoothedPos.accuracy,
+              isMock: Boolean(smoothedPos.isMock)
+            },
             studentCoords: {
               lat: smoothedPos.lat,
-              lon: smoothedPos.lon
+              lon: smoothedPos.lon,
+              accuracy: smoothedPos.accuracy,
+              isMock: Boolean(smoothedPos.isMock)
             },
             studentData: {
               studentId: targetMssv,
@@ -845,9 +887,18 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         if (submitRes.ok && submitData?.success) {
           setHasCheckedIn(true);
           hasCheckedInRef.current = true;
+          const recCourseCode = submitData.record?.courseCode || activeSessionRef.current?.courseCode || courseMeta.courseCode || 'IT402.N01';
+          const recCourseName = submitData.record?.courseName || activeSessionRef.current?.courseName || courseMeta.courseName || 'An toàn Mạng máy tính & Ứng dụng';
+          const recRoom = submitData.record?.room || activeSessionRef.current?.room || courseMeta.room || 'A2-301';
+          const recSessionNum = submitData.record?.sessionNumber || activeSessionRef.current?.sessionNumber || courseMeta.sessionNumber || 4;
           try {
             const checkedInMeta = {
               sessionId: submitData.record?.sessionId || sessionId,
+              classId: submitData.record?.classId || activeSessionRef.current?.classId || courseMeta.classId,
+              courseCode: recCourseCode,
+              courseName: recCourseName,
+              room: recRoom,
+              sessionNumber: recSessionNum,
               studentId: targetMssv,
               fullName: studentFullName,
               timestamp: Date.now()
@@ -859,15 +910,25 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
             studentName: studentFullName.toUpperCase(),
             mssv: targetMssv,
             sessionId,
+            courseCode: recCourseCode,
+            courseName: recCourseName,
+            room: recRoom,
+            sessionNumber: recSessionNum,
             signatureHash: shortSig,
             distance: `${submitData.record?.dist ?? distance}m`,
-            biometricVerified: true
+            biometricVerified: true,
+            proximityWarning: smoothedPos.isMock
+              ? {
+                  alert: 'FAKE_GPS_DETECTED',
+                  detail: 'Hệ thống phát hiện cờ giả lập vị trí (isMock=true, accuracy=0.0m). Đã gắn cờ nghi vấn trên IDS!'
+                }
+              : null
           });
 
           setScanStatus({
             type: 'SUCCESS',
             title: 'ĐIỂM DANH THÀNH CÔNG (UNIFIED PIPELINE)',
-            message: `Sinh viên ${studentFullName} (${targetMssv}) đã vượt qua 6 lớp đối soát mật mã & hiện trực tiếp lên màn chiếu Giảng viên qua WebSocket!`,
+            message: `Sinh viên ${studentFullName} (${targetMssv}) đã điểm danh lớp ${recCourseCode} (${recRoom} • Buổi ${recSessionNum}) và đồng bộ trực tiếp lên Web Portal Giảng viên!`,
             details: {
               sessionId,
               distance: `${submitData.record?.dist ?? distance}m (Pre-warm GPS ${gpsLatencyMs}ms)`,
@@ -1130,16 +1191,41 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         </div>
       </div>
 
-      <div>
-        <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '0 0 3px', color: 'var(--text-main)' }}>
-          Quét Mã Điểm Danh (Holder)
-        </h1>
-        <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-dim)', lineHeight: 1.4 }}>
-          WebAuthn Biometric Gate • Key Wrapping AES-GCM + PIN 6 Số • Pre-warm GPS (<code>&lt; 300ms</code>)
-        </p>
+      {/* THÔNG TIN LỚP HỌC PHẦN ĐANG ĐIỂM DANH (ĐỒNG BỘ TRỰC TIẾP VỚI COURSE HUB GIẢNG VIÊN) */}
+      <div
+        className="glass-card"
+        style={{
+          padding: '11px 13px',
+          borderRadius: '14px',
+          border: '1px solid rgba(56, 189, 248, 0.38)',
+          background: 'rgba(8, 18, 38, 0.92)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <span
+            style={{
+              padding: '2px 8px',
+              borderRadius: '6px',
+              background: 'rgba(56, 189, 248, 0.16)',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              color: '#38BDF8',
+              fontSize: '10px',
+              fontFamily: 'JetBrains Mono',
+              fontWeight: 800
+            }}
+          >
+            {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'}
+          </span>
+          <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#10B981' }}>
+            Buổi {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 4} • Phòng {courseMeta.room || activeCourseSession?.room || 'A2-301'}
+          </span>
+        </div>
+        <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+          {courseMeta.courseName || activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
+        </div>
       </div>
 
-      {/* BẢNG THỰC NGHIỆM NCKH: KIỂM SOÁT KẾT NỐI MẠNG (4G LOCALTUNNEL VS WI-FI TRƯỜNG) */}
+      {/* BẢNG THỰC NGHIỆM NCKH: KIỂM SOÁT KẾT NỐI MẠNG & VỊ TRÍ GPS */}
       <div
         className="glass-card"
         style={{
@@ -1147,13 +1233,13 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           borderRadius: '14px',
           border: sessionNetworkMode === 'CAMPUS_WIFI' && phoneNetworkMode === '4G'
             ? '1px solid rgba(245, 158, 11, 0.5)'
-            : '1px solid rgba(6, 182, 212, 0.35)'
+            : '1px solid rgba(56, 189, 248, 0.35)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-              🌐 Mạng Điện Thoại:
+              Mạng Điện Thoại:
             </span>
             <button
               type="button"
@@ -1164,13 +1250,13 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
                 borderRadius: '7px',
                 fontSize: '10px',
                 fontWeight: 800,
-                border: phoneNetworkMode === '4G' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
-                background: phoneNetworkMode === '4G' ? 'rgba(6, 182, 212, 0.16)' : 'var(--bg-inset)',
-                color: phoneNetworkMode === '4G' ? '#06B6D4' : 'var(--text-muted)',
+                border: phoneNetworkMode === '4G' ? '1px solid #38BDF8' : '1px solid var(--border-hairline)',
+                background: phoneNetworkMode === '4G' ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-inset)',
+                color: phoneNetworkMode === '4G' ? '#38BDF8' : 'var(--text-muted)',
                 cursor: 'pointer'
               }}
             >
-              📱 Đang bật 4G/5G
+              Đang bật 4G/5G
             </button>
             <button
               type="button"
@@ -1187,7 +1273,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
                 cursor: 'pointer'
               }}
             >
-              📶 Wi-Fi Trường
+              Wi-Fi Trường
             </button>
           </div>
 
@@ -1207,7 +1293,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
               cursor: 'pointer'
             }}
           >
-            SERVER_URL ⚙
+            SERVER_URL
           </button>
         </div>
 
@@ -1215,15 +1301,15 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           <span>
             Chính sách Giảng viên:{' '}
             <b style={{ color: sessionNetworkMode === 'CAMPUS_WIFI' ? '#F59E0B' : '#10B981' }}>
-              {sessionNetworkMode === 'CAMPUS_WIFI' ? `📶 Wi-Fi Trường (R ≤ ${sessionRadius}m)` : `🌐 4G/5G Tự do (R ≤ ${sessionRadius}m)`}
+              {sessionNetworkMode === 'CAMPUS_WIFI' ? `Wi-Fi Trường (R ≤ ${sessionRadius}m)` : `4G/5G Tự do (R ≤ ${sessionRadius}m)`}
             </b>
           </span>
-          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9.5px', color: '#06B6D4' }}>
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9.5px', color: '#38BDF8' }}>
             {serverUrlInput.replace(/^https?:\/\//, '')}
           </span>
         </div>
 
-        {/* BỘ CHỈNH KHOẢNG CÁCH GPS THỰC NGHIỆM (MÉT) TRÊN ĐIỆN THOẠI ĐỂ TEST TRONG LỚP / NGOÀI LỚP */}
+        {/* BỘ CHỈNH KHOẢNG CÁCH GPS & FAKE GPS THỰC NGHIỆM TRÊN ĐIỆN THOẠI */}
         <div
           style={{
             marginTop: '7px',
@@ -1237,7 +1323,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           }}
         >
           <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-main)' }}>
-            📏 Test GPS (R ≤ {sessionRadius}m):
+            Test GPS (R ≤ {sessionRadius}m):
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
             <button
@@ -1255,7 +1341,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
                 cursor: 'pointer'
               }}
             >
-              📍 Trong lớp (8m)
+              Trong lớp (8m)
             </button>
             <button
               type="button"
@@ -1272,7 +1358,24 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
                 cursor: 'pointer'
               }}
             >
-              🏃 Ngoài lớp (85m)
+              Ngoài lớp (85m)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSimDistanceMeters('FAKE_GPS')}
+              className="btn-press"
+              style={{
+                padding: '3px 7px',
+                borderRadius: '6px',
+                fontSize: '9.5px',
+                fontWeight: 800,
+                border: simDistanceMeters === 'FAKE_GPS' ? '1px solid #F59E0B' : '1px solid var(--border-hairline)',
+                background: simDistanceMeters === 'FAKE_GPS' ? 'rgba(245, 158, 11, 0.18)' : 'var(--bg-inset)',
+                color: simDistanceMeters === 'FAKE_GPS' ? '#F59E0B' : 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              Fake GPS (0.0m)
             </button>
             <button
               type="button"
@@ -1283,15 +1386,15 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
                 borderRadius: '6px',
                 fontSize: '9.5px',
                 fontWeight: 800,
-                border: simDistanceMeters === 'REAL_GPS' ? '1px solid #06B6D4' : '1px solid var(--border-hairline)',
-                background: simDistanceMeters === 'REAL_GPS' ? 'rgba(6, 182, 212, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === 'REAL_GPS' ? '#06B6D4' : 'var(--text-muted)',
+                border: simDistanceMeters === 'REAL_GPS' ? '1px solid #38BDF8' : '1px solid var(--border-hairline)',
+                background: simDistanceMeters === 'REAL_GPS' ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-inset)',
+                color: simDistanceMeters === 'REAL_GPS' ? '#38BDF8' : 'var(--text-muted)',
                 cursor: 'pointer'
               }}
             >
-              🛰️ GPS Thật
+              GPS Thật
             </button>
-            {simDistanceMeters !== 'REAL_GPS' && (
+            {simDistanceMeters !== 'REAL_GPS' && simDistanceMeters !== 'FAKE_GPS' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                 <input
                   type="number"
@@ -1303,9 +1406,9 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
                     width: '48px',
                     padding: '2px 4px',
                     borderRadius: '6px',
-                    border: '1px solid rgba(6, 182, 212, 0.4)',
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
                     background: 'var(--bg-inset)',
-                    color: '#06B6D4',
+                    color: '#38BDF8',
                     fontFamily: 'JetBrains Mono',
                     fontSize: '9.5px',
                     textAlign: 'center'
@@ -1364,7 +1467,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
             <span style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--tone-amber)' }}>
-              📢 YÊU CẦU TÁI KIỂM TRA ĐỘT XUẤT (SPOT-CHECK)
+              YÊU CẦU TÁI KIỂM TRA ĐỘT XUẤT (SPOT-CHECK)
             </span>
             <span style={{ fontSize: '11.5px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#F59E0B' }}>
               Còn {spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s
@@ -1393,7 +1496,7 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
             }}
           >
             <Fingerprint size={15} />
-            <span>⚡ Xác Thực Lại Face ID ({spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s)</span>
+            <span>Xác Thực Lại Face ID ({spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s)</span>
           </button>
         </div>
       )}
@@ -1527,6 +1630,10 @@ export default function ScanPage({ spotCheckState, onTriggerSpotCheckFaceID }) {
           studentName={livenessStampData.studentName}
           mssv={livenessStampData.mssv}
           sessionId={livenessStampData.sessionId}
+          courseCode={livenessStampData.courseCode || courseMeta.courseCode}
+          courseName={livenessStampData.courseName || courseMeta.courseName}
+          room={livenessStampData.room || courseMeta.room}
+          sessionNumber={livenessStampData.sessionNumber || courseMeta.sessionNumber}
           signatureHash={livenessStampData.signatureHash}
           distance={livenessStampData.distance}
           biometricVerified={livenessStampData.biometricVerified}

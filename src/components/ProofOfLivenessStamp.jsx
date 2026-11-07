@@ -10,6 +10,10 @@ export default function ProofOfLivenessStamp({
   studentName = 'NGUYỄN ĐỨC HIỂN',
   mssv = '2251120000',
   sessionId = 'SES_A2301',
+  courseCode = 'IT402.N01',
+  courseName = 'An toàn Mạng máy tính & Ứng dụng',
+  room = 'A2-301',
+  sessionNumber = 4,
   signatureHash = '0x8a4f91c2b7e0...c4e191',
   distance = '8m',
   biometricVerified = true,
@@ -216,9 +220,14 @@ export default function ProofOfLivenessStamp({
               MSSV: {mssv}
             </span>
             <span style={{ fontSize: '10px', fontFamily: 'JetBrains Mono', color: 'var(--text-muted)' }}>
-              {sessionId} ({distance})
+              {courseCode} • {room} ({distance})
             </span>
           </div>
+          {courseName && (
+            <div style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {courseName} • Buổi {sessionNumber || 1} ({sessionId})
+            </div>
+          )}
         </div>
       </div>
 

@@ -24,17 +24,31 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { ShieldCheck, Lock, Sun, Moon, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
-  const [theme, setTheme] = useState(() => (getInitialThemeIsDark() ? 'dark' : 'light'));
 
   useEffect(() => {
-    applyRootTheme(theme === 'dark');
-  }, [theme]);
+    getInitialThemeIsDark();
+    applyRootTheme(true);
+  }, []);
+
+  // Trạng thái Lớp Học Phần & Buổi Điểm Danh đang mở từ Web Portal Giảng viên (Đồng bộ thời gian thực)
+  const [activeCourseSession, setActiveCourseSession] = useState({
+    isOpen: true,
+    sessionId: 'SES_A2301',
+    classId: 'CLS_IT402_N01',
+    courseCode: 'IT402.N01',
+    courseName: 'An toàn Mạng máy tính & Ứng dụng',
+    room: 'A2-301',
+    sessionNumber: 4,
+    radius: 35,
+    networkMode: 'CELLULAR_ANY',
+    nonce: 'NONCE_LIVE'
+  });
 
   // Pre-warm GPS chạy nền ngay khi App mount để lấy sẵn toạ độ trong sessionStorage + RAM (< 5ms khi quét QR)
   useEffect(() => {
@@ -173,6 +187,18 @@ export default function App() {
         .then((d) => {
           if (d?.success && d?.session) {
             const s = d.session;
+            setActiveCourseSession({
+              isOpen: s.isOpen !== false,
+              sessionId: s.sessionId || 'SES_A2301',
+              classId: s.classId || 'CLS_IT402_N01',
+              courseCode: s.courseCode || 'IT402.N01',
+              courseName: s.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+              room: s.room || 'A2-301',
+              sessionNumber: Number(s.sessionNumber || 1),
+              radius: Number(s.radius || s.maxRadius || 35),
+              networkMode: s.networkMode || 'CELLULAR_ANY',
+              nonce: s.nonce || 'NONCE_LIVE'
+            });
             const myMssv = studentIdentityRef.current?.studentId || '2251120000';
             socket.emit('join-session', {
               sessionId: s.sessionId,
@@ -201,6 +227,53 @@ export default function App() {
         })
         .catch(() => {});
 
+      socket.on('session-created', (payload) => {
+        if (payload?.sessionId) {
+          setActiveCourseSession({
+            isOpen: true,
+            sessionId: payload.sessionId,
+            classId: payload.classId || 'CLS_IT402_N01',
+            courseCode: payload.courseCode || 'IT402.N01',
+            courseName: payload.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+            room: payload.room || 'A2-301',
+            sessionNumber: Number(payload.sessionNumber || 1),
+            radius: Number(payload.maxRadius || payload.radius || 35),
+            networkMode: payload.networkMode || (payload.networkPolicy === 'CAMPUS_WIFI_ONLY' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY'),
+            nonce: payload.nonce || 'NONCE_LIVE'
+          });
+          socket.emit('join-session', {
+            sessionId: payload.sessionId,
+            role: 'STUDENT',
+            studentId: studentIdentityRef.current?.studentId || '2251120000'
+          });
+        }
+      });
+
+      socket.on('network-mode-updated', (payload) => {
+        if (payload?.networkMode) {
+          setActiveCourseSession((prev) => ({ ...prev, networkMode: payload.networkMode }));
+        }
+      });
+
+      socket.on('radius-updated', (payload) => {
+        if (payload?.maxRadiusMeters || payload?.radius) {
+          setActiveCourseSession((prev) => ({
+            ...prev,
+            radius: Number(payload.maxRadiusMeters || payload.radius)
+          }));
+        }
+      });
+
+      socket.on('nonce-updated', (payload) => {
+        if (payload?.nonce) {
+          setActiveCourseSession((prev) => ({
+            ...prev,
+            sessionId: payload.sessionId || prev.sessionId,
+            nonce: payload.nonce
+          }));
+        }
+      });
+
       const handleStudentCheckedIn = (e) => {
         if (e?.detail?.sessionId) {
           socket.emit('join-session', {
@@ -219,6 +292,7 @@ export default function App() {
       const handleSessionClosed = () => {
         sessionStorage.removeItem('uth_spot_check_state');
         setSpotCheckState((prev) => (prev.isActive ? { ...prev, isActive: false, isModalOpen: false, countdown: 0 } : prev));
+        setActiveCourseSession((prev) => ({ ...prev, isOpen: false }));
       };
       socket.on('session-closed', handleSessionClosed);
       socket.on('session-terminated', handleSessionClosed);
@@ -282,7 +356,7 @@ export default function App() {
 
       if (verifyRes && !verifyRes.ok) {
         const errData = await verifyRes.json().catch(() => ({}));
-        setSpotVerifiedNotice(`❌ ${errData.error || 'Tái điểm danh bị từ chối!'}`);
+        setSpotVerifiedNotice(errData.error || 'Tái điểm danh bị từ chối!');
         setTimeout(() => setSpotVerifiedNotice(''), 5000);
         return;
       }
@@ -298,7 +372,7 @@ export default function App() {
         challenge: ''
       });
       setSpotVerifiedNotice(
-        `✓ Đã xác thực lại Face ID (Spot-Check) thành công lúc ${new Date().toLocaleTimeString('vi-VN')}!`
+        `Đã xác thực lại Face ID (Spot-Check) thành công lúc ${new Date().toLocaleTimeString('vi-VN')}!`
       );
       setTimeout(() => setSpotVerifiedNotice(''), 6000);
     } catch (err) {
@@ -309,10 +383,6 @@ export default function App() {
   const handleLockSession = () => {
     clearActiveWallet();
     lockNow();
-  };
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   const portalHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
@@ -428,30 +498,14 @@ export default function App() {
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Dark/Light Mode + Huy hiệu Holder FIDO2 */}
+            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Khóa phiên + Huy hiệu Holder FIDO2 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <LiveClock />
 
               <button
-                onClick={toggleTheme}
-                title={theme === 'dark' ? 'Chuyển sang Chế độ Sáng (Light Mode)' : 'Chuyển sang Chế độ Tối (Dark Mode)'}
-                className="btn-press bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400"
-                style={{
-                  padding: '5px 7px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
-              </button>
-
-              <button
                 onClick={handleLockSession}
                 title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
-                className="btn-press bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400"
+                className="btn-press bg-slate-800 border border-slate-700 text-cyan-400"
                 style={{
                   padding: '5px 7px',
                   borderRadius: '8px',
@@ -466,7 +520,7 @@ export default function App() {
 
               <span
                 title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
-                className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
                 style={{
                   padding: '4px 7px',
                   borderRadius: '8px',
@@ -492,16 +546,13 @@ export default function App() {
             onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
             className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-amber-500/20 border border-amber-500/50 backdrop-blur-md flex items-center justify-between cursor-pointer animate-pulse shadow-lg"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-base">⚠️</span>
-              <div>
-                <p className="text-xs font-bold text-amber-700 dark:text-amber-300 m-0">
-                  Yêu cầu Tái điểm danh đang diễn ra!
-                </p>
-                <p className="text-[10px] text-amber-800/80 dark:text-amber-200/80 m-0">
-                  Chạm vào đây để quét Face ID xác thực ngay
-                </p>
-              </div>
+            <div>
+              <p className="text-xs font-bold text-amber-300 m-0">
+                Yêu cầu Hậu kiểm Spot-Check đang diễn ra
+              </p>
+              <p className="text-[10px] text-amber-200/80 m-0">
+                Chạm vào đây để quét Face ID xác thực ngay
+              </p>
             </div>
             <span className="px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-mono font-black text-xs">
               {spotCheckState.countdown}s
@@ -511,14 +562,14 @@ export default function App() {
 
         {/* Thông báo hoàn tất Spot-check toàn cục */}
         {spotVerifiedNotice && (
-          <div className="mx-3 mt-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+          <div className="mx-3 mt-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" />
             <span>{spotVerifiedNotice}</span>
           </div>
         )}
 
         {/* Vùng Nội Dung Cuộn Bên Trong Khung Điện Thoại */}
-        <main className="mobile-scroll-body bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
+        <main className="mobile-scroll-body bg-slate-950 transition-colors duration-200">
           <Routes>
             {/* 1. VAI TRÒ HOLDER - SINH VIÊN (/student & /wallet) */}
             <Route path="/" element={<Navigate to="/student" replace />} />
@@ -526,8 +577,8 @@ export default function App() {
               path="/student"
               element={
                 <StudentWalletPro
-                  isDarkMode={theme === 'dark'}
-                  onToggleTheme={toggleTheme}
+                  isDarkMode={true}
+                  activeCourseSession={activeCourseSession}
                   spotCheckState={spotCheckState}
                   onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
                 />
@@ -537,8 +588,8 @@ export default function App() {
               path="/wallet"
               element={
                 <StudentWalletPro
-                  isDarkMode={theme === 'dark'}
-                  onToggleTheme={toggleTheme}
+                  isDarkMode={true}
+                  activeCourseSession={activeCourseSession}
                   spotCheckState={spotCheckState}
                   onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
                 />
@@ -548,6 +599,7 @@ export default function App() {
               path="/scan"
               element={
                 <ScanPage
+                  activeCourseSession={activeCourseSession}
                   spotCheckState={spotCheckState}
                   onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
                 />
@@ -620,7 +672,7 @@ export default function App() {
               fontWeight: 800,
               marginBottom: '12px'
             }}>
-              <span>⚠️ KIỂM TRA HIỆN DIỆN ĐỘT XUẤT</span>
+              <span>KIỂM TRA HIỆN DIỆN ĐỘT XUẤT</span>
               <span style={{
                 background: '#F59E0B',
                 color: '#04060A',
@@ -637,7 +689,7 @@ export default function App() {
               Yêu Cầu Tái Điểm Danh Bằng Face ID
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5, margin: '0 0 16px' }}>
-              Giảng viên đang kiểm tra sĩ số giữa giờ (Phiên <b>{spotCheckState.sessionId}</b>). Vui lòng xác thực sinh trắc học trước khi hết <b>{spotCheckState.countdown} giây</b> để giữ trạng thái <b>Có Mặt</b>.
+              Giảng viên đang kiểm tra sĩ số giữa giờ tại lớp <b>{activeCourseSession.courseCode} ({activeCourseSession.room})</b>. Vui lòng xác thực sinh trắc học trước khi hết <b>{spotCheckState.countdown} giây</b> để giữ trạng thái <b>Có Mặt</b>.
             </p>
 
             <button
@@ -663,7 +715,7 @@ export default function App() {
               }}
             >
               <Fingerprint size={18} />
-              <span>⚡ Xác Thực Lại Face ID ({spotCheckState.countdown}s)</span>
+              <span>Xác Thực Lại Face ID ({spotCheckState.countdown}s)</span>
             </button>
 
             <button

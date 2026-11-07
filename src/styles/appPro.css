@@ -6,29 +6,29 @@
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
 
-  /* Dark Mode chuẩn Design System (bg-slate-950 / bg-slate-900 / border-slate-800 / text-slate-100) */
-  --bg-page: #020617;
-  --bg-root: #020617;
-  --bg-card: #0F172A;
-  --bg-card-elevated: #1E293B;
-  --bg-inset: #020617;
-  --bg-header: rgba(15, 23, 42, 0.94);
-  --border-hairline: #1E293B;
-  --border-active: rgba(6, 182, 212, 0.4);
+  /* Dark Neon chuẩn Design System Ocean-Ice (đồng bộ 100% với Web Portal 5174) */
+  --bg-page: #020c18;
+  --bg-root: #041529;
+  --bg-card: #081226;
+  --bg-card-elevated: #0D2B52;
+  --bg-inset: #040814;
+  --bg-header: rgba(6, 22, 41, 0.95);
+  --border-hairline: rgba(78, 142, 162, 0.35);
+  --border-active: rgba(56, 189, 248, 0.45);
   
-  --text-main: #F1F5F9;
-  --text-muted: #94A3B8;
-  --text-dim: #64748B;
+  --text-main: #F8FAFC;
+  --text-muted: #CBD5E1;
+  --text-dim: #94A3B8;
   
-  --accent-cyan: #06B6D4;
-  --accent-blue: #0284C7;
+  --accent-cyan: #38BDF8;
+  --accent-blue: #0A4174;
   --accent-green: #10B981;
   --accent-amber: #F59E0B;
   --accent-rose: #F43F5E;
 
-  /* Màu chữ nhấn theo ngữ nghĩa (tự đổi độ đậm theo nền Sáng/Tối để luôn đủ tương phản) */
-  --tone-cyan: #22D3EE;
-  --tone-sky: #38BDF8;
+  /* Màu chữ nhấn theo ngữ nghĩa */
+  --tone-cyan: #38BDF8;
+  --tone-sky: #7BBDE8;
   --tone-blue: #60A5FA;
   --tone-green: #34D399;
   --tone-amber: #FCD34D;
@@ -37,18 +37,18 @@
   --tone-purple: #C084FC;
 
   /* Nền nhạt cho banner cảnh báo / thông tin */
-  --tint-amber: rgba(245, 158, 11, 0.12);
-  --tint-cyan: rgba(6, 182, 212, 0.12);
-  --tint-green: rgba(16, 185, 129, 0.12);
-  --tint-rose: rgba(244, 63, 94, 0.12);
+  --tint-amber: rgba(245, 158, 11, 0.14);
+  --tint-cyan: rgba(56, 189, 248, 0.14);
+  --tint-green: rgba(16, 185, 129, 0.14);
+  --tint-rose: rgba(244, 63, 94, 0.14);
   --tint-neutral: rgba(255, 255, 255, 0.06);
-  --border-neutral: rgba(255, 255, 255, 0.12);
+  --border-neutral: rgba(78, 142, 162, 0.32);
 
   /* Modal / bảng nổi */
-  --bg-modal: #0F172A;
-  --bg-modal-footer: #020617;
-  --bg-code: #020617;
-  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --bg-modal: #081226;
+  --bg-modal-footer: #040814;
+  --bg-code: #040814;
+  --shadow-card: 0 8px 26px rgba(0, 10, 24, 0.55);
 }
 
 /* Light Mode chuẩn Design System (bg-slate-100 / bg-white / border-slate-200 / text-slate-900) */

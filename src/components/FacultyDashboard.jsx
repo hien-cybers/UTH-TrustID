@@ -358,10 +358,44 @@ export default function FacultyDashboard({
 
       setAttendees((prev) => {
         const exists = prev.some((item) => item.studentId === sid);
-        if (exists) {
-          return prev.map((item) => (item.studentId === sid ? { ...item, ...mapped } : item));
-        }
-        return [mapped, ...prev];
+        const nextList = exists
+          ? prev.map((item) => (item.studentId === sid ? { ...item, ...mapped } : item))
+          : [mapped, ...prev];
+
+        // Tự động lưu đồng bộ sinh viên vừa điểm danh từ App vào buổi học hiện tại trong danh mục lớp
+        try {
+          setCourses((prevCourses) => {
+            const targetCourseCode = rec.courseCode;
+            const targetSid = rec.sessionId;
+            const updated = prevCourses.map((c) => {
+              if (targetCourseCode && c.courseCode !== targetCourseCode && c.id !== rec.classId) return c;
+              const sessList = Array.isArray(c.sessions) ? c.sessions : [];
+              if (!targetSid || !sessList.some((s) => s.sessionId === targetSid)) return c;
+              return {
+                ...c,
+                sessions: sessList.map((s) =>
+                  s.sessionId === targetSid
+                    ? {
+                        ...s,
+                        attendees: nextList.map((a) => ({
+                          studentId: a.studentId,
+                          name: a.name,
+                          major: a.major,
+                          checkInTime: a.checkInTime,
+                          distance: a.distance,
+                          status: a.distance <= 100 ? 'VERIFIED' : 'OUT_OF_RANGE'
+                        }))
+                      }
+                    : s
+                )
+              };
+            });
+            localStorage.setItem('uth_courses_catalog_v2', JSON.stringify(updated));
+            return updated;
+          });
+        } catch {}
+
+        return nextList;
       });
       setNetworkBlockNotice(null);
       setGeofenceBlockNotice(null);
@@ -573,12 +607,14 @@ export default function FacultyDashboard({
     const targetCourse = course || courses.find((c) => c.id === activeCourseId) || courses[0];
     if (!targetCourse) return;
 
-    const nextSessionNumber = (targetCourse.sessions?.length || 0) + 1;
+    const existingSessions = Array.isArray(targetCourse.sessions) ? targetCourse.sessions : [];
+    const nextSessionNumber = existingSessions.length + 1;
     const cleanRoom = (targetCourse.defaultRoom || 'A2301').replace(/[^A-Z0-9]/gi, '').toUpperCase();
     const newSid = `SES_${cleanRoom}_B${String(nextSessionNumber).padStart(2, '0')}`;
 
     const nextConfig = {
       ...sessionConfig,
+      sessionNumber: nextSessionNumber,
       courseCode: targetCourse.courseCode,
       courseName: targetCourse.courseName,
       room: targetCourse.defaultRoom,
@@ -601,6 +637,7 @@ export default function FacultyDashboard({
         body: JSON.stringify({
           sessionId: newSid,
           classId: targetCourse.id,
+          sessionNumber: nextSessionNumber,
           courseCode: nextConfig.courseCode,
           courseName: nextConfig.courseName,
           room: nextConfig.room,
@@ -645,9 +682,10 @@ export default function FacultyDashboard({
     const updatedCourses = courses.map((c) => {
       if (c.id !== activeCourseId && c.courseCode !== sessionConfig.courseCode) return c;
       const existingSessions = Array.isArray(c.sessions) ? c.sessions : [];
+      const alreadyIdx = existingSessions.findIndex((s) => s.sessionId === sessionId);
       const newSessionRecord = {
         sessionId,
-        sessionNumber: existingSessions.length + 1,
+        sessionNumber: alreadyIdx >= 0 ? existingSessions[alreadyIdx].sessionNumber : existingSessions.length + 1,
         sessionDate: todayStr,
         nonce: currentNonce,
         attendees: attendees.map((a) => ({
@@ -659,16 +697,26 @@ export default function FacultyDashboard({
           status: a.distance <= sessionConfig.maxRadiusMeters ? 'VERIFIED' : 'OUT_OF_RANGE'
         }))
       };
+      const nextSessions =
+        alreadyIdx >= 0
+          ? existingSessions.map((s, idx) => (idx === alreadyIdx ? newSessionRecord : s))
+          : [...existingSessions, newSessionRecord];
+
       return {
         ...c,
         defaultRoom: sessionConfig.room,
         defaultRadius: Number(sessionConfig.maxRadiusMeters) || c.defaultRadius,
         defaultNetworkMode: sessionConfig.networkMode,
-        sessions: [...existingSessions, newSessionRecord]
+        sessions: nextSessions
       };
     });
     saveCoursesToStorage(updatedCourses);
     socketRef.current?.emit('close-session', { sessionId });
+    smartFetch('/api/session/close', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId })
+    }).catch(() => {});
     setIsCreated(false);
     setIsSessionOpen(false);
   };
