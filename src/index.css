@@ -332,3 +332,107 @@ button, input, select {
   align-items: center;
   justify-content: center;
 }
+
+/* ==================== HIỆU ỨNG ĐỘNG CHO CỔNG ĐĂNG NHẬP NGHỆ THUẬT (ARTISTIC SPLIT-SCREEN LOGIN) ==================== */
+@keyframes loginCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes artKenBurns {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.06) translate3d(-4px, -6px, 0);
+  }
+  100% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fireflyDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.7);
+    opacity: 0.15;
+  }
+  45% {
+    opacity: 0.95;
+    transform: translate3d(10px, -22px, 0) scale(1.2);
+  }
+  100% {
+    transform: translate3d(-8px, -46px, 0) scale(0.6);
+    opacity: 0.1;
+  }
+}
+
+@keyframes pavilionWarmPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.78;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes btnShimmerSweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+
+.animate-login-card {
+  animation: loginCardEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-art-breathe {
+  animation: artKenBurns 18s ease-in-out infinite;
+}
+
+.animate-pavilion-glow {
+  animation: pavilionWarmPulse 4.2s ease-in-out infinite;
+}
+
+.login-btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.22),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-20deg);
+  animation: btnShimmerSweep 3.8s ease-in-out infinite;
+}
