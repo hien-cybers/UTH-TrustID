@@ -446,93 +446,171 @@ button, input, select {
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
 }
 
-/* ==================== HỆ MÀU OCEAN ICE 7 SẮC ĐỘ (#001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) ==================== */
-.sunset-palette-theme,
-.ocean-palette-theme {
-  background: radial-gradient(circle at 85% 10%, rgba(123, 189, 232, 0.18), transparent 45%),
-              radial-gradient(circle at 15% 85%, rgba(10, 65, 116, 0.45), transparent 52%),
-              #001D39 !important;
+/* ==================== BỘ 3 GIAO DIỆN DASHBOARD CAO CẤP THEO MẪU THAM CHIẾU (DARK NEON / HYBRID SLATE / FROSTED LIGHT) ==================== */
+
+/* 1. CHẾ ĐỘ DARK NEON (Khung trên cùng trong ảnh mẫu: Nền xanh đêm vực thẳm + Viền phát sáng Cyan + Card kính mờ sâu) */
+.ocean-palette-theme,
+.theme-fintech-dark {
+  background: radial-gradient(circle at 18% 15%, rgba(14, 116, 144, 0.32), transparent 45%),
+              radial-gradient(circle at 82% 85%, rgba(10, 65, 116, 0.45), transparent 50%),
+              linear-gradient(160deg, #041529 0%, #020c18 100%) !important;
   color: #F4F9FD !important;
 }
 
-/* Header & Thanh điều hướng trên cùng */
-.sunset-palette-theme header,
-.ocean-palette-theme header {
-  background: rgba(0, 29, 57, 0.92) !important;
-  border-bottom-color: rgba(73, 118, 159, 0.45) !important;
-  box-shadow: 0 8px 32px rgba(0, 20, 42, 0.65);
+.theme-fintech-dark .dashboard-outer-shell {
+  background: linear-gradient(165deg, rgba(7, 25, 46, 0.94) 0%, rgba(4, 16, 31, 0.98) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 0 65px -8px rgba(0, 210, 255, 0.25), 0 30px 70px -15px rgba(0, 0, 0, 0.85);
 }
 
-/* Các khối Card chính (chuyển sang Xanh Đại Dương #0A4174 -> #001D39) */
-.sunset-palette-theme .bg-\[\#081226\],
-.ocean-palette-theme .bg-\[\#081226\] {
-  background: linear-gradient(145deg, rgba(10, 65, 116, 0.72) 0%, rgba(4, 38, 72, 0.92) 100%) !important;
-  border-color: rgba(110, 162, 179, 0.38) !important;
-  box-shadow: 0 18px 45px -12px rgba(0, 18, 38, 0.78) !important;
+.theme-fintech-dark header {
+  background: rgba(6, 22, 41, 0.9) !important;
+  border-bottom: 1px solid rgba(73, 118, 159, 0.32) !important;
 }
 
-/* Các khối nền phụ & Ô Input bên trong Card (#040814 / slate-950 -> #001D39) */
-.sunset-palette-theme .bg-\[\#040814\],
-.sunset-palette-theme .bg-\[\#040814\]\/80,
-.sunset-palette-theme .bg-slate-950,
-.sunset-palette-theme .bg-slate-950\/90,
-.ocean-palette-theme .bg-\[\#040814\],
-.ocean-palette-theme .bg-\[\#040814\]\/80,
-.ocean-palette-theme .bg-slate-950,
-.ocean-palette-theme .bg-slate-950\/90 {
-  background-color: rgba(0, 29, 57, 0.88) !important;
-  border-color: rgba(73, 118, 159, 0.55) !important;
+.theme-fintech-dark .bg-\[\#081226\] {
+  background: linear-gradient(155deg, rgba(13, 39, 70, 0.88) 0%, rgba(7, 23, 43, 0.95) 100%) !important;
+  border: 1px solid rgba(78, 142, 162, 0.32) !important;
+  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.12), 0 16px 38px -10px rgba(1, 8, 20, 0.78) !important;
 }
 
-/* Đường viền (Borders) chuyển sang tông #49769F & #6EA2B3 */
-.sunset-palette-theme .border-slate-800,
-.sunset-palette-theme .border-slate-800\/90,
-.sunset-palette-theme .border-slate-800\/80,
-.sunset-palette-theme .border-slate-700,
-.ocean-palette-theme .border-slate-800,
-.ocean-palette-theme .border-slate-800\/90,
-.ocean-palette-theme .border-slate-800\/80,
-.ocean-palette-theme .border-slate-700 {
-  border-color: rgba(73, 118, 159, 0.58) !important;
+.theme-fintech-dark .bg-\[\#040814\],
+.theme-fintech-dark .bg-\[\#040814\]\/80,
+.theme-fintech-dark .bg-slate-950,
+.theme-fintech-dark .bg-slate-950\/90 {
+  background: rgba(4, 15, 30, 0.85) !important;
+  border-color: rgba(73, 118, 159, 0.38) !important;
 }
 
-.sunset-palette-theme .border-cyan-500\/30,
-.sunset-palette-theme .border-cyan-500\/40,
-.sunset-palette-theme .border-cyan-400\/40,
-.sunset-palette-theme .border-cyan-400,
-.ocean-palette-theme .border-cyan-500\/30,
-.ocean-palette-theme .border-cyan-500\/40,
-.ocean-palette-theme .border-cyan-400\/40,
-.ocean-palette-theme .border-cyan-400 {
-  border-color: rgba(123, 189, 232, 0.58) !important;
+.theme-fintech-dark .bg-cyan-400 {
+  background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 55%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
 }
 
-/* Nút bấm chính & Tab đang chọn (#7BBDE8 -> #4E8EA2) */
-.sunset-palette-theme .bg-cyan-400,
-.ocean-palette-theme .bg-cyan-400 {
-  background: linear-gradient(135deg, #7BBDE8 0%, #4E8EA2 100%) !important;
+/* 2. CHẾ ĐỘ HYBRID SLATE (Khung ở giữa trong ảnh mẫu: Nền ngoài Xanh Xám Thép #5C7693 + Header Navy Tối + Card Trắng Sáng xen kẽ Card Navy) */
+.theme-fintech-hybrid {
+  background: linear-gradient(145deg, #68829E 0%, #4A6482 100%) !important;
   color: #001D39 !important;
-  box-shadow: 0 8px 24px rgba(123, 189, 232, 0.35) !important;
 }
 
-.sunset-palette-theme .bg-cyan-500\/15,
-.ocean-palette-theme .bg-cyan-500\/15 {
-  background-color: rgba(123, 189, 232, 0.16) !important;
-  border-color: rgba(123, 189, 232, 0.45) !important;
+.theme-fintech-hybrid .dashboard-outer-shell {
+  background: #DCE4EF !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 32px 75px -15px rgba(10, 28, 54, 0.55);
+}
+
+.theme-fintech-hybrid header {
+  background: linear-gradient(90deg, #152238 0%, #1C2E4A 100%) !important;
+  border-bottom: 1px solid rgba(123, 189, 232, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.theme-fintech-hybrid .bg-\[\#081226\] {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(110, 162, 179, 0.35) !important;
+  box-shadow: 0 12px 30px -8px rgba(15, 38, 74, 0.1) !important;
+  color: #001D39 !important;
+}
+
+/* Giữ Card KPI đầu tiên (Balance/Sĩ số) mang màu Navy đặc trưng giống hệt ảnh mẫu giữa & dưới */
+.theme-fintech-hybrid .hero-navy-card,
+.theme-fintech-light .hero-navy-card {
+  background: linear-gradient(145deg, #0D274C 0%, #06152D 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 16px 36px -10px rgba(6, 21, 45, 0.45) !important;
+}
+
+.theme-fintech-hybrid .hero-navy-card span,
+.theme-fintech-light .hero-navy-card span {
   color: #BDD8E9 !important;
 }
 
-/* Chữ nhấn (Text Accents: #7BBDE8 & #BDD8E9) */
-.sunset-palette-theme .text-cyan-300,
-.sunset-palette-theme .text-cyan-400,
-.ocean-palette-theme .text-cyan-300,
-.ocean-palette-theme .text-cyan-400 {
-  color: #7BBDE8 !important;
+.theme-fintech-hybrid .bg-\[\#040814\],
+.theme-fintech-hybrid .bg-\[\#040814\]\/80,
+.theme-fintech-hybrid .bg-slate-950,
+.theme-fintech-hybrid .bg-slate-950\/90 {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #001D39 !important;
 }
 
-.sunset-palette-theme .text-slate-400,
-.sunset-palette-theme .text-slate-300,
-.ocean-palette-theme .text-slate-400,
-.ocean-palette-theme .text-slate-300 {
-  color: #BDD8E9 !important;
+.theme-fintech-hybrid header .bg-\[\#040814\] {
+  background: rgba(9, 18, 34, 0.75) !important;
+  border-color: rgba(73, 118, 159, 0.45) !important;
+}
+
+.theme-fintech-hybrid main .text-white,
+.theme-fintech-light main .text-white {
+  color: #001D39 !important;
+}
+
+.theme-fintech-hybrid .hero-navy-card .text-white,
+.theme-fintech-light .hero-navy-card .text-white {
+  color: #FFFFFF !important;
+}
+
+.theme-fintech-hybrid main .text-slate-400,
+.theme-fintech-hybrid main .text-slate-300,
+.theme-fintech-light main .text-slate-400,
+.theme-fintech-light main .text-slate-300 {
+  color: #49769F !important;
+}
+
+.theme-fintech-hybrid main .text-cyan-300,
+.theme-fintech-hybrid main .text-cyan-400,
+.theme-fintech-light main .text-cyan-300,
+.theme-fintech-light main .text-cyan-400 {
+  color: #0A4174 !important;
+}
+
+.theme-fintech-hybrid .bg-cyan-400,
+.theme-fintech-light .bg-cyan-400 {
+  background: linear-gradient(135deg, #4E8EA2 0%, #0A4174 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 18px rgba(10, 65, 116, 0.28) !important;
+}
+
+/* 3. CHẾ ĐỘ FROSTED LIGHT (Khung dưới cùng trong ảnh mẫu: Nền trắng băng tuyết #EEF3FA + Card Trắng tinh khôi + Điểm nhấn Teal/Navy) */
+.theme-fintech-light {
+  background: linear-gradient(145deg, #EEF2F9 0%, #DCE5F2 100%) !important;
+  color: #001D39 !important;
+}
+
+.theme-fintech-light .dashboard-outer-shell {
+  background: #F5F8FC !important;
+  border: 1.5px solid #FFFFFF;
+  box-shadow: 0 28px 65px -15px rgba(15, 38, 74, 0.16);
+}
+
+.theme-fintech-light header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  color: #001D39 !important;
+}
+
+.theme-fintech-light header h1,
+.theme-fintech-light header strong {
+  color: #001D39 !important;
+}
+
+.theme-fintech-light header .text-slate-400 {
+  color: #49769F !important;
+}
+
+.theme-fintech-light .bg-\[\#081226\] {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 10px 28px -6px rgba(15, 38, 74, 0.06) !important;
+  color: #001D39 !important;
+}
+
+.theme-fintech-light .bg-\[\#040814\],
+.theme-fintech-light .bg-\[\#040814\]\/80,
+.theme-fintech-light .bg-slate-950,
+.theme-fintech-light .bg-slate-950\/90 {
+  background: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+  color: #001D39 !important;
 }

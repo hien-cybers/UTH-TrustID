@@ -39,6 +39,14 @@ export default function FacultyDashboard({
   const [loginHelperNotice, setLoginHelperNotice] = useState('');
   const [authError, setAuthError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  // Bộ chuyển đổi 3 chế độ phối màu Dashboard theo mẫu tham chiếu: 'DARK' (Xanh Đêm Phát Sáng) | 'HYBRID' (Xanh Xám Thép + Card Trắng/Navy) | 'LIGHT' (Trắng Băng Tuyết + Card Navy)
+  const [dashboardThemeMode, setDashboardThemeMode] = useState(
+    () => localStorage.getItem('uth_portal_theme_mode') || 'DARK'
+  );
+  const handleSelectThemeMode = (mode) => {
+    setDashboardThemeMode(mode);
+    localStorage.setItem('uth_portal_theme_mode', mode);
+  };
 
   // Danh sách học phần mẫu được phân công cho Giảng viên
   const ASSIGNED_COURSES = [
@@ -1194,11 +1202,54 @@ export default function FacultyDashboard({
     return true;
   });
 
+  const activeThemeClass =
+    dashboardThemeMode === 'LIGHT'
+      ? 'theme-fintech-light'
+      : dashboardThemeMode === 'HYBRID'
+      ? 'theme-fintech-hybrid'
+      : 'theme-fintech-dark';
+
+  const validRatioPercent =
+    attendees.length > 0 ? Math.round((validAttendeesCount / attendees.length) * 100) : 100;
+
   return (
-    <div className="ocean-palette-theme min-h-screen bg-[#001D39] text-[#F4F9FD] flex flex-col select-none">
+    <div className={`${activeThemeClass} min-h-screen w-full p-2 sm:p-4 lg:p-6 flex flex-col select-none transition-colors duration-300`}>
+      
+      {/* Thanh chọn nhanh 3 chế độ Giao diện (🌙 Dark Neon / 🌗 Hybrid Slate / ☀️ Frosted Light) giống hệt góc phải ảnh mẫu */}
+      <div className="w-full max-w-[1620px] mx-auto mb-2.5 px-2 flex items-center justify-between text-xs">
+        <span className="font-mono text-[11px] opacity-80">
+          UTH-TRUSTID • ZERO-TRUST COMMAND CENTER
+        </span>
+        <div className="flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-sky-400/30 shadow-md">
+          <span className="text-[10.5px] font-semibold text-sky-200 mr-1">Chế độ màu:</span>
+          {[
+            { id: 'DARK', icon: '🌙', label: 'Dark Neon' },
+            { id: 'HYBRID', icon: '🌗', label: 'Hybrid Slate' },
+            { id: 'LIGHT', icon: '☀️', label: 'Ice Light' }
+          ].map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => handleSelectThemeMode(m.id)}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer border-none flex items-center gap-1 ${
+                dashboardThemeMode === m.id
+                  ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-sm'
+                  : 'bg-transparent text-slate-300 hover:text-white'
+              }`}
+              title={`Chuyển sang giao diện ${m.label}`}
+            >
+              <span>{m.icon}</span>
+              <span className="hidden sm:inline">{m.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* KHUNG VIỀN BO TRÒN NỔI (FLOATING ROUNDED DASHBOARD SHELL GIỐNG ẢNH MẪU) */}
+      <div className="dashboard-outer-shell w-full max-w-[1620px] mx-auto flex-1 rounded-[28px] overflow-hidden flex flex-col transition-all duration-300">
       
       {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH THEO ĐÚNG VAI TRÒ (ROLE-AWARE TOP NAVBAR) ==================== */}
-      <header className="sticky top-0 z-30 px-6 py-3 border-b border-slate-800/80 bg-[#060D1F]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 px-6 py-3.5 border-b border-slate-800/80 bg-[#060D1F]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
         
         {/* Cụm Thương hiệu & Thông tin Người dùng đang đăng nhập */}
         <div className="flex items-center gap-3.5">
@@ -1262,14 +1313,14 @@ export default function FacultyDashboard({
           </div>
         </div>
 
-        {/* ==================== CỤM TAB ĐIỀU HƯỚNG TÁCH BIỆT THEO TỪNG ROLE ==================== */}
+        {/* ==================== CỤM TAB ĐIỀU HƯỚNG VIÊN THUỐC (PILL TABS GIỐNG ẢNH MẪU) ==================== */}
         {/* 1. Tab dành riêng cho GIẢNG VIÊN (Chỉ hiện sau khi đã bấm Tạo Lớp) */}
         {staffRole === 'FACULTY' && isCreated && (
-          <nav className="flex items-center bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
+          <nav className="flex items-center bg-[#040814] p-1 rounded-full border border-slate-800 gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab('STAGE')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'STAGE'
                   ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
@@ -1280,7 +1331,7 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('RADAR')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'RADAR'
                   ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
@@ -1291,7 +1342,7 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('IDS')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'IDS'
                   ? 'bg-rose-500 text-white shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
@@ -1309,13 +1360,13 @@ export default function FacultyDashboard({
 
         {/* 2. Tab dành riêng cho QUẢN TRỊ VIÊN TỐI CAO (ADMIN) */}
         {staffRole === 'ADMIN' && (
-          <nav className="flex items-center bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
+          <nav className="flex items-center bg-[#040814] p-1 rounded-full border border-slate-800 gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_ISSUANCE')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_ISSUANCE' || activeTab === 'ADMIN'
-                  ? 'bg-emerald-400 text-slate-950 shadow-md'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
@@ -1324,7 +1375,7 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_REVOCATION')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_REVOCATION'
                   ? 'bg-rose-500 text-white shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
@@ -1335,7 +1386,7 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_AUDIT')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_AUDIT'
                   ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
@@ -1348,13 +1399,13 @@ export default function FacultyDashboard({
 
         {/* 3. Tab dành riêng cho THANH TRA KHẢO THÍ (AUDITOR) */}
         {staffRole === 'AUDITOR' && (
-          <nav className="flex items-center bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
+          <nav className="flex items-center bg-[#040814] p-1 rounded-full border border-slate-800 gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab('IDS')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'IDS'
-                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
@@ -1363,9 +1414,9 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('RADAR')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'RADAR'
-                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
@@ -1374,9 +1425,9 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_AUDIT')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_AUDIT'
-                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
@@ -1385,14 +1436,14 @@ export default function FacultyDashboard({
           </nav>
         )}
 
-        {/* Cụm nút tác vụ & Chuyển nhanh tài khoản Demo RBAC bên phải */}
+        {/* Cụm nút tác vụ bên phải */}
         <div className="flex flex-wrap items-center gap-2">
           {staffRole === 'FACULTY' && isCreated && (
             <>
               <button
                 type="button"
                 onClick={handleToggleSessionState}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                className={`px-3 py-2 rounded-full text-xs font-bold transition-all border cursor-pointer ${
                   isSessionOpen
                     ? 'border-rose-500/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25'
                     : 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
@@ -1407,7 +1458,7 @@ export default function FacultyDashboard({
                   setIsCreated(false);
                   setIsSessionOpen(false);
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/40 hover:text-white cursor-pointer"
+                className="px-3 py-2 rounded-full text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/40 hover:text-white cursor-pointer"
                 title="Kết thúc phiên hiện tại hoặc đổi sang lớp học phần khác"
               >
                 ⏹ Đổi Lớp Khác
@@ -1418,7 +1469,7 @@ export default function FacultyDashboard({
           <button
             type="button"
             onClick={handleLogout}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer"
+            className="px-3.5 py-2 rounded-full text-xs font-bold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer"
             title="Đăng xuất khỏi phiên làm việc hiện tại"
           >
             🚪 Đăng Xuất
@@ -1642,7 +1693,7 @@ export default function FacultyDashboard({
         <div className="flex-1 flex flex-col p-6 gap-5 max-w-[1440px] w-full mx-auto">
           {/* 3 Thẻ Thống Kê Toàn Trường Của Admin */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-[#081226] border border-cyan-500/30 flex items-center justify-between">
+            <div className="hero-navy-card p-5 rounded-2xl bg-[#081226] border border-cyan-500/30 flex items-center justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-400 block">Tổng Định Danh Sinh Viên (W3C DID)</span>
                 <span className="text-2xl font-extrabold text-white mt-1 block font-mono">{adminStats.totalDID}</span>
@@ -1839,31 +1890,43 @@ export default function FacultyDashboard({
           
           {/* ==================== THANH ĐIỀU KHIỂN NHANH 4 Ô (QUICK CONTROL & KPI BAR) ==================== */}
           <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {/* Ô 1: Thống kê sĩ số thời gian thực + Hàng đợi Offline Grace Buffer */}
-            <div className="p-4 rounded-2xl bg-[#081226] border border-slate-800/90 flex items-center justify-between">
-              <div>
-                <span className="text-[11px] font-semibold text-slate-400 block">
-                  Sĩ Số Điểm Danh Thời Gian Thực
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-2xl font-extrabold text-white font-mono">{attendees.length}</span>
-                  <span className="text-xs font-semibold text-emerald-400">{validAttendeesCount} hợp lệ</span>
-                  {suspiciousAttendeesCount > 0 && (
-                    <span className="text-xs font-semibold text-rose-400">• {suspiciousAttendeesCount} ngoài vùng</span>
-                  )}
+            {/* Ô 1: Thống kê sĩ số thời gian thực (Hero Navy Card giống thẻ Balance/Goals trong ảnh mẫu) */}
+            <div className="hero-navy-card p-4 rounded-2xl bg-[#081226] border border-slate-800/90 flex flex-col justify-between gap-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-400 block">
+                    Sĩ Số Điểm Danh Thời Gian Thực
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-2xl font-extrabold text-white font-mono">{attendees.length}</span>
+                    <span className="text-xs font-semibold text-emerald-400">{validAttendeesCount} hợp lệ</span>
+                    {suspiciousAttendeesCount > 0 && (
+                      <span className="text-xs font-semibold text-rose-400">• {suspiciousAttendeesCount} ngoài vùng</span>
+                    )}
+                  </div>
                 </div>
-                <span className="text-[10px] font-mono text-cyan-400/90 block mt-0.5">
-                  ✓ Grace Offline Buffer (T_sign ±5p): Đã đồng bộ {offlineSyncCount} gói
-                </span>
+                <button
+                  type="button"
+                  onClick={handleExportCSV}
+                  className="px-3 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 text-xs font-bold cursor-pointer"
+                  title="Tải xuống báo cáo điểm danh CSV"
+                >
+                  📥 Xuất CSV
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleExportCSV}
-                className="px-3 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 text-xs font-bold cursor-pointer"
-                title="Tải xuống báo cáo điểm danh CSV"
-              >
-                📥 Xuất CSV
-              </button>
+              {/* Thanh tiến trình tỉ lệ hợp lệ (Teal-Cyan Progress Bar giống Goals 93% trong ảnh mẫu) */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px] font-mono">
+                  <span className="text-cyan-300">Tỉ lệ trong vùng Geofence</span>
+                  <span className="font-bold text-white">{validRatioPercent}%</span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-950/80 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-teal-400 to-blue-500 transition-all duration-500"
+                    style={{ width: `${validRatioPercent}%` }}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Ô 2: Chuyển đổi nhanh Thực nghiệm 1 (Wi-Fi Trường) vs Thực nghiệm 2 (4G/5G) */}
@@ -2722,6 +2785,7 @@ export default function FacultyDashboard({
           </main>
         </div>
       )}
+      </div>
     </div>
   );
 }
