@@ -3,12 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UTH-TrustID Command Center — Faculty &amp; Admin Web Portal</title>
+    <title>UTH-TrustID Command Center — Cổng Giảng Viên &amp; Quản Trị Viên</title>
     <meta name="theme-color" content="#040814" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) {
+            regs[i].unregister();
+          }
+        });
+      }
+    </script>
   </head>
   <body class="bg-[#040814] text-slate-100 m-0 p-0">
     <div id="portal-root"></div>
     <script type="module" src="/src/portalMain.jsx"></script>
   </body>
 </html>
-

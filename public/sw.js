@@ -1,13 +1,17 @@
-// public/sw.js - PWA Service Worker hỗ trợ Offline Cache & Lớp 1 Android Background Sync API
-const CACHE_NAME = 'uth-trustid-v2';
+// public/sw.js - PWA Service Worker dành riêng cho App Sinh Viên (Port 5173)
+// TUYỆT ĐỐI KHÔNG can thiệp vào Cổng Web Giảng Viên & Admin (Port 5174)
+const CACHE_NAME = 'uth-trustid-student-v3';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/pwa-192x192.png',
   '/pwa-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
+  if (self.location.port === '5174') {
+    self.skipWaiting();
+    return;
+  }
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
@@ -19,7 +23,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME || self.location.port === '5174') return caches.delete(key);
         })
       )
     )
@@ -28,6 +32,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Không bao giờ chặn request của Cổng Web Giảng Viên & Admin (Port 5174)
+  if (self.location.port === '5174' || event.request.url.includes(':5174') || event.request.url.includes('portal.html')) {
+    return;
+  }
   if (event.request.method !== 'GET') return;
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))

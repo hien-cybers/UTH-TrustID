@@ -123,6 +123,7 @@ export default function FacultyDashboard({
   const [latestVerifiedNotice, setLatestVerifiedNotice] = useState(null);
   const [gpsSyncMsg, setGpsSyncMsg] = useState('');
   const [focusedMapStudentId, setFocusedMapStudentId] = useState(null);
+  const [isProjectorFullscreen, setIsProjectorFullscreen] = useState(false);
 
   // Đồng bộ thời gian thực qua WebSocket với Backend
   useEffect(() => {
@@ -809,7 +810,12 @@ export default function FacultyDashboard({
             U
           </div>
           <div>
-            <h1 className="text-sm font-black tracking-wider text-white m-0">TRUSTID COMMAND CENTER</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-black tracking-wider text-white m-0">TRUSTID COMMAND CENTER</h1>
+              <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/50 text-[9px] font-mono font-bold text-cyan-300">
+                PORT 5174 • ĐỘC LẬP VỚI APP SINH VIÊN (5173)
+              </span>
+            </div>
             <p className="text-[10px] font-mono text-cyan-400 m-0">
               JWT AUTH: <span className="text-emerald-400">{facultyUser?.email || 'giangvien@uth.edu.vn'}</span> • TUNNEL: <span className="text-cyan-300">{SERVER_URL}</span>
             </p>
@@ -1136,22 +1142,33 @@ export default function FacultyDashboard({
               </span>
             </div>
 
-            {/* TAB 1: STAGE MODE (MÁY CHIẾU) */}
+            {/* TAB 1: STAGE MODE (MÁY CHIẾU QR Cỡ LỚN 360px + CHẾ ĐỘ TOÀN MÀN CHIẾU 500px) */}
             {activeTab === 'STAGE' && (
-              <div className="flex-1 min-h-[460px] rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
+              <div className="flex-1 min-h-[540px] rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
                 <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3">
                   <div className="text-left">
                     <p className="text-xs font-mono text-slate-400 m-0">CHALLENGE-RESPONSE TOTP • {sessionConfig.room}</p>
                     <p className="text-sm font-bold text-white m-0">{sessionConfig.courseName}</p>
                   </div>
 
-                  {/* Nhãn trạng thái Kiểm soát kết nối mạng (Network Enforcement) trên màn chiếu */}
-                  <div className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-2 ${
-                    sessionConfig.networkMode === 'CAMPUS_WIFI'
-                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-300'
-                      : 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
-                  }`}>
-                    <span>{sessionConfig.networkMode === 'CAMPUS_WIFI' ? `📶 RÀNG BUỘC WI-FI TRƯỜNG (CHẶN 4G • R ≤ ${sessionConfig.maxRadiusMeters}M)` : `🌐 MẠNG 4G/5G TỰ DO (GPS R ≤ ${sessionConfig.maxRadiusMeters}M)`}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Nút phóng to QR toàn màn chiếu (500x500px) cho hội trường lớn */}
+                    <button
+                      type="button"
+                      onClick={() => setIsProjectorFullscreen(true)}
+                      className="px-3.5 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-[0_0_20px_rgba(0,242,254,0.35)] cursor-pointer border-none transition-all"
+                    >
+                      ⛶ Phóng To QR Toàn Màn Chiếu (500px)
+                    </button>
+
+                    {/* Nhãn trạng thái Kiểm soát kết nối mạng (Network Enforcement) trên màn chiếu */}
+                    <div className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-2 ${
+                      sessionConfig.networkMode === 'CAMPUS_WIFI'
+                        ? 'bg-amber-500/15 border-amber-500/50 text-amber-300'
+                        : 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
+                    }`}>
+                      <span>{sessionConfig.networkMode === 'CAMPUS_WIFI' ? `📶 RÀNG BUỘC WI-FI TRƯỜNG (CHẶN 4G • R ≤ ${sessionConfig.maxRadiusMeters}M)` : `🌐 MẠNG 4G/5G TỰ DO (GPS R ≤ ${sessionConfig.maxRadiusMeters}M)`}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -1216,35 +1233,127 @@ export default function FacultyDashboard({
                   </div>
                 )}
 
-                <div className="relative p-5 bg-white rounded-3xl shadow-[0_0_50px_rgba(0,242,254,0.2)] border-4 border-cyan-400 flex flex-col items-center">
-                  <div className="w-60 h-60 bg-white rounded-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
+                {/* KHUNG QR ĐIỂM DANH CỠ ĐẠI (360x360px) TRÊN MÀN CHIẾU */}
+                <div
+                  onClick={() => setIsProjectorFullscreen(true)}
+                  title="Nhấp vào mã QR để phóng to toàn màn chiếu (500x500px)"
+                  className="relative p-6 bg-white rounded-3xl shadow-[0_0_65px_rgba(0,242,254,0.3)] border-4 border-cyan-400 flex flex-col items-center cursor-pointer hover:scale-[1.01] transition-transform"
+                >
+                  <div className="w-[380px] h-[380px] max-w-[78vw] max-h-[78vw] bg-white rounded-2xl flex flex-col items-center justify-center relative overflow-hidden p-2">
                     <QRCodeCanvas
                       value={qrPayloadString}
-                      size={224}
-                      level="L"
+                      size={360}
+                      level="M"
                       includeMargin={false}
+                      style={{ width: '100%', height: '100%', maxWidth: '360px', maxHeight: '360px' }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/20 to-transparent pointer-events-none animate-pulse" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/15 to-transparent pointer-events-none animate-pulse" />
                   </div>
-                  <div className="mt-2.5 text-center">
-                    <p className="text-xs font-mono font-bold text-slate-950 truncate max-w-xs m-0">{currentNonce}</p>
-                    <p className="text-[10px] font-mono text-slate-600 m-0">
+                  <div className="mt-3 text-center">
+                    <p className="text-sm font-mono font-black text-slate-950 tracking-wider m-0">{currentNonce}</p>
+                    <p className="text-[11px] font-mono font-semibold text-slate-700 mt-0.5 mb-0">
                       {sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Chế độ: Ràng buộc Wi-Fi trường' : `Chế độ: Mạng 4G/5G + GPS Haversine (R ≤ ${sessionConfig.maxRadiusMeters}m)`}
                     </p>
                   </div>
                 </div>
 
                 {/* Thanh đếm lùi */}
-                <div className="w-80 mt-4 space-y-1.5 text-center">
+                <div className="w-96 max-w-full mt-4 space-y-1.5 text-center">
                   <div className="flex justify-between text-xs font-mono">
-                    <span className="text-slate-400">Tự động xoay mã sau:</span>
-                    <span className="text-cyan-400 font-bold">{timerProgress}s</span>
+                    <span className="text-slate-400">Tự động xoay mã Nonce sau:</span>
+                    <span className="text-cyan-400 font-bold text-sm">{timerProgress}s</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
+                  <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                     <div 
                       className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-1000 ease-linear"
                       style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
                     />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHẾ ĐỘ TOÀN MÀN CHIẾU SIÊU LỚN (500x500px PROJECTOR OVERLAY) CHO HỘI TRƯỜNG 30M */}
+            {isProjectorFullscreen && (
+              <div className="fixed inset-0 z-50 bg-[#040814]/98 backdrop-blur-xl flex flex-col items-center justify-center p-6">
+                <div className="w-full max-w-5xl flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-cyan-500/20">
+                  <div>
+                    <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-mono font-bold">
+                      📽️ CHẾ ĐỘ MÁY CHIẾU HỘI TRƯỜNG LỚN (ULTRA-LARGE QR 500x500PX)
+                    </span>
+                    <h2 className="text-2xl font-black text-white mt-2 mb-0">
+                      {sessionConfig.courseCode} — {sessionConfig.courseName} (Phòng {sessionConfig.room})
+                    </h2>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono text-sm font-bold">
+                      ✅ Sĩ số đã điểm danh: {attendees.length} SV
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsProjectorFullscreen(false)}
+                      className="px-4 py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs cursor-pointer border-none shadow-lg"
+                    >
+                      ✕ Thu Nhỏ Về Bảng Điều Khiển
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col lg:flex-row items-center justify-center gap-8 w-full max-w-5xl">
+                  {/* Khung QR 500x500px siêu nét */}
+                  <div className="p-7 bg-white rounded-[32px] shadow-[0_0_90px_rgba(0,242,254,0.4)] border-4 border-cyan-400 flex flex-col items-center">
+                    <div className="w-[480px] h-[480px] max-w-[82vw] max-h-[60vh] bg-white rounded-2xl flex items-center justify-center p-2 relative">
+                      <QRCodeCanvas
+                        value={qrPayloadString}
+                        size={460}
+                        level="M"
+                        includeMargin={false}
+                        style={{ width: '100%', height: '100%', maxWidth: '460px', maxHeight: '460px' }}
+                      />
+                    </div>
+                    <p className="text-base font-mono font-black text-slate-950 tracking-widest mt-3 mb-0">
+                      {currentNonce}
+                    </p>
+                  </div>
+
+                  {/* Cột thông tin thời gian thực bên cạnh QR toàn màn hình */}
+                  <div className="w-full lg:w-80 space-y-4">
+                    <div className="p-5 rounded-3xl bg-[#081226] border border-cyan-500/30 space-y-3">
+                      <div className="flex justify-between items-center font-mono text-sm">
+                        <span className="text-slate-400">Xoay mã Nonce sau:</span>
+                        <span className="text-2xl font-black text-cyan-400">{timerProgress}s</span>
+                      </div>
+                      <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
+                        <div
+                          className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-1000 ease-linear"
+                          style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs font-mono text-slate-400 m-0">
+                        Bán kính Geofencing: <strong className="text-cyan-300">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
+                      </p>
+                      <p className="text-xs font-mono text-slate-400 m-0">
+                        Chế độ mạng: <strong className="text-emerald-400">{sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G Tự Do'}</strong>
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-3xl bg-[#081226] border border-slate-800 space-y-2.5 max-h-64 overflow-y-auto">
+                      <p className="text-xs font-mono font-bold text-cyan-400 uppercase m-0">
+                        Sinh viên vừa quét thành công ({attendees.length})
+                      </p>
+                      {attendees.slice(0, 5).map((st) => (
+                        <div key={st.studentId} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+                          <div>
+                            <p className="font-bold text-white m-0">{st.name}</p>
+                            <p className="text-[10px] font-mono text-slate-400 m-0">MSSV: {st.studentId} • {st.distance}m</p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
+                            ✓ EIP-191
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
