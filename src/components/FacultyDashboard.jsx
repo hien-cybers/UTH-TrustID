@@ -1,10 +1,11 @@
-// src/components/FacultyDashboard.jsx - Web Command Center dành cho Giảng viên & Quản trị viên (Stage QR Laser, Canvas Radar 360°, IDS Audit, Spot-Check 60s, CSV Export & Root Admin Merkle/Revoke)
+// src/components/FacultyDashboard.jsx - Web Command Center dành cho Giảng viên & Quản trị viên (Stage QR Laser, Google Maps Live View, IDS Audit, Spot-Check 60s, CSV Export & Root Admin Merkle/Revoke)
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { io } from 'socket.io-client';
 import { getSocketUrl, smartFetch, retargetSocket, SERVER_URL } from '../utils/backendUrl';
 import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
+import GoogleMapsLiveView from './GoogleMapsLiveView';
 
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
@@ -121,9 +122,7 @@ export default function FacultyDashboard({
   const [geofenceBlockNotice, setGeofenceBlockNotice] = useState(null);
   const [latestVerifiedNotice, setLatestVerifiedNotice] = useState(null);
   const [gpsSyncMsg, setGpsSyncMsg] = useState('');
-
-  // Canvas radar ref
-  const canvasRef = useRef(null);
+  const [focusedMapStudentId, setFocusedMapStudentId] = useState(null);
 
   // Đồng bộ thời gian thực qua WebSocket với Backend
   useEffect(() => {
@@ -180,6 +179,7 @@ export default function FacultyDashboard({
       });
       setNetworkBlockNotice(null);
       setGeofenceBlockNotice(null);
+      setFocusedMapStudentId(sid);
       setLatestVerifiedNotice({
         studentId: sid,
         name: mapped.name,
@@ -402,97 +402,6 @@ export default function FacultyDashboard({
     }
     return () => clearInterval(timer);
   }, [spotCheckState.active, spotCheckState.countdown, spotCheckState.targetIds]);
-
-  // Vẽ Radar bằng Canvas với hiệu ứng quét 360 độ
-  useEffect(() => {
-    if (activeTab !== 'RADAR' || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-    let angle = 0;
-
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = Math.min(centerX, centerY) - 20;
-
-      // Vòng tròn radar nền
-      ctx.strokeStyle = '#0891b2';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.66, 0, 2 * Math.PI);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.33, 0, 2 * Math.PI);
-      ctx.stroke();
-
-      // Trục tọa độ chữ thập
-      ctx.beginPath();
-      ctx.moveTo(centerX - radius, centerY);
-      ctx.lineTo(centerX + radius, centerY);
-      ctx.moveTo(centerX, centerY - radius);
-      ctx.lineTo(centerX, centerY + radius);
-      ctx.strokeStyle = 'rgba(8, 145, 178, 0.4)';
-      ctx.stroke();
-
-      // Quét radar xoay (Scanline 360 độ)
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(angle);
-      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-      gradient.addColorStop(0, 'rgba(0, 242, 254, 0.4)');
-      gradient.addColorStop(1, 'rgba(0, 242, 254, 0)');
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, radius, 0, 0.5);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      // Tâm phòng học
-      ctx.fillStyle = '#00F2FE';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 4, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Vẽ sinh viên
-      attendees.forEach(s => {
-        const dx = (s.coords.lon - sessionConfig.centerCoords.lon) * 150000;
-        const dy = (sessionConfig.centerCoords.lat - s.coords.lat) * 150000;
-        const px = Math.max(16, Math.min(canvas.width - 16, centerX + dx));
-        const py = Math.max(16, Math.min(canvas.height - 16, centerY + dy));
-
-        const isOutside = s.distance > sessionConfig.maxRadiusMeters;
-        ctx.fillStyle = isOutside ? '#F43F5E' : '#34D399';
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Viền phát sáng
-        ctx.strokeStyle = isOutside ? 'rgba(244, 63, 94, 0.6)' : 'rgba(52, 211, 153, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Nhãn tên + khoảng cách
-        ctx.fillStyle = isOutside ? '#FDA4AF' : '#A7F3D0';
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText(`${s.name.split(' ').slice(-1)[0]} (${s.distance}m)`, px + 8, py + 3);
-      });
-
-      angle += 0.03;
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [activeTab, attendees, sessionConfig]);
 
   // Kích hoạt Spot-check
   const handleTriggerSpotCheck = async (mode = 'ALL') => {
@@ -1198,7 +1107,7 @@ export default function FacultyDashboard({
                       : 'bg-transparent text-slate-400 hover:text-white'
                   }`}
                 >
-                  🛰️ Radar Tọa Độ Vệ Tinh ({attendees.length})
+                  🌍 Bản Đồ Google Maps ({attendees.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('IDS')}
@@ -1292,14 +1201,17 @@ export default function FacultyDashboard({
                 {!networkBlockNotice && !geofenceBlockNotice && latestVerifiedNotice && (
                   <div className="w-full max-w-xl mb-3 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 flex items-center justify-between text-xs font-bold">
                     <span>
-                      ✅ Đã xác thực Face ID &amp; ghim tọa độ Radar: {latestVerifiedNotice.name} ({latestVerifiedNotice.studentId}) • Cách tâm {latestVerifiedNotice.distance}m ({latestVerifiedNotice.network})
+                      ✅ Đã xác thực Face ID &amp; ghim tọa độ Google Maps: {latestVerifiedNotice.name} ({latestVerifiedNotice.studentId}) • Cách tâm {latestVerifiedNotice.distance}m ({latestVerifiedNotice.network})
                     </span>
                     <button
                       type="button"
-                      onClick={() => setActiveTab('RADAR')}
+                      onClick={() => {
+                        setFocusedMapStudentId(latestVerifiedNotice.studentId);
+                        setActiveTab('RADAR');
+                      }}
                       className="px-2.5 py-1 rounded-lg bg-cyan-400 text-slate-950 font-black text-[11px] cursor-pointer border-none"
                     >
-                      Xem Radar 360°
+                      Xem Vị Trí Google Maps
                     </button>
                   </div>
                 )}
@@ -1338,43 +1250,15 @@ export default function FacultyDashboard({
               </div>
             )}
 
-            {/* TAB 2: CANVAS RADAR XOAY 360 ĐỘ */}
+            {/* TAB 2: BẢN ĐỒ ĐỊNH VỊ GOOGLE MAPS THỜI GIAN THỰC */}
             {activeTab === 'RADAR' && (
-              <div className="flex-1 min-h-[460px] rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col relative overflow-hidden shadow-2xl">
-                <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
-                  <div>
-                    <h3 className="text-sm font-bold text-white m-0">Radar Hiện Diện Không Gian (Haversine Formula)</h3>
-                    <p className="text-xs text-slate-400 m-0">
-                      Tâm phòng: {sessionConfig.room} ({sessionConfig.centerCoords.lat}, {sessionConfig.centerCoords.lon}) • Bán kính an toàn: <strong className="text-cyan-300">{sessionConfig.maxRadiusMeters}m</strong>
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSyncLaptopGpsCenter}
-                      className="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-xs font-bold hover:bg-cyan-500/25 cursor-pointer"
-                    >
-                      📍 Lấy GPS Laptop làm tâm
-                    </button>
-                    <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
-                      GPS Fix: ±3.2m
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex-1 flex items-center justify-center relative">
-                  <canvas 
-                    ref={canvasRef} 
-                    width={400} 
-                    height={320} 
-                    className="rounded-2xl border border-slate-800/80 bg-[#040814]"
-                  />
-                  <div className="absolute bottom-3 left-4 text-[11px] font-mono text-slate-400 bg-slate-950/90 p-2 rounded-xl border border-slate-800">
-                    <p className="text-emerald-400 m-0">● Trong phòng (&le; {sessionConfig.maxRadiusMeters}m)</p>
-                    <p className="text-rose-400 m-0">● Ngoài phòng (&gt; {sessionConfig.maxRadiusMeters}m - Nghi vấn)</p>
-                  </div>
-                </div>
-              </div>
+              <GoogleMapsLiveView
+                sessionConfig={sessionConfig}
+                attendees={attendees}
+                focusedStudentId={focusedMapStudentId}
+                onSelectStudent={(sid) => setFocusedMapStudentId(sid)}
+                onSyncLaptopGps={handleSyncLaptopGpsCenter}
+              />
             )}
 
             {/* TAB 3: IDS AUDIT */}
@@ -1617,14 +1501,28 @@ export default function FacultyDashboard({
                       </div>
 
                       <div className="text-right flex flex-col items-end gap-1.5 flex-shrink-0">
-                        <a
-                          href={`https://www.google.com/maps?q=${s.coords.lat},${s.coords.lon}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono hover:bg-blue-500/20 no-underline"
-                        >
-                          📍 Google Maps
-                        </a>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFocusedMapStudentId(s.studentId);
+                              setActiveTab('RADAR');
+                            }}
+                            className="px-2 py-0.5 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-[10px] font-mono font-bold hover:bg-cyan-500/25 cursor-pointer"
+                            title="Định vị trực tiếp sinh viên này trên Bản đồ Google Maps nhúng"
+                          >
+                            📍 Định Vị Bản Đồ
+                          </button>
+                          <a
+                            href={`https://www.google.com/maps?q=${s.coords.lat},${s.coords.lon}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-1.5 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono hover:bg-blue-500/20 no-underline"
+                            title="Mở trên Google Maps ở tab mới"
+                          >
+                            ↗
+                          </a>
+                        </div>
 
                         {s.spotCheckStatus === 'PENDING' && (
                           <button

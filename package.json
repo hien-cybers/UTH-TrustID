@@ -20,6 +20,7 @@
     "idb": "^8.0.4",
     "jsqr": "^1.4.0",
     "keccak256": "^1.0.6",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.66.0",
     "merkletreejs": "^0.6.0",
     "qrcode.react": "^4.2.0",
