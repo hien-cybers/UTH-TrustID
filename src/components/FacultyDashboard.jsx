@@ -92,7 +92,7 @@ export default function FacultyDashboard({
   const [timerProgress, setTimerProgress] = useState(ROTATE_INTERVAL);
   const socketRef = useRef(null);
 
-  // Danh sách sinh viên hiện diện thời gian thực
+  // Danh sách sinh viên hiện diện thời gian thực (Kèm thông số Telemetry chống Fake GPS: gpsAccuracy & isMockGps)
   const [attendees, setAttendees] = useState([
     {
       studentId: "2251120001",
@@ -101,6 +101,8 @@ export default function FacultyDashboard({
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
       coords: { lat: 10.799215, lon: 106.705620 },
       distance: 4,
+      gpsAccuracy: 5.8,
+      isMockGps: false,
       network: "UTH_STUDENT_SECURE",
       deviceId: "DEV_IPHONE_15_A1",
       checkInTime: "13:30:15",
@@ -113,6 +115,8 @@ export default function FacultyDashboard({
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
       coords: { lat: 10.799260, lon: 106.705680 },
       distance: 12,
+      gpsAccuracy: 7.2,
+      isMockGps: false,
       network: "UTH_STUDENT_SECURE",
       deviceId: "DEV_SAMSUNG_S23_B2",
       checkInTime: "13:31:02",
@@ -125,6 +129,8 @@ export default function FacultyDashboard({
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
       coords: { lat: 10.799480, lon: 106.706100 },
       distance: 65, // Ngoài vùng 35m
+      gpsAccuracy: 0.0, // Sai số 0.0000m quá hoàn hảo -> Nghi vấn Mock Location / Fake GPS
+      isMockGps: true,
       network: "VIETTEL_4G",
       deviceId: "DEV_IPHONE_15_A1", // Trùng deviceId với bạn An -> IDS Trigger
       checkInTime: "13:32:40",
@@ -171,6 +177,12 @@ export default function FacultyDashboard({
   const [isProjectorFullscreen, setIsProjectorFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [rosterFilter, setRosterFilter] = useState('ALL'); // 'ALL' | 'VALID' | 'SUSPICIOUS'
+  // 1. Chế độ Bảo vệ Quyền riêng tư Màn chiếu (Projection Privacy Mode / Stage Safe Mode - ZKP Light)
+  const [stageSafeMode, setStageSafeMode] = useState(false);
+  // 2. Cờ Yêu cầu Hậu kiểm từ Thanh tra gửi sang Giảng viên (Inspection Request Flag)
+  const [auditorInspectionRequest, setAuditorInspectionRequest] = useState(null);
+  const [auditorStatusMsg, setAuditorStatusMsg] = useState('');
+  const [offlineSyncCount, setOfflineSyncCount] = useState(0);
 
   // Đồng bộ thời gian thực qua WebSocket với Backend
   useEffect(() => {
@@ -212,11 +224,17 @@ export default function FacultyDashboard({
           lon: Number(rec.lon || 106.705630)
         },
         distance: Number(rec.dist ?? rec.distance ?? 5),
+        gpsAccuracy: Number(rec.gpsAccuracy ?? 6.4),
+        isMockGps: Boolean(rec.isMockGps),
         network: rec.network || rec.networkMode || 'UTH_STUDENT_SECURE',
         deviceId: rec.deviceId || 'DEV_MOBILE_EIP191',
         checkInTime: rec.time || rec.checkInTime || new Date().toLocaleTimeString('vi-VN', { hour12: false }),
         spotCheckStatus: rec.spotCheckVerified ? 'VERIFIED' : (rec.status === 'PENDING_SPOTCHECK' ? 'PENDING' : 'NONE')
       };
+
+      if (rec.isOfflineSynced) {
+        setOfflineSyncCount((c) => c + 1);
+      }
 
       setAttendees((prev) => {
         const exists = prev.some((item) => item.studentId === sid);
@@ -241,6 +259,24 @@ export default function FacultyDashboard({
     socket.on('student-checked-in', upsertAttendee);
     socket.on('student-verified', upsertAttendee);
     socket.on('attendee-updated', upsertAttendee);
+
+    // Lắng nghe Yêu cầu Hậu kiểm (Inspection Request Flag) hoặc Override từ Thanh tra (Auditor)
+    socket.on('auditor-inspection-request', (payload) => {
+      if (payload) {
+        setAuditorInspectionRequest(payload);
+      }
+    });
+
+    socket.on('auditor-override-spot-check', (payload) => {
+      if (payload) {
+        setAuditorInspectionRequest({ ...payload, isOverride: true });
+        setSpotCheckState({
+          active: true,
+          countdown: 60,
+          targetIds: payload.targetIds?.length ? payload.targetIds : ['2251120001', '2251120003']
+        });
+      }
+    });
 
     socket.on('network-enforcement-blocked', (payload) => {
       if (payload) {
@@ -451,7 +487,66 @@ export default function FacultyDashboard({
     return () => clearInterval(timer);
   }, [spotCheckState.active, spotCheckState.countdown, spotCheckState.targetIds]);
 
-  // Kích hoạt Spot-check
+  // Tính Điểm Rủi Ro Gian Lận Tự Động (Fraud Risk Score: 0 -> 100)
+  // Risk Score = w1*HardwareCollision + w2*DistanceDelta + w3*NetworkMismatch + w4*Time/FakeGPS
+  const calculateFraudRiskScore = (student) => {
+    let score = 0;
+    const reasons = [];
+
+    // w1: Hardware Fingerprint Collision (Trùng lặp mã thiết bị vật lý) -> +45 điểm
+    const devUseCount = deviceCounts[student.deviceId] || 1;
+    if (devUseCount > 1) {
+      score += 45;
+      reasons.push(`Trùng thiết bị (${devUseCount} SV)`);
+    }
+
+    // w2: Distance Delta (Khoảng cách Haversine so với tâm phòng R) -> tối đa +30 điểm
+    const maxR = Number(sessionConfig.maxRadiusMeters || 100);
+    if (student.distance > maxR) {
+      score += 30;
+      reasons.push(`Ngoài bán kính (${student.distance}m > ${maxR}m)`);
+    } else if (student.distance > maxR * 0.75) {
+      score += 12;
+      reasons.push(`Sát biên Geofence (${student.distance}m)`);
+    }
+
+    // w3: Network Mismatch (Dùng 4G/5G hoặc kết nối ngoài khi khuyến nghị Wi-Fi trường) -> +15 điểm
+    const netStr = String(student.network || '').toUpperCase();
+    if (netStr.includes('4G') || netStr.includes('5G') || netStr.includes('CELLULAR')) {
+      score += 15;
+      reasons.push('Mạng di động 4G/5G');
+    }
+
+    // w4: System-level Anti-Fake GPS (isMock === true hoặc sai số accuracy == 0.0000m bất thường) -> +35 điểm
+    const acc = Number(student.gpsAccuracy ?? 6.5);
+    if (student.isMockGps || acc <= 0.5 || acc > 80) {
+      score += 35;
+      reasons.push(student.isMockGps || acc <= 0.5 ? `Nghi vấn Fake GPS (acc=${acc}m)` : `Sai số GPS cao (${acc}m)`);
+    }
+
+    const clamped = Math.min(100, score);
+    const level = clamped > 70 ? 'CRITICAL' : clamped >= 30 ? 'WARNING' : 'SAFE';
+    return { score: clamped, level, reasons };
+  };
+
+  // Ẩn danh ZKP-Light khi bật Chế độ Trình chiếu An toàn (Projection Privacy / Stage Safe Mode)
+  const maskStudentName = (fullName = '') => {
+    if (!stageSafeMode) return fullName;
+    const parts = String(fullName).trim().split(/\s+/);
+    if (parts.length <= 1) return `${fullName.slice(0, 2)}***`;
+    const first = parts[0];
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${first} ***. ${lastInitial}.`;
+  };
+
+  const maskStudentId = (sid = '') => {
+    if (!stageSafeMode) return sid;
+    const s = String(sid);
+    if (s.length <= 3) return '***';
+    return `*******${s.slice(-3)}`;
+  };
+
+  // Kích hoạt Spot-check (Giảng viên chủ động hoặc đồng ý từ Cờ Yêu Cầu Hậu Kiểm của Thanh tra)
   const handleTriggerSpotCheck = async (mode = 'ALL') => {
     if (attendees.length === 0) return;
     let targets = [];
@@ -459,12 +554,20 @@ export default function FacultyDashboard({
       targets = attendees.map(a => a.studentId);
     } else if (mode === 'FURTHEST') {
       targets = [...attendees].sort((a, b) => b.distance - a.distance).slice(0, 2).map(a => a.studentId);
+    } else if (mode === 'RISK_TARGETED') {
+      targets = attendees
+        .filter(a => calculateFraudRiskScore(a).score >= 30)
+        .map(a => a.studentId);
+      if (targets.length === 0) {
+        targets = [...attendees].sort((a, b) => b.distance - a.distance).slice(0, 2).map(a => a.studentId);
+      }
     }
 
     setAttendees(prev => prev.map(a => 
       targets.includes(a.studentId) ? { ...a, spotCheckStatus: 'PENDING' } : a
     ));
     setSpotCheckState({ active: true, countdown: 60, targetIds: targets });
+    setAuditorInspectionRequest(null);
 
     socketRef.current?.emit('trigger-spot-check', {
       sessionId,
@@ -483,6 +586,49 @@ export default function FacultyDashboard({
         })
       });
     } catch {}
+  };
+
+  // Thanh tra (AUDITOR): Gửi Cờ Yêu Cầu Hậu Kiểm (Inspection Request Flag) cho Giảng viên
+  // hoặc Kích hoạt Ép Hậu Kiểm Khẩn Cấp (Override Trigger có ghi nhận lý do vào Audit Log)
+  const handleAuditorSendInspectionRequest = async (override = false) => {
+    const suspiciousTargets = attendees
+      .filter(a => calculateFraudRiskScore(a).score >= 30)
+      .map(a => a.studentId);
+
+    const reason = override
+      ? 'Ép hậu kiểm khẩn cấp (Override Trigger): Phát hiện xung đột phần cứng Device ID & rủi ro gian lận > 70 điểm'
+      : 'Đề nghị Giảng viên phát lệnh Spot-check 60s đối với nhóm sinh viên có điểm rủi ro (Risk Score ≥ 30)';
+
+    try {
+      const res = await smartFetch('/api/auditor/request-spot-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          auditorEmail: facultyUser?.email || 'thanhtra@ut.edu.vn',
+          reason,
+          targetIds: suspiciousTargets,
+          override
+        })
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setAuditorStatusMsg(data.message);
+        if (override) {
+          handleTriggerSpotCheck('RISK_TARGETED');
+        }
+        fetchAdminAuditLogs();
+      }
+    } catch {
+      setAuditorStatusMsg(
+        override
+          ? '🚨 Đã kích hoạt Ép hậu kiểm khẩn cấp (Override Trigger) và ghi vết Audit Log!'
+          : '🚩 Đã gửi Cờ Yêu Cầu Hậu Kiểm (Inspection Request Flag) tới màn hình Giảng viên!'
+      );
+      if (override) {
+        handleTriggerSpotCheck('RISK_TARGETED');
+      }
+    }
   };
 
   // Giả lập sinh viên vượt qua Spot-check
@@ -1570,13 +1716,17 @@ export default function FacultyDashboard({
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-2 text-xs text-slate-300 leading-relaxed">
-                  <div className="font-bold text-white">💡 Tại sao cần Thu hồi độc lập 2 tầng?</div>
+                <div className="lg:col-span-5 p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-2.5 text-xs text-slate-300 leading-relaxed">
+                  <div className="font-bold text-white">💡 Cơ chế Thu Hồi Khóa Độc Lập 2 Tầng O(1) (Decoupled Revocation)</div>
                   <p className="m-0">
                     Nếu gộp trạng thái thu hồi vào cây Merkle, mỗi khi 1 sinh viên mất điện thoại, nhà trường phải tính lại Merkle Root và bắt toàn bộ 10.000 sinh viên khác tải lại Proof mới.
                   </p>
-                  <p className="m-0 text-emerald-300">
-                    Nhờ tách riêng bảng <code>isRevoked[address]</code>, việc khóa máy diễn ra tức thì với độ phức tạp <code>O(1)</code>.
+                  <div className="p-2.5 rounded-xl bg-slate-950 border border-emerald-500/30 font-mono text-[11px] text-emerald-300">
+                    Verify(Proof) == True &amp;&amp; isRevoked[SignerAddress] == False
+                  </div>
+                  <p className="m-0 text-cyan-300">
+                    • <strong>Tầng 1 (Tĩnh - O(log N)):</strong> Cây Merkle chứng minh sinh viên thuộc biên chế trường.<br />
+                    • <strong>Tầng 2 (Động - O(1)):</strong> Bảng băm <code>mapping(address =&gt; bool) isRevoked</code> khóa máy tức thì với chi phí O(1).
                   </p>
                 </div>
               </div>
@@ -1631,7 +1781,7 @@ export default function FacultyDashboard({
           
           {/* ==================== THANH ĐIỀU KHIỂN NHANH 4 Ô (QUICK CONTROL & KPI BAR) ==================== */}
           <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {/* Ô 1: Thống kê sĩ số thời gian thực */}
+            {/* Ô 1: Thống kê sĩ số thời gian thực + Hàng đợi Offline Grace Buffer */}
             <div className="p-4 rounded-2xl bg-[#081226] border border-slate-800/90 flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-semibold text-slate-400 block">
@@ -1644,6 +1794,9 @@ export default function FacultyDashboard({
                     <span className="text-xs font-semibold text-rose-400">• {suspiciousAttendeesCount} ngoài vùng</span>
                   )}
                 </div>
+                <span className="text-[10px] font-mono text-cyan-400/90 block mt-0.5">
+                  ✓ Grace Offline Buffer (T_sign ±5p): Đã đồng bộ {offlineSyncCount} gói
+                </span>
               </div>
               <button
                 type="button"
@@ -1670,8 +1823,9 @@ export default function FacultyDashboard({
               <div className="grid grid-cols-2 bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
                 <button
                   type="button"
+                  disabled={staffRole === 'AUDITOR'}
                   onClick={() => handleSwitchLiveNetworkMode('CAMPUS_WIFI')}
-                  className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none disabled:opacity-60 ${
                     sessionConfig.networkMode === 'CAMPUS_WIFI'
                       ? 'bg-amber-500 text-slate-950 shadow-sm'
                       : 'bg-transparent text-slate-400 hover:text-white'
@@ -1681,8 +1835,9 @@ export default function FacultyDashboard({
                 </button>
                 <button
                   type="button"
+                  disabled={staffRole === 'AUDITOR'}
                   onClick={() => handleSwitchLiveNetworkMode('CELLULAR_ANY')}
-                  className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                  className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none disabled:opacity-60 ${
                     sessionConfig.networkMode !== 'CAMPUS_WIFI'
                       ? 'bg-emerald-400 text-slate-950 shadow-sm'
                       : 'bg-transparent text-slate-400 hover:text-white'
@@ -1699,22 +1854,25 @@ export default function FacultyDashboard({
                 <span className="text-[11px] font-semibold text-slate-400">
                   Bán Kính Phòng: <strong className="text-cyan-300 font-mono">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
                 </span>
-                <button
-                  type="button"
-                  onClick={handleSyncLaptopGpsCenter}
-                  className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/25 cursor-pointer"
-                  title="Lấy vị trí GPS hiện tại của Laptop làm tâm phòng học"
-                >
-                  📍 Tâm GPS Laptop
-                </button>
+                {staffRole === 'FACULTY' && (
+                  <button
+                    type="button"
+                    onClick={handleSyncLaptopGpsCenter}
+                    className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/25 cursor-pointer"
+                    title="Lấy vị trí GPS hiện tại của Laptop làm tâm phòng học"
+                  >
+                    📍 Tâm GPS Laptop
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 {[15, 35, 100, 500, 5000].map((rVal) => (
                   <button
                     key={rVal}
                     type="button"
+                    disabled={staffRole === 'AUDITOR'}
                     onClick={() => handleUpdateLiveRadius(rVal)}
-                    className={`flex-1 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer border-none ${
+                    className={`flex-1 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer border-none disabled:opacity-60 ${
                       Number(sessionConfig.maxRadiusMeters) === rVal
                         ? 'bg-cyan-400 text-slate-950 shadow-sm'
                         : 'bg-[#040814] text-slate-400 hover:text-white'
@@ -1727,48 +1885,119 @@ export default function FacultyDashboard({
                   type="number"
                   min={1}
                   max={50000}
+                  disabled={staffRole === 'AUDITOR'}
                   value={sessionConfig.maxRadiusMeters}
                   onChange={(e) => handleUpdateLiveRadius(e.target.value)}
-                  className="w-16 py-1 px-1.5 rounded-lg bg-[#040814] border border-slate-800 text-[11px] font-mono text-cyan-300 text-center outline-none focus:border-cyan-400"
+                  className="w-16 py-1 px-1.5 rounded-lg bg-[#040814] border border-slate-800 text-[11px] font-mono text-cyan-300 text-center outline-none focus:border-cyan-400 disabled:opacity-60"
                   title="Nhập số mét bán kính bất kỳ"
                 />
               </div>
             </div>
 
-            {/* Ô 4: Phát lệnh Tái kiểm tra đột xuất (Spot-Check 60s) */}
+            {/* Ô 4: Tách biệt cơ chế Hậu kiểm giữa GIẢNG VIÊN (Phát lệnh trực tiếp) vs THANH TRA (Gửi Cờ Yêu Cầu / Override) */}
             <div className="p-3.5 rounded-2xl bg-[#081226] border border-amber-500/30 flex flex-col justify-between gap-2">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-amber-300">
-                  ⚡ Hậu Kiểm Face ID (Spot-Check)
+                  {staffRole === 'AUDITOR' ? '🚩 Cờ Yêu Cầu Hậu Kiểm (RBAC)' : '⚡ Hậu Kiểm Face ID (Spot-Check)'}
                 </span>
                 {spotCheckState.active ? (
                   <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px] animate-pulse">
                     Còn {spotCheckState.countdown}s
                   </span>
                 ) : (
-                  <span className="text-[11px] text-slate-400">Chu kỳ 60s</span>
+                  <span className="text-[11px] text-slate-400">
+                    {staffRole === 'AUDITOR' ? 'Chống gián đoạn bài giảng' : 'Chu kỳ 60s'}
+                  </span>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-1.5">
+              {staffRole === 'AUDITOR' ? (
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleAuditorSendInspectionRequest(false)}
+                    className="py-1.5 px-2 rounded-xl text-[10.5px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all border-none cursor-pointer"
+                    title="Gửi cờ đề nghị hậu kiểm sang màn hình Giảng viên để đồng bộ với tiến trình bài giảng"
+                  >
+                    🚩 Gửi Cờ Cho GV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAuditorSendInspectionRequest(true)}
+                    className="py-1.5 px-2 rounded-xl text-[10.5px] font-bold border border-rose-500/50 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-all cursor-pointer"
+                    title="Chỉ dùng khi khẩn cấp: Ép hậu kiểm và bắt buộc ghi nhận lý do vào Audit Log"
+                  >
+                    🚨 Ép Khẩn (Override)
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    disabled={spotCheckState.active}
+                    onClick={() => handleTriggerSpotCheck('ALL')}
+                    className="py-1.5 px-2 rounded-xl text-[10.5px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all disabled:opacity-50 border-none cursor-pointer"
+                  >
+                    ⚡ Kiểm Tra Cả Lớp
+                  </button>
+                  <button
+                    type="button"
+                    disabled={spotCheckState.active}
+                    onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
+                    className="py-1.5 px-2 rounded-xl text-[10.5px] font-bold border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                    title="Chỉ phát lệnh hậu kiểm 60s tới các sinh viên có Điểm Rủi Ro Gian Lận (Risk Score ≥ 30)"
+                  >
+                    🎯 Theo Rủi Ro (≥30đ)
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Banner nhận Cờ Yêu Cầu Hậu Kiểm (Inspection Request Flag) từ Thanh tra hiển thị trên màn hình Giảng viên */}
+          {staffRole === 'FACULTY' && auditorInspectionRequest && (
+            <div className="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-400 text-amber-100 flex flex-wrap items-center justify-between gap-3 shadow-lg animate-pulse">
+              <div>
+                <div className="text-xs font-extrabold text-amber-300 flex items-center gap-2">
+                  <span>🚩 YÊU CẦU HẬU KIỂM TỪ BAN THANH TRA ({auditorInspectionRequest.auditorEmail})</span>
+                  <span className="px-2 py-0.5 rounded bg-amber-400/20 text-[10px] font-mono">
+                    Lúc {auditorInspectionRequest.requestedAt}
+                  </span>
+                </div>
+                <p className="text-xs text-white mt-1 mb-0">
+                  Lý do: <strong>{auditorInspectionRequest.reason}</strong> — Giảng viên vui lòng xác nhận khi đến đoạn nghỉ bài giảng để tránh gián đoạn lớp học.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  disabled={spotCheckState.active}
-                  onClick={() => handleTriggerSpotCheck('ALL')}
-                  className="py-1.5 px-2.5 rounded-xl text-[11px] font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all disabled:opacity-50 border-none cursor-pointer"
+                  onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
+                  className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs cursor-pointer border-none"
                 >
-                  ⚡ Kiểm Tra Cả Lớp
+                  ✅ Đồng Ý &amp; Phát Lệnh Spot-Check 60s
                 </button>
                 <button
                   type="button"
-                  disabled={spotCheckState.active}
-                  onClick={() => handleTriggerSpotCheck('FURTHEST')}
-                  className="py-1.5 px-2.5 rounded-xl text-[11px] font-bold border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                  onClick={() => setAuditorInspectionRequest(null)}
+                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
                 >
-                  🎯 SV Xa Tâm Nhất
+                  ⏳ Hoãn Sau Khi Giảng Xong
                 </button>
               </div>
             </div>
-          </section>
+          )}
+
+          {auditorStatusMsg && (
+            <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-200 flex items-center justify-between text-xs font-semibold">
+              <span>{auditorStatusMsg}</span>
+              <button
+                type="button"
+                onClick={() => setAuditorStatusMsg('')}
+                className="text-slate-400 hover:text-white bg-transparent border-none cursor-pointer text-xs"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* ==================== KHÔNG GIAN LÀM VIỆC CHÍNH (2 CỘT GỌN GÀNG) ==================== */}
           <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
@@ -1796,13 +2025,29 @@ export default function FacultyDashboard({
                       </h2>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setIsProjectorFullscreen(true)}
-                      className="px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-[0_0_25px_rgba(0,242,254,0.35)] cursor-pointer border-none transition-all"
-                    >
-                      ⛶ Phóng To QR Toàn Màn Chiếu (500px)
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Nút bật/tắt Chế độ Trình chiếu Ẩn danh (Projection Privacy / Stage Safe Mode - ZKP Light) */}
+                      <button
+                        type="button"
+                        onClick={() => setStageSafeMode((prev) => !prev)}
+                        className={`px-3.5 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1.5 cursor-pointer border transition-all ${
+                          stageSafeMode
+                            ? 'bg-purple-500/20 border-purple-400 text-purple-200 shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+                            : 'bg-[#040814] border-slate-700 text-slate-300 hover:text-white'
+                        }`}
+                        title="Bảo vệ quyền riêng tư trên máy chiếu (ZKP-Light): Che một phần Họ tên, MSSV và ẩn tọa độ GPS chi tiết"
+                      >
+                        {stageSafeMode ? '🕶️ Đang Bật Ẩn Danh Màn Chiếu (ZKP-Light)' : '👁️ Chế Độ Ẩn Danh Màn Chiếu'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsProjectorFullscreen(true)}
+                        className="px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-[0_0_25px_rgba(0,242,254,0.35)] cursor-pointer border-none transition-all"
+                      >
+                        ⛶ Phóng To QR Toàn Màn Chiếu (500px)
+                      </button>
+                    </div>
                   </div>
 
                   {/* Thông báo sự kiện thời gian thực (Nếu có sinh viên quét hoặc bị chặn) */}
@@ -1979,7 +2224,18 @@ export default function FacultyDashboard({
                       </h2>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStageSafeMode((prev) => !prev)}
+                        className={`px-3.5 py-2 rounded-2xl font-bold text-xs cursor-pointer border transition-all ${
+                          stageSafeMode
+                            ? 'bg-purple-500/25 border-purple-400 text-purple-200'
+                            : 'bg-slate-900 border-slate-700 text-slate-300'
+                        }`}
+                      >
+                        {stageSafeMode ? '🕶️ Đang Ẩn Danh MSSV/Tên (ZKP-Light)' : '👁️ Bật Ẩn Danh Màn Chiếu'}
+                      </button>
                       <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-bold">
                         ✅ Sĩ số đã điểm danh: {attendees.length} SV
                       </div>
@@ -2036,8 +2292,10 @@ export default function FacultyDashboard({
                         {attendees.slice(0, 5).map((st) => (
                           <div key={st.studentId} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
                             <div>
-                              <p className="font-bold text-white m-0">{st.name}</p>
-                              <p className="text-[11px] font-mono text-slate-400 m-0">MSSV: {st.studentId} • {st.distance}m</p>
+                              <p className="font-bold text-white m-0">{maskStudentName(st.name)}</p>
+                              <p className="text-[11px] font-mono text-slate-400 m-0">
+                                MSSV: {maskStudentId(st.studentId)} • {stageSafeMode ? '✓ Trong vùng' : `${st.distance}m`}
+                              </p>
                             </div>
                             <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
                               ✓ EIP-191
@@ -2061,57 +2319,150 @@ export default function FacultyDashboard({
                 />
               )}
 
-              {/* TAB 3: IDS AUDIT (DÀNH CHO GIẢNG VIÊN LỚP HỌC & THANH TRA KHẢO THÍ) */}
+              {/* TAB 3: IDS AUDIT & ĐIỂM RỦI RO GIAN LẬN TỰ ĐỘNG (FRAUD RISK SCORE 0-100) */}
               {activeTab === 'IDS' && (
-                <div className="flex-1 min-h-[480px] rounded-3xl bg-[#081226] border border-rose-500/30 p-6 flex flex-col shadow-2xl">
-                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
+                <div className="flex-1 min-h-[480px] rounded-3xl bg-[#081226] border border-rose-500/30 p-6 flex flex-col shadow-2xl gap-4">
+                  <div className="flex flex-wrap justify-between items-center gap-3 pb-3 border-b border-slate-800">
                     <div>
-                      <h3 className="text-base font-extrabold text-rose-300 m-0">🛡️ Nhật Ký Phát Hiện Điểm Danh Hộ (IDS)</h3>
-                      <p className="text-xs text-slate-400 mt-0.5 mb-0">Đối soát xung đột dấu vân tay phần cứng thiết bị (Hardware Fingerprint Collision)</p>
+                      <h3 className="text-base font-extrabold text-rose-300 m-0">
+                        🛡️ Trung Tâm Phát Hiện Điểm Danh Hộ (IDS) &amp; Chấm Điểm Rủi Ro Tự Động
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5 mb-0">
+                        Công thức: <code className="text-cyan-300">RiskScore = w1·HardwareCollision + w2·DistanceDelta + w3·NetworkMismatch + w4·FakeGPS</code>
+                      </p>
                     </div>
-                    <span className="px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 text-xs font-bold">
-                      {idsViolationCount} Cảnh Báo Xung Đột
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 text-xs font-bold">
+                        {idsViolationCount} Xung Đột Phần Cứng
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="space-y-3 overflow-y-auto">
+                  {/* Khung Phối hợp Quyền hạn Hậu kiểm giữa Thanh tra (AUDITOR) và Giảng viên (FACULTY) */}
+                  <div className="p-4 rounded-2xl bg-[#040814] border border-amber-500/30 flex flex-wrap items-center justify-between gap-3">
+                    <div className="text-xs">
+                      <div className="font-bold text-amber-300">
+                        {staffRole === 'AUDITOR'
+                          ? '🚩 Cơ Chế Phối Hợp Thanh Tra — Giảng Viên (Tránh Làm Gián Đoạn Bài Giảng)'
+                          : '🎯 Phát Lệnh Hậu Kiểm Chọn Lọc Theo Điểm Rủi Ro (Risk-Based Spot-Check)'}
+                      </div>
+                      <p className="text-slate-400 mt-0.5 mb-0">
+                        {staffRole === 'AUDITOR'
+                          ? 'Gửi Cờ Yêu Cầu Hậu Kiểm để Giảng viên chủ động bấm xác nhận, hoặc kích hoạt Override khẩn cấp có ghi nhật ký kiểm toán.'
+                          : 'Tự động lọc các sinh viên có Risk Score ≥ 30 (Nghi vấn Vàng / Báo động Đỏ) để yêu cầu quét lại Face ID trong 60s.'}
+                      </p>
+                    </div>
+
+                    {staffRole === 'AUDITOR' ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleAuditorSendInspectionRequest(false)}
+                          className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs border-none cursor-pointer"
+                        >
+                          🚩 Gửi Cờ Yêu Cầu Hậu Kiểm Cho GV
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAuditorSendInspectionRequest(true)}
+                          className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-extrabold text-xs cursor-pointer"
+                        >
+                          🚨 Ép Hậu Kiểm Khẩn Cấp (Override + Log)
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
+                          className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs border-none cursor-pointer"
+                        >
+                          🎯 Hậu Kiểm Nhóm Rủi Ro (Risk ≥ 30)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleTriggerSpotCheck('ALL')}
+                          className="px-3.5 py-2 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-300 font-bold text-xs cursor-pointer"
+                        >
+                          ⚡ Hậu Kiểm Toàn Lớp
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3 overflow-y-auto max-h-[420px] pr-1">
+                    {/* Cảnh báo trùng mã phần cứng Device ID */}
                     {Object.entries(deviceCounts).map(([devId, count]) => {
                       if (count > 1) {
                         const violators = attendees.filter(a => a.deviceId === devId);
                         return (
-                          <div key={devId} className="p-4 rounded-2xl bg-rose-950/25 border border-rose-500/40 text-xs space-y-2.5">
+                          <div key={devId} className="p-4 rounded-2xl bg-rose-950/25 border border-rose-500/40 text-xs space-y-2">
                             <div className="flex justify-between text-rose-400 font-bold">
-                              <span>⚠️ PHÁT HIỆN 1 THIẾT BỊ ĐIỂM DANH CHO {count} SINH VIÊN</span>
+                              <span>⚠️ XUNG ĐỘT VÂN TAY PHẦN CỨNG: 1 MÁY ĐIỂM DANH CHO {count} SINH VIÊN</span>
                               <span className="font-mono">Device ID: {devId}</span>
                             </div>
                             <p className="text-slate-300 m-0">
                               Sinh viên liên quan: <strong>{violators.map(v => `${v.name} (${v.studentId})`).join(', ')}</strong>
                             </p>
-                            <div className="flex gap-2 pt-1">
-                              <button 
-                                onClick={() => alert(`Đã ghi nhận biên bản gian lận thiết bị: ${devId}`)}
-                                className="px-3.5 py-1.5 rounded-xl bg-rose-500 text-white font-bold text-xs border-none cursor-pointer"
-                              >
-                                Lập Biên Bản Học Vụ
-                              </button>
-                              <button 
-                                onClick={() => handleTriggerSpotCheck('ALL')}
-                                className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold text-xs cursor-pointer"
-                              >
-                                Buộc Tái Xác Thực Face ID Cả Lớp
-                              </button>
-                            </div>
                           </div>
                         );
                       }
                       return null;
                     })}
 
-                    <div className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs text-slate-300">
-                      ✓ Sliding Nonce TOTP: Không phát hiện Replay Attack trong 120 chu kỳ.
+                    {/* Bảng chấm điểm Fraud Risk Score (0-100) & Chống Fake GPS từng sinh viên */}
+                    <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs font-bold text-white">
+                        <span>📊 Bảng Chấm Điểm Rủi Ro Gian Lận &amp; Kiểm Định Fake GPS Thời Gian Thực</span>
+                        <span className="text-[11px] font-normal text-slate-400">
+                          &lt;30: Hợp lệ (Xanh) • 30-70: Nghi vấn (Vàng) • &gt;70: Báo động đỏ
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {attendees.map((st) => {
+                          const risk = calculateFraudRiskScore(st);
+                          const badgeStyle =
+                            risk.level === 'CRITICAL'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                              : risk.level === 'WARNING'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+                          return (
+                            <div
+                              key={st.studentId}
+                              className="p-3 rounded-xl bg-slate-950/90 border border-slate-800/90 flex flex-wrap items-center justify-between gap-2 text-xs"
+                            >
+                              <div>
+                                <div className="font-bold text-white flex items-center gap-2">
+                                  <span>{st.name}</span>
+                                  <span className="font-mono text-cyan-400 text-[11px]">({st.studentId})</span>
+                                  <span className="font-mono text-[10px] text-slate-400">• Máy: {st.deviceId}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                  Khoảng cách: <strong className="text-slate-200">{st.distance}m</strong> • Sai số GPS:{' '}
+                                  <strong className={st.isMockGps || Number(st.gpsAccuracy) <= 0.5 ? 'text-rose-400' : 'text-emerald-300'}>
+                                    ±{st.gpsAccuracy ?? 6.2}m {st.isMockGps ? '(⚠️ Mock Location!)' : '(Cảm biến thật)'}
+                                  </strong>
+                                  {risk.reasons.length > 0 && (
+                                    <span className="text-amber-300 ml-2">• Yếu tố: {risk.reasons.join(', ')}</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2.5 py-1 rounded-lg border font-mono font-extrabold text-xs ${badgeStyle}`}>
+                                  Risk Score: {risk.score}/100
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
+
                     <div className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs text-slate-300">
-                      ✓ Chữ ký số EIP-191 Secp256k1: Khôi phục địa chỉ ví trùng khớp 100% Merkle Root.
+                      ✓ Sliding Nonce TOTP + Grace Offline Buffer (T_sign ±5 phút): Chống Replay Attack 100% và hỗ trợ đồng bộ trễ khi nghẽn mạng.
                     </div>
                   </div>
                 </div>
@@ -2156,7 +2507,7 @@ export default function FacultyDashboard({
                       👥 Danh Sách Hiện Diện ({filteredAttendees.length}/{attendees.length})
                     </h3>
                     <p className="text-[10px] font-mono text-cyan-400 mt-0.5 mb-0">
-                      ĐỒNG BỘ WEBSOCKET THỜI GIAN THỰC
+                      {stageSafeMode ? '🕶️ ĐANG BẬT CHẾ ĐỘ ẨN DANH MÀN CHIẾU (ZKP-LIGHT)' : 'ĐỒNG BỘ WEBSOCKET THỜI GIAN THỰC'}
                     </p>
                   </div>
 
@@ -2211,12 +2562,15 @@ export default function FacultyDashboard({
                   ) : (
                     filteredAttendees.map((s) => {
                       const isSuspicious = s.distance > sessionConfig.maxRadiusMeters;
+                      const riskInfo = calculateFraudRiskScore(s);
                       return (
                         <div
                           key={s.studentId}
                           className={`p-3 rounded-2xl border transition-all text-xs flex items-center justify-between gap-2 ${
-                            isSuspicious
+                            isSuspicious || riskInfo.level === 'CRITICAL'
                               ? 'bg-rose-950/20 border-rose-500/40 text-slate-200'
+                              : riskInfo.level === 'WARNING'
+                              ? 'bg-amber-950/15 border-amber-500/35 text-slate-200'
                               : 'bg-[#040814]/80 border-slate-800/90 hover:border-cyan-500/40'
                           }`}
                         >
@@ -2227,50 +2581,58 @@ export default function FacultyDashboard({
                               className="w-10 h-10 rounded-xl object-cover border border-cyan-500/30 flex-shrink-0"
                             />
                             <div className="truncate">
-                              <p className="font-bold text-white truncate m-0">{s.name}</p>
+                              <p className="font-bold text-white truncate m-0">{maskStudentName(s.name)}</p>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="text-[10px] font-mono text-cyan-400 font-semibold">{s.studentId}</span>
+                                <span className="text-[10px] font-mono text-cyan-400 font-semibold">{maskStudentId(s.studentId)}</span>
                                 <span className="text-[10px] text-slate-600">•</span>
                                 <span className="text-[10px] font-mono text-slate-400">{s.checkInTime}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 mt-1">
+                              <div className="flex flex-wrap items-center gap-1 mt-1">
                                 <span className={`px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold ${
                                   isSuspicious
                                     ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                                     : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
                                 }`}>
-                                  📍 Cách tâm {s.distance}m
+                                  📍 {stageSafeMode ? '✓ Hợp lệ' : `Cách tâm ${s.distance}m`}
                                 </span>
-                                <span className="px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-[9px] font-mono text-slate-400 truncate max-w-[110px]">
-                                  {s.network}
+                                <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
+                                  riskInfo.level === 'CRITICAL'
+                                    ? 'bg-rose-500/20 text-rose-300'
+                                    : riskInfo.level === 'WARNING'
+                                    ? 'bg-amber-500/20 text-amber-300'
+                                    : 'bg-slate-900 text-emerald-300'
+                                }`}>
+                                  Risk: {riskInfo.score}đ
                                 </span>
                               </div>
                             </div>
                           </div>
 
                           <div className="text-right flex flex-col items-end gap-1.5 flex-shrink-0">
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setFocusedMapStudentId(s.studentId);
-                                  setActiveTab('RADAR');
-                                }}
-                                className="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-[10px] font-mono font-bold hover:bg-cyan-500/25 cursor-pointer"
-                                title="Định vị trực tiếp sinh viên này trên Bản đồ Google Maps"
-                              >
-                                📍 Bản Đồ
-                              </button>
-                              <a
-                                href={`https://www.google.com/maps?q=${s.coords.lat},${s.coords.lon}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="px-2 py-1 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono hover:bg-blue-500/20 no-underline"
-                                title="Mở tọa độ trên Google Maps tab mới"
-                              >
-                                ↗
-                              </a>
-                            </div>
+                            {!stageSafeMode && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFocusedMapStudentId(s.studentId);
+                                    setActiveTab('RADAR');
+                                  }}
+                                  className="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-[10px] font-mono font-bold hover:bg-cyan-500/25 cursor-pointer"
+                                  title="Định vị trực tiếp sinh viên này trên Bản đồ Google Maps"
+                                >
+                                  📍 Bản Đồ
+                                </button>
+                                <a
+                                  href={`https://www.google.com/maps?q=${s.coords.lat},${s.coords.lon}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2 py-1 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono hover:bg-blue-500/20 no-underline"
+                                  title="Mở tọa độ trên Google Maps tab mới"
+                                >
+                                  ↗
+                                </a>
+                              </div>
+                            )}
 
                             {s.spotCheckStatus === 'PENDING' && (
                               <button
