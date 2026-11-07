@@ -296,12 +296,17 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         triggerSessionTerminatedFeedback();
         setScanStatus({
           type: 'ERROR',
-          title: 'PHIÊN ĐIỂM DANH ĐÃ KẾT THÚC',
-          message: payload?.message || 'Phiên điểm danh đã kết thúc bởi giảng viên. Camera đã tự động tắt.',
+          title: payload?.sessionHash ? 'BUỔI HỌC ĐÃ KHÓA SỔ BẤT BIẾN' : 'PHIÊN ĐIỂM DANH ĐÃ KẾT THÚC',
+          message:
+            payload?.message ||
+            (payload?.sessionHash
+              ? `Giảng viên đã kết thúc & chốt sổ buổi học (Session Hash: ${payload.sessionHash.slice(0, 16)}...). Hệ thống từ chối mọi gói tin gửi bù.`
+              : 'Phiên điểm danh đã kết thúc bởi giảng viên. Camera đã tự động tắt.'),
           details: payload?.sessionId ? { sessionId: payload.sessionId } : null
         });
       };
 
+      socket.on('session-finalized', handleClosed);
       socket.on('session-terminated', handleClosed);
       socket.on('session-closed', handleClosed);
 

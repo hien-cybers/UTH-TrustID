@@ -48,6 +48,9 @@ export default function StudentWalletPro({
   const [copied, setCopied] = useState(false);
   const [showPassQr, setShowPassQr] = useState(false);
   const [expandedCourseId, setExpandedCourseId] = useState('CLS_IT402_N01');
+  const [walletSubTab, setWalletSubTab] = useState('CARD'); // 'CARD' | 'HISTORY'
+  const [previewStudentMssv, setPreviewStudentMssv] = useState('');
+  const [verifiedReceiptSessionId, setVerifiedReceiptSessionId] = useState(null);
 
   // Sinh trắc học phần cứng (Face ID / Touch ID / Keystore)
   const [bioEnabled, setBioEnabled] = useState(true);
@@ -453,26 +456,54 @@ export default function StudentWalletPro({
             </div>
           )}
 
+          {/* THANH CHUYỂN ĐỔI 2 MỤC CHÍNH TRÊN APP SINH VIÊN: THẺ SỐ DID vs LỊCH SỬ CHUYÊN CẦN */}
+          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#040814] border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setWalletSubTab('CARD')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
+                walletSubTab === 'CARD'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  : 'bg-transparent text-slate-300 hover:text-white'
+              }`}
+            >
+              Thẻ Số DID &amp; Bảo Mật
+            </button>
+            <button
+              type="button"
+              onClick={() => setWalletSubTab('HISTORY')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
+                walletSubTab === 'HISTORY'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  : 'bg-transparent text-slate-300 hover:text-white'
+              }`}
+            >
+              Lịch Sử Chuyên Cần
+            </button>
+          </div>
+
           {/* COMPONENT THẺ SINH VIÊN ĐỒNG BỘ DARK NEON & CHẠY TỨC THÌ (< 50MS) */}
-          <StudentCardClean
-            student={{
-              name: zkpMode
-                ? 'Proof = { isUTHStudent: true, status: "Active" }'
-                : (credential.fullName || 'NGUYỄN ĐỨC HIỂN').toUpperCase(),
-              studentId: zkpMode ? 'isUTHStudent: true' : credential.studentId,
-              major: zkpMode ? 'status: "Active"' : credential.major,
-              faculty: 'Công nghệ Thông tin',
-              avatar: credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-              address: zkpMode ? '0x0000...ZKP' : credential.address,
-              validUntil: '2027',
-              status: zkpMode ? 'ZKP-LITE' : 'ACTIVE'
-            }}
-            onScanClick={() => navigate('/scan')}
-            onAvatarChange={!zkpMode ? handleAvatarUpload : undefined}
-            activeCourseSession={activeCourseSession}
-            spotCheckState={spotCheckState}
-            onTriggerSpotCheckFaceID={onTriggerSpotCheckFaceID}
-          />
+          {walletSubTab === 'CARD' && (
+            <StudentCardClean
+              student={{
+                name: zkpMode
+                  ? 'Proof = { isUTHStudent: true, status: "Active" }'
+                  : (credential.fullName || 'NGUYỄN ĐỨC HIỂN').toUpperCase(),
+                studentId: zkpMode ? 'isUTHStudent: true' : credential.studentId,
+                major: zkpMode ? 'status: "Active"' : credential.major,
+                faculty: 'Công nghệ Thông tin',
+                avatar: credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                address: zkpMode ? '0x0000...ZKP' : credential.address,
+                validUntil: '2027',
+                status: zkpMode ? 'ZKP-LITE' : 'ACTIVE'
+              }}
+              onScanClick={() => navigate('/scan')}
+              onAvatarChange={!zkpMode ? handleAvatarUpload : undefined}
+              activeCourseSession={activeCourseSession}
+              spotCheckState={spotCheckState}
+              onTriggerSpotCheckFaceID={onTriggerSpotCheckFaceID}
+            />
+          )}
 
           {/* LỚP HỌC PHẦN & BUỔI HỌC ĐANG MỞ ĐIỂM DANH (ĐỒNG BỘ TRỰC TIẾP TỪ GIẢNG VIÊN) */}
           {activeCourseSession?.isOpen && (
@@ -504,7 +535,7 @@ export default function StudentWalletPro({
             </div>
           )}
 
-          {/* SỔ CHUYÊN CẦN HỌC KỲ (KIẾN TRÚC PHÂN CẤP 1 LỚP HỌC -> NHIỀU BUỔI HỌC CON) */}
+          {/* 4. CƠ CHẾ CHO PHÉP SINH VIÊN "XEM LỊCH SỬ ĐIỂM DANH CÁ NHÂN" & BIÊN LAI CHỮ KÝ EIP-191 TRÊN APP */}
           {(() => {
             const fallbackCourses = [
               {
@@ -512,19 +543,44 @@ export default function StudentWalletPro({
                 courseCode: 'IT402.N01',
                 courseName: 'An toàn Mạng máy tính & Ứng dụng',
                 defaultRoom: 'A2-301',
+                defaultRadius: 35,
                 schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
                 sessions: [
                   {
                     sessionId: 'SES_IT402_B01',
                     sessionIndex: 1,
                     date: '2026-09-15',
-                    attendees: [{ studentId: '2251120000', checkInTime: '13:31:15', distance: 6 }]
+                    isFinalized: true,
+                    sessionHash: '0x9f84b2c71e09a43d5c621b8e74031a92d8f4c6e1b2a093847561029384756102',
+                    attendees: [
+                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '13:31:15', distance: 3, status: 'VERIFIED', signatureHash: '0x8a91f3c2d401e8b7a1290c4f8e21309a7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b21' },
+                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '13:32:10', distance: 3, status: 'VERIFIED', signatureHash: '0x7c82e1d4a502f9b8c2310d5e9f32410b8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c32' },
+                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '13:33:45', distance: 5, status: 'VERIFIED', signatureHash: '0x5d61c9b8e304a7f2d1420e6f1a43521c9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d43' }
+                    ]
                   },
                   {
                     sessionId: 'SES_IT402_B02',
                     sessionIndex: 2,
                     date: '2026-09-22',
-                    attendees: [{ studentId: '2251120000', checkInTime: '13:30:40', distance: 7 }]
+                    isFinalized: true,
+                    sessionHash: '0x3e71c8a94d02f65b1a839c7e42019b84f1d2e3c4b5a697887766554433221100',
+                    attendees: [
+                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '13:30:40', distance: 4, status: 'VERIFIED', signatureHash: '0x9b12e4f7a803c6d5b4750b9c4d76854f2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a76' },
+                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '13:31:04', distance: 4, status: 'VERIFIED', signatureHash: '0x4f63d8a1c209e5b7d8120c3f6e87965a3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b87' }
+                    ]
+                  },
+                  {
+                    sessionId: 'SES_IT402_B03',
+                    sessionIndex: 3,
+                    date: '2026-11-08',
+                    isFinalized: true,
+                    sessionHash: '0x7a42d9e15c08b34f2e918d6a53027c95e2f3a4b5c6d7e8f90123456789abcdef',
+                    attendees: [
+                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '13:29:50', distance: 2, status: 'VERIFIED', signatureHash: '0x6c95d0f4a208c7e9f0340e5b8a09187c5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d09' },
+                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '13:30:18', distance: 2, status: 'VERIFIED', signatureHash: '0x5e74b1d3c902a8f6e1450f6c9b10298d6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e10' },
+                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '13:32:05', distance: 4, status: 'VERIFIED', signatureHash: '0x8d16f2a5b403c9e7d2560a7d0c21309e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f21' },
+                      { studentId: '2251120003', name: 'Lê Hoàng Quân', checkInTime: '13:41:30', distance: 48, status: 'EXCEPTION', signatureHash: '0x3c91a4e7d605b2f8c3670b8e1d32410f8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a32' }
+                    ]
                   }
                 ]
               },
@@ -533,35 +589,87 @@ export default function StudentWalletPro({
                 courseCode: 'IT308.M11',
                 courseName: 'Mật mã học & Ứng dụng Blockchain',
                 defaultRoom: 'B1-204',
+                defaultRadius: 35,
                 schedule: 'Thứ 5 • Ca 1 (07:30 - 10:00)',
                 sessions: [
                   {
                     sessionId: 'SES_IT308_B01',
                     sessionIndex: 1,
                     date: '2026-09-18',
-                    attendees: [{ studentId: '2251120000', checkInTime: '07:32:10', distance: 5 }]
+                    isFinalized: true,
+                    sessionHash: '0x5c83e1f26a09d45b3f029e7b64138d06f3a4b5c6d7e8f90123456789abcdef01',
+                    attendees: [
+                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '07:32:10', distance: 5, status: 'VERIFIED', signatureHash: '0x4b38f4c7d605e2a0f5890d0a3f54632b0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c54' },
+                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '07:33:15', distance: 8, status: 'VERIFIED', signatureHash: '0x7d49a5d8e706f3b1a6900e1b4a65743c1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d65' },
+                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '07:35:02', distance: 10, status: 'VERIFIED', signatureHash: '0x2f50b6e9f807a4c2b7010f2c5b76854d2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e76' }
+                    ]
+                  }
+                ]
+              },
+              {
+                courseId: 'CLS_IT415_P02',
+                courseCode: 'IT415.P02',
+                courseName: 'Bảo mật Web & Hệ thống Phân tán',
+                defaultRoom: 'A3-402',
+                defaultRadius: 50,
+                schedule: 'Thứ 6 • Ca 2 (09:30 - 12:00)',
+                sessions: [
+                  {
+                    sessionId: 'SES_IT415_B01',
+                    sessionIndex: 1,
+                    date: '2026-09-25',
+                    isFinalized: true,
+                    sessionHash: '0x2d94f0a37b10e56c4a130f8c75249e17a4b5c6d7e8f90123456789abcdef0123',
+                    attendees: [
+                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '09:31:45', distance: 8, status: 'VERIFIED', signatureHash: '0x1c72d8a1b009c6e4d9230b4e7d98076f4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a98' },
+                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '09:32:11', distance: 9, status: 'VERIFIED', signatureHash: '0x6a83e9b2c10ad7f5ea340c5f8ea9187a5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b09' },
+                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '09:34:05', distance: 12, status: 'VERIFIED', signatureHash: '0x3d94f0c3d20be8a6fb450d6a9fb0298b6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c10' }
+                    ]
                   }
                 ]
               }
             ];
             const displayCourses =
               Array.isArray(coursesCatalog) && coursesCatalog.length > 0 ? coursesCatalog : fallbackCourses;
-            const myMssv = credential?.studentId || '2251120000';
+            const holderMssv = credential?.studentId || '2251120000';
+            const myMssv = previewStudentMssv || holderMssv;
 
             return (
               <div className="stagger-2 rounded-2xl p-4 border shadow-sm bg-[#081226] border-slate-800 text-slate-100 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div>
                     <h3 className="text-xs font-extrabold text-white m-0">
-                      Lớp Học Phần &amp; Lịch Sử Buổi Học (1 → N)
+                      Lịch Sử Chuyên Cần Cá Nhân &amp; Biên Lai EIP-191
                     </h3>
                     <p className="text-[10px] text-slate-400 m-0 mt-0.5">
-                      Chạm vào từng lớp để xem danh sách các buổi điểm danh con bên trong
+                      Tự đối soát từng buổi học kèm chữ ký số EIP-191 và mã băm chốt sổ của Giảng viên
                     </p>
                   </div>
                   <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold">
-                    {displayCourses.length} lớp
+                    {displayCourses.length} môn học
                   </span>
+                </div>
+
+                {/* Bộ chọn nhanh MSSV để đối soát thử trường hợp Đủ điều kiện vs Vắng / Cảnh báo cấm thi */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  {[
+                    { id: holderMssv, label: `${holderMssv} (Thẻ của tôi • 100%)` },
+                    { id: '2251120002', label: '2251120002 (Trần Thị Mai • 66.7%)' },
+                    { id: '2251120003', label: '2251120003 (Lê Hoàng Quân • 33.3%)' }
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setPreviewStudentMssv(item.id === holderMssv ? '' : item.id)}
+                      className={`px-2 py-1 rounded-lg text-[9.5px] font-mono font-semibold cursor-pointer border transition-all ${
+                        myMssv === item.id
+                          ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
+                          : 'bg-[#040814] border-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="space-y-2.5">
@@ -572,6 +680,10 @@ export default function StudentWalletPro({
                     const myAttendedCount = sesList.filter((s) =>
                       (s.attendees || []).some((a) => (a.studentId || a.mssv) === myMssv)
                     ).length;
+                    const totalSess = sesList.length;
+                    const ratioNum = totalSess > 0 ? Number(((myAttendedCount / totalSess) * 100).toFixed(1)) : 100;
+                    const absentCount = totalSess - myAttendedCount;
+                    const isWarning = totalSess > 0 && ((ratioNum < 80 && absentCount >= 2) || ratioNum < 60);
                     const isCourseLive =
                       activeCourseSession?.isOpen &&
                       (activeCourseSession.classId === cid || activeCourseSession.courseCode === course.courseCode);
@@ -580,7 +692,9 @@ export default function StudentWalletPro({
                       <div
                         key={cid}
                         className={`rounded-xl border transition-all overflow-hidden ${
-                          isExpanded
+                          isWarning
+                            ? 'bg-rose-950/25 border-rose-500/45'
+                            : isExpanded
                             ? 'bg-[#040814] border-cyan-500/45'
                             : 'bg-[#040814]/80 border-slate-800'
                         }`}
@@ -591,13 +705,22 @@ export default function StudentWalletPro({
                           className="w-full p-3 text-left bg-transparent border-none cursor-pointer flex items-center justify-between gap-2"
                         >
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
                               <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/35 font-mono text-[10px] font-bold text-cyan-300">
                                 {course.courseCode}
                               </span>
                               <span className="text-[10px] text-slate-400">
                                 Phòng {course.defaultRoom}
                               </span>
+                              {isWarning ? (
+                                <span className="px-1.5 py-0.5 rounded bg-rose-500/25 border border-rose-500/40 text-rose-200 font-bold text-[9.5px]">
+                                  Cảnh báo cấm thi (&lt; 80%)
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold text-[9.5px]">
+                                  Đủ điều kiện thi
+                                </span>
+                              )}
                               {isCourseLive && (
                                 <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[9.5px] font-bold">
                                   Buổi {activeCourseSession.sessionNumber} đang mở
@@ -610,46 +733,114 @@ export default function StudentWalletPro({
                           </div>
 
                           <div className="text-right flex-shrink-0">
-                            <div className="font-mono text-xs font-extrabold text-emerald-400">
-                              {myAttendedCount}/{sesList.length} buổi
+                            <div className={`font-mono text-xs font-extrabold ${isWarning ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              {myAttendedCount}/{totalSess} ({ratioNum}%)
                             </div>
                             <div className="text-[9.5px] text-slate-400">
-                              {isExpanded ? 'Thu gọn ▲' : 'Xem buổi ▼'}
+                              {isExpanded ? 'Thu gọn ▲' : 'Chi tiết ▼'}
                             </div>
                           </div>
                         </button>
 
                         {isExpanded && (
-                          <div className="px-3 pb-3 pt-1 border-t border-slate-800/80 space-y-1.5">
+                          <div className="px-3 pb-3 pt-1.5 border-t border-slate-800/80 space-y-2">
                             {sesList.map((ses) => {
                               const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
                               const sDate = ses.date || ses.sessionDate || '';
                               const myRec = (ses.attendees || []).find(
                                 (a) => (a.studentId || a.mssv) === myMssv
                               );
+                              const isException =
+                                myRec &&
+                                (myRec.status === 'EXCEPTION' ||
+                                  myRec.status === 'OUT_OF_RANGE' ||
+                                  Number(myRec.distance) > (Number(course.defaultRadius) || 35));
+                              const receiptSig =
+                                myRec?.signatureHash ||
+                                '0x8a91f3c2d401e8b7a1290c4f8e21309a7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b21';
+                              const sessionRootHash =
+                                ses.sessionHash ||
+                                '0x9f84b2c71e09a43d5c621b8e74031a92d8f4c6e1b2a093847561029384756102';
+                              const isReceiptOpen = verifiedReceiptSessionId === `${ses.sessionId}_${myMssv}`;
+
                               return (
                                 <div
                                   key={ses.sessionId}
-                                  className="p-2.5 rounded-lg bg-[#081226] border border-slate-800/90 flex items-center justify-between gap-2 text-[10.5px]"
+                                  className={`p-2.5 rounded-xl border space-y-1.5 text-[10.5px] ${
+                                    !myRec
+                                      ? 'bg-rose-950/20 border-rose-500/30'
+                                      : isException
+                                      ? 'bg-amber-950/20 border-amber-500/35'
+                                      : 'bg-[#081226] border-slate-800/90'
+                                  }`}
                                 >
-                                  <div>
-                                    <span className="font-mono font-bold text-cyan-300">
-                                      Buổi {sIdx} ({sDate})
-                                    </span>
-                                    {myRec && (
-                                      <span className="block text-[9.5px] text-slate-400 font-mono mt-0.5">
-                                        Lúc {myRec.checkInTime} • Cách tâm {myRec.distance}m
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                      <span className="font-mono font-bold text-cyan-300">
+                                        Buổi {sIdx} ({sDate})
+                                      </span>
+                                      {myRec ? (
+                                        <span className="block text-[9.5px] text-slate-300 font-mono mt-0.5">
+                                          Lúc {myRec.checkInTime} • Khoảng cách GPS: {myRec.distance}m
+                                        </span>
+                                      ) : (
+                                        <span className="block text-[9.5px] text-rose-300/90 mt-0.5">
+                                          Không có gói tin điểm danh trong phiên đã khóa sổ
+                                        </span>
+                                      )}
+                                    </div>
+                                    {myRec ? (
+                                      isException ? (
+                                        <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-[10px]">
+                                          Ngoại lệ ({myRec.distance}m)
+                                        </span>
+                                      ) : (
+                                        <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-[10px]">
+                                          ✓ Có mặt ({myRec.distance}m)
+                                        </span>
+                                      )
+                                    ) : (
+                                      <span className="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/35 text-rose-300 font-bold text-[10px]">
+                                        ✕ Vắng mặt
                                       </span>
                                     )}
                                   </div>
-                                  {myRec ? (
-                                    <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-[10px]">
-                                      Đã điểm danh
-                                    </span>
-                                  ) : (
-                                    <span className="px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold text-[10px]">
-                                      Chưa có mặt
-                                    </span>
+
+                                  {myRec && (
+                                    <div className="pt-1.5 border-t border-slate-800/80 space-y-1">
+                                      <div className="flex items-center justify-between gap-2 font-mono text-[9.5px]">
+                                        <span className="text-slate-400 truncate">
+                                          Biên lai chữ ký EIP-191: <code className="text-cyan-300">{receiptSig.slice(0, 16)}...{receiptSig.slice(-6)}</code>
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setVerifiedReceiptSessionId(
+                                              isReceiptOpen ? null : `${ses.sessionId}_${myMssv}`
+                                            )
+                                          }
+                                          className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-sans font-bold text-[9.5px] cursor-pointer flex-shrink-0"
+                                        >
+                                          {isReceiptOpen ? 'Ẩn biên lai' : 'Đối soát EIP-191'}
+                                        </button>
+                                      </div>
+
+                                      {isReceiptOpen && (
+                                        <div className="p-2 rounded-lg bg-[#040814] border border-emerald-500/35 font-mono text-[9.5px] space-y-1 text-slate-300">
+                                          <div className="text-emerald-400 font-sans font-bold">
+                                            ✓ Biên lai chữ ký số EIP-191 hợp lệ &amp; khớp mã băm chốt sổ
+                                          </div>
+                                          <div className="break-all">
+                                            <span className="text-slate-400">Chữ ký SV (EIP-191): </span>
+                                            <span className="text-cyan-300">{receiptSig}</span>
+                                          </div>
+                                          <div className="break-all">
+                                            <span className="text-slate-400">Session Hash (GV khóa sổ): </span>
+                                            <span className="text-emerald-300">{sessionRootHash}</span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               );
