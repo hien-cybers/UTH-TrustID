@@ -1,5 +1,5 @@
-/* src/index.css - UTH-TrustID Original Deep Blue-Navy Glassmorphism Design System */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* src/index.css - UTH-TrustID Dark Neon Design System & Universal Vietnamese Typography */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -45,14 +45,21 @@
   --btn-border: #49769F;
 }
 
-/* Tối ưu hóa hiển thị Mobile chuẩn iOS & Android */
+/* Tối ưu hóa Phông chữ Tiếng Việt dễ đọc, rõ nét cho mọi lứa tuổi (Giảng viên, Quản trị viên & Sinh viên) */
 html, body {
   height: 100%;
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
   overscroll-behavior-y: none;
+  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: normal;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
   box-sizing: border-box;
 }
@@ -70,16 +77,21 @@ html, body {
   box-sizing: border-box;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
-  font-family: 'Be Vietnam Pro', 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-tap-highlight-color: transparent;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tự động ngắt dòng mã code, hash và địa chỉ trên mọi màn hình */
+button, input, select, textarea {
+  font-family: inherit;
+  letter-spacing: normal;
+}
+
+/* Chỉ dùng Font Monospace cho mã Hash, Địa chỉ Ví và Nonce */
 code, pre, .font-mono, .mono-code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-variant-ligatures: none;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -446,40 +458,45 @@ button, input, select {
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
 }
 
-/* ==================== BỘ 3 GIAO DIỆN DASHBOARD CAO CẤP THEO MẪU THAM CHIẾU (DARK NEON / HYBRID SLATE / FROSTED LIGHT) ==================== */
-
-/* 1. CHẾ ĐỘ DARK NEON (Khung trên cùng trong ảnh mẫu: Nền xanh đêm vực thẳm + Viền phát sáng Cyan + Card kính mờ sâu) */
+/* ==================== GIAO DIỆN DASHBOARD DARK NEON CHUẨN MẪU (NỀN XANH ĐÊM VỰC THẲM + VIỀN PHÁT SÁNG CYAN + PHÔNG CHỮ DỄ ĐỌC) ==================== */
 .ocean-palette-theme,
 .theme-fintech-dark {
-  background: radial-gradient(circle at 18% 15%, rgba(14, 116, 144, 0.32), transparent 45%),
-              radial-gradient(circle at 82% 85%, rgba(10, 65, 116, 0.45), transparent 50%),
+  background: radial-gradient(circle at 18% 15%, rgba(14, 116, 144, 0.34), transparent 45%),
+              radial-gradient(circle at 82% 85%, rgba(10, 65, 116, 0.48), transparent 50%),
               linear-gradient(160deg, #041529 0%, #020c18 100%) !important;
-  color: #F4F9FD !important;
+  color: #F8FAFC !important;
+  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .theme-fintech-dark .dashboard-outer-shell {
-  background: linear-gradient(165deg, rgba(7, 25, 46, 0.94) 0%, rgba(4, 16, 31, 0.98) 100%);
-  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  background: linear-gradient(165deg, rgba(7, 25, 46, 0.95) 0%, rgba(4, 16, 31, 0.98) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.38);
   box-shadow: 0 0 65px -8px rgba(0, 210, 255, 0.25), 0 30px 70px -15px rgba(0, 0, 0, 0.85);
 }
 
 .theme-fintech-dark header {
-  background: rgba(6, 22, 41, 0.9) !important;
-  border-bottom: 1px solid rgba(73, 118, 159, 0.32) !important;
+  background: rgba(6, 22, 41, 0.92) !important;
+  border-bottom: 1px solid rgba(73, 118, 159, 0.34) !important;
 }
 
 .theme-fintech-dark .bg-\[\#081226\] {
-  background: linear-gradient(155deg, rgba(13, 39, 70, 0.88) 0%, rgba(7, 23, 43, 0.95) 100%) !important;
-  border: 1px solid rgba(78, 142, 162, 0.32) !important;
-  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.12), 0 16px 38px -10px rgba(1, 8, 20, 0.78) !important;
+  background: linear-gradient(155deg, rgba(13, 39, 70, 0.9) 0%, rgba(7, 23, 43, 0.96) 100%) !important;
+  border: 1px solid rgba(78, 142, 162, 0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.14), 0 16px 38px -10px rgba(1, 8, 20, 0.78) !important;
+}
+
+.theme-fintech-dark .hero-navy-card {
+  background: linear-gradient(145deg, #0D2B52 0%, #071933 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.18), 0 16px 36px -10px rgba(0, 210, 255, 0.18) !important;
 }
 
 .theme-fintech-dark .bg-\[\#040814\],
 .theme-fintech-dark .bg-\[\#040814\]\/80,
 .theme-fintech-dark .bg-slate-950,
 .theme-fintech-dark .bg-slate-950\/90 {
-  background: rgba(4, 15, 30, 0.85) !important;
-  border-color: rgba(73, 118, 159, 0.38) !important;
+  background: rgba(4, 15, 30, 0.88) !important;
+  border-color: rgba(73, 118, 159, 0.4) !important;
 }
 
 .theme-fintech-dark .bg-cyan-400 {
@@ -488,129 +505,31 @@ button, input, select {
   box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
 }
 
-/* 2. CHẾ ĐỘ HYBRID SLATE (Khung ở giữa trong ảnh mẫu: Nền ngoài Xanh Xám Thép #5C7693 + Header Navy Tối + Card Trắng Sáng xen kẽ Card Navy) */
-.theme-fintech-hybrid {
-  background: linear-gradient(145deg, #68829E 0%, #4A6482 100%) !important;
-  color: #001D39 !important;
+/* Cân chỉnh kích thước chữ & độ tương phản để mọi giảng viên, cán bộ đều nhìn rõ và êm mắt */
+.theme-fintech-dark .text-slate-400 {
+  color: #CBD5E1 !important;
 }
 
-.theme-fintech-hybrid .dashboard-outer-shell {
-  background: #DCE4EF !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 32px 75px -15px rgba(10, 28, 54, 0.55);
+.theme-fintech-dark .text-slate-300 {
+  color: #E2E8F0 !important;
 }
 
-.theme-fintech-hybrid header {
-  background: linear-gradient(90deg, #152238 0%, #1C2E4A 100%) !important;
-  border-bottom: 1px solid rgba(123, 189, 232, 0.25) !important;
-  color: #ffffff !important;
+.theme-fintech-dark .text-xs {
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
 }
 
-.theme-fintech-hybrid .bg-\[\#081226\] {
-  background: #FFFFFF !important;
-  border: 1px solid rgba(110, 162, 179, 0.35) !important;
-  box-shadow: 0 12px 30px -8px rgba(15, 38, 74, 0.1) !important;
-  color: #001D39 !important;
+.theme-fintech-dark .text-sm {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
 }
 
-/* Giữ Card KPI đầu tiên (Balance/Sĩ số) mang màu Navy đặc trưng giống hệt ảnh mẫu giữa & dưới */
-.theme-fintech-hybrid .hero-navy-card,
-.theme-fintech-light .hero-navy-card {
-  background: linear-gradient(145deg, #0D274C 0%, #06152D 100%) !important;
-  border: 1px solid rgba(56, 189, 248, 0.4) !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 16px 36px -10px rgba(6, 21, 45, 0.45) !important;
+.theme-fintech-dark .text-base {
+  font-size: 16.5px !important;
+  line-height: 1.5 !important;
 }
 
-.theme-fintech-hybrid .hero-navy-card span,
-.theme-fintech-light .hero-navy-card span {
-  color: #BDD8E9 !important;
-}
-
-.theme-fintech-hybrid .bg-\[\#040814\],
-.theme-fintech-hybrid .bg-\[\#040814\]\/80,
-.theme-fintech-hybrid .bg-slate-950,
-.theme-fintech-hybrid .bg-slate-950\/90 {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
-  color: #001D39 !important;
-}
-
-.theme-fintech-hybrid header .bg-\[\#040814\] {
-  background: rgba(9, 18, 34, 0.75) !important;
-  border-color: rgba(73, 118, 159, 0.45) !important;
-}
-
-.theme-fintech-hybrid main .text-white,
-.theme-fintech-light main .text-white {
-  color: #001D39 !important;
-}
-
-.theme-fintech-hybrid .hero-navy-card .text-white,
-.theme-fintech-light .hero-navy-card .text-white {
-  color: #FFFFFF !important;
-}
-
-.theme-fintech-hybrid main .text-slate-400,
-.theme-fintech-hybrid main .text-slate-300,
-.theme-fintech-light main .text-slate-400,
-.theme-fintech-light main .text-slate-300 {
-  color: #49769F !important;
-}
-
-.theme-fintech-hybrid main .text-cyan-300,
-.theme-fintech-hybrid main .text-cyan-400,
-.theme-fintech-light main .text-cyan-300,
-.theme-fintech-light main .text-cyan-400 {
-  color: #0A4174 !important;
-}
-
-.theme-fintech-hybrid .bg-cyan-400,
-.theme-fintech-light .bg-cyan-400 {
-  background: linear-gradient(135deg, #4E8EA2 0%, #0A4174 100%) !important;
-  color: #FFFFFF !important;
-  box-shadow: 0 6px 18px rgba(10, 65, 116, 0.28) !important;
-}
-
-/* 3. CHẾ ĐỘ FROSTED LIGHT (Khung dưới cùng trong ảnh mẫu: Nền trắng băng tuyết #EEF3FA + Card Trắng tinh khôi + Điểm nhấn Teal/Navy) */
-.theme-fintech-light {
-  background: linear-gradient(145deg, #EEF2F9 0%, #DCE5F2 100%) !important;
-  color: #001D39 !important;
-}
-
-.theme-fintech-light .dashboard-outer-shell {
-  background: #F5F8FC !important;
-  border: 1.5px solid #FFFFFF;
-  box-shadow: 0 28px 65px -15px rgba(15, 38, 74, 0.16);
-}
-
-.theme-fintech-light header {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-bottom: 1px solid #E2E8F0 !important;
-  color: #001D39 !important;
-}
-
-.theme-fintech-light header h1,
-.theme-fintech-light header strong {
-  color: #001D39 !important;
-}
-
-.theme-fintech-light header .text-slate-400 {
-  color: #49769F !important;
-}
-
-.theme-fintech-light .bg-\[\#081226\] {
-  background: #FFFFFF !important;
-  border: 1px solid #E2E8F0 !important;
-  box-shadow: 0 10px 28px -6px rgba(15, 38, 74, 0.06) !important;
-  color: #001D39 !important;
-}
-
-.theme-fintech-light .bg-\[\#040814\],
-.theme-fintech-light .bg-\[\#040814\]\/80,
-.theme-fintech-light .bg-slate-950,
-.theme-fintech-light .bg-slate-950\/90 {
-  background: #F8FAFC !important;
-  border-color: #E2E8F0 !important;
-  color: #001D39 !important;
+.theme-fintech-dark .text-lg {
+  font-size: 18.5px !important;
+  line-height: 1.45 !important;
 }

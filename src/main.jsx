@@ -3,10 +3,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import FacultyDashboard from './components/FacultyDashboard.jsx';
-import './index.css';
 import './styles/nativeApp.css';
 import './styles/animations.css';
 import './styles/appPro.css';
+import './index.css';
 
 const isFacultyPortalEnv =
   typeof window !== 'undefined' &&

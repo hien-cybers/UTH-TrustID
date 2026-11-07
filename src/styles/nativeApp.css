@@ -1,5 +1,5 @@
 /* src/styles/nativeApp.css - Chuẩn Giao Diện Mobile Bản Địa (iOS Human Interface & Material 3) */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   --bg-primary: #07090E;
@@ -25,12 +25,12 @@
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
   margin: 0;
   padding: 0;
+  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: #000000;
   color: var(--text-primary);
   display: flex;
