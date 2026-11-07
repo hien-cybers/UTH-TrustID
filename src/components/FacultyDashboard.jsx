@@ -32,9 +32,8 @@ export default function FacultyDashboard({
       };
     }
   });
-  const [loginForm, setLoginForm] = useState({ email: 'giangvien@uth.edu.vn', password: 'Admin@2026' });
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [loginRoleFilter, setLoginRoleFilter] = useState('ALL'); // 'ALL' | 'FACULTY' | 'ADMIN' | 'AUDITOR'
   const [authError, setAuthError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -863,444 +862,159 @@ export default function FacultyDashboard({
     localStorage.removeItem('faculty_token');
     localStorage.removeItem('faculty_user');
     setToken(null);
+    setLoginForm({ email: '', password: '' });
     setIsCreated(false);
     setIsSessionOpen(false);
     setAuthError('');
   };
 
-  // ==================== CỔNG ĐĂNG NHẬP ĐA VAI TRÒ (GIẢNG VIÊN / ADMIN / THANH TRA) ====================
+  // ==================== CỔNG ĐĂNG NHẬP TIÊU CHUẨN (NHẬP TÀI KHOẢN & MẬT KHẨU ĐỂ XÁC THỰC) ====================
   if (!token) {
-    const DEMO_ACCOUNTS = [
-      {
-        role: 'FACULTY',
-        badge: '👨‍🏫 Giảng Viên 1',
-        roleTitle: 'Giảng Viên Giảng Đường',
-        name: 'TS. Trần Thế Vinh',
-        dept: 'Khoa Công nghệ Thông tin',
-        email: 'giangvien@uth.edu.vn',
-        desc: 'Khởi tạo lớp học, chiếu QR TOTP 35s (360px/500px), bản đồ Google Maps & Spot-Check 60s.',
-        permissions: ['Khởi tạo phiên & Phát QR', 'Bản đồ Geofence R(m)', 'Hậu kiểm Face ID 60s'],
-        color: 'cyan',
-        avatarBg: 'from-cyan-400 to-blue-600'
-      },
-      {
-        role: 'FACULTY',
-        badge: '👨‍🏫 Giảng Viên 2',
-        roleTitle: 'Giảng Viên Học Phần',
-        name: 'ThS. Nguyễn Minh Khoa',
-        dept: 'Bộ môn An toàn Thông tin',
-        email: 'gv.khoa@uth.edu.vn',
-        desc: 'Quản lý lớp Bảo mật Web, ẩn danh màn chiếu ZKP-Light & xuất biên bản CSV chuẩn UTF-8.',
-        permissions: ['Màn chiếu Ẩn danh ZKP', 'Đổi nóng Wi-Fi / 4G', 'Xuất báo cáo CSV'],
-        color: 'cyan',
-        avatarBg: 'from-sky-400 to-indigo-600'
-      },
-      {
-        role: 'ADMIN',
-        badge: '🏛️ Quản Trị Viên (Root Admin)',
-        roleTitle: 'Quản Trị Viên Tối Cao',
-        name: 'Phòng Đào Tạo & CNTT',
-        dept: 'Quản trị Định danh & Smart Contract',
-        email: 'admin@uth.edu.vn',
-        desc: 'Phát hành lô thẻ W3C Verifiable Credentials, neo gốc Merkle Root & thu hồi khóa O(1).',
-        permissions: ['Cấp phát lô thẻ W3C VC', 'Neo gốc Merkle Root', 'Thu hồi khóa O(1)'],
-        color: 'emerald',
-        avatarBg: 'from-emerald-400 to-teal-600'
-      },
-      {
-        role: 'AUDITOR',
-        badge: '🛡️ Thanh Tra Khảo Thí',
-        roleTitle: 'Thanh Tra & Đảm Bảo Chất Lượng',
-        name: 'Ban Thanh Tra & ĐBCL',
-        dept: 'Giám sát Gian lận & Học vụ',
-        email: 'thanhtra@uth.edu.vn',
-        desc: 'Chấm điểm rủi ro gian lận (Risk Score 0-100), phát hiện trùng máy IDS & gửi Cờ Hậu Kiểm.',
-        permissions: ['Giám sát IDS & Fake GPS', 'Gửi Cờ Hậu Kiểm cho GV', 'Kiểm toán Sổ cái Audit'],
-        color: 'amber',
-        avatarBg: 'from-amber-400 to-orange-600'
-      }
-    ];
-
-    const emailLower = (loginForm.email || '').toLowerCase();
-    const activePreviewRole = emailLower.startsWith('admin')
-      ? 'ADMIN'
-      : emailLower.startsWith('thanhtra') || emailLower.startsWith('audit')
-      ? 'AUDITOR'
-      : 'FACULTY';
-
-    const selectedAccount =
-      DEMO_ACCOUNTS.find((a) => a.email.toLowerCase() === emailLower) ||
-      DEMO_ACCOUNTS.find((a) => a.role === activePreviewRole) ||
-      DEMO_ACCOUNTS[0];
-
-    const visibleAccounts =
-      loginRoleFilter === 'ALL'
-        ? DEMO_ACCOUNTS
-        : DEMO_ACCOUNTS.filter((a) => a.role === loginRoleFilter);
-
-    const roleTheme =
-      activePreviewRole === 'ADMIN'
-        ? {
-            glow: 'rgba(16, 185, 129, 0.16)',
-            border: 'border-emerald-500/40',
-            badge: 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300',
-            btn: 'bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 shadow-emerald-500/25',
-            accentText: 'text-emerald-300',
-            ringFocus: 'focus:border-emerald-400'
-          }
-        : activePreviewRole === 'AUDITOR'
-        ? {
-            glow: 'rgba(245, 158, 11, 0.16)',
-            border: 'border-amber-500/40',
-            badge: 'bg-amber-500/15 border-amber-400/40 text-amber-300',
-            btn: 'bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 shadow-amber-500/25',
-            accentText: 'text-amber-300',
-            ringFocus: 'focus:border-amber-400'
-          }
-        : {
-            glow: 'rgba(0, 242, 254, 0.16)',
-            border: 'border-cyan-500/40',
-            badge: 'bg-cyan-500/15 border-cyan-400/40 text-cyan-300',
-            btn: 'bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 shadow-cyan-500/25',
-            accentText: 'text-cyan-300',
-            ringFocus: 'focus:border-cyan-400'
-          };
-
     return (
       <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col justify-between relative overflow-hidden select-none">
         
-        {/* Hiệu ứng ánh sáng nền (Ambient Spotlight Glow) đổi màu theo Vai trò đang chọn */}
+        {/* Ánh sáng nền tinh tế chuẩn giao diện Web cổng thông tin đại học */}
         <div
-          className="pointer-events-none fixed inset-0 transition-all duration-700"
+          className="pointer-events-none fixed inset-0"
           style={{
-            background: `radial-gradient(circle at 80% 20%, ${roleTheme.glow}, transparent 45%), radial-gradient(circle at 15% 80%, rgba(37, 99, 235, 0.12), transparent 50%)`
+            background:
+              'radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.14), transparent 50%), radial-gradient(circle at 80% 90%, rgba(37, 99, 235, 0.12), transparent 45%)'
           }}
         />
 
-        {/* Thanh Header Thương hiệu Trường Đại học GTVT TP.HCM (UTH) */}
-        <header className="relative z-10 w-full max-w-6xl mx-auto px-6 pt-6 pb-2 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-700 flex items-center justify-center font-black text-slate-950 text-lg shadow-[0_0_25px_rgba(0,242,254,0.35)] border border-white/20">
+        {/* Thanh Header đơn giản */}
+        <header className="relative z-10 w-full max-w-6xl mx-auto px-6 pt-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-700 flex items-center justify-center font-black text-slate-950 text-sm shadow-[0_0_20px_rgba(0,242,254,0.3)] border border-white/20">
               UTH
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-400">
-                  TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM
-                </span>
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-bold text-emerald-300">
-                  ● Zero-Trust v2.5 Online
-                </span>
+              <div className="text-xs font-extrabold uppercase tracking-wider text-white">
+                TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP.HCM
               </div>
-              <p className="text-xs text-slate-400 m-0">
-                Cổng Quản Trị Định Danh Số Phi Tập Trung &amp; Điểm Danh Sinh Trắc Học Đa Nhân Tố
-              </p>
+              <div className="text-[11px] text-slate-400">
+                Hệ thống Quản lý Điểm danh &amp; Định danh Số UTH-TrustID
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="px-3 py-1.5 rounded-xl bg-[#081226]/90 border border-slate-800 text-slate-300 font-mono text-[11px]">
-              🌐 Máy chủ: <strong className="text-emerald-400">{SERVER_URL}</strong>
-            </span>
-          </div>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-semibold text-emerald-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Hệ thống đang hoạt động
+          </span>
         </header>
 
-        {/* Khối Nội Dung Chính (Split-Screen 12 Cột) */}
-        <main className="relative z-10 w-full max-w-6xl mx-auto px-6 py-4 my-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Hộp Đăng nhập Chính giữa màn hình (Centered Standard Web Login Card) */}
+        <main className="relative z-10 w-full px-4 py-8 my-auto flex items-center justify-center">
+          <div className="w-full max-w-[440px] rounded-[28px] bg-[#081124]/95 backdrop-blur-xl border border-slate-800/90 shadow-[0_25px_70px_rgba(0,0,0,0.65)] p-8 sm:p-9">
             
-            {/* ==================== CỘT TRÁI (7 CỘT): BẢNG CHỌN NHANH VAI TRÒ & KIẾN TRÚC ZERO-TRUST ==================== */}
-            <div className="lg:col-span-7 p-7 rounded-[28px] bg-[#071022]/90 backdrop-blur-xl border border-slate-800/90 shadow-2xl flex flex-col justify-between gap-5">
-              
-              {/* Tiêu đề & Bộ lọc Vai trò */}
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <span className="px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">
-                      ⚡ Chuyển Đổi Nhanh Tài Khoản Demo (RBAC)
-                    </span>
-                    <h2 className="text-xl font-extrabold text-white mt-2 mb-0 tracking-tight">
-                      Chọn Vai Trò Truy Cập Hệ Thống
-                    </h2>
-                  </div>
-
-                  {/* Bộ lọc 3 Role */}
-                  <div className="flex items-center bg-[#030712] p-1 rounded-xl border border-slate-800 gap-1">
-                    {[
-                      { id: 'ALL', label: 'Tất cả (4)' },
-                      { id: 'FACULTY', label: '👨‍🏫 Giảng viên' },
-                      { id: 'ADMIN', label: '🏛️ Admin' },
-                      { id: 'AUDITOR', label: '🛡️ Thanh tra' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setLoginRoleFilter(tab.id)}
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
-                          loginRoleFilter === tab.id
-                            ? 'bg-cyan-400 text-slate-950 shadow-sm'
-                            : 'bg-transparent text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Danh sách thẻ tài khoản (Nhấp để điền form hoặc bấm "Vào ngay 1 chạm") */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {visibleAccounts.map((acc) => {
-                    const isSelected = emailLower === acc.email.toLowerCase();
-                    const cardAccent =
-                      acc.color === 'emerald'
-                        ? isSelected
-                          ? 'border-emerald-400 bg-emerald-500/12 shadow-[0_0_25px_rgba(16,185,129,0.15)]'
-                          : 'border-slate-800/90 bg-[#040917]/90 hover:border-emerald-500/40'
-                        : acc.color === 'amber'
-                        ? isSelected
-                          ? 'border-amber-400 bg-amber-500/12 shadow-[0_0_25px_rgba(245,158,11,0.15)]'
-                          : 'border-slate-800/90 bg-[#040917]/90 hover:border-amber-500/40'
-                        : isSelected
-                        ? 'border-cyan-400 bg-cyan-500/12 shadow-[0_0_25px_rgba(0,242,254,0.15)]'
-                        : 'border-slate-800/90 bg-[#040917]/90 hover:border-cyan-500/40';
-
-                    const pillStyle =
-                      acc.color === 'emerald'
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                        : acc.color === 'amber'
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                        : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
-
-                    return (
-                      <div
-                        key={acc.email}
-                        onClick={() => {
-                          setLoginForm({ email: acc.email, password: 'Admin@2026' });
-                          setAuthError('');
-                        }}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${cardAccent}`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <span className={`px-2.5 py-0.5 rounded-lg border text-[10.5px] font-bold ${pillStyle}`}>
-                              {acc.badge}
-                            </span>
-                            {isSelected ? (
-                              <span className="px-2 py-0.5 rounded-full bg-white text-slate-950 text-[10px] font-extrabold">
-                                ✓ Đang chọn
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-slate-500 font-medium">Nhấp để chọn</span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2.5">
-                            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${acc.avatarBg} flex items-center justify-center text-slate-950 font-extrabold text-xs flex-shrink-0 shadow-md`}>
-                              {acc.name.split(' ').pop()?.charAt(0) || 'U'}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-extrabold text-white truncate m-0">{acc.name}</p>
-                              <p className="text-[11px] text-slate-400 truncate m-0">{acc.dept}</p>
-                            </div>
-                          </div>
-
-                          <p className="text-[11px] text-slate-300 leading-relaxed mt-2.5 mb-0">
-                            {acc.desc}
-                          </p>
-                        </div>
-
-                        <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-mono text-cyan-300 truncate">{acc.email}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleQuickSwitchAccount(acc.email);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-[10.5px] font-bold whitespace-nowrap cursor-pointer border border-slate-700 transition-all"
-                            title="Đăng nhập tức thì vào vai trò này chỉ với 1 cú nhấp"
-                          >
-                            Vào ngay ➔
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Logo & Tiêu đề Đăng nhập */}
+            <div className="text-center mb-7">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 flex items-center justify-center font-black text-slate-950 text-xl mx-auto mb-4 shadow-[0_0_30px_rgba(0,242,254,0.35)] border border-white/20">
+                UTH
               </div>
-
-              {/* Dải Đối chiếu Kiến trúc Zero-Trust (Tại sao GV cần Tài khoản còn SV dùng DID) */}
-              <div className="p-4 rounded-2xl bg-[#030712]/90 border border-slate-800/90 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="flex items-start gap-2.5">
-                  <span className="text-base">🔐</span>
-                  <div>
-                    <div className="font-bold text-white">Cổng Giảng Viên / Admin (Port 5174)</div>
-                    <p className="text-[11px] text-slate-400 mt-0.5 mb-0 leading-snug">
-                      Bắt buộc xác thực <strong className="text-cyan-300">JWT + RBAC</strong> để bảo vệ quyền mở lớp, phát QR và thu hồi khóa.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="text-base">📱</span>
-                  <div>
-                    <div className="font-bold text-white">Ví Số Sinh Viên (Port 5173)</div>
-                    <p className="text-[11px] text-slate-400 mt-0.5 mb-0 leading-snug">
-                      Phi tài khoản (<strong className="text-emerald-300">Account-less W3C DID</strong>), ký số EIP-191 bằng Face ID cục bộ.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <h1 className="text-2xl font-extrabold text-white tracking-tight m-0">
+                Đăng nhập hệ thống
+              </h1>
+              <p className="text-xs text-slate-400 mt-1.5 mb-0">
+                Dành cho Giảng viên, Quản trị viên và Cán bộ Khảo thí
+              </p>
             </div>
 
-            {/* ==================== CỘT PHẢI (5 CỘT): BIỂU MẪU ĐĂNG NHẬP CHÍNH QUY ==================== */}
-            <form
-              onSubmit={handleLogin}
-              className={`lg:col-span-5 p-8 rounded-[28px] bg-[#071022]/95 backdrop-blur-xl border ${roleTheme.border} shadow-2xl flex flex-col justify-between gap-5 transition-all duration-300`}
-            >
-              <div className="space-y-4">
-                
-                {/* Header Form & Huy hiệu Vai trò tự động nhận diện */}
-                <div className="border-b border-slate-800/90 pb-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`px-3 py-1 rounded-full border text-[11px] font-bold ${roleTheme.badge}`}>
-                      {activePreviewRole === 'ADMIN'
-                        ? '🏛️ CỔNG QUẢN TRỊ VIÊN TỐI CAO'
-                        : activePreviewRole === 'AUDITOR'
-                        ? '🛡️ CỔNG THANH TRA & KHẢO THÍ'
-                        : '👨‍🏫 CỔNG GIẢNG VIÊN GIẢNG ĐƯỜNG'}
-                    </span>
-                    <span className="text-[11px] font-mono text-slate-400">SSO • JWT HS256</span>
-                  </div>
-
-                  <h2 className="text-2xl font-extrabold text-white mt-3 mb-1 tracking-tight">
-                    Đăng Nhập Hệ Thống
-                  </h2>
-                  <p className="text-xs text-slate-400 m-0">
-                    Xác thực danh tính cán bộ trường để mở không gian làm việc tương ứng
-                  </p>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Thông báo lỗi nếu nhập sai tài khoản / mật khẩu */}
+              {authError && (
+                <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-start gap-2">
+                  <span>⚠️</span>
+                  <span>{authError}</span>
                 </div>
+              )}
 
-                {/* Hộp hiển thị Tóm tắt Hồ sơ đang được chọn */}
-                <div className="p-3.5 rounded-2xl bg-[#030712] border border-slate-800/90 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${selectedAccount.avatarBg} flex items-center justify-center text-slate-950 font-black text-sm flex-shrink-0 shadow-md`}>
-                      {selectedAccount.name.split(' ').pop()?.charAt(0) || 'U'}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs font-extrabold text-white truncate">{selectedAccount.name}</div>
-                      <div className={`text-[11px] font-semibold truncate ${roleTheme.accentText}`}>
-                        {selectedAccount.roleTitle} • {selectedAccount.dept}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-[10px] font-mono text-slate-300 flex-shrink-0">
-                    {activePreviewRole}
-                  </span>
-                </div>
+              {/* Ô nhập Tài khoản / Email */}
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1.5">
+                  Tài khoản hoặc Email trường
+                </label>
+                <input
+                  type="text"
+                  autoComplete="username"
+                  value={loginForm.email}
+                  onChange={(e) => {
+                    setLoginForm({ ...loginForm, email: e.target.value });
+                    if (authError) setAuthError('');
+                  }}
+                  placeholder="Nhập email (vd: name@uth.edu.vn)"
+                  className="w-full py-3 px-4 rounded-xl bg-[#040814] border border-slate-800 text-sm text-white placeholder-slate-500 focus:border-cyan-400 outline-none transition-colors"
+                  required
+                />
+              </div>
 
-                {/* Thông báo lỗi nếu sai mật khẩu hoặc mất kết nối */}
-                {authError && (
-                  <div className="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2">
-                    <span>⚠️</span>
-                    <span>{authError}</span>
-                  </div>
-                )}
-
-                {/* Ô nhập Email */}
-                <div>
-                  <label className="text-xs font-bold text-slate-300 flex items-center justify-between mb-1.5">
-                    <span>📧 Email Cán bộ / Giảng viên (@uth.edu.vn)</span>
-                    <span className="text-[10px] font-normal text-slate-400">Tự động nhận diện Role</span>
+              {/* Ô nhập Mật khẩu */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-300">
+                    Mật khẩu
                   </label>
+                </div>
+                <div className="relative">
                   <input
-                    type="email"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                    placeholder="giangvien@uth.edu.vn / admin@uth.edu.vn"
-                    className={`w-full py-3 px-3.5 rounded-xl bg-[#030712] border border-slate-800 text-xs font-mono text-white ${roleTheme.ringFocus} outline-none transition-colors`}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={loginForm.password}
+                    onChange={(e) => {
+                      setLoginForm({ ...loginForm, password: e.target.value });
+                      if (authError) setAuthError('');
+                    }}
+                    placeholder="Nhập mật khẩu của bạn"
+                    className="w-full py-3 pl-4 pr-16 rounded-xl bg-[#040814] border border-slate-800 text-sm text-white placeholder-slate-500 focus:border-cyan-400 outline-none transition-colors"
                     required
                   />
-                </div>
-
-                {/* Ô nhập Mật khẩu có nút Hiện / Ẩn */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold text-slate-300">
-                      🔑 Mật khẩu xác thực
-                    </label>
-                    <span className="text-[11px] text-slate-400">
-                      Mặc định: <code className="text-cyan-300 font-bold">Admin@2026</code>
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      placeholder="Nhập mật khẩu..."
-                      className={`w-full py-3 pl-3.5 pr-20 rounded-xl bg-[#030712] border border-slate-800 text-xs font-mono text-white ${roleTheme.ringFocus} outline-none transition-colors`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] font-semibold text-slate-300 cursor-pointer"
-                    >
-                      {showPassword ? '🙈 Ẩn' : '👁️ Hiện'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Danh sách Đặc quyền sẽ mở khóa sau khi đăng nhập */}
-                <div className="p-3.5 rounded-2xl bg-[#030712]/90 border border-slate-800/90 space-y-2">
-                  <div className="text-[11px] font-bold text-slate-300 flex items-center justify-between">
-                    <span>Đặc quyền sẽ kích hoạt cho tài khoản này:</span>
-                    <span className={`font-mono text-[10px] ${roleTheme.accentText}`}>RBAC Verified</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedAccount.permissions.map((perm) => (
-                      <span
-                        key={perm}
-                        className="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-800 text-[10.5px] font-semibold text-slate-200"
-                      >
-                        ✓ {perm}
-                      </span>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[11px] font-semibold text-slate-300 cursor-pointer"
+                  >
+                    {showPassword ? 'Ẩn' : 'Hiện'}
+                  </button>
                 </div>
               </div>
 
-              {/* Nút Đăng nhập chính */}
-              <div className="space-y-3 pt-2">
+              {/* Ghi nhớ đăng nhập */}
+              <div className="flex items-center justify-between pt-1 text-xs text-slate-400">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    defaultChecked
+                    className="rounded border-slate-700 bg-slate-900 text-cyan-400 focus:ring-0"
+                  />
+                  <span>Duy trì đăng nhập (8 giờ)</span>
+                </label>
+                <span className="text-cyan-400 font-medium">Xác thực SSO • JWT</span>
+              </div>
+
+              {/* Nút Đăng nhập */}
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loginLoading}
-                  className={`w-full py-3.5 px-4 rounded-2xl ${roleTheme.btn} text-slate-950 font-extrabold text-sm shadow-lg active:scale-[0.99] transition-all cursor-pointer border-none flex items-center justify-center gap-2`}
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-cyan-500/25 active:scale-[0.99] transition-all cursor-pointer border-none"
                 >
-                  {loginLoading ? (
-                    <span>⏳ Đang cấp phát chứng chỉ JWT...</span>
-                  ) : (
-                    <>
-                      <span>🔐 Đăng Nhập Vào {selectedAccount.roleTitle}</span>
-                      <span>➔</span>
-                    </>
-                  )}
+                  {loginLoading ? '⏳ Đang kiểm tra thông tin...' : 'Đăng nhập'}
                 </button>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
-                  <span>🔒 Mã hóa TLS + JWT Bearer (8 giờ)</span>
-                  <span>Chuẩn W3C DID &amp; EIP-191</span>
-                </div>
               </div>
             </form>
+
+            <div className="mt-6 pt-5 border-t border-slate-800/80 text-center">
+              <p className="text-[11px] text-slate-400 m-0 leading-relaxed">
+                Hệ thống tự động nhận diện phân quyền (<strong className="text-slate-200">Giảng viên</strong>, <strong className="text-slate-200">Quản trị viên</strong> hoặc <strong className="text-slate-200">Thanh tra</strong>) dựa trên tài khoản đăng nhập của bạn.
+              </p>
+            </div>
           </div>
         </main>
 
-        {/* Footer nhỏ gọn */}
-        <footer className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-4 pt-1 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-          <span>© 2026 UTH-TrustID Research Group • Khoa Công nghệ Thông tin — ĐH GTVT TP.HCM</span>
-          <span>Cổng Web Giảng viên &amp; Quản trị tách biệt độc lập với App Sinh viên</span>
+        {/* Footer */}
+        <footer className="relative z-10 w-full max-w-6xl mx-auto px-6 pb-5 text-center text-[11px] text-slate-500">
+          © 2026 Trường Đại học Giao thông Vận tải TP.HCM (UTH) • Hệ thống Định danh Số UTH-TrustID
         </footer>
       </div>
     );
@@ -1544,51 +1258,11 @@ export default function FacultyDashboard({
             </>
           )}
 
-          {/* Bộ chuyển nhanh tài khoản giữa Thầy/Cô, Admin và Thanh tra để trình diễn Hội đồng */}
-          <div className="flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
-            <button
-              type="button"
-              onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
-                staffRole === 'FACULTY'
-                  ? 'bg-cyan-400 text-slate-950'
-                  : 'bg-transparent text-slate-400 hover:text-white'
-              }`}
-              title="Chuyển nhanh sang tài khoản Giảng viên (TS. Trần Thế Vinh)"
-            >
-              👨‍🏫 Giảng Viên
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
-                staffRole === 'ADMIN'
-                  ? 'bg-emerald-400 text-slate-950'
-                  : 'bg-transparent text-slate-400 hover:text-white'
-              }`}
-              title="Chuyển nhanh sang tài khoản Quản trị viên (Root Admin)"
-            >
-              🏛️ Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickSwitchAccount('thanhtra@uth.edu.vn')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
-                staffRole === 'AUDITOR'
-                  ? 'bg-amber-400 text-slate-950'
-                  : 'bg-transparent text-slate-400 hover:text-white'
-              }`}
-              title="Chuyển nhanh sang tài khoản Thanh tra khảo thí (Auditor)"
-            >
-              🛡️ Thanh Tra
-            </button>
-          </div>
-
           <button
             type="button"
             onClick={handleLogout}
-            className="px-3 py-2 rounded-xl text-xs font-bold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer"
-            title="Đăng xuất về màn hình chọn tài khoản"
+            className="px-3.5 py-2 rounded-xl text-xs font-bold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer"
+            title="Đăng xuất khỏi phiên làm việc hiện tại"
           >
             🚪 Đăng Xuất
           </button>
