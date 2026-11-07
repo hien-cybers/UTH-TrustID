@@ -871,28 +871,29 @@ export default function FacultyDashboard({
     setAuthError('');
   };
 
-  // ==================== CỔNG ĐĂNG NHẬP NGHỆ THUẬT (PHỐI MÀU SUNSET TWILIGHT: #1B1931, #44174E, #662249, #A34054, #ED9E59, #E9BCB9) ====================
+  // ==================== CỔNG ĐĂNG NHẬP NGHỆ THUẬT (PHỐI MÀU OCEAN ICE: #001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) ====================
   if (!token) {
     const FIREFLIES = [
-      { id: 1, top: '22%', left: '68%', size: 5, delay: '0s', dur: '5.5s', color: '#ED9E59' },
-      { id: 2, top: '34%', left: '42%', size: 6, delay: '1.1s', dur: '6.2s', color: '#ED9E59' },
-      { id: 3, top: '46%', left: '28%', size: 5, delay: '0.4s', dur: '4.8s', color: '#E9BCB9' },
-      { id: 4, top: '54%', left: '52%', size: 7, delay: '1.8s', dur: '6.8s', color: '#ED9E59' },
-      { id: 5, top: '64%', left: '36%', size: 5, delay: '2.3s', dur: '5.1s', color: '#A34054' },
-      { id: 6, top: '72%', left: '64%', size: 6, delay: '0.9s', dur: '5.9s', color: '#ED9E59' },
-      { id: 7, top: '16%', left: '48%', size: 4, delay: '1.5s', dur: '4.5s', color: '#E9BCB9' },
-      { id: 8, top: '28%', left: '82%', size: 4, delay: '2.7s', dur: '5.3s', color: '#ED9E59' },
-      { id: 9, top: '58%', left: '76%', size: 5, delay: '0.6s', dur: '6.4s', color: '#E9BCB9' },
-      { id: 10, top: '82%', left: '48%', size: 6, delay: '1.9s', dur: '5.7s', color: '#ED9E59' }
+      { id: 1, top: '22%', left: '68%', size: 5, delay: '0s', dur: '5.5s', color: '#7BBDE8' },
+      { id: 2, top: '34%', left: '42%', size: 6, delay: '1.1s', dur: '6.2s', color: '#fde047' },
+      { id: 3, top: '46%', left: '28%', size: 5, delay: '0.4s', dur: '4.8s', color: '#BDD8E9' },
+      { id: 4, top: '54%', left: '52%', size: 7, delay: '1.8s', dur: '6.8s', color: '#7BBDE8' },
+      { id: 5, top: '64%', left: '36%', size: 5, delay: '2.3s', dur: '5.1s', color: '#4E8EA2' },
+      { id: 6, top: '72%', left: '64%', size: 6, delay: '0.9s', dur: '5.9s', color: '#BDD8E9' },
+      { id: 7, top: '16%', left: '48%', size: 4, delay: '1.5s', dur: '4.5s', color: '#ffffff' },
+      { id: 8, top: '28%', left: '82%', size: 4, delay: '2.7s', dur: '5.3s', color: '#7BBDE8' },
+      { id: 9, top: '58%', left: '76%', size: 5, delay: '0.6s', dur: '6.4s', color: '#BDD8E9' },
+      { id: 10, top: '82%', left: '48%', size: 6, delay: '1.9s', dur: '5.7s', color: '#7BBDE8' }
     ];
 
     const PALETTE_SWATCHES = [
-      '#1B1931',
-      '#44174E',
-      '#662249',
-      '#A34054',
-      '#ED9E59',
-      '#E9BCB9'
+      '#001D39',
+      '#0A4174',
+      '#49769F',
+      '#4E8EA2',
+      '#6EA2B3',
+      '#7BBDE8',
+      '#BDD8E9'
     ];
 
     const handleCardMouseMove = (e) => {
@@ -913,24 +914,24 @@ export default function FacultyDashboard({
         className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden select-none"
         style={{
           background:
-            'linear-gradient(165deg, #ED9E59 0%, #A34054 38%, #662249 70%, #44174E 90%, #1B1931 100%)'
+            'linear-gradient(180deg, #BDD8E9 0%, #7BBDE8 24%, #6EA2B3 44%, #4E8EA2 60%, #49769F 74%, #0A4174 88%, #001D39 100%)'
         }}
       >
-        {/* Quầng bóng đổ sâu màu Tím Đêm (#1B1931 & #44174E) phía dưới Card */}
+        {/* Quầng bóng đổ sâu màu Xanh Đại Dương (#001D39 & #0A4174) phía dưới Card */}
         <div
-          className="pointer-events-none absolute w-[84%] max-w-[920px] h-[540px] rounded-[44px] blur-3xl opacity-75 transition-transform duration-500"
+          className="pointer-events-none absolute w-[84%] max-w-[920px] h-[540px] rounded-[44px] blur-3xl opacity-80 transition-transform duration-500"
           style={{
             background:
-              'radial-gradient(circle at 50% 85%, rgba(27, 25, 49, 0.85), rgba(68, 23, 78, 0.55), transparent 74%)',
+              'radial-gradient(circle at 50% 85%, rgba(0, 29, 57, 0.88), rgba(10, 65, 116, 0.6), transparent 74%)',
             transform: `translate3d(${loginParallax.x * 0.5}px, ${30 + loginParallax.y * 0.5}px, 0)`
           }}
         />
 
-        {/* ==================== KHUNG CARD ĐĂNG NHẬP 2 CỘT (50% ARTWORK SUNSET / 50% FORM KEM HỒNG #FFF9F8) ==================== */}
-        <div className="animate-login-card relative z-10 w-full max-w-[960px] min-h-[590px] rounded-[26px] bg-[#FFFDFC] border border-[#E9BCB9]/45 shadow-[0_36px_90px_-12px_rgba(27,25,49,0.68)] overflow-hidden grid grid-cols-1 md:grid-cols-12">
+        {/* ==================== KHUNG CARD ĐĂNG NHẬP 2 CỘT (50% ARTWORK OCEAN / 50% FORM BĂNG TUYẾT #F7FBFE) ==================== */}
+        <div className="animate-login-card relative z-10 w-full max-w-[960px] min-h-[590px] rounded-[26px] bg-[#F9FCFF] border border-[#BDD8E9]/70 shadow-[0_36px_90px_-12px_rgba(0,29,57,0.72)] overflow-hidden grid grid-cols-1 md:grid-cols-12">
           
-          {/* ==================== CỘT TRÁI (6 CỘT): TRANH ĐÊM HÒA QUYỆN TÔNG MÀU HOÀNG HÔN TÍM (#1B1931 -> #ED9E59) ==================== */}
-          <div className="md:col-span-6 relative min-h-[300px] md:min-h-[590px] bg-[#1B1931] overflow-hidden flex items-center justify-center">
+          {/* ==================== CỘT TRÁI (6 CỘT): TRANH ĐÊM HÒA QUYỆN TÔNG XANH ĐẠI DƯƠNG (#001D39 -> #7BBDE8) ==================== */}
+          <div className="md:col-span-6 relative min-h-[300px] md:min-h-[590px] bg-[#001D39] overflow-hidden flex items-center justify-center">
             
             {/* Lớp Tranh Nền chuyển động Parallax + Ken Burns nhẹ nhàng */}
             <img
@@ -942,16 +943,16 @@ export default function FacultyDashboard({
               }}
             />
 
-            {/* Lớp phủ hòa sắc nhẹ (Color Grading Overlay) theo bảng màu #1B1931 - #44174E - #A34054 - #ED9E59 */}
+            {/* Lớp phủ hòa sắc nhẹ (Color Grading Overlay) theo bảng màu #001D39 - #0A4174 - #4E8EA2 - #7BBDE8 */}
             <div
-              className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-70"
+              className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-55"
               style={{
                 background:
-                  'linear-gradient(160deg, rgba(27,25,49,0.75) 0%, rgba(68,23,78,0.55) 40%, rgba(163,64,84,0.45) 75%, rgba(237,158,89,0.5) 100%)'
+                  'linear-gradient(160deg, rgba(0,29,57,0.75) 0%, rgba(10,65,116,0.5) 45%, rgba(78,142,162,0.4) 78%, rgba(123,189,232,0.45) 100%)'
               }}
             />
 
-            {/* Hiệu ứng Quầng Sáng Cam Hoàng Hôn (#ED9E59) lan tỏa từ mái nhà vàng */}
+            {/* Hiệu ứng Quầng Sáng Ấm Áp lan tỏa từ mái nhà vàng */}
             <div
               className="animate-pavilion-glow pointer-events-none absolute rounded-full blur-2xl"
               style={{
@@ -960,12 +961,12 @@ export default function FacultyDashboard({
                 width: '140px',
                 height: '100px',
                 background:
-                  'radial-gradient(circle, rgba(237, 158, 89, 0.72) 0%, rgba(163, 64, 84, 0.32) 55%, transparent 78%)',
+                  'radial-gradient(circle, rgba(253, 224, 71, 0.62) 0%, rgba(123, 189, 232, 0.35) 58%, transparent 78%)',
                 transform: `translate3d(${-loginParallax.x * 1.1}px, ${-loginParallax.y * 1.1}px, 0)`
               }}
             />
 
-            {/* Hiệu ứng Đom Đóm & Sao Đêm Lấp Lánh Bay Lên (#ED9E59 & #E9BCB9) */}
+            {/* Hiệu ứng Đom Đóm & Sao Đêm Lấp Lánh Bay Lên (#7BBDE8 & #BDD8E9) */}
             {FIREFLIES.map((f) => (
               <span
                 key={f.id}
@@ -982,12 +983,12 @@ export default function FacultyDashboard({
               />
             ))}
 
-            {/* Huy hiệu UTH-TrustID + Thanh 6 chấm màu Sunset Twilight ở góc dưới bên trái */}
+            {/* Huy hiệu UTH-TrustID + Thanh 7 chấm màu Ocean Ice ở góc dưới bên trái */}
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2 pointer-events-none">
-              <span className="px-3 py-1 rounded-full bg-[#1B1931]/85 backdrop-blur-md border border-[#E9BCB9]/25 text-[10.5px] font-semibold tracking-wider text-[#E9BCB9] shadow-sm">
+              <span className="px-3 py-1 rounded-full bg-[#001D39]/85 backdrop-blur-md border border-[#BDD8E9]/30 text-[10.5px] font-semibold tracking-wider text-[#BDD8E9] shadow-sm">
                 UTH-TRUSTID • ZERO-TRUST PORTAL
               </span>
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1B1931]/80 backdrop-blur-md border border-[#E9BCB9]/20">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#001D39]/80 backdrop-blur-md border border-[#BDD8E9]/25">
                 {PALETTE_SWATCHES.map((hex) => (
                   <span
                     key={hex}
@@ -999,26 +1000,26 @@ export default function FacultyDashboard({
             </div>
           </div>
 
-          {/* ==================== CỘT PHẢI (6 CỘT): BIỂU MẪU LOGIN TỐI GIẢN PHỐI MÀU #1B1931 -> #ED9E59 ==================== */}
+          {/* ==================== CỘT PHẢI (6 CỘT): BIỂU MẪU LOGIN TỐI GIẢN PHỐI MÀU #001D39 -> #7BBDE8 ==================== */}
           <div
             className="md:col-span-6 px-8 sm:px-14 py-10 flex flex-col justify-between relative"
             style={{
               background:
-                'linear-gradient(180deg, #FFFFFF 0%, #FFF9F8 65%, #FCEFED 100%)'
+                'linear-gradient(180deg, #FFFFFF 0%, #F7FBFE 65%, #EBF4FA 100%)'
             }}
           >
             {/* Khoảng đệm phía trên để căn giữa Form giống mẫu */}
             <div className="hidden md:block" />
 
-            {/* Khối trung tâm: Tiêu đề Login + 2 ô Underline Input + Nút Login Gradient (#1B1931 -> #662249) */}
+            {/* Khối trung tâm: Tiêu đề Login + 2 ô Underline Input + Nút Login Gradient (#001D39 -> #0A4174 -> #49769F) */}
             <div className="w-full max-w-[330px] mx-auto my-auto">
-              <h1 className="text-[32px] font-extrabold text-[#1B1931] text-center tracking-tight mb-10">
+              <h1 className="text-[32px] font-extrabold text-[#001D39] text-center tracking-tight mb-10">
                 Login
               </h1>
 
               {/* Thông báo lỗi nếu nhập sai tài khoản hoặc mật khẩu */}
               {authError && (
-                <div className="mb-6 p-3 rounded-xl bg-[#E9BCB9]/35 border border-[#A34054]/50 text-[#662249] text-xs font-semibold flex items-start gap-2 animate-[fadeIn_0.25s_ease-out]">
+                <div className="mb-6 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-start gap-2 animate-[fadeIn_0.25s_ease-out]">
                   <span>⚠️</span>
                   <span>{authError}</span>
                 </div>
@@ -1026,12 +1027,12 @@ export default function FacultyDashboard({
 
               {/* Thông báo hỗ trợ khi bấm Forgot password? hoặc Sign up */}
               {loginHelperNotice && !authError && (
-                <div className="mb-6 p-3 rounded-xl bg-[#E9BCB9]/30 border border-[#A34054]/35 text-[#1B1931] text-xs leading-relaxed flex items-start justify-between gap-2 animate-[fadeIn_0.25s_ease-out]">
+                <div className="mb-6 p-3 rounded-xl bg-[#BDD8E9]/40 border border-[#7BBDE8] text-[#001D39] text-xs leading-relaxed flex items-start justify-between gap-2 animate-[fadeIn_0.25s_ease-out]">
                   <span>{loginHelperNotice}</span>
                   <button
                     type="button"
                     onClick={() => setLoginHelperNotice('')}
-                    className="text-[#662249] hover:text-[#1B1931] bg-transparent border-none cursor-pointer text-xs font-bold"
+                    className="text-[#0A4174] hover:text-[#001D39] bg-transparent border-none cursor-pointer text-xs font-bold"
                   >
                     ✕
                   </button>
@@ -1040,13 +1041,13 @@ export default function FacultyDashboard({
 
               <form onSubmit={handleLogin} className="space-y-8">
                 
-                {/* Ô nhập Email (Underline Input + Thanh gạch chân chuyển sắc #44174E -> #A34054 -> #ED9E59) */}
+                {/* Ô nhập Email (Underline Input + Thanh gạch chân chuyển sắc #001D39 -> #0A4174 -> #4E8EA2 -> #7BBDE8) */}
                 <div className="relative pt-2">
                   <label
                     className={`block transition-all duration-300 pointer-events-none ${
                       focusedField === 'email' || loginForm.email
-                        ? 'text-[11px] font-bold text-[#662249] -translate-y-1'
-                        : 'text-[14px] font-medium text-[#662249]/65 translate-y-4'
+                        ? 'text-[11px] font-bold text-[#0A4174] -translate-y-1'
+                        : 'text-[14px] font-medium text-[#49769F] translate-y-4'
                     }`}
                   >
                     Email
@@ -1061,16 +1062,16 @@ export default function FacultyDashboard({
                       setLoginForm({ ...loginForm, email: e.target.value });
                       if (authError) setAuthError('');
                     }}
-                    className="w-full pt-1 pb-2.5 bg-transparent border-0 border-b border-[#662249]/35 text-[14.5px] text-[#1B1931] font-semibold outline-none transition-colors"
+                    className="w-full pt-1 pb-2.5 bg-transparent border-0 border-b border-[#6EA2B3]/65 text-[14.5px] text-[#001D39] font-semibold outline-none transition-colors"
                     required
                   />
-                  {/* Thanh gạch chân động (Animated Expanding Sunset Gradient Underline) */}
+                  {/* Thanh gạch chân động (Animated Expanding Ocean Gradient Underline) */}
                   <span
                     className={`pointer-events-none absolute bottom-0 left-0 h-[2.5px] transition-all duration-300 ease-out ${
                       focusedField === 'email' ? 'w-full' : 'w-0'
                     }`}
                     style={{
-                      background: 'linear-gradient(90deg, #1B1931 0%, #662249 40%, #A34054 72%, #ED9E59 100%)'
+                      background: 'linear-gradient(90deg, #001D39 0%, #0A4174 35%, #4E8EA2 70%, #7BBDE8 100%)'
                     }}
                   />
                 </div>
@@ -1081,8 +1082,8 @@ export default function FacultyDashboard({
                     <label
                       className={`block transition-all duration-300 pointer-events-none ${
                         focusedField === 'password' || loginForm.password
-                          ? 'text-[11px] font-bold text-[#662249] -translate-y-1'
-                          : 'text-[14px] font-medium text-[#662249]/65 translate-y-4'
+                          ? 'text-[11px] font-bold text-[#0A4174] -translate-y-1'
+                          : 'text-[14px] font-medium text-[#49769F] translate-y-4'
                       }`}
                     >
                       Password
@@ -1094,7 +1095,7 @@ export default function FacultyDashboard({
                           '🔑 Mật khẩu SSO mặc định cho Cán bộ / Giảng viên / Admin / Thanh tra là: Admin@2026'
                         )
                       }
-                      className="text-[11.5px] font-bold text-[#662249] hover:text-[#A34054] bg-transparent border-none cursor-pointer p-0 transition-colors z-10"
+                      className="text-[11.5px] font-bold text-[#0A4174] hover:text-[#4E8EA2] bg-transparent border-none cursor-pointer p-0 transition-colors z-10"
                     >
                       Forgot password?
                     </button>
@@ -1111,14 +1112,14 @@ export default function FacultyDashboard({
                         setLoginForm({ ...loginForm, password: e.target.value });
                         if (authError) setAuthError('');
                       }}
-                      className="w-full pt-1 pb-2.5 pr-10 bg-transparent border-0 border-b border-[#662249]/35 text-[14.5px] text-[#1B1931] font-semibold outline-none transition-colors"
+                      className="w-full pt-1 pb-2.5 pr-10 bg-transparent border-0 border-b border-[#6EA2B3]/65 text-[14.5px] text-[#001D39] font-semibold outline-none transition-colors"
                       required
                     />
                     {loginForm.password && (
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-0 bottom-2 text-[11px] font-bold text-[#A34054] hover:text-[#1B1931] bg-transparent border-none cursor-pointer"
+                        className="absolute right-0 bottom-2 text-[11px] font-bold text-[#49769F] hover:text-[#001D39] bg-transparent border-none cursor-pointer"
                         title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                       >
                         {showPassword ? 'Hide' : 'Show'}
@@ -1126,26 +1127,26 @@ export default function FacultyDashboard({
                     )}
                   </div>
 
-                  {/* Thanh gạch chân động (Animated Expanding Sunset Gradient Underline) */}
+                  {/* Thanh gạch chân động (Animated Expanding Ocean Gradient Underline) */}
                   <span
                     className={`pointer-events-none absolute bottom-0 left-0 h-[2.5px] transition-all duration-300 ease-out ${
                       focusedField === 'password' ? 'w-full' : 'w-0'
                     }`}
                     style={{
-                      background: 'linear-gradient(90deg, #1B1931 0%, #662249 40%, #A34054 72%, #ED9E59 100%)'
+                      background: 'linear-gradient(90deg, #001D39 0%, #0A4174 35%, #4E8EA2 70%, #7BBDE8 100%)'
                     }}
                   />
                 </div>
 
-                {/* Nút Login Phối màu #1B1931 -> #44174E -> #662249 kèm Hiệu ứng Ánh sáng lướt */}
+                {/* Nút Login Phối màu #001D39 -> #0A4174 -> #49769F kèm Hiệu ứng Ánh sáng lướt */}
                 <div className="pt-3">
                   <button
                     type="submit"
                     disabled={loginLoading}
                     style={{
-                      background: 'linear-gradient(135deg, #1B1931 0%, #44174E 55%, #662249 100%)'
+                      background: 'linear-gradient(135deg, #001D39 0%, #0A4174 58%, #49769F 100%)'
                     }}
-                    className="login-btn-shimmer w-full py-3.5 px-6 rounded-[14px] text-[#FFFDFC] font-bold text-[15px] tracking-wide shadow-[0_14px_30px_-6px_rgba(68,23,78,0.55)] hover:shadow-[0_18px_36px_-6px_rgba(163,64,84,0.65)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer border border-[#A34054]/40"
+                    className="login-btn-shimmer w-full py-3.5 px-6 rounded-[14px] text-white font-bold text-[15px] tracking-wide shadow-[0_14px_30px_-6px_rgba(0,29,57,0.55)] hover:shadow-[0_18px_36px_-6px_rgba(10,65,116,0.7)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer border border-[#7BBDE8]/35"
                   >
                     {loginLoading ? 'Signing in...' : 'Login'}
                   </button>
@@ -1153,9 +1154,9 @@ export default function FacultyDashboard({
               </form>
             </div>
 
-            {/* Chân Form: "Don't have an account? Sign up" phối màu #662249 & #A34054 */}
+            {/* Chân Form: "Don't have an account? Sign up" phối màu #49769F & #001D39 */}
             <div className="text-center pt-6">
-              <p className="text-[12.5px] font-medium text-[#662249]/80 m-0">
+              <p className="text-[12.5px] font-medium text-[#49769F] m-0">
                 Don&apos;t have an account?{' '}
                 <button
                   type="button"
@@ -1164,7 +1165,7 @@ export default function FacultyDashboard({
                       '🏛️ Tài khoản Cán bộ / Giảng viên (@uth.edu.vn) được cấp tập trung qua Phòng Đào tạo & CNTT (ví dụ: giangvien@uth.edu.vn, admin@uth.edu.vn, thanhtra@uth.edu.vn).'
                     )
                   }
-                  className="font-extrabold text-[#1B1931] hover:text-[#A34054] hover:underline bg-transparent border-none cursor-pointer p-0 transition-colors"
+                  className="font-extrabold text-[#001D39] hover:text-[#0A4174] hover:underline bg-transparent border-none cursor-pointer p-0 transition-colors"
                 >
                   Sign up
                 </button>
@@ -1194,7 +1195,7 @@ export default function FacultyDashboard({
   });
 
   return (
-    <div className="sunset-palette-theme min-h-screen bg-[#1B1931] text-[#FDF8F7] flex flex-col select-none">
+    <div className="ocean-palette-theme min-h-screen bg-[#001D39] text-[#F4F9FD] flex flex-col select-none">
       
       {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH THEO ĐÚNG VAI TRÒ (ROLE-AWARE TOP NAVBAR) ==================== */}
       <header className="sticky top-0 z-30 px-6 py-3 border-b border-slate-800/80 bg-[#060D1F]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">

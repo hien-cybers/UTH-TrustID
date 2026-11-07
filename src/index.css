@@ -4,44 +4,45 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Bảng phối màu Sunset Twilight 6 sắc độ (#1B1931, #44174E, #662249, #A34054, #ED9E59, #E9BCB9) */
-  --palette-midnight: #1B1931;
-  --palette-plum: #44174E;
-  --palette-burgundy: #662249;
-  --palette-crimson: #A34054;
-  --palette-amber: #ED9E59;
-  --palette-blush: #E9BCB9;
+  /* Bảng phối màu Ocean Ice 7 sắc độ (#001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) */
+  --ocean-abyss: #001D39;
+  --ocean-royal: #0A4174;
+  --ocean-steel: #49769F;
+  --ocean-teal: #4E8EA2;
+  --ocean-mist: #6EA2B3;
+  --ocean-sky: #7BBDE8;
+  --ocean-frost: #BDD8E9;
 
-  --bg-main: #1B1931;
-  --bg-dark: #1B1931;
-  --bg-pure: #151328;
-  --admin-bg: #1B1931;
-  --bg-card: rgba(68, 23, 78, 0.55);
-  --card-bg: #27173A;
-  --card-charcoal: #221533;
-  --bg-input: #161329;
-  --border-color: rgba(233, 188, 185, 0.16);
-  --border-hover: rgba(237, 158, 89, 0.45);
-  --border-subtle: #44174E;
-  --border: #662249;
-  --primary: #ED9E59;
-  --cyan-accent: #ED9E59;
-  --primary-glow: rgba(237, 158, 89, 0.28);
-  --accent-purple: #662249;
-  --accent-rose: #A34054;
-  --accent-emerald: #ED9E59;
-  --green-active: #ED9E59;
-  --red-revoked: #A34054;
-  --yellow-warn: #ED9E59;
-  --text-main: #FDF8F7;
-  --text-primary: #FDF8F7;
+  --bg-main: #001D39;
+  --bg-dark: #001D39;
+  --bg-pure: #00152B;
+  --admin-bg: #001D39;
+  --bg-card: rgba(10, 65, 116, 0.58);
+  --card-bg: #072E54;
+  --card-charcoal: #052647;
+  --bg-input: #00172E;
+  --border-color: rgba(123, 189, 232, 0.22);
+  --border-hover: rgba(123, 189, 232, 0.55);
+  --border-subtle: #0A4174;
+  --border: #49769F;
+  --primary: #7BBDE8;
+  --cyan-accent: #7BBDE8;
+  --primary-glow: rgba(123, 189, 232, 0.32);
+  --accent-purple: #49769F;
+  --accent-rose: #f43f5e;
+  --accent-emerald: #4E8EA2;
+  --green-active: #7BBDE8;
+  --red-revoked: #ff5252;
+  --yellow-warn: #fbbf24;
+  --text-main: #F4F9FD;
+  --text-primary: #F4F9FD;
   --text-white: #ffffff;
-  --text-muted: #E9BCB9;
-  --text-secondary: #d5a7a4;
+  --text-muted: #BDD8E9;
+  --text-secondary: #7BBDE8;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --btn-bg: #44174E;
-  --btn-border: #662249;
+  --btn-bg: #0A4174;
+  --btn-border: #49769F;
 }
 
 /* Tối ưu hóa hiển thị Mobile chuẩn iOS & Android */
@@ -445,92 +446,93 @@ button, input, select {
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
 }
 
-/* ==================== HỆ MÀU SUNSET TWILIGHT (#1B1931, #44174E, #662249, #A34054, #ED9E59, #E9BCB9) ==================== */
-.sunset-palette-theme {
-  background: radial-gradient(circle at 85% 10%, rgba(163, 64, 84, 0.22), transparent 45%),
-              radial-gradient(circle at 15% 85%, rgba(68, 23, 78, 0.35), transparent 50%),
-              #1B1931 !important;
-  color: #FDF8F7 !important;
+/* ==================== HỆ MÀU OCEAN ICE 7 SẮC ĐỘ (#001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) ==================== */
+.sunset-palette-theme,
+.ocean-palette-theme {
+  background: radial-gradient(circle at 85% 10%, rgba(123, 189, 232, 0.18), transparent 45%),
+              radial-gradient(circle at 15% 85%, rgba(10, 65, 116, 0.45), transparent 52%),
+              #001D39 !important;
+  color: #F4F9FD !important;
 }
 
 /* Header & Thanh điều hướng trên cùng */
-.sunset-palette-theme header {
-  background: rgba(27, 25, 49, 0.92) !important;
-  border-bottom-color: rgba(163, 64, 84, 0.35) !important;
-  box-shadow: 0 8px 32px rgba(27, 25, 49, 0.65);
+.sunset-palette-theme header,
+.ocean-palette-theme header {
+  background: rgba(0, 29, 57, 0.92) !important;
+  border-bottom-color: rgba(73, 118, 159, 0.45) !important;
+  box-shadow: 0 8px 32px rgba(0, 20, 42, 0.65);
 }
 
-/* Các khối Card chính (chuyển từ xanh đen #081226 sang Tím Rượu Vang #44174E / #2A163B) */
-.sunset-palette-theme .bg-\[\#081226\] {
-  background: linear-gradient(145deg, rgba(68, 23, 78, 0.78) 0%, rgba(36, 20, 52, 0.92) 100%) !important;
-  border-color: rgba(163, 64, 84, 0.38) !important;
-  box-shadow: 0 18px 45px -12px rgba(17, 14, 34, 0.75) !important;
+/* Các khối Card chính (chuyển sang Xanh Đại Dương #0A4174 -> #001D39) */
+.sunset-palette-theme .bg-\[\#081226\],
+.ocean-palette-theme .bg-\[\#081226\] {
+  background: linear-gradient(145deg, rgba(10, 65, 116, 0.72) 0%, rgba(4, 38, 72, 0.92) 100%) !important;
+  border-color: rgba(110, 162, 179, 0.38) !important;
+  box-shadow: 0 18px 45px -12px rgba(0, 18, 38, 0.78) !important;
 }
 
-/* Các khối nền phụ & Ô Input bên trong Card (#040814 / slate-950 -> #1B1931) */
+/* Các khối nền phụ & Ô Input bên trong Card (#040814 / slate-950 -> #001D39) */
 .sunset-palette-theme .bg-\[\#040814\],
 .sunset-palette-theme .bg-\[\#040814\]\/80,
 .sunset-palette-theme .bg-slate-950,
-.sunset-palette-theme .bg-slate-950\/90 {
-  background-color: rgba(27, 25, 49, 0.88) !important;
-  border-color: rgba(102, 34, 73, 0.65) !important;
+.sunset-palette-theme .bg-slate-950\/90,
+.ocean-palette-theme .bg-\[\#040814\],
+.ocean-palette-theme .bg-\[\#040814\]\/80,
+.ocean-palette-theme .bg-slate-950,
+.ocean-palette-theme .bg-slate-950\/90 {
+  background-color: rgba(0, 29, 57, 0.88) !important;
+  border-color: rgba(73, 118, 159, 0.55) !important;
 }
 
-/* Đường viền (Borders) chuyển sang tông #662249 & #A34054 */
+/* Đường viền (Borders) chuyển sang tông #49769F & #6EA2B3 */
 .sunset-palette-theme .border-slate-800,
 .sunset-palette-theme .border-slate-800\/90,
 .sunset-palette-theme .border-slate-800\/80,
-.sunset-palette-theme .border-slate-700 {
-  border-color: rgba(102, 34, 73, 0.68) !important;
+.sunset-palette-theme .border-slate-700,
+.ocean-palette-theme .border-slate-800,
+.ocean-palette-theme .border-slate-800\/90,
+.ocean-palette-theme .border-slate-800\/80,
+.ocean-palette-theme .border-slate-700 {
+  border-color: rgba(73, 118, 159, 0.58) !important;
 }
 
 .sunset-palette-theme .border-cyan-500\/30,
 .sunset-palette-theme .border-cyan-500\/40,
 .sunset-palette-theme .border-cyan-400\/40,
-.sunset-palette-theme .border-cyan-400 {
-  border-color: rgba(237, 158, 89, 0.55) !important;
+.sunset-palette-theme .border-cyan-400,
+.ocean-palette-theme .border-cyan-500\/30,
+.ocean-palette-theme .border-cyan-500\/40,
+.ocean-palette-theme .border-cyan-400\/40,
+.ocean-palette-theme .border-cyan-400 {
+  border-color: rgba(123, 189, 232, 0.58) !important;
 }
 
-/* Nút bấm chính & Tab đang chọn (Cyan -> Cam Hoàng Hôn #ED9E59 & Hồng Đỏ #A34054) */
+/* Nút bấm chính & Tab đang chọn (#7BBDE8 -> #4E8EA2) */
 .sunset-palette-theme .bg-cyan-400,
-.sunset-palette-theme .bg-amber-500,
-.sunset-palette-theme .bg-amber-400 {
-  background: linear-gradient(135deg, #ED9E59 0%, #d97b43 100%) !important;
-  color: #1B1931 !important;
-  box-shadow: 0 8px 24px rgba(237, 158, 89, 0.32) !important;
+.ocean-palette-theme .bg-cyan-400 {
+  background: linear-gradient(135deg, #7BBDE8 0%, #4E8EA2 100%) !important;
+  color: #001D39 !important;
+  box-shadow: 0 8px 24px rgba(123, 189, 232, 0.35) !important;
 }
 
 .sunset-palette-theme .bg-cyan-500\/15,
-.sunset-palette-theme .bg-amber-500\/15,
-.sunset-palette-theme .bg-amber-500\/10 {
-  background-color: rgba(237, 158, 89, 0.16) !important;
-  border-color: rgba(237, 158, 89, 0.42) !important;
-  color: #ED9E59 !important;
+.ocean-palette-theme .bg-cyan-500\/15 {
+  background-color: rgba(123, 189, 232, 0.16) !important;
+  border-color: rgba(123, 189, 232, 0.45) !important;
+  color: #BDD8E9 !important;
 }
 
-/* Chữ nhấn (Text Accents: Cyan -> #ED9E59 & #E9BCB9) */
+/* Chữ nhấn (Text Accents: #7BBDE8 & #BDD8E9) */
 .sunset-palette-theme .text-cyan-300,
 .sunset-palette-theme .text-cyan-400,
-.sunset-palette-theme .text-amber-300,
-.sunset-palette-theme .text-amber-400 {
-  color: #ED9E59 !important;
+.ocean-palette-theme .text-cyan-300,
+.ocean-palette-theme .text-cyan-400 {
+  color: #7BBDE8 !important;
 }
 
 .sunset-palette-theme .text-slate-400,
-.sunset-palette-theme .text-slate-300 {
-  color: #E9BCB9 !important;
-}
-
-/* Nút Đỏ / Cảnh báo IDS (#A34054 & #662249) */
-.sunset-palette-theme .bg-rose-500 {
-  background: linear-gradient(135deg, #A34054 0%, #662249 100%) !important;
-  color: #ffffff !important;
-}
-
-.sunset-palette-theme .bg-rose-500\/15,
-.sunset-palette-theme .bg-rose-500\/20,
-.sunset-palette-theme .bg-rose-950\/20,
-.sunset-palette-theme .bg-rose-950\/25 {
-  background-color: rgba(163, 64, 84, 0.22) !important;
-  border-color: rgba(163, 64, 84, 0.55) !important;
+.sunset-palette-theme .text-slate-300,
+.ocean-palette-theme .text-slate-400,
+.ocean-palette-theme .text-slate-300 {
+  color: #BDD8E9 !important;
 }
