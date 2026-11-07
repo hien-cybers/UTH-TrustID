@@ -8,21 +8,58 @@ import { saveCredentialToStorage } from '../utils/credentialStorage';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
 
 export default function FacultyDashboard({
-  initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
+  initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN' | 'AUDITOR'
 }) {
-  // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên & Admin)
+  // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên, Admin & Thanh tra)
   const [token, setToken] = useState(() => localStorage.getItem('faculty_token') || null);
   const [facultyUser, setFacultyUser] = useState(() => {
     try {
       const raw = localStorage.getItem('faculty_user');
-      return raw ? JSON.parse(raw) : { email: 'giangvien@uth.edu.vn', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY' };
+      return raw
+        ? JSON.parse(raw)
+        : {
+            email: 'giangvien@uth.edu.vn',
+            fullName: 'TS. Trần Thế Vinh',
+            department: 'Khoa Công nghệ Thông tin',
+            role: 'FACULTY'
+          };
     } catch {
-      return { email: 'giangvien@uth.edu.vn', fullName: 'TS. Trần Thế Vinh', role: 'FACULTY' };
+      return {
+        email: 'giangvien@uth.edu.vn',
+        fullName: 'TS. Trần Thế Vinh',
+        department: 'Khoa Công nghệ Thông tin',
+        role: 'FACULTY'
+      };
     }
   });
   const [loginForm, setLoginForm] = useState({ email: 'giangvien@uth.edu.vn', password: 'Admin@2026' });
   const [authError, setAuthError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Danh sách học phần mẫu được phân công cho Giảng viên
+  const ASSIGNED_COURSES = [
+    {
+      courseCode: 'IT402.N01',
+      courseName: 'An toàn Mạng máy tính & Ứng dụng',
+      room: 'A2-301',
+      schedule: 'Ca 3 (13:30 - 16:00)',
+      totalStudents: 65
+    },
+    {
+      courseCode: 'IT308.M11',
+      courseName: 'Mật mã học & Ứng dụng Blockchain',
+      room: 'B1-204',
+      schedule: 'Ca 1 (07:30 - 10:00)',
+      totalStudents: 50
+    },
+    {
+      courseCode: 'IT415.P02',
+      courseName: 'Bảo mật Web & Hệ thống Phân tán',
+      room: 'A3-402',
+      schedule: 'Ca 2 (09:30 - 12:00)',
+      totalStudents: 60
+    }
+  ];
 
   // Cấu hình phiên học
   const [sessionConfig, setSessionConfig] = useState({
@@ -35,11 +72,19 @@ export default function FacultyDashboard({
     campusSsid: "UTH_STUDENT_SECURE"
   });
 
+  const resolvedInitialRole = facultyUser?.role || (initialMode === 'ADMIN' ? 'ADMIN' : 'FACULTY');
   const [sessionId, setSessionId] = useState("SES_A2301");
-  const [staffRole, setStaffRole] = useState(initialMode === 'ADMIN' ? 'ADMIN' : 'FACULTY'); // 'FACULTY' | 'ADMIN'
-  const [isCreated, setIsCreated] = useState(true);
-  const [isSessionOpen, setIsSessionOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState(initialMode === 'ADMIN' ? 'ADMIN' : 'STAGE'); // 'STAGE' | 'RADAR' | 'IDS' | 'ADMIN'
+  const [staffRole, setStaffRole] = useState(resolvedInitialRole); // 'FACULTY' | 'ADMIN' | 'AUDITOR'
+  // QUAN TRỌNG: Mặc định isCreated = false đối với Giảng viên — Chỉ khi nào Giảng viên bấm "Tạo Lớp" thì mới sinh mã QR!
+  const [isCreated, setIsCreated] = useState(false);
+  const [isSessionOpen, setIsSessionOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(
+    resolvedInitialRole === 'ADMIN'
+      ? 'ADMIN_ISSUANCE'
+      : resolvedInitialRole === 'AUDITOR'
+      ? 'IDS'
+      : 'STAGE'
+  );
   
   // Nonce xoay vòng & Tiến trình đếm lùi 35 giây
   const ROTATE_INTERVAL = 35;
@@ -500,10 +545,10 @@ export default function FacultyDashboard({
   };
 
   useEffect(() => {
-    if (activeTab === 'ADMIN') {
+    if (staffRole === 'ADMIN' || staffRole === 'AUDITOR' || activeTab.startsWith('ADMIN')) {
       fetchAdminAuditLogs();
     }
-  }, [activeTab]);
+  }, [activeTab, staffRole]);
 
   const handleAdminRevokeWallet = async () => {
     if (!revokeAddressInput.trim()) return;
@@ -514,7 +559,6 @@ export default function FacultyDashboard({
         currentRevoked.push(addr);
         localStorage.setItem('uth_revoked_keys', JSON.stringify(currentRevoked));
       }
-      // Thu hồi đồng thời địa chỉ nhập vào và cả 2 địa chỉ mặc định của thẻ sinh viên 2251120000 nếu đang demo
       const targets = addr.toLowerCase() === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' || addr.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
         ? ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x1D9b6938A3f073e3426052C7016155D85040Ed1D']
         : [addr];
@@ -577,10 +621,32 @@ export default function FacultyDashboard({
     return acc;
   }, {});
 
-  // Chuỗi QR chuẩn UTH_ID để điện thoại sinh viên quét trực tiếp từ Stage Mode (Nhúng kèm SERVER_URL LocalTunnel cho điện thoại 4G)
-  const qrPayloadString = `UTH_ID:${sessionId}:${currentNonce}:${sessionConfig.centerCoords.lat}:${sessionConfig.centerCoords.lon}:${Date.now()}:${
-    sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'CAMPUS_WIFI_ONLY' : 'HYBRID_4G_5G'
-  }:${encodeURIComponent(SERVER_URL)}`;
+  // Chuỗi QR chuẩn UTH_ID — CHỈ SINH RA KHI GIẢNG VIÊN ĐÃ TẠO LỚP (isCreated === true)
+  const qrPayloadString = isCreated
+    ? `UTH_ID:${sessionId}:${currentNonce}:${sessionConfig.centerCoords.lat}:${sessionConfig.centerCoords.lon}:${Date.now()}:${
+        sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'CAMPUS_WIFI_ONLY' : 'HYBRID_4G_5G'
+      }:${encodeURIComponent(SERVER_URL)}`
+    : '';
+
+  // Áp dụng phân quyền giao diện theo đúng Role đăng nhập
+  const applyRoleWorkspace = (role, userObj) => {
+    setFacultyUser(userObj);
+    setStaffRole(role);
+    if (role === 'ADMIN') {
+      setIsCreated(false);
+      setIsSessionOpen(false);
+      setActiveTab('ADMIN_ISSUANCE');
+    } else if (role === 'AUDITOR') {
+      setIsCreated(false);
+      setIsSessionOpen(false);
+      setActiveTab('IDS');
+    } else {
+      // Giảng viên (FACULTY): Bắt đầu ở màn hình Tạo Lớp (isCreated = false -> chưa có QR)
+      setIsCreated(false);
+      setIsSessionOpen(false);
+      setActiveTab('STAGE');
+    }
+  };
 
   // Xử lý Đăng nhập Quản trị tập trung (Centralized RBAC + JWT Bearer Token)
   const handleLogin = async (e) => {
@@ -599,20 +665,25 @@ export default function FacultyDashboard({
       const resolvedRole = data.role || data.user?.role || 'FACULTY';
       const userObj = data.user || {
         email: loginForm.email,
-        fullName: resolvedRole === 'ADMIN' ? 'Quản Trị Viên Tối Cao' : 'TS. Trần Thế Vinh',
+        fullName:
+          resolvedRole === 'ADMIN'
+            ? 'Quản Trị Viên Tối Cao'
+            : resolvedRole === 'AUDITOR'
+            ? 'Ban Thanh Tra & Khảo Thí UTH'
+            : 'TS. Trần Thế Vinh',
+        department:
+          resolvedRole === 'ADMIN'
+            ? 'Phòng Đào tạo & Quản trị Hệ thống'
+            : resolvedRole === 'AUDITOR'
+            ? 'Phòng Thanh tra & Đảm bảo Chất lượng'
+            : 'Khoa Công nghệ Thông tin',
         role: resolvedRole
       };
 
       localStorage.setItem('faculty_token', data.token);
       localStorage.setItem('faculty_user', JSON.stringify(userObj));
       setToken(data.token);
-      setFacultyUser(userObj);
-      setStaffRole(resolvedRole);
-      if (resolvedRole === 'ADMIN') {
-        setActiveTab('ADMIN');
-      } else {
-        setActiveTab('STAGE');
-      }
+      applyRoleWorkspace(resolvedRole, userObj);
     } catch (err) {
       setAuthError(err.message || 'Không thể kết nối máy chủ xác thực');
     } finally {
@@ -620,167 +691,227 @@ export default function FacultyDashboard({
     }
   };
 
+  // Chuyển nhanh giữa các tài khoản Thầy/Cô, Admin, Thanh tra để kiểm thử phân quyền RBAC
+  const handleQuickSwitchAccount = async (targetEmail) => {
+    setLoginForm({ email: targetEmail, password: 'Admin@2026' });
+    try {
+      const res = await smartFetch('/api/auth/faculty/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, password: 'Admin@2026' })
+      });
+      const data = await res.json();
+      if (res.ok && data?.token) {
+        const resolvedRole = data.role || data.user?.role || 'FACULTY';
+        localStorage.setItem('faculty_token', data.token);
+        localStorage.setItem('faculty_user', JSON.stringify(data.user));
+        setToken(data.token);
+        applyRoleWorkspace(resolvedRole, data.user);
+      }
+    } catch {}
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('faculty_token');
     localStorage.removeItem('faculty_user');
     setToken(null);
+    setIsCreated(false);
+    setIsSessionOpen(false);
     setAuthError('');
   };
 
-  // NẾU CHƯA ĐĂNG NHẬP: HIỆN CỔNG XÁC THỰC QUẢN TRỊ TẬP TRUNG (LOGIN GATE - ZERO TRUST RBAC)
+  // ==================== CỔNG ĐĂNG NHẬP ĐA VAI TRÒ (GIẢNG VIÊN / ADMIN / THANH TRA) ====================
   if (!token) {
+    const DEMO_ACCOUNTS = [
+      {
+        role: 'FACULTY',
+        badge: '👨‍🏫 Giảng Viên 1',
+        name: 'TS. Trần Thế Vinh',
+        dept: 'Khoa Công nghệ Thông tin',
+        email: 'giangvien@uth.edu.vn',
+        desc: 'Tạo lớp học, phát QR điểm danh, định vị bản đồ & Spot-Check 60s',
+        color: 'cyan'
+      },
+      {
+        role: 'FACULTY',
+        badge: '👨‍🏫 Giảng Viên 2',
+        name: 'ThS. Nguyễn Minh Khoa',
+        dept: 'Bộ môn An toàn Thông tin',
+        email: 'gv.khoa@uth.edu.vn',
+        desc: 'Quản lý lớp Bảo mật Web, phát QR TOTP & xuất danh sách CSV',
+        color: 'cyan'
+      },
+      {
+        role: 'ADMIN',
+        badge: '🏛️ Quản Trị Viên (Root Admin)',
+        name: 'Phòng Đào Tạo & CNTT',
+        dept: 'Quản trị Định danh & Smart Contract',
+        email: 'admin@uth.edu.vn',
+        desc: 'Phát hành lô thẻ W3C VC, neo Merkle Root & thu hồi khóa thiết bị',
+        color: 'emerald'
+      },
+      {
+        role: 'AUDITOR',
+        badge: '🛡️ Thanh Tra Khảo Thí',
+        name: 'Ban Thanh Tra & ĐBCL',
+        dept: 'Giám sát Gian lận & Học vụ',
+        email: 'thanhtra@uth.edu.vn',
+        desc: 'Kiểm toán xung đột thiết bị (IDS), tra cứu bản đồ & lập biên bản',
+        color: 'amber'
+      }
+    ];
+
     return (
-      <div className="min-h-screen bg-[#040814] text-slate-100 flex items-center justify-center p-4 font-sans select-none">
-        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* CỘT TRÁI (7 CỘT): SƠ ĐỒ KIẾN TRÚC ZERO-TRUST ĐỐI XỨNG 2 PHÍA */}
-          <div className="lg:col-span-7 p-7 rounded-3xl bg-[#081226] border border-cyan-500/25 shadow-2xl flex flex-col justify-between space-y-5">
+      <div className="min-h-screen bg-[#040814] text-slate-100 flex items-center justify-center p-5 select-none">
+        <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          
+          {/* CỘT TRÁI (7 CỘT): CHỌN VAI TRÒ TRUY CẬP (THẦY/CÔ, ADMIN, THANH TRA) */}
+          <div className="lg:col-span-7 p-7 rounded-3xl bg-[#081226] border border-slate-800 shadow-2xl flex flex-col justify-between gap-5">
             <div>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center font-black text-cyan-400 text-base shadow-[0_0_15px_rgba(0,242,254,0.3)]">
+              <div className="flex items-center gap-3.5 mb-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-extrabold text-slate-950 text-lg shadow-[0_0_20px_rgba(0,242,254,0.3)]">
                   U
                 </div>
                 <div>
-                  <h1 className="text-base font-black tracking-wider text-white m-0">
-                    KIẾN TRÚC XÁC THỰC KÉP ZERO-TRUST &amp; W3C DID
+                  <h1 className="text-lg font-extrabold text-white m-0">
+                    HỆ THỐNG QUẢN TRỊ ĐỊNH DANH SỐ UTH-TRUSTID
                   </h1>
-                  <p className="text-[11px] font-mono text-cyan-400 m-0">
-                    CENTRALIZED RBAC (ISSUER/VERIFIER) + ACCOUNT-LESS SSI (HOLDER)
+                  <p className="text-xs font-medium text-cyan-400 mt-0.5 mb-0">
+                    Phân quyền tập trung theo vai trò (Role-Based Access Control — JWT)
                   </p>
                 </div>
               </div>
 
               <p className="text-xs text-slate-300 leading-relaxed m-0">
-                Hệ thống phân tách hoàn toàn miền xác thực giữa <strong className="text-cyan-300">Cán bộ Quản trị</strong> và <strong className="text-emerald-300">Sinh viên</strong> nhằm triệt tiêu bề mặt tấn công mật khẩu tập trung nhưng vẫn kiểm soát chặt chẽ đặc quyền học vụ:
+                Chọn tài khoản tương ứng với vai trò của bạn để đăng nhập. Mỗi vai trò (<strong className="text-cyan-300">Giảng viên</strong>, <strong className="text-emerald-300">Quản trị viên</strong>, <strong className="text-amber-300">Thanh tra</strong>) được phân tách giao diện và chức năng riêng biệt:
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {/* Khối 1: Giảng viên & Admin */}
-              <div className="p-4 rounded-2xl bg-slate-950/90 border border-cyan-500/35 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 font-mono text-[10px] font-bold">
-                    ISSUER &amp; VERIFIER
-                  </span>
-                  <span className="text-[10px] font-mono text-amber-400 font-bold">🔐 Bắt buộc JWT</span>
-                </div>
-                <h3 className="text-xs font-bold text-white m-0">
-                  1. Phía Giảng Viên &amp; Admin (Web Portal)
-                </h3>
-                <ul className="text-[11px] text-slate-400 space-y-1 pl-4 m-0">
-                  <li>Xác thực tập trung qua <strong className="text-slate-200">Email trường (@uth.edu.vn) + Mật khẩu</strong>.</li>
-                  <li>Backend cấp <strong className="text-cyan-300">JWT Bearer Token (8h)</strong> gắn vai trò <code>FACULTY</code> / <code>ADMIN</code>.</li>
-                  <li>Bảo vệ các API đặc quyền: Tạo phòng, xoay Nonce, phát lệnh Spot-check, cấp Merkle Root &amp; thu hồi khóa (<code>revokeKey</code>).</li>
-                </ul>
-              </div>
+            {/* Danh sách 4 tài khoản thuộc 3 Role khác nhau */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {DEMO_ACCOUNTS.map((acc) => {
+                const isSelected = loginForm.email.toLowerCase() === acc.email.toLowerCase();
+                const activeBorder =
+                  acc.color === 'emerald'
+                    ? 'border-emerald-400 bg-emerald-500/10'
+                    : acc.color === 'amber'
+                    ? 'border-amber-400 bg-amber-500/10'
+                    : 'border-cyan-400 bg-cyan-500/10';
+                const badgeStyle =
+                  acc.color === 'emerald'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : acc.color === 'amber'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
 
-              {/* Khối 2: Sinh viên */}
-              <div className="p-4 rounded-2xl bg-slate-950/90 border border-emerald-500/35 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
-                    HOLDER NODE (iOS/MOBILE)
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold">⚡ Account-less SSI</span>
-                </div>
-                <h3 className="text-xs font-bold text-white m-0">
-                  2. Phía Sinh Viên (Không Tài Khoản)
-                </h3>
-                <ul className="text-[11px] text-slate-400 space-y-1 pl-4 m-0">
-                  <li><strong className="text-emerald-300">Không Username/Password tập trung</strong> (Chống lộ lọt &amp; Brute-force).</li>
-                  <li>Danh tính là cặp khóa <code>secp256k1</code> (<code>did:ethr:0x...</code>) lưu trong thiết bị.</li>
-                  <li>Mở khóa bằng <strong className="text-slate-200">Face ID (WebAuthn)</strong> để ký số <strong>EIP-191</strong> + <strong>Merkle Proof</strong>.</li>
-                </ul>
-              </div>
+                return (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => {
+                      setLoginForm({ email: acc.email, password: 'Admin@2026' });
+                      setAuthError('');
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                      isSelected
+                        ? `${activeBorder} shadow-lg`
+                        : 'border-slate-800 bg-[#040814]/90 hover:border-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold ${badgeStyle}`}>
+                          {acc.badge}
+                        </span>
+                        {isSelected && (
+                          <span className="text-[10px] font-bold text-white">✓ Đang chọn</span>
+                        )}
+                      </div>
+                      <p className="text-sm font-bold text-white m-0">{acc.name}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5 mb-0">{acc.dept}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-slate-300 leading-snug m-0">{acc.desc}</p>
+                      <p className="text-[11px] font-mono text-cyan-400 mt-1.5 mb-0">{acc.email}</p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="p-3 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>🌐 LocalTunnel: <strong className="text-emerald-400">{SERVER_URL}</strong></span>
-              <span className="text-cyan-300">Middleware: requireFacultyAuth (JWT)</span>
+            <div className="p-3 rounded-2xl bg-[#040814] border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+              <span>📱 <strong>Sinh viên:</strong> Quét QR qua App di động (Không cần tài khoản tập trung)</span>
+              <span className="font-mono text-[11px] text-emerald-400">{SERVER_URL}</span>
             </div>
           </div>
 
-          {/* CỘT PHẢI (5 CỘT): FORM ĐĂNG NHẬP GIẢNG VIÊN & ADMIN */}
+          {/* CỘT PHẢI (5 CỘT): BIỂU MẪU ĐĂNG NHẬP */}
           <form
             onSubmit={handleLogin}
-            className="lg:col-span-5 p-8 rounded-3xl bg-[#081226] border border-cyan-500/40 space-y-4 shadow-[0_0_50px_rgba(0,242,254,0.12)] flex flex-col justify-between"
+            className="lg:col-span-5 p-8 rounded-3xl bg-[#081226] border border-cyan-500/35 space-y-5 shadow-2xl flex flex-col justify-between"
           >
             <div className="space-y-4">
-              <div className="text-center space-y-1 border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-black text-white tracking-wide m-0">
-                  CỔNG GIẢNG VIÊN &amp; ADMIN
+              <div className="border-b border-slate-800 pb-3.5">
+                <span className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
+                  🔐 Cổng Đăng Nhập Cán Bộ &amp; Giảng Viên
+                </span>
+                <h2 className="text-xl font-extrabold text-white mt-2.5 mb-1">
+                  Đăng Nhập Hệ Thống
                 </h2>
-                <p className="text-[11px] font-mono text-cyan-400 m-0">
-                  XÁC THỰC QUYỀN ĐIỀU PHỐI HỆ THỐNG (JWT RBAC)
+                <p className="text-xs text-slate-400 m-0">
+                  Sử dụng tài khoản Email trường (@uth.edu.vn) để nhận chứng chỉ phân quyền JWT
                 </p>
               </div>
 
-              {/* Nút điền nhanh tài khoản mẫu để Demo trước Hội đồng NCKH */}
-              <div>
-                <span className="text-[10px] font-mono text-slate-400 block mb-1.5">
-                  ⚡ Chọn nhanh tài khoản thực nghiệm NCKH:
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginForm({ email: 'giangvien@uth.edu.vn', password: 'Admin@2026' });
-                      setAuthError('');
-                    }}
-                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                      loginForm.email.startsWith('giangvien')
-                        ? 'border-cyan-400 bg-cyan-500/15 text-cyan-300'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <p className="text-[11px] font-bold m-0">👨‍🏫 Giảng Viên</p>
-                    <p className="text-[9.5px] font-mono text-slate-400 truncate m-0">giangvien@uth.edu.vn</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginForm({ email: 'admin@uth.edu.vn', password: 'Admin@2026' });
-                      setAuthError('');
-                    }}
-                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                      loginForm.email.startsWith('admin')
-                        ? 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <p className="text-[11px] font-bold m-0">🏛️ Root Admin</p>
-                    <p className="text-[9.5px] font-mono text-slate-400 truncate m-0">admin@uth.edu.vn</p>
-                  </button>
-                </div>
-              </div>
-
               {authError && (
-                <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs text-center font-semibold">
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-semibold">
                   ⚠️ {authError}
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-mono text-slate-400">Email Giảng viên / Quản trị viên</label>
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  Email Cán bộ / Giảng viên / Quản trị viên
+                </label>
                 <input
                   type="email"
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                  placeholder="giangvien@uth.edu.vn"
-                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                  placeholder="giangvien@uth.edu.vn hoặc admin@uth.edu.vn"
+                  className="w-full p-3 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono text-slate-400">Mật khẩu (Mặc định: Admin@2026)</label>
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                  Mật khẩu xác thực (Mặc định: <code className="text-cyan-300">Admin@2026</code>)
+                </label>
                 <input
                   type="password"
                   value={loginForm.password}
                   onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-white focus:border-cyan-400 outline-none"
+                  className="w-full p-3 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-white focus:border-cyan-400 outline-none"
                   required
                 />
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#040814] border border-slate-800/90 text-xs text-slate-300 space-y-1">
+                <div className="font-bold text-white">Vai trò sẽ đăng nhập:</div>
+                {loginForm.email.startsWith('admin') ? (
+                  <p className="text-emerald-300 m-0">
+                    🏛️ <strong>Quản Trị Viên Tối Cao (ADMIN):</strong> Mở cổng Phát hành thẻ Merkle Root &amp; Thu hồi khóa thiết bị.
+                  </p>
+                ) : loginForm.email.startsWith('thanhtra') || loginForm.email.startsWith('audit') ? (
+                  <p className="text-amber-300 m-0">
+                    🛡️ <strong>Thanh Tra Học Vụ (AUDITOR):</strong> Mở cổng Kiểm toán gian lận thiết bị IDS &amp; Giám sát bản đồ.
+                  </p>
+                ) : (
+                  <p className="text-cyan-300 m-0">
+                    👨‍🏫 <strong>Giảng Viên (FACULTY):</strong> Mở cổng Khởi tạo lớp học &amp; Phát mã QR điểm danh giảng đường.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -788,12 +919,12 @@ export default function FacultyDashboard({
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full py-3.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs tracking-wide shadow-lg shadow-cyan-500/25 active:scale-95 transition-all cursor-pointer border-none"
+                className="w-full py-3.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-cyan-500/25 active:scale-95 transition-all cursor-pointer border-none"
               >
-                {loginLoading ? '⏳ ĐANG XÁC THỰC JWT...' : '🔐 ĐĂNG NHẬP QUẢN TRỊ & CẤP JWT'}
+                {loginLoading ? '⏳ Đang xác thực thông tin...' : '🔐 Đăng Nhập Vào Hệ Thống'}
               </button>
-              <p className="text-[10px] font-mono text-slate-500 text-center m-0">
-                Token JWT có hiệu lực 8 giờ • Ghi vết vào Sổ cái Audit Logs
+              <p className="text-[11px] text-slate-500 text-center m-0">
+                Phiên làm việc được bảo vệ bằng chữ ký JWT (Hiệu lực 8 giờ)
               </p>
             </div>
           </form>
@@ -820,113 +951,199 @@ export default function FacultyDashboard({
   });
 
   return (
-    <div className="min-h-screen bg-[#040814] text-slate-100 flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-[#040814] text-slate-100 flex flex-col select-none">
       
-      {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH (CLEAN TOP NAVBAR) ==================== */}
+      {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH THEO ĐÚNG VAI TRÒ (ROLE-AWARE TOP NAVBAR) ==================== */}
       <header className="sticky top-0 z-30 px-6 py-3 border-b border-slate-800/80 bg-[#060D1F]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
-        {/* Cụm thương hiệu & Thông tin lớp học */}
+        
+        {/* Cụm Thương hiệu & Thông tin Người dùng đang đăng nhập */}
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-black text-slate-950 text-base shadow-[0_0_20px_rgba(0,242,254,0.35)]">
+          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-extrabold text-slate-950 text-base shadow-lg ${
+            staffRole === 'ADMIN'
+              ? 'bg-gradient-to-br from-emerald-400 to-teal-600'
+              : staffRole === 'AUDITOR'
+              ? 'bg-gradient-to-br from-amber-400 to-orange-500'
+              : 'bg-gradient-to-br from-cyan-400 to-blue-600'
+          }`}>
             U
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-black tracking-wide text-white m-0">UTH-TRUSTID PORTAL</h1>
-              <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-[10px] font-mono font-bold text-cyan-300">
-                CỔNG GIẢNG VIÊN &amp; ADMIN
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-sm font-extrabold tracking-wide text-white m-0">
+                {staffRole === 'ADMIN'
+                  ? 'UTH-TRUSTID • CỔNG QUẢN TRỊ VIÊN HỆ THỐNG'
+                  : staffRole === 'AUDITOR'
+                  ? 'UTH-TRUSTID • CỔNG THANH TRA & KHẢO THÍ'
+                  : 'UTH-TRUSTID • CỔNG GIẢNG VIÊN ĐIỂM DANH'}
+              </h1>
+
+              {/* Nhãn Role hiện tại */}
+              <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${
+                staffRole === 'ADMIN'
+                  ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300'
+                  : staffRole === 'AUDITOR'
+                  ? 'bg-amber-500/15 border-amber-400/40 text-amber-300'
+                  : 'bg-cyan-500/15 border-cyan-400/40 text-cyan-300'
+              }`}>
+                {staffRole === 'ADMIN'
+                  ? '🏛️ VAI TRÒ: ROOT ADMIN'
+                  : staffRole === 'AUDITOR'
+                  ? '🛡️ VAI TRÒ: THANH TRA IDS'
+                  : '👨‍🏫 VAI TRÒ: GIẢNG VIÊN'}
               </span>
-              {isCreated && (
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border flex items-center gap-1.5 ${
-                  isSessionOpen
+
+              {/* Chỉ hiện trạng thái phiên học khi là Giảng viên */}
+              {staffRole === 'FACULTY' && (
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex items-center gap-1.5 ${
+                  !isCreated
+                    ? 'bg-slate-800/80 border-slate-700 text-slate-300'
+                    : isSessionOpen
                     ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
                     : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${isSessionOpen ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'}`} />
-                  {isSessionOpen ? 'ĐANG MỞ ĐIỂM DANH' : 'ĐÃ KHÓA PHIÊN'}
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    !isCreated ? 'bg-slate-400' : isSessionOpen ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
+                  }`} />
+                  {!isCreated ? 'Chưa khởi tạo lớp (Chưa phát QR)' : isSessionOpen ? `Đang mở lớp ${sessionConfig.courseCode}` : 'Đã khóa phiên'}
                 </span>
               )}
             </div>
-            <p className="text-[11px] font-mono text-slate-400 mt-0.5 mb-0">
-              {facultyUser?.fullName || 'TS. Trần Thế Vinh'} (<span className="text-cyan-400">{facultyUser?.email}</span>) • Lớp <strong className="text-white">{sessionConfig.courseCode}</strong> • Phòng <strong className="text-cyan-300">{sessionConfig.room}</strong>
+
+            <p className="text-xs text-slate-400 mt-0.5 mb-0">
+              Xin chào, <strong className="text-white">{facultyUser?.fullName}</strong> (<span className="font-mono text-cyan-400">{facultyUser?.email}</span>)
+              {staffRole === 'FACULTY' && isCreated && (
+                <> • Học phần: <strong className="text-white">{sessionConfig.courseCode}</strong> • Phòng: <strong className="text-cyan-300">{sessionConfig.room}</strong></>
+              )}
             </p>
           </div>
         </div>
 
-        {/* Cụm Tab điều hướng trung tâm */}
-        {isCreated && (
+        {/* ==================== CỤM TAB ĐIỀU HƯỚNG TÁCH BIỆT THEO TỪNG ROLE ==================== */}
+        {/* 1. Tab dành riêng cho GIẢNG VIÊN (Chỉ hiện sau khi đã bấm Tạo Lớp) */}
+        {staffRole === 'FACULTY' && isCreated && (
           <nav className="flex items-center bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
             <button
               type="button"
-              onClick={() => {
-                setStaffRole('FACULTY');
-                setActiveTab('STAGE');
-              }}
+              onClick={() => setActiveTab('STAGE')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'STAGE'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md shadow-cyan-500/25'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
-              📽️ Màn Chiếu QR
+              📽️ Màn Chiếu QR Điểm Danh
             </button>
             <button
               type="button"
-              onClick={() => {
-                setStaffRole('FACULTY');
-                setActiveTab('RADAR');
-              }}
+              onClick={() => setActiveTab('RADAR')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'RADAR'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md shadow-cyan-500/25'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
-              🌍 Bản Đồ Định Vị
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                activeTab === 'RADAR' ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-cyan-300'
-              }`}>
-                {attendees.length}
-              </span>
+              🌍 Bản Đồ Định Vị Lớp ({attendees.length})
             </button>
             <button
               type="button"
-              onClick={() => {
-                setStaffRole('FACULTY');
-                setActiveTab('IDS');
-              }}
+              onClick={() => setActiveTab('IDS')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'IDS'
-                  ? 'bg-rose-500 text-white shadow-md shadow-rose-500/25'
+                  ? 'bg-rose-500 text-white shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
-              🛡️ Kiểm Toán IDS
+              🛡️ Giám Sát Thiết Bị Lớp
               {idsViolationCount > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full bg-rose-500/30 border border-rose-400 text-rose-200 text-[10px] font-mono">
                   {idsViolationCount}
                 </span>
               )}
             </button>
+          </nav>
+        )}
+
+        {/* 2. Tab dành riêng cho QUẢN TRỊ VIÊN TỐI CAO (ADMIN) */}
+        {staffRole === 'ADMIN' && (
+          <nav className="flex items-center bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
             <button
               type="button"
-              onClick={() => {
-                setStaffRole('ADMIN');
-                setActiveTab('ADMIN');
-              }}
+              onClick={() => setActiveTab('ADMIN_ISSUANCE')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
-                activeTab === 'ADMIN'
-                  ? 'bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/25'
+                activeTab === 'ADMIN_ISSUANCE' || activeTab === 'ADMIN'
+                  ? 'bg-emerald-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
-              🏛️ Quản Trị Root Admin
+              🪪 Cấp Phát Thẻ VC &amp; Merkle Root
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ADMIN_REVOCATION')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+                activeTab === 'ADMIN_REVOCATION'
+                  ? 'bg-rose-500 text-white shadow-md'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              🚫 Thu Hồi &amp; Khôi Phục Khóa ({adminStats.revokedDID})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ADMIN_AUDIT')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+                activeTab === 'ADMIN_AUDIT'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              📜 Sổ Cái Kiểm Toán Toàn Trường
             </button>
           </nav>
         )}
 
-        {/* Cụm nút tác vụ nhanh bên phải */}
-        <div className="flex items-center gap-2">
-          {isCreated && (
+        {/* 3. Tab dành riêng cho THANH TRA KHẢO THÍ (AUDITOR) */}
+        {staffRole === 'AUDITOR' && (
+          <nav className="flex items-center bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab('IDS')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+                activeTab === 'IDS'
+                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              🛡️ Thanh Tra Điểm Danh Hộ (IDS)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('RADAR')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+                activeTab === 'RADAR'
+                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              🌍 Giám Sát Bản Đồ Tọa Độ ({attendees.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ADMIN_AUDIT')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+                activeTab === 'ADMIN_AUDIT'
+                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              📜 Nhật Ký An Ninh Hệ Thống
+            </button>
+          </nav>
+        )}
+
+        {/* Cụm nút tác vụ & Chuyển nhanh tài khoản Demo RBAC bên phải */}
+        <div className="flex flex-wrap items-center gap-2">
+          {staffRole === 'FACULTY' && isCreated && (
             <>
               <button
                 type="button"
@@ -937,170 +1154,479 @@ export default function FacultyDashboard({
                     : 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
                 }`}
               >
-                {isSessionOpen ? '🔒 Khóa Phiên' : '🔓 Mở Lại Phiên'}
+                {isSessionOpen ? '🔒 Tạm Khóa QR' : '🔓 Mở Lại QR'}
               </button>
 
               <button
                 type="button"
-                onClick={() => setIsCreated(false)}
-                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900/90 text-slate-300 hover:border-cyan-500/40 hover:text-white cursor-pointer"
+                onClick={() => {
+                  setIsCreated(false);
+                  setIsSessionOpen(false);
+                }}
+                className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 bg-slate-900 text-slate-300 hover:border-cyan-500/40 hover:text-white cursor-pointer"
+                title="Kết thúc phiên hiện tại hoặc đổi sang lớp học phần khác"
               >
-                ⚙ Đổi Lớp
+                ⏹ Đổi Lớp Khác
               </button>
             </>
           )}
 
+          {/* Bộ chuyển nhanh tài khoản giữa Thầy/Cô, Admin và Thanh tra để trình diễn Hội đồng */}
+          <div className="flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
+            <button
+              type="button"
+              onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                staffRole === 'FACULTY'
+                  ? 'bg-cyan-400 text-slate-950'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+              title="Chuyển nhanh sang tài khoản Giảng viên (TS. Trần Thế Vinh)"
+            >
+              👨‍🏫 Giảng Viên
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                staffRole === 'ADMIN'
+                  ? 'bg-emerald-400 text-slate-950'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+              title="Chuyển nhanh sang tài khoản Quản trị viên (Root Admin)"
+            >
+              🏛️ Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickSwitchAccount('thanhtra@uth.edu.vn')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border-none ${
+                staffRole === 'AUDITOR'
+                  ? 'bg-amber-400 text-slate-950'
+                  : 'bg-transparent text-slate-400 hover:text-white'
+              }`}
+              title="Chuyển nhanh sang tài khoản Thanh tra khảo thí (Auditor)"
+            >
+              🛡️ Thanh Tra
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={handleLogout}
-            className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-800 bg-slate-900/60 text-slate-400 hover:border-rose-500/40 hover:text-rose-300 cursor-pointer"
-            title="Đăng xuất khỏi phiên Giảng viên / Admin"
+            className="px-3 py-2 rounded-xl text-xs font-bold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer"
+            title="Đăng xuất về màn hình chọn tài khoản"
           >
             🚪 Đăng Xuất
           </button>
         </div>
       </header>
 
-      {/* ==================== BODY CHÍNH ==================== */}
-      {!isCreated ? (
+      {/* ==================== BODY THEO ĐÚNG VAI TRÒ (FACULTY vs ADMIN vs AUDITOR) ==================== */}
+      {staffRole === 'FACULTY' && !isCreated ? (
+        /* ==================== BƯỚC 1 CỦA GIẢNG VIÊN: KHỞI TẠO LỚP HỌC (CHƯA CÓ MÃ QR) ==================== */
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-xl p-8 rounded-3xl bg-[#081226] border border-cyan-500/30 shadow-2xl space-y-6">
-            <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-white m-0">Thiết Lập Phiên Điểm Danh Giảng Đường</h2>
-                <p className="text-xs text-slate-400 mt-1 mb-0">Cấu hình môn học, kiểm soát mạng và bán kính không gian trước khi mở máy chiếu</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCreated(true)}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-300 hover:text-white cursor-pointer"
-              >
-                ✕ Quay Lại
-              </button>
-            </div>
+          <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            
+            {/* Cột trái (5 cột): Chọn nhanh Học phần được phân công */}
+            <div className="lg:col-span-5 p-6 rounded-3xl bg-[#081226] border border-slate-800 shadow-2xl flex flex-col justify-between gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
+                    📚 Học Phần Phân Công
+                  </span>
+                  <span className="text-xs text-slate-400">Học kỳ II • 2025-2026</span>
+                </div>
+                <h3 className="text-base font-extrabold text-white m-0">
+                  Chọn Lớp Học Để Mở Điểm Danh
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed m-0">
+                  Nhấp vào một lớp học phần bên dưới để tự động điền thông tin phòng học, hoặc tùy chỉnh trực tiếp ở biểu mẫu bên phải:
+                </p>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-mono text-slate-400">Mã Học Phần</label>
-                <input
-                  value={sessionConfig.courseCode}
-                  onChange={e => setSessionConfig({...sessionConfig, courseCode: e.target.value})}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-mono text-slate-400">Phòng Học</label>
-                <input
-                  value={sessionConfig.room}
-                  onChange={e => setSessionConfig({...sessionConfig, room: e.target.value})}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-mono text-slate-400">Tên Môn Học</label>
-              <input
-                value={sessionConfig.courseName}
-                onChange={e => setSessionConfig({...sessionConfig, courseName: e.target.value})}
-                className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:border-cyan-400 outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-mono text-slate-400 block mb-1.5">Chế Độ Kiểm Soát Kết Nối Mạng (Network Enforcement)</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSessionConfig({...sessionConfig, networkMode: 'CAMPUS_WIFI'})}
-                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                    sessionConfig.networkMode === 'CAMPUS_WIFI'
-                      ? 'border-amber-400 bg-amber-500/10 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
-                      : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  <p className="text-xs font-bold m-0">📶 TN1: Ràng buộc Wi-Fi Trường</p>
-                  <p className="text-[10px] text-slate-400 mt-1 mb-0">Từ chối 4G/5G ngoài luồng, bắt buộc kết nối Wi-Fi giảng đường</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSessionConfig({...sessionConfig, networkMode: 'CELLULAR_ANY'})}
-                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                    sessionConfig.networkMode === 'CELLULAR_ANY'
-                      ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.15)]'
-                      : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  <p className="text-xs font-bold m-0">🌐 TN2: Mạng 4G/5G Tự Do</p>
-                  <p className="text-[10px] text-slate-400 mt-1 mb-0">Cho phép 4G/5G và đối soát tọa độ GPS bán kính R ≤ {sessionConfig.maxRadiusMeters}m</p>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <label className="text-xs font-mono text-cyan-300 font-bold">
-                  📏 Bán kính Geofencing cho phép (R = {sessionConfig.maxRadiusMeters}m)
-                </label>
-                <button
-                  type="button"
-                  onClick={handleSyncLaptopGpsCenter}
-                  className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/25 cursor-pointer"
-                >
-                  📍 Lấy GPS Laptop làm tâm phòng
-                </button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { val: 5, label: '5m' },
-                  { val: 15, label: '15m' },
-                  { val: 35, label: '35m (Chuẩn)' },
-                  { val: 100, label: '100m' },
-                  { val: 500, label: '500m' },
-                  { val: 5000, label: '5000m (Test xa)' }
-                ].map((opt) => (
-                  <button
-                    key={opt.val}
-                    type="button"
-                    onClick={() => handleUpdateLiveRadius(opt.val)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer border ${
-                      Number(sessionConfig.maxRadiusMeters) === opt.val
-                        ? 'bg-cyan-400 text-slate-950 border-cyan-300 shadow-sm'
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-                <div className="flex items-center gap-1 ml-auto">
-                  <input
-                    type="number"
-                    min={1}
-                    max={50000}
-                    value={sessionConfig.maxRadiusMeters}
-                    onChange={(e) => handleUpdateLiveRadius(e.target.value)}
-                    className="w-20 p-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-cyan-300 text-center outline-none focus:border-cyan-400"
-                  />
-                  <span className="text-xs font-mono text-slate-400">mét</span>
+                <div className="space-y-2.5 pt-1">
+                  {ASSIGNED_COURSES.map((course) => {
+                    const isSelected = sessionConfig.courseCode === course.courseCode;
+                    return (
+                      <button
+                        key={course.courseCode}
+                        type="button"
+                        onClick={() =>
+                          setSessionConfig((prev) => ({
+                            ...prev,
+                            courseCode: course.courseCode,
+                            courseName: course.courseName,
+                            room: course.room
+                          }))
+                        }
+                        className={`w-full p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-cyan-400 bg-cyan-500/15 shadow-md'
+                            : 'border-slate-800 bg-[#040814]/90 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold text-cyan-300">{course.courseCode}</span>
+                          <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700 text-[11px] font-semibold text-white">
+                            Phòng {course.room}
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold text-white mt-1 mb-0.5">{course.courseName}</p>
+                        <p className="text-[11px] text-slate-400 m-0">
+                          {course.schedule} • Sĩ số: {course.totalStudents} SV
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {gpsSyncMsg && (
-                <p className="text-[10px] font-mono text-emerald-400 m-0">{gpsSyncMsg}</p>
-              )}
+              {/* Khung trạng thái: Chưa sinh mã QR */}
+              <div className="p-4 rounded-2xl bg-[#040814] border border-dashed border-slate-700 text-center space-y-1.5">
+                <div className="text-2xl">🔒</div>
+                <p className="text-xs font-bold text-amber-300 m-0">
+                  Chưa phát mã QR điểm danh
+                </p>
+                <p className="text-[11px] text-slate-400 leading-relaxed m-0">
+                  Mã QR động (TOTP Nonce 35s) chỉ được khởi tạo và hiển thị sau khi Giảng viên bấm nút <strong className="text-cyan-300">&ldquo;Khởi Tạo Lớp &amp; Phát Mã QR&rdquo;</strong>.
+                </p>
+              </div>
             </div>
 
-            <button
-              onClick={handleStartProjectorSession}
-              className="w-full py-3.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-sm tracking-wide shadow-lg shadow-cyan-500/25 transition-all cursor-pointer border-none"
-            >
-              🚀 LƯU CẤU HÌNH &amp; MỞ MÀN CHIẾU ĐIỂM DANH
-            </button>
+            {/* Cột phải (7 cột): Cấu hình thông số bảo mật của lớp học trước khi phát QR */}
+            <div className="lg:col-span-7 p-7 rounded-3xl bg-[#081226] border border-cyan-500/30 shadow-2xl flex flex-col justify-between space-y-5">
+              <div className="space-y-4">
+                <div className="border-b border-slate-800 pb-3.5">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                    Bước 1 / 2 • Thiết Lập Phiên Giảng Đường
+                  </span>
+                  <h2 className="text-lg font-extrabold text-white mt-2 mb-0.5">
+                    Cấu Hình Lớp Học &amp; Ràng Buộc Không Gian
+                  </h2>
+                  <p className="text-xs text-slate-400 m-0">
+                    Kiểm tra mã lớp, phòng học và chế độ mạng trước khi sinh mã QR trên màn chiếu
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Mã Học Phần</label>
+                    <input
+                      value={sessionConfig.courseCode}
+                      onChange={e => setSessionConfig({...sessionConfig, courseCode: e.target.value})}
+                      className="w-full p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Phòng Học Giảng Đường</label>
+                    <input
+                      value={sessionConfig.room}
+                      onChange={e => setSessionConfig({...sessionConfig, room: e.target.value})}
+                      className="w-full p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Tên Học Phần</label>
+                  <input
+                    value={sessionConfig.courseName}
+                    onChange={e => setSessionConfig({...sessionConfig, courseName: e.target.value})}
+                    className="w-full p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-xs font-medium text-white focus:border-cyan-400 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                    Chế Độ Kiểm Soát Kết Nối Mạng (Network Enforcement)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSessionConfig({...sessionConfig, networkMode: 'CAMPUS_WIFI'})}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        sessionConfig.networkMode === 'CAMPUS_WIFI'
+                          ? 'border-amber-400 bg-amber-500/10 text-amber-300'
+                          : 'border-slate-800 bg-[#040814] text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <p className="text-xs font-bold m-0">📶 Chế độ 1: Ràng buộc Wi-Fi Trường</p>
+                      <p className="text-[11px] text-slate-400 mt-1 mb-0">Chặn 4G/5G cá nhân, bắt buộc kết nối Wi-Fi phòng học</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSessionConfig({...sessionConfig, networkMode: 'CELLULAR_ANY'})}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        sessionConfig.networkMode === 'CELLULAR_ANY'
+                          ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300'
+                          : 'border-slate-800 bg-[#040814] text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <p className="text-xs font-bold m-0">🌐 Chế độ 2: Cho phép Mạng 4G/5G</p>
+                      <p className="text-[11px] text-slate-400 mt-1 mb-0">Mở cho 4G/5G kèm đối soát tọa độ GPS bán kính R ≤ {sessionConfig.maxRadiusMeters}m</p>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="text-xs font-bold text-cyan-300">
+                      📏 Bán kính phòng học cho phép (R = <span className="font-mono">{sessionConfig.maxRadiusMeters}m</span>)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleSyncLaptopGpsCenter}
+                      className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 text-[11px] font-bold hover:bg-cyan-500/25 cursor-pointer"
+                    >
+                      📍 Lấy GPS Laptop làm tâm phòng
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[
+                      { val: 5, label: '5m' },
+                      { val: 15, label: '15m' },
+                      { val: 35, label: '35m (Chuẩn)' },
+                      { val: 100, label: '100m' },
+                      { val: 500, label: '500m' },
+                      { val: 5000, label: '5000m (Test xa)' }
+                    ].map((opt) => (
+                      <button
+                        key={opt.val}
+                        type="button"
+                        onClick={() => handleUpdateLiveRadius(opt.val)}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                          Number(sessionConfig.maxRadiusMeters) === opt.val
+                            ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
+                            : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                    <div className="flex items-center gap-1 ml-auto">
+                      <input
+                        type="number"
+                        min={1}
+                        max={50000}
+                        value={sessionConfig.maxRadiusMeters}
+                        onChange={(e) => handleUpdateLiveRadius(e.target.value)}
+                        className="w-20 p-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-cyan-300 text-center outline-none focus:border-cyan-400"
+                      />
+                      <span className="text-xs text-slate-400">mét</span>
+                    </div>
+                  </div>
+
+                  {gpsSyncMsg && (
+                    <p className="text-xs text-emerald-400 font-medium m-0">{gpsSyncMsg}</p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleStartProjectorSession}
+                className="w-full py-4 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-sm tracking-wide shadow-lg shadow-cyan-500/25 transition-all cursor-pointer border-none"
+              >
+                🚀 KHỞI TẠO LỚP ({sessionConfig.courseCode}) &amp; PHÁT MÃ QR ĐIỂM DANH
+              </button>
+            </div>
           </div>
         </main>
+      ) : staffRole === 'ADMIN' ? (
+        /* ==================== GIAO DIỆN DÀNH RIÊNG CHO QUẢN TRỊ VIÊN TỐI CAO (ROOT ADMIN PORTAL) ==================== */
+        <div className="flex-1 flex flex-col p-6 gap-5 max-w-[1440px] w-full mx-auto">
+          {/* 3 Thẻ Thống Kê Toàn Trường Của Admin */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-5 rounded-2xl bg-[#081226] border border-cyan-500/30 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 block">Tổng Định Danh Sinh Viên (W3C DID)</span>
+                <span className="text-2xl font-extrabold text-white mt-1 block font-mono">{adminStats.totalDID}</span>
+              </div>
+              <span className="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
+                Toàn Trường
+              </span>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#081226] border border-emerald-500/30 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 block">Chứng Chỉ Đang Hoạt Động (Active VC)</span>
+                <span className="text-2xl font-extrabold text-emerald-400 mt-1 block font-mono">{adminStats.activeDID}</span>
+              </div>
+              <span className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                Hợp Lệ Điểm Danh
+              </span>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#081226] border border-rose-500/30 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 block">Thiết Bị Đã Bị Thu Hồi Khóa (Revoked)</span>
+                <span className="text-2xl font-extrabold text-rose-400 mt-1 block font-mono">{adminStats.revokedDID}</span>
+              </div>
+              <span className="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold">
+                Chặn Tức Thì
+              </span>
+            </div>
+          </section>
+
+          {adminStatusMsg && (
+            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-xs font-semibold text-emerald-300">
+              {adminStatusMsg}
+            </div>
+          )}
+
+          {/* Phân hệ 1 của Admin: Phát hành lô thẻ VC & Merkle Root */}
+          {(activeTab === 'ADMIN_ISSUANCE' || activeTab === 'ADMIN') && (
+            <div className="p-7 rounded-3xl bg-[#081226] border border-emerald-500/30 shadow-2xl space-y-5">
+              <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-extrabold text-emerald-300 m-0">
+                    🪪 Phát Hành Lô Thẻ Định Danh Sinh Viên (Merkle Batch Issuance O(log N))
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 mb-0">
+                    Chức năng đặc quyền của Root Admin: Băm danh sách sinh viên thành cây Merkle và neo Root Hash lên Smart Contract Polygon Amoy (80002)
+                  </p>
+                </div>
+                <div className="px-3 py-1.5 rounded-xl bg-[#040814] border border-slate-800 text-xs">
+                  Merkle Root hiện tại: <code className="text-amber-300 font-mono">{adminStats.merkleRoot.slice(0, 26)}...</code>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-7 space-y-3">
+                  <label className="text-xs font-semibold text-slate-300 block">
+                    Danh sách sinh viên cấp phát chứng chỉ W3C VC (Định dạng JSON):
+                  </label>
+                  <textarea
+                    value={batchJson}
+                    onChange={(e) => setBatchJson(e.target.value)}
+                    rows={10}
+                    className="w-full p-4 rounded-2xl bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-200 focus:border-emerald-400 outline-none resize-none"
+                  />
+                </div>
+
+                <div className="lg:col-span-5 flex flex-col justify-between p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-4">
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-white m-0">Cơ Chế Cây Merkle O(log N)</h3>
+                    <ul className="text-xs text-slate-300 space-y-2 pl-4 m-0 leading-relaxed">
+                      <li>Mỗi lá (Leaf) được băm chuẩn <code className="text-cyan-300">keccak256(address, studentId)</code>.</li>
+                      <li>Gom hàng ngàn thẻ sinh viên vào <strong>1 giao dịch neo Merkle Root duy nhất</strong>, tiết kiệm 99% phí Gas trên Blockchain.</li>
+                      <li>Sinh viên tải <code className="text-emerald-300">merkleProof</code> về điện thoại để chứng minh tư cách hợp lệ mà không cần tài khoản tập trung.</li>
+                    </ul>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAdminIssueMerkleBatch}
+                    className="w-full py-3.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs cursor-pointer border-none shadow-lg"
+                  >
+                    ⚡ Băm Keccak256 &amp; Neo Merkle Root Lên Smart Contract
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Phân hệ 2 của Admin: Thu hồi & Khôi phục khóa thiết bị độc lập */}
+          {activeTab === 'ADMIN_REVOCATION' && (
+            <div className="p-7 rounded-3xl bg-[#081226] border border-rose-500/30 shadow-2xl space-y-5">
+              <div className="border-b border-slate-800 pb-4">
+                <h2 className="text-lg font-extrabold text-rose-300 m-0">
+                  🚫 Sổ Bộ Thu Hồi &amp; Khôi Phục Khóa Thiết Bị Độc Lập (Decoupled Key Revocation)
+                </h2>
+                <p className="text-xs text-slate-400 mt-1 mb-0">
+                  Vô hiệu hóa tức thì thiết bị di động bị báo mất máy (<code>isRevoked[address] = true</code>) mà không làm thay đổi Merkle Root của các sinh viên khác
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div className="lg:col-span-7 space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                      Địa chỉ Ví mật mã học gắn với thiết bị cần thu hồi / khôi phục:
+                    </label>
+                    <input
+                      value={revokeAddressInput}
+                      onChange={(e) => setRevokeAddressInput(e.target.value)}
+                      className="w-full p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-rose-300 focus:border-rose-400 outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleAdminRevokeWallet}
+                      className="py-3.5 px-4 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs cursor-pointer border-none shadow-lg"
+                    >
+                      🚫 Thu Hồi Khóa Thiết Bị (revokeKey)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAdminUnrevokeWallet}
+                      className="py-3.5 px-4 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-extrabold text-xs cursor-pointer"
+                    >
+                      🔓 Khôi Phục Khóa Thiết Bị (unrevokeKey)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-2 text-xs text-slate-300 leading-relaxed">
+                  <div className="font-bold text-white">💡 Tại sao cần Thu hồi độc lập 2 tầng?</div>
+                  <p className="m-0">
+                    Nếu gộp trạng thái thu hồi vào cây Merkle, mỗi khi 1 sinh viên mất điện thoại, nhà trường phải tính lại Merkle Root và bắt toàn bộ 10.000 sinh viên khác tải lại Proof mới.
+                  </p>
+                  <p className="m-0 text-emerald-300">
+                    Nhờ tách riêng bảng <code>isRevoked[address]</code>, việc khóa máy diễn ra tức thì với độ phức tạp <code>O(1)</code>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Phân hệ 3 của Admin: Sổ cái Kiểm toán An ninh Toàn trường */}
+          {activeTab === 'ADMIN_AUDIT' && (
+            <div className="p-7 rounded-3xl bg-[#081226] border border-cyan-500/30 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                  <h2 className="text-lg font-extrabold text-cyan-300 m-0">
+                    📜 Sổ Cái Kiểm Toán An Ninh Toàn Trường (System Audit Trail)
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 mb-0">
+                    Ghi vết bất biến mọi thao tác cấp phát, thu hồi khóa và xác thực chữ ký số EIP-191
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchAdminAuditLogs}
+                  className="px-3.5 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-bold cursor-pointer"
+                >
+                  🔄 Làm Mới Nhật Ký
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-[420px] overflow-y-auto">
+                {auditLogs.length === 0 ? (
+                  <p className="text-xs text-slate-500 py-8 text-center">Đang đồng bộ nhật ký kiểm toán từ máy chủ...</p>
+                ) : (
+                  auditLogs.map((log) => (
+                    <div key={log.id} className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div>
+                        <span className="font-mono text-slate-400 mr-2">[{log.time}]</span>
+                        <strong className="text-emerald-300 mr-2">{log.action}:</strong>
+                        <span className="text-slate-200">{log.detail}</span>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 font-mono text-[11px] font-bold">
+                        {log.result}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
+        /* ==================== GIAO DIỆN GIẢNG VIÊN (SAU KHI ĐÃ TẠO LỚP) & THANH TRA KHẢO THÍ ==================== */
         <div className="flex-1 flex flex-col p-5 gap-5 max-w-[1600px] w-full mx-auto">
           
           {/* ==================== THANH ĐIỀU KHIỂN NHANH 4 Ô (QUICK CONTROL & KPI BAR) ==================== */}
@@ -1108,14 +1634,14 @@ export default function FacultyDashboard({
             {/* Ô 1: Thống kê sĩ số thời gian thực */}
             <div className="p-4 rounded-2xl bg-[#081226] border border-slate-800/90 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                <span className="text-[11px] font-semibold text-slate-400 block">
                   Sĩ Số Điểm Danh Thời Gian Thực
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-2xl font-black text-white">{attendees.length}</span>
-                  <span className="text-xs font-mono text-emerald-400">{validAttendeesCount} hợp lệ</span>
+                  <span className="text-2xl font-extrabold text-white font-mono">{attendees.length}</span>
+                  <span className="text-xs font-semibold text-emerald-400">{validAttendeesCount} hợp lệ</span>
                   {suspiciousAttendeesCount > 0 && (
-                    <span className="text-xs font-mono text-rose-400">• {suspiciousAttendeesCount} ngoài vùng</span>
+                    <span className="text-xs font-semibold text-rose-400">• {suspiciousAttendeesCount} ngoài vùng</span>
                   )}
                 </div>
               </div>
@@ -1132,10 +1658,10 @@ export default function FacultyDashboard({
             {/* Ô 2: Chuyển đổi nhanh Thực nghiệm 1 (Wi-Fi Trường) vs Thực nghiệm 2 (4G/5G) */}
             <div className="p-3.5 rounded-2xl bg-[#081226] border border-slate-800/90 flex flex-col justify-between gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                  Kiểm Soát Kết Nối Mạng (Network)
+                <span className="text-[11px] font-semibold text-slate-400">
+                  Kiểm Soát Kết Nối Mạng
                 </span>
-                <span className={`text-[10px] font-mono font-bold ${
+                <span className={`text-[11px] font-bold ${
                   sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'text-amber-400' : 'text-emerald-400'
                 }`}>
                   {sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Chặn 4G ngoài' : 'Cho phép 4G/5G'}
@@ -1170,13 +1696,13 @@ export default function FacultyDashboard({
             {/* Ô 3: Điều chỉnh nhanh Bán kính Geofence (R) & Tâm GPS */}
             <div className="p-3.5 rounded-2xl bg-[#081226] border border-slate-800/90 flex flex-col justify-between gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                  Bán Kính Phòng Học: <strong className="text-cyan-300">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
+                <span className="text-[11px] font-semibold text-slate-400">
+                  Bán Kính Phòng: <strong className="text-cyan-300 font-mono">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
                 </span>
                 <button
                   type="button"
                   onClick={handleSyncLaptopGpsCenter}
-                  className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold hover:bg-cyan-500/25 cursor-pointer"
+                  className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/25 cursor-pointer"
                   title="Lấy vị trí GPS hiện tại của Laptop làm tâm phòng học"
                 >
                   📍 Tâm GPS Laptop
@@ -1212,15 +1738,15 @@ export default function FacultyDashboard({
             {/* Ô 4: Phát lệnh Tái kiểm tra đột xuất (Spot-Check 60s) */}
             <div className="p-3.5 rounded-2xl bg-[#081226] border border-amber-500/30 flex flex-col justify-between gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-bold">
-                  ⚡ Hậu Kiểm Face ID Đột Xuất (Spot-Check)
+                <span className="text-[11px] font-bold text-amber-300">
+                  ⚡ Hậu Kiểm Face ID (Spot-Check)
                 </span>
                 {spotCheckState.active ? (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-mono font-black text-[10px] animate-pulse">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px] animate-pulse">
                     Còn {spotCheckState.countdown}s
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono text-slate-400">Chu kỳ 60s</span>
+                  <span className="text-[11px] text-slate-400">Chu kỳ 60s</span>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-1.5">
@@ -1247,25 +1773,25 @@ export default function FacultyDashboard({
           {/* ==================== KHÔNG GIAN LÀM VIỆC CHÍNH (2 CỘT GỌN GÀNG) ==================== */}
           <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
             
-            {/* CỘT TRÁI (8 CỘT TRÊN MÀN LỚN): MÀN CHIẾU QR / GOOGLE MAPS / IDS / ADMIN */}
+            {/* CỘT TRÁI (8 CỘT TRÊN MÀN LỚN): MÀN CHIẾU QR / GOOGLE MAPS / IDS / AUDIT */}
             <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
               
-              {/* TAB 1: MÀN CHIẾU QR ĐIỂM DANH (BỐ CỤC CHIA 2 NỬA CÂN ĐỐI & HIỆN ĐẠI) */}
-              {activeTab === 'STAGE' && (
+              {/* TAB 1 (CHỈ HIỆN KHI GIẢNG VIÊN ĐÃ TẠO LỚP): MÀN CHIẾU QR ĐIỂM DANH */}
+              {activeTab === 'STAGE' && staffRole === 'FACULTY' && isCreated && (
                 <div className="flex-1 rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col justify-between shadow-2xl gap-5">
                   
                   {/* Thanh tiêu đề trên cùng của Màn Chiếu */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800/90">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-[10px] font-mono font-bold text-cyan-300">
-                          CHALLENGE-RESPONSE TOTP
+                        <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-[11px] font-bold text-cyan-300">
+                          Đang Chiếu Mã QR Động (TOTP 35s)
                         </span>
-                        <span className="text-xs font-mono text-slate-400">
-                          Phòng {sessionConfig.room} • Sliding Window 3 Nonces
+                        <span className="text-xs text-slate-400">
+                          Phòng <strong className="text-white">{sessionConfig.room}</strong> • Chống chụp ảnh QR gửi hộ
                         </span>
                       </div>
-                      <h2 className="text-lg font-black text-white mt-1 mb-0">
+                      <h2 className="text-lg font-extrabold text-white mt-1 mb-0">
                         {sessionConfig.courseCode} — {sessionConfig.courseName}
                       </h2>
                     </div>
@@ -1273,7 +1799,7 @@ export default function FacultyDashboard({
                     <button
                       type="button"
                       onClick={() => setIsProjectorFullscreen(true)}
-                      className="px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-[0_0_25px_rgba(0,242,254,0.35)] cursor-pointer border-none transition-all"
+                      className="px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-[0_0_25px_rgba(0,242,254,0.35)] cursor-pointer border-none transition-all"
                     >
                       ⛶ Phóng To QR Toàn Màn Chiếu (500px)
                     </button>
@@ -1283,15 +1809,15 @@ export default function FacultyDashboard({
                   {networkBlockNotice && (
                     <div className="p-3.5 rounded-2xl bg-rose-500/20 border-2 border-rose-500 text-rose-200 flex items-center justify-between gap-3 animate-pulse">
                       <div>
-                        <p className="text-xs font-black text-rose-300 m-0">
+                        <p className="text-xs font-extrabold text-rose-300 m-0">
                           🚨 CHẶN KẾT NỐI MẠNG (THỰC NGHIỆM 1) — {networkBlockNotice.fullName} ({networkBlockNotice.studentId})
                         </p>
-                        <p className="text-xs font-bold text-white mt-0.5 mb-0">{networkBlockNotice.message}</p>
+                        <p className="text-xs font-semibold text-white mt-0.5 mb-0">{networkBlockNotice.message}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleSwitchLiveNetworkMode('CELLULAR_ANY')}
-                        className="px-3.5 py-2 rounded-xl bg-emerald-400 text-slate-950 font-black text-xs whitespace-nowrap cursor-pointer border-none"
+                        className="px-3.5 py-2 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-xs whitespace-nowrap cursor-pointer border-none"
                       >
                         Mở Chế Độ 4G/5G ➔
                       </button>
@@ -1301,15 +1827,15 @@ export default function FacultyDashboard({
                   {geofenceBlockNotice && (
                     <div className="p-3.5 rounded-2xl bg-amber-500/20 border-2 border-amber-500 text-amber-200 flex items-center justify-between gap-3 animate-pulse">
                       <div>
-                        <p className="text-xs font-black text-amber-300 m-0">
+                        <p className="text-xs font-extrabold text-amber-300 m-0">
                           📍 VƯỢT BÁN KÍNH PHÒNG HỌC — {geofenceBlockNotice.fullName} ({geofenceBlockNotice.studentId})
                         </p>
-                        <p className="text-xs font-bold text-white mt-0.5 mb-0">{geofenceBlockNotice.message}</p>
+                        <p className="text-xs font-semibold text-white mt-0.5 mb-0">{geofenceBlockNotice.message}</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleUpdateLiveRadius(Math.max(100, (geofenceBlockNotice.distance || 85) + 15))}
-                        className="px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-black text-xs whitespace-nowrap cursor-pointer border-none"
+                        className="px-3.5 py-2 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-xs whitespace-nowrap cursor-pointer border-none"
                       >
                         Mở rộng R lên {Math.max(100, (geofenceBlockNotice.distance || 85) + 15)}m ➔
                       </button>
@@ -1317,7 +1843,7 @@ export default function FacultyDashboard({
                   )}
 
                   {!networkBlockNotice && !geofenceBlockNotice && latestVerifiedNotice && (
-                    <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 flex items-center justify-between gap-3 text-xs font-bold">
+                    <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 flex items-center justify-between gap-3 text-xs font-semibold">
                       <span>
                         ✅ Xác thực thành công: <strong>{latestVerifiedNotice.name}</strong> ({latestVerifiedNotice.studentId}) • Cách tâm {latestVerifiedNotice.distance}m ({latestVerifiedNotice.network})
                       </span>
@@ -1327,7 +1853,7 @@ export default function FacultyDashboard({
                           setFocusedMapStudentId(latestVerifiedNotice.studentId);
                           setActiveTab('RADAR');
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-cyan-400 text-slate-950 font-black text-[11px] whitespace-nowrap cursor-pointer border-none"
+                        className="px-3 py-1.5 rounded-xl bg-cyan-400 text-slate-950 font-extrabold text-[11px] whitespace-nowrap cursor-pointer border-none"
                       >
                         📍 Xem Trên Google Maps
                       </button>
@@ -1355,15 +1881,15 @@ export default function FacultyDashboard({
                           <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 to-transparent pointer-events-none animate-pulse" />
                         </div>
                         <div className="mt-2.5 text-center">
-                          <p className="text-sm font-mono font-black text-slate-950 tracking-wider m-0">{currentNonce}</p>
+                          <p className="text-sm font-mono font-bold text-slate-950 tracking-wider m-0">{currentNonce}</p>
                         </div>
                       </div>
 
                       {/* Thanh tiến trình xoay Nonce 35s */}
                       <div className="w-[360px] max-w-full mt-3.5 space-y-1.5">
-                        <div className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-400">Tự động làm mới mã QR sau:</span>
-                          <span className="text-cyan-400 font-black">{timerProgress}s</span>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400 font-medium">Tự động làm mới mã QR sau:</span>
+                          <span className="text-cyan-400 font-mono font-bold">{timerProgress}s</span>
                         </div>
                         <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
@@ -1377,14 +1903,14 @@ export default function FacultyDashboard({
                     {/* Bảng Trạng Thái Bảo Mật & Hướng Dẫn Quét (5 cột) */}
                     <div className="xl:col-span-5 flex flex-col gap-3">
                       <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800/90 space-y-3">
-                        <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider">
+                        <div className="text-xs font-bold text-cyan-300 uppercase tracking-wide">
                           🔒 Thông Số Bảo Mật Phiên Đang Áp Dụng
                         </div>
 
                         <div className="space-y-2 text-xs">
                           <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
                             <span className="text-slate-400">Chế độ mạng:</span>
-                            <span className={`font-mono font-bold ${
+                            <span className={`font-bold ${
                               sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'text-amber-300' : 'text-emerald-300'
                             }`}>
                               {sessionConfig.networkMode === 'CAMPUS_WIFI' ? '📶 Wi-Fi Trường' : '🌐 4G/5G Tự Do'}
@@ -1400,21 +1926,21 @@ export default function FacultyDashboard({
 
                           <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
                             <span className="text-slate-400">Chữ ký định danh:</span>
-                            <span className="font-mono font-bold text-emerald-300">
+                            <span className="font-bold text-emerald-300">
                               EIP-191 + Face ID
                             </span>
                           </div>
 
                           <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center justify-between">
                             <span className="text-slate-400">Đối soát lớp học:</span>
-                            <span className="font-mono font-bold text-purple-300">
+                            <span className="font-bold text-purple-300">
                               Merkle Proof O(log N)
                             </span>
                           </div>
                         </div>
 
                         {gpsSyncMsg && (
-                          <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono text-emerald-300">
+                          <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-medium text-emerald-300">
                             {gpsSyncMsg}
                           </div>
                         )}
@@ -1424,7 +1950,7 @@ export default function FacultyDashboard({
                         <div className="text-xs font-bold text-white">
                           🗺️ Chuyển Nhanh Sang Bản Đồ Định Vị
                         </div>
-                        <p className="text-[11px] text-slate-400 m-0 leading-relaxed">
+                        <p className="text-xs text-slate-400 m-0 leading-relaxed">
                           Xem trực tiếp vị trí GPS của từng sinh viên trên bản đồ Google Maps nhúng và vòng tròn Geofence.
                         </p>
                         <button
@@ -1441,26 +1967,26 @@ export default function FacultyDashboard({
               )}
 
               {/* CHẾ ĐỘ TOÀN MÀN CHIẾU SIÊU LỚN (500x500px PROJECTOR OVERLAY) */}
-              {isProjectorFullscreen && (
+              {isProjectorFullscreen && isCreated && (
                 <div className="fixed inset-0 z-50 bg-[#040814]/98 backdrop-blur-xl flex flex-col items-center justify-center p-6">
                   <div className="w-full max-w-5xl flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-cyan-500/20">
                     <div>
-                      <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-mono font-bold">
-                        📽️ CHẾ ĐỘ MÁY CHIẾU HỘI TRƯỜNG LỚN (ULTRA-LARGE QR 500x500PX)
+                      <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-bold">
+                        📽️ CHẾ ĐỘ MÁY CHIẾU HỘI TRƯỜNG LỚN (MÃ QR 500x500PX)
                       </span>
-                      <h2 className="text-2xl font-black text-white mt-2 mb-0">
+                      <h2 className="text-2xl font-extrabold text-white mt-2 mb-0">
                         {sessionConfig.courseCode} — {sessionConfig.courseName} (Phòng {sessionConfig.room})
                       </h2>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono text-sm font-bold">
+                      <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-bold">
                         ✅ Sĩ số đã điểm danh: {attendees.length} SV
                       </div>
                       <button
                         type="button"
                         onClick={() => setIsProjectorFullscreen(false)}
-                        className="px-4 py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs cursor-pointer border-none shadow-lg"
+                        className="px-4 py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs cursor-pointer border-none shadow-lg"
                       >
                         ✕ Thu Nhỏ Về Bảng Điều Khiển
                       </button>
@@ -1478,16 +2004,16 @@ export default function FacultyDashboard({
                           style={{ width: '100%', height: '100%', maxWidth: '460px', maxHeight: '460px' }}
                         />
                       </div>
-                      <p className="text-base font-mono font-black text-slate-950 tracking-widest mt-3 mb-0">
+                      <p className="text-base font-mono font-bold text-slate-950 tracking-widest mt-3 mb-0">
                         {currentNonce}
                       </p>
                     </div>
 
                     <div className="w-full lg:w-80 space-y-4">
                       <div className="p-5 rounded-3xl bg-[#081226] border border-cyan-500/30 space-y-3">
-                        <div className="flex justify-between items-center font-mono text-sm">
-                          <span className="text-slate-400">Xoay mã Nonce sau:</span>
-                          <span className="text-2xl font-black text-cyan-400">{timerProgress}s</span>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400 font-medium">Xoay mã Nonce sau:</span>
+                          <span className="text-2xl font-mono font-extrabold text-cyan-400">{timerProgress}s</span>
                         </div>
                         <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
@@ -1495,23 +2021,23 @@ export default function FacultyDashboard({
                             style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
                           />
                         </div>
-                        <p className="text-xs font-mono text-slate-400 m-0">
-                          Bán kính Geofencing: <strong className="text-cyan-300">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
+                        <p className="text-xs text-slate-400 m-0">
+                          Bán kính Geofencing: <strong className="text-cyan-300 font-mono">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
                         </p>
-                        <p className="text-xs font-mono text-slate-400 m-0">
+                        <p className="text-xs text-slate-400 m-0">
                           Chế độ mạng: <strong className="text-emerald-400">{sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G Tự Do'}</strong>
                         </p>
                       </div>
 
                       <div className="p-5 rounded-3xl bg-[#081226] border border-slate-800 space-y-2.5 max-h-64 overflow-y-auto">
-                        <p className="text-xs font-mono font-bold text-cyan-400 uppercase m-0">
+                        <p className="text-xs font-bold text-cyan-400 uppercase m-0">
                           Sinh viên vừa quét thành công ({attendees.length})
                         </p>
                         {attendees.slice(0, 5).map((st) => (
                           <div key={st.studentId} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
                             <div>
                               <p className="font-bold text-white m-0">{st.name}</p>
-                              <p className="text-[10px] font-mono text-slate-400 m-0">MSSV: {st.studentId} • {st.distance}m</p>
+                              <p className="text-[11px] font-mono text-slate-400 m-0">MSSV: {st.studentId} • {st.distance}m</p>
                             </div>
                             <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
                               ✓ EIP-191
@@ -1535,15 +2061,15 @@ export default function FacultyDashboard({
                 />
               )}
 
-              {/* TAB 3: IDS AUDIT */}
+              {/* TAB 3: IDS AUDIT (DÀNH CHO GIẢNG VIÊN LỚP HỌC & THANH TRA KHẢO THÍ) */}
               {activeTab === 'IDS' && (
                 <div className="flex-1 min-h-[480px] rounded-3xl bg-[#081226] border border-rose-500/30 p-6 flex flex-col shadow-2xl">
                   <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
                     <div>
-                      <h3 className="text-base font-bold text-rose-300 m-0">🛡️ Nhật Ký Phát Hiện Điểm Danh Hộ (IDS)</h3>
+                      <h3 className="text-base font-extrabold text-rose-300 m-0">🛡️ Nhật Ký Phát Hiện Điểm Danh Hộ (IDS)</h3>
                       <p className="text-xs text-slate-400 mt-0.5 mb-0">Đối soát xung đột dấu vân tay phần cứng thiết bị (Hardware Fingerprint Collision)</p>
                     </div>
-                    <span className="px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 text-xs font-mono font-bold">
+                    <span className="px-3 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 text-xs font-bold">
                       {idsViolationCount} Cảnh Báo Xung Đột
                     </span>
                   </div>
@@ -1554,9 +2080,9 @@ export default function FacultyDashboard({
                         const violators = attendees.filter(a => a.deviceId === devId);
                         return (
                           <div key={devId} className="p-4 rounded-2xl bg-rose-950/25 border border-rose-500/40 text-xs space-y-2.5">
-                            <div className="flex justify-between text-rose-400 font-bold font-mono">
+                            <div className="flex justify-between text-rose-400 font-bold">
                               <span>⚠️ PHÁT HIỆN 1 THIẾT BỊ ĐIỂM DANH CHO {count} SINH VIÊN</span>
-                              <span>Device ID: {devId}</span>
+                              <span className="font-mono">Device ID: {devId}</span>
                             </div>
                             <p className="text-slate-300 m-0">
                               Sinh viên liên quan: <strong>{violators.map(v => `${v.name} (${v.studentId})`).join(', ')}</strong>
@@ -1581,109 +2107,40 @@ export default function FacultyDashboard({
                       return null;
                     })}
 
-                    <div className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs text-slate-300 font-mono">
+                    <div className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs text-slate-300">
                       ✓ Sliding Nonce TOTP: Không phát hiện Replay Attack trong 120 chu kỳ.
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs text-slate-300 font-mono">
+                    <div className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs text-slate-300">
                       ✓ Chữ ký số EIP-191 Secp256k1: Khôi phục địa chỉ ví trùng khớp 100% Merkle Root.
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 4: ROOT ADMIN CONSOLE (MERKLE BATCH ISSUANCE & DECOUPLED REVOCATION) */}
-              {activeTab === 'ADMIN' && (
-                <div className="flex-1 min-h-[480px] rounded-3xl bg-[#081226] border border-emerald-500/30 p-6 flex flex-col gap-4 shadow-2xl overflow-y-auto">
-                  <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-3">
+              {/* TAB NHẬT KÝ AN NINH CHO THANH TRA KHẢO THÍ (AUDITOR) */}
+              {activeTab === 'ADMIN_AUDIT' && (
+                <div className="flex-1 min-h-[480px] rounded-3xl bg-[#081226] border border-amber-500/30 p-6 flex flex-col gap-4 shadow-2xl overflow-y-auto">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div>
-                      <h3 className="text-base font-bold text-emerald-300 m-0">🏛️ Trung Tâm Quản Trị Cấp Cao (Root Issuer &amp; Revocation)</h3>
-                      <p className="text-xs text-slate-400 mt-0.5 mb-0">Cấp phát lô thẻ sinh viên Merkle Tree O(log N) &amp; Thu hồi khóa độc lập (Polygon Amoy 80002)</p>
+                      <h3 className="text-base font-extrabold text-amber-300 m-0">📜 Nhật Ký Thanh Tra An Ninh Hệ Thống</h3>
+                      <p className="text-xs text-slate-400 mt-0.5 mb-0">Lịch sử kiểm toán chữ ký số EIP-191, trạng thái thu hồi khóa và điểm danh thực tế</p>
                     </div>
-                    <div className="flex gap-2 text-xs font-mono">
-                      <span className="px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-bold">
-                        Tổng DID: {adminStats.totalDID}
-                      </span>
-                      <span className="px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-bold">
-                        Active: {adminStats.activeDID}
-                      </span>
-                      <span className="px-3 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-bold">
-                        Revoked: {adminStats.revokedDID}
-                      </span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={fetchAdminAuditLogs}
+                      className="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold cursor-pointer"
+                    >
+                      🔄 Làm Mới
+                    </button>
                   </div>
-
-                  {adminStatusMsg && (
-                    <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-xs font-mono text-emerald-300">
-                      {adminStatusMsg}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-                    <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex flex-col gap-2.5">
-                      <div className="text-xs font-bold text-cyan-300">1. Phát Hành Lô Thẻ VC (Merkle Batch Issuance)</div>
-                      <textarea
-                        value={batchJson}
-                        onChange={(e) => setBatchJson(e.target.value)}
-                        rows={6}
-                        className="w-full flex-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-cyan-200 focus:border-cyan-400 outline-none resize-none"
-                      />
-                      <div className="text-[10px] font-mono text-slate-400 truncate">
-                        Merkle Root: <span className="text-amber-300">{adminStats.merkleRoot}</span>
+                  <div className="space-y-2">
+                    {auditLogs.map((log) => (
+                      <div key={log.id} className="p-3 rounded-xl bg-[#040814] border border-slate-800 flex justify-between text-xs">
+                        <span><code className="text-slate-400">[{log.time}]</code> <strong className="text-emerald-300">{log.action}</strong>: {log.detail}</span>
+                        <span className="text-cyan-400 font-semibold ml-2">{log.result}</span>
                       </div>
-                      <button
-                        onClick={handleAdminIssueMerkleBatch}
-                        className="w-full py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs cursor-pointer border-none"
-                      >
-                        ⚡ Băm Keccak256 &amp; Neo Merkle Root On-Chain
-                      </button>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex flex-col justify-between gap-3">
-                      <div className="space-y-2">
-                        <div className="text-xs font-bold text-rose-300">2. Thu Hồi &amp; Khôi Phục Khóa Thiết Bị iOS (Decoupled Revocation)</div>
-                        <p className="text-[11px] text-slate-400 m-0 leading-relaxed">
-                          Vô hiệu hóa ngay lập tức thẻ sinh viên trên iPhone bị báo mất máy (<code>isRevoked[address] = true</code>) mà giữ nguyên Merkle Root của toàn trường:
-                        </p>
-                        <div>
-                          <label className="text-[10px] font-mono text-slate-400">Địa chỉ Ví thiết bị iOS (SV 2251120000 - Nguyễn Đức Hiển):</label>
-                          <input
-                            value={revokeAddressInput}
-                            onChange={(e) => setRevokeAddressInput(e.target.value)}
-                            className="w-full mt-1 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-rose-300 focus:border-rose-400 outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={handleAdminRevokeWallet}
-                          className="w-full py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs cursor-pointer border-none"
-                        >
-                          🚫 Thu Hồi Khóa Thiết Bị iOS (revokeKey)
-                        </button>
-                        <button
-                          onClick={handleAdminUnrevokeWallet}
-                          className="w-full py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs cursor-pointer"
-                        >
-                          🔓 Khôi Phục Khóa Thiết Bị iOS (unrevokeKey)
-                        </button>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-
-                  {auditLogs.length > 0 && (
-                    <div className="p-3.5 rounded-2xl bg-[#040814] border border-slate-800 space-y-1.5 max-h-40 overflow-y-auto">
-                      <div className="text-[11px] font-mono font-bold text-cyan-300">
-                        📜 Sổ Cái Kiểm Toán An Ninh Thời Gian Thực (Live Backend Audit Logs)
-                      </div>
-                      {auditLogs.slice(0, 6).map((log) => (
-                        <div key={log.id} className="text-[10.5px] font-mono text-slate-300 flex justify-between border-b border-slate-900 pb-1">
-                          <span>[{log.time}] <b className="text-emerald-300">{log.action}</b>: {log.detail}</span>
-                          <span className="text-cyan-400 ml-2">{log.result}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </div>
