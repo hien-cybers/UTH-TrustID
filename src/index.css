@@ -4,36 +4,44 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg-main: #070b14;
-  --bg-dark: #070b14;
-  --bg-pure: #070b14;
-  --admin-bg: #07090e;
-  --bg-card: rgba(15, 23, 42, 0.75);
-  --card-bg: #0d131f;
-  --card-charcoal: #0d131f;
-  --bg-input: #0b1329;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(56, 189, 248, 0.3);
-  --border-subtle: #162032;
-  --border: #162032;
-  --primary: #38bdf8;
-  --cyan-accent: #00f2fe;
-  --primary-glow: rgba(56, 189, 248, 0.25);
-  --accent-purple: #a855f7;
-  --accent-rose: #f43f5e;
-  --accent-emerald: #10b981;
-  --green-active: #00e676;
-  --red-revoked: #ff5252;
-  --yellow-warn: #ffab00;
-  --text-main: #f8fafc;
-  --text-primary: #f8fafc;
+  /* Bảng phối màu Sunset Twilight 6 sắc độ (#1B1931, #44174E, #662249, #A34054, #ED9E59, #E9BCB9) */
+  --palette-midnight: #1B1931;
+  --palette-plum: #44174E;
+  --palette-burgundy: #662249;
+  --palette-crimson: #A34054;
+  --palette-amber: #ED9E59;
+  --palette-blush: #E9BCB9;
+
+  --bg-main: #1B1931;
+  --bg-dark: #1B1931;
+  --bg-pure: #151328;
+  --admin-bg: #1B1931;
+  --bg-card: rgba(68, 23, 78, 0.55);
+  --card-bg: #27173A;
+  --card-charcoal: #221533;
+  --bg-input: #161329;
+  --border-color: rgba(233, 188, 185, 0.16);
+  --border-hover: rgba(237, 158, 89, 0.45);
+  --border-subtle: #44174E;
+  --border: #662249;
+  --primary: #ED9E59;
+  --cyan-accent: #ED9E59;
+  --primary-glow: rgba(237, 158, 89, 0.28);
+  --accent-purple: #662249;
+  --accent-rose: #A34054;
+  --accent-emerald: #ED9E59;
+  --green-active: #ED9E59;
+  --red-revoked: #A34054;
+  --yellow-warn: #ED9E59;
+  --text-main: #FDF8F7;
+  --text-primary: #FDF8F7;
   --text-white: #ffffff;
-  --text-muted: #94a3b8;
-  --text-secondary: #8492a6;
+  --text-muted: #E9BCB9;
+  --text-secondary: #d5a7a4;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --btn-bg: #131b2e;
-  --btn-border: #202d4a;
+  --btn-bg: #44174E;
+  --btn-border: #662249;
 }
 
 /* Tối ưu hóa hiển thị Mobile chuẩn iOS & Android */
@@ -430,9 +438,99 @@ button, input, select {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.25),
     transparent
   );
   transform: translateX(-120%) skewX(-20deg);
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
+}
+
+/* ==================== HỆ MÀU SUNSET TWILIGHT (#1B1931, #44174E, #662249, #A34054, #ED9E59, #E9BCB9) ==================== */
+.sunset-palette-theme {
+  background: radial-gradient(circle at 85% 10%, rgba(163, 64, 84, 0.22), transparent 45%),
+              radial-gradient(circle at 15% 85%, rgba(68, 23, 78, 0.35), transparent 50%),
+              #1B1931 !important;
+  color: #FDF8F7 !important;
+}
+
+/* Header & Thanh điều hướng trên cùng */
+.sunset-palette-theme header {
+  background: rgba(27, 25, 49, 0.92) !important;
+  border-bottom-color: rgba(163, 64, 84, 0.35) !important;
+  box-shadow: 0 8px 32px rgba(27, 25, 49, 0.65);
+}
+
+/* Các khối Card chính (chuyển từ xanh đen #081226 sang Tím Rượu Vang #44174E / #2A163B) */
+.sunset-palette-theme .bg-\[\#081226\] {
+  background: linear-gradient(145deg, rgba(68, 23, 78, 0.78) 0%, rgba(36, 20, 52, 0.92) 100%) !important;
+  border-color: rgba(163, 64, 84, 0.38) !important;
+  box-shadow: 0 18px 45px -12px rgba(17, 14, 34, 0.75) !important;
+}
+
+/* Các khối nền phụ & Ô Input bên trong Card (#040814 / slate-950 -> #1B1931) */
+.sunset-palette-theme .bg-\[\#040814\],
+.sunset-palette-theme .bg-\[\#040814\]\/80,
+.sunset-palette-theme .bg-slate-950,
+.sunset-palette-theme .bg-slate-950\/90 {
+  background-color: rgba(27, 25, 49, 0.88) !important;
+  border-color: rgba(102, 34, 73, 0.65) !important;
+}
+
+/* Đường viền (Borders) chuyển sang tông #662249 & #A34054 */
+.sunset-palette-theme .border-slate-800,
+.sunset-palette-theme .border-slate-800\/90,
+.sunset-palette-theme .border-slate-800\/80,
+.sunset-palette-theme .border-slate-700 {
+  border-color: rgba(102, 34, 73, 0.68) !important;
+}
+
+.sunset-palette-theme .border-cyan-500\/30,
+.sunset-palette-theme .border-cyan-500\/40,
+.sunset-palette-theme .border-cyan-400\/40,
+.sunset-palette-theme .border-cyan-400 {
+  border-color: rgba(237, 158, 89, 0.55) !important;
+}
+
+/* Nút bấm chính & Tab đang chọn (Cyan -> Cam Hoàng Hôn #ED9E59 & Hồng Đỏ #A34054) */
+.sunset-palette-theme .bg-cyan-400,
+.sunset-palette-theme .bg-amber-500,
+.sunset-palette-theme .bg-amber-400 {
+  background: linear-gradient(135deg, #ED9E59 0%, #d97b43 100%) !important;
+  color: #1B1931 !important;
+  box-shadow: 0 8px 24px rgba(237, 158, 89, 0.32) !important;
+}
+
+.sunset-palette-theme .bg-cyan-500\/15,
+.sunset-palette-theme .bg-amber-500\/15,
+.sunset-palette-theme .bg-amber-500\/10 {
+  background-color: rgba(237, 158, 89, 0.16) !important;
+  border-color: rgba(237, 158, 89, 0.42) !important;
+  color: #ED9E59 !important;
+}
+
+/* Chữ nhấn (Text Accents: Cyan -> #ED9E59 & #E9BCB9) */
+.sunset-palette-theme .text-cyan-300,
+.sunset-palette-theme .text-cyan-400,
+.sunset-palette-theme .text-amber-300,
+.sunset-palette-theme .text-amber-400 {
+  color: #ED9E59 !important;
+}
+
+.sunset-palette-theme .text-slate-400,
+.sunset-palette-theme .text-slate-300 {
+  color: #E9BCB9 !important;
+}
+
+/* Nút Đỏ / Cảnh báo IDS (#A34054 & #662249) */
+.sunset-palette-theme .bg-rose-500 {
+  background: linear-gradient(135deg, #A34054 0%, #662249 100%) !important;
+  color: #ffffff !important;
+}
+
+.sunset-palette-theme .bg-rose-500\/15,
+.sunset-palette-theme .bg-rose-500\/20,
+.sunset-palette-theme .bg-rose-950\/20,
+.sunset-palette-theme .bg-rose-950\/25 {
+  background-color: rgba(163, 64, 84, 0.22) !important;
+  border-color: rgba(163, 64, 84, 0.55) !important;
 }
