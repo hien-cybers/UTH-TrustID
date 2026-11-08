@@ -1,40 +1,25 @@
-// src/components/LiveClock.jsx - Component Đồng Hồ Thời Gian Thực Độc Lập (React.memo)
-// Tách biệt hoàn toàn state nhảy từng giây khỏi App.jsx / ScanPage.jsx để KHÔNG gây re-render luồng Camera trên iOS Safari
+// src/components/LiveClock.jsx - Đồng Hồ Thời Gian Thực Chuẩn Mẫu
 import React, { useState, useEffect, memo } from 'react';
-import { Clock } from 'lucide-react';
 
-const LiveClock = memo(function LiveClock({ showIcon = true, style = {} }) {
-  const [currentTime, setCurrentTime] = useState(() => new Date());
+const LiveClock = memo(function LiveClock() {
+  const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const updateClock = () => {
+      const now = new Date();
+      setCurrentTime(now.toTimeString().split(' ')[0]);
+    };
+    updateClock();
+    const timer = setInterval(updateClock, 1000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '5px',
-        fontSize: '10.5px',
-        fontFamily: 'JetBrains Mono, monospace',
-        color: '#E0F2FE',
-        background: 'rgba(3, 13, 27, 0.85)',
-        padding: '4px 10px',
-        borderRadius: '999px',
-        border: '1px solid rgba(123, 189, 232, 0.28)',
-        fontWeight: 600,
-        ...style
-      }}
-    >
-      {showIcon && <Clock size={11} color="#38BDF8" />}
-      <span>{currentTime.toLocaleTimeString('vi-VN', { hour12: false })}</span>
+    <div className="px-2.5 py-1 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-300 flex items-center gap-1 font-mono text-[11px]">
+      <span>🕒</span>
+      <span>{currentTime || '23:13:13'}</span>
     </div>
   );
 });
 
 export default LiveClock;
-

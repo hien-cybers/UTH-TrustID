@@ -24,7 +24,7 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink, LayoutGrid } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -535,7 +535,7 @@ export default function App() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-[#020A15] text-[#F0F7FF] flex flex-col items-center justify-center">
+    <div className="w-full min-h-screen bg-[#030712] text-slate-100 flex flex-col items-center justify-center select-none antialiased">
       {/* Màn hình khởi động động (Animated Splash Screen) hiển thị khi vừa mở ứng dụng */}
       {showSplash && (
         <SplashScreen onFinish={() => setShowSplash(false)} />
@@ -551,80 +551,45 @@ export default function App() {
 
       {/* Giao diện chính của ứng dụng Sinh viên (Holder Node) */}
       <BrowserRouter>
-      {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
-      <div className="mobile-viewport mobile-app-root text-[#F0F7FF]">
-        
-        {/* Top Header Chuẩn Native iOS / Android (Ocean-Ice Glassmorphism) */}
-        <header style={{
-          flexShrink: 0,
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          background: 'rgba(5, 19, 38, 0.92)',
-          borderBottom: '1px solid rgba(123, 189, 232, 0.22)',
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
-          padding: '12px 16px',
-          width: '100%'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-            
-            {/* Logo Thương Hiệu UTH-TrustID */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-              <UthTrustLogo size={32} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: '14.5px', letterSpacing: '-0.02em', color: '#F0F7FF', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
-                  UTH TRUST<span style={{ color: '#38BDF8' }}>ID</span>
-                </div>
-                <div style={{ fontSize: '10.5px', fontWeight: 600, color: '#7BBDE8', letterSpacing: '0.01em', whiteSpace: 'nowrap', marginTop: '1px' }}>
-                  Ví Danh Tính Sinh Viên
-                </div>
+      {/* Khung màn hình điện thoại iPhone tỉ lệ chuẩn */}
+      <div className="mobile-viewport mobile-app-root text-slate-100">
+        {/* ================= 1. STATUS BAR & TOP HEADER ================= */}
+        <header className="pt-3 px-5 pb-2 flex-shrink-0 z-50 bg-[#050B18]/95 backdrop-blur-md">
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-cyan-950/60 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_12px_rgba(0,242,254,0.25)]">
+                <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xs font-black tracking-wider text-white flex items-center gap-1 m-0">
+                  UTH TRUST<span className="text-cyan-400">ID</span>
+                </h1>
+                <p className="text-[9px] font-mono text-slate-400 tracking-tight m-0">HOLDER NODE • SINH VIÊN</p>
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Khóa phiên + Huy hiệu Holder FIDO2 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {/* Các badge bảo mật góc phải */}
+            <div className="flex items-center gap-1.5 font-mono text-[11px]">
               <LiveClock />
-
               <button
+                type="button"
                 onClick={handleLockSession}
-                title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
-                className="btn-press"
-                style={{
-                  padding: '6px 10px',
-                  borderRadius: '999px',
-                  background: 'rgba(10, 65, 116, 0.45)',
-                  border: '1px solid rgba(123, 189, 232, 0.28)',
-                  color: '#7BBDE8',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
+                title="Khóa phiên bảo mật ngay (PIN: 123456)"
+                className="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-cyan-400 cursor-pointer flex items-center justify-center"
               >
-                <Lock size={13} />
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
               </button>
-
-              <span
-                title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
-                style={{
-                  padding: '5px 10px',
-                  borderRadius: '999px',
-                  background: 'rgba(16, 185, 129, 0.14)',
-                  border: '1px solid rgba(16, 185, 129, 0.35)',
-                  color: '#34D399',
-                  fontSize: '10.5px',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <ShieldCheck size={12} />
-                <span>FIDO2</span>
-              </span>
+              <div className="px-2 py-1 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                FIDO2
+              </div>
             </div>
-
           </div>
         </header>
 

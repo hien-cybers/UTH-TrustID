@@ -414,47 +414,57 @@ export default function StudentWalletPro({
           </button>
         </div>
       ) : (
-        /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> HIỂN THỊ GỌN GÀNG, RÕ NÉT */
-        <div className="flex flex-col gap-4">
+        /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> GIAO DIỆN CHUẨN STUDENTMOBILEAPP.JSX */
+        <div className="space-y-4">
           {pinSavedNotice && (
             <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
               {pinSavedNotice}
             </div>
           )}
 
-          {/* THANH CHUYỂN ĐỔI 2 MỤC CHÍNH TO RÕ, DỄ BẤM */}
-          <div
-            className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl"
-            style={{
-              background: '#030D1B',
-              border: '1px solid rgba(123, 189, 232, 0.25)'
-            }}
-          >
+          {/* Tiêu đề Ví danh tính */}
+          <div className="flex items-end justify-between pt-1">
+            <div>
+              <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider m-0">
+                Sinh viên (Holder) • Passwordless
+              </p>
+              <h2 className="text-lg font-black text-white tracking-tight m-0">
+                Ví Danh Tính DID
+              </h2>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-medium flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Đã kích hoạt
+            </span>
+          </div>
+
+          {/* Segment Tabs chuyển đổi */}
+          <div className="p-1 rounded-2xl bg-[#091326] border border-slate-800/80 flex gap-1">
             <button
               type="button"
               onClick={() => setWalletSubTab('CARD')}
-              className={`py-2.5 px-3 rounded-xl text-[13px] font-bold transition-all cursor-pointer border-none ${
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
                 walletSubTab === 'CARD'
-                  ? 'bg-sky-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md shadow-cyan-400/20'
+                  : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
-              Thẻ Sinh Viên
+              Thẻ Số DID &amp; Bảo Mật
             </button>
             <button
               type="button"
               onClick={() => setWalletSubTab('HISTORY')}
-              className={`py-2.5 px-3 rounded-xl text-[13px] font-bold transition-all cursor-pointer border-none ${
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
                 walletSubTab === 'HISTORY'
-                  ? 'bg-sky-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md shadow-cyan-400/20'
+                  : 'bg-transparent text-slate-400 hover:text-white'
               }`}
             >
-              Lịch Sử Điểm Danh
+              Lịch Sử Chuyên Cần
             </button>
           </div>
 
-          {/* TAB 1: THẺ SINH VIÊN & CÀI ĐẶT NHANH */}
+          {/* TAB 1: THẺ SỐ DID & BẢO MẬT */}
           {walletSubTab === 'CARD' && (
             <>
               <StudentCardClean
@@ -465,11 +475,17 @@ export default function StudentWalletPro({
                   studentId: zkpMode ? '••••••••••' : credential.studentId,
                   major: zkpMode ? 'Đã xác thực hợp lệ' : credential.major,
                   faculty: 'Công nghệ Thông tin',
-                  avatar: credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+                  avatar:
+                    credential.avatar ||
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
                   address: zkpMode ? '0x0000...ZKP' : credential.address,
-                  merkleRoot: credential.merkleRoot || '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2',
-                  merkleProof: credential.merkleProof || ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85'],
-                  validUntil: '2022 - 2026',
+                  merkleRoot:
+                    credential.merkleRoot ||
+                    '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2',
+                  merkleProof: credential.merkleProof || [
+                    '0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85'
+                  ],
+                  validUntil: '2027',
                   status: zkpMode ? 'ZKP-LITE' : 'ACTIVE'
                 }}
                 onScanClick={() => navigate('/scan')}
@@ -481,85 +497,139 @@ export default function StudentWalletPro({
                 onOpenHistoryTab={() => setWalletSubTab('HISTORY')}
               />
 
-              {/* KHỐI CÀI ĐẶT BẢO MẬT GỌN GÀNG, DỄ THAO TÁC */}
-              <div className="glass-card space-y-3">
+              {/* THẺ LỊCH SỬ CHUYÊN CẦN & BIÊN LAI (CHUẨN GIAO DIỆN MẪU) */}
+              <div className="p-4 rounded-3xl bg-[#081226]/80 border border-slate-800/80 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold text-white m-0">
+                      Lịch Sử Chuyên Cần Cá Nhân &amp; Biên Lai EIP-191
+                    </h4>
+                    <p className="text-[9px] text-slate-400 mt-0.5 m-0">
+                      Tự đối soát từng buổi học kèm chữ ký số EIP-191 và mã băm chốt sổ của Giảng viên
+                    </p>
+                  </div>
+                  <span className="px-2 py-1 rounded-xl bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[9px] font-mono font-bold flex-shrink-0 text-center">
+                    3 môn học
+                  </span>
+                </div>
+
+                {/* Danh sách chip môn học / sinh viên */}
+                <div className="space-y-1.5 pt-1">
+                  <div
+                    onClick={() => {
+                      setPreviewStudentMssv('');
+                      setWalletSubTab('HISTORY');
+                    }}
+                    className="p-2 rounded-xl bg-slate-950/80 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 flex items-center justify-between cursor-pointer"
+                  >
+                    <span>2251120000 (Thẻ của tôi • 100%)</span>
+                    <span className="text-[9px] text-cyan-400">Xem sổ →</span>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setPreviewStudentMssv('2251120002');
+                      setWalletSubTab('HISTORY');
+                    }}
+                    className="p-2 rounded-xl bg-slate-950/40 border border-slate-800 text-[10px] font-mono text-slate-400 flex items-center justify-between cursor-pointer hover:border-cyan-500/30"
+                  >
+                    <span>2251120002 (Trần Thị Mai • 66.7%)</span>
+                    <span className="text-[9px] text-slate-500">Đối soát →</span>
+                  </div>
+                  <div
+                    onClick={() => {
+                      setPreviewStudentMssv('2251120003');
+                      setWalletSubTab('HISTORY');
+                    }}
+                    className="p-2 rounded-xl bg-slate-950/40 border border-slate-800 text-[10px] font-mono text-slate-400 flex items-center justify-between cursor-pointer hover:border-cyan-500/30"
+                  >
+                    <span>2251120003 (Lê Hoàng Quân • 33.3%)</span>
+                    <span className="text-[9px] text-slate-500">Đối soát →</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* KHỐI BẢO MẬT PHẦN CỨNG FACE ID & ZKP */}
+              <div className="p-4 rounded-3xl bg-[#081226]/80 border border-slate-800/80 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Shield size={17} className="text-sky-400" />
-                    <h3 className="text-[14px] font-bold m-0 text-white">
-                      Bảo Mật &amp; Quyền Riêng Tư
-                    </h3>
+                    <Shield size={15} className="text-cyan-400" />
+                    <h4 className="text-xs font-bold m-0 text-white">
+                      Bảo Mật Sinh Trắc Học &amp; Ẩn Danh ZKP
+                    </h4>
                   </div>
-                  <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
+                  <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
                     PIN: 123456
                   </span>
                 </div>
 
                 {/* Hàng 1: Face ID */}
-                <div className="p-3 rounded-xl bg-[#030D1B] border border-sky-200/15 flex items-center justify-between gap-3">
+                <div className="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-2">
                   <div>
-                    <div className="text-[13px] font-bold text-white">
+                    <div className="text-[11.5px] font-bold text-white">
                       Xác thực Face ID / Vân tay
                     </div>
-                    <div className="text-[11.5px] text-slate-300 mt-0.5">
-                      Dùng sinh trắc học khi quét QR điểm danh
+                    <div className="text-[10px] text-slate-400">
+                      Ký số EIP-191 bằng khóa phần cứng
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       type="button"
                       onClick={handleTriggerFaceIdTest}
-                      className="btn-press px-2.5 py-1.5 rounded-lg bg-sky-400/15 border border-sky-300/30 text-sky-300 text-[11.5px] font-bold cursor-pointer"
+                      className="px-2.5 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold cursor-pointer"
                     >
                       Quét thử
                     </button>
                     <button
                       type="button"
-                      onClick={() => setBioEnabled(v => !v)}
+                      onClick={() => setBioEnabled((v) => !v)}
                       className="bg-transparent border-none cursor-pointer p-0 flex items-center"
                     >
-                      {bioEnabled ? <ToggleRight size={30} color="#10B981" /> : <ToggleLeft size={30} color="#64748B" />}
+                      {bioEnabled ? (
+                        <ToggleRight size={28} color="#10B981" />
+                      ) : (
+                        <ToggleLeft size={28} color="#64748B" />
+                      )}
                     </button>
                   </div>
                 </div>
 
                 {bioTestSuccessMsg && (
-                  <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10.5px] font-semibold">
                     {bioTestSuccessMsg}
                   </div>
                 )}
 
                 {/* Hàng 2: Ẩn danh ZKP */}
-                <div className="p-3 rounded-xl bg-[#030D1B] border border-sky-200/15 flex items-center justify-between gap-3">
+                <div className="p-2.5 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-2">
                   <div>
-                    <div className="text-[13px] font-bold text-white">
-                      Chế độ ẩn danh qua cổng (ZKP)
+                    <div className="text-[11.5px] font-bold text-white">
+                      Chế độ ẩn danh ZKP-Lite
                     </div>
-                    <div className="text-[11.5px] text-slate-300 mt-0.5">
-                      Ẩn Họ tên &amp; MSSV trên thẻ khi qua thư viện
+                    <div className="text-[10px] text-slate-400">
+                      Ẩn Họ tên &amp; MSSV khi qua cổng thư viện
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={handleToggleZkp}
-                    className={`btn-press px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex-shrink-0 border ${
+                    className={`px-3 py-1 rounded-xl text-[10px] font-bold cursor-pointer flex-shrink-0 border ${
                       zkpMode
                         ? 'bg-emerald-400 text-slate-950 border-emerald-300'
-                        : 'bg-sky-400/15 text-sky-300 border-sky-300/30'
+                        : 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
                     }`}
                   >
                     {zkpMode ? 'Đang bật' : 'Bật ẩn danh'}
                   </button>
                 </div>
 
-                {/* Nút gỡ thẻ nhỏ gọn ở cuối */}
-                <div className="pt-1 flex justify-end">
+                <div className="pt-0.5 flex justify-end">
                   <button
                     type="button"
                     onClick={handleRevokeLocal}
-                    className="btn-press py-1.5 px-3 bg-rose-500/10 border border-rose-400/25 rounded-lg text-rose-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                    className="py-1 px-2.5 bg-rose-500/10 border border-rose-500/25 rounded-xl text-rose-400 text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
                   >
-                    <Trash2 size={13} /> Đặt lại thẻ trên máy này
+                    <Trash2 size={11} /> Đặt lại thẻ trên máy này
                   </button>
                 </div>
               </div>

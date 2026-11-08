@@ -1,4 +1,4 @@
-/* src/styles/appPro.css - UTH-TrustID Ocean-Ice Dark Neon & Soft Squircle Design System */
+/* src/styles/appPro.css - UTH-TrustID Neon Cyberpunk Dark UI (#030712 / #050B18 / Cyan-400) */
 
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
@@ -6,10 +6,6 @@
   box-sizing: border-box;
 }
 
-/* =========================================================
-   BẢNG MÀU OCEAN-ICE DARK NEON (#001D39 -> #0A4174 -> #7BBDE8 -> #BDD8E9)
-   & HỆ THỐNG BO GÓC SQUIRCLE MỀM MẠI (KHÔNG GÓC NHỌN)
-   ========================================================= */
 :root,
 [data-theme="dark"] {
   --sat: env(safe-area-inset-top, 0px);
@@ -17,41 +13,34 @@
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
 
-  --bg-page: #020A15;
-  --bg-root: #041224;
-  --bg-card: #071C36;
-  --bg-card-elevated: #0B284C;
-  --bg-inset: #030D1B;
-  --bg-header: rgba(5, 19, 38, 0.92);
-  --bg-modal: #081F3D;
-  --bg-nav: rgba(4, 16, 34, 0.94);
+  --bg-page: #030712;
+  --bg-root: #050B18;
+  --bg-card: #081226;
+  --bg-card-elevated: #0B172E;
+  --bg-inset: #030712;
+  --bg-header: rgba(5, 11, 24, 0.95);
+  --bg-modal: #081226;
+  --bg-nav: rgba(6, 13, 30, 0.95);
 
-  --text-main: #F0F7FF;
-  --text-muted: #BDD8E9;
-  --text-dim: #7BBDE8;
+  --text-main: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
 
-  --border-hairline: rgba(123, 189, 232, 0.24);
-  --border-neutral: rgba(123, 189, 232, 0.30);
-  --border-cyan: rgba(56, 189, 248, 0.48);
-  --shadow-card: 0 16px 38px rgba(1, 8, 20, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  --shadow-viewport: 0 28px 72px rgba(0, 6, 16, 0.88), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --border-hairline: rgba(30, 41, 59, 0.8);
+  --border-neutral: rgba(51, 65, 85, 0.7);
+  --border-cyan: rgba(34, 211, 238, 0.35);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-viewport: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
 
-  --tint-cyan: rgba(123, 189, 232, 0.14);
-  --tint-emerald: rgba(16, 185, 129, 0.14);
+  --tint-cyan: rgba(34, 211, 238, 0.12);
+  --tint-emerald: rgba(16, 185, 129, 0.12);
   --tint-amber: rgba(245, 158, 11, 0.15);
   --tint-rose: rgba(244, 63, 94, 0.15);
 
-  --tone-cyan: #7BBDE8;
+  --tone-cyan: #22D3EE;
   --tone-emerald: #34D399;
   --tone-amber: #FBBF24;
   --tone-rose: #FB7185;
-
-  --radius-xs: 12px;
-  --radius-sm: 16px;
-  --radius-md: 20px;
-  --radius-lg: 26px;
-  --radius-xl: 32px;
-  --radius-pill: 9999px;
 }
 
 html, body {
@@ -59,16 +48,13 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100dvh;
-  background-color: var(--bg-page);
+  background-color: #030712;
   color: var(--text-main);
   font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
-  letter-spacing: -0.008em;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body, button, input, select, textarea {
@@ -77,59 +63,32 @@ body, button, input, select, textarea {
 
 code, pre, .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-  letter-spacing: -0.01em;
 }
 
 /* =========================================================
-   NÂNG CẤP TOÀN BỘ GÓC BO SQUIRCLE MỀM MẠI (TRIỆT TIÊU KHUNG NHỌN)
-   ========================================================= */
-.rounded,
-.rounded-sm,
-.rounded-md {
-  border-radius: 12px !important;
-}
-
-.rounded-lg {
-  border-radius: 16px !important;
-}
-
-.rounded-xl {
-  border-radius: 20px !important;
-}
-
-.rounded-2xl {
-  border-radius: 24px !important;
-}
-
-.rounded-3xl {
-  border-radius: 30px !important;
-}
-
-/* =========================================================
-   KHUNG ĐIỆN THOẠI BO CONG 4 GÓC MỀM MẠI (HOLDER MOBILE NODE)
+   KHUNG MÀN HÌNH ĐIỆN THOẠI IPHONE TỈ LỆ CHUẨN (420PX)
    ========================================================= */
 .mobile-viewport {
   width: 100%;
-  max-width: 434px;
+  max-width: 420px;
   height: 100dvh;
   margin: 0 auto;
-  background: radial-gradient(circle at 50% 0%, rgba(10, 65, 116, 0.45) 0%, rgba(4, 18, 36, 0.98) 45%, #030E1D 100%);
+  background-color: #050B18;
+  border-left: 1px solid rgba(8, 51, 68, 0.4);
+  border-right: 1px solid rgba(8, 51, 68, 0.4);
   position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: var(--shadow-viewport);
-  border-left: 1px solid rgba(123, 189, 232, 0.22);
-  border-right: 1px solid rgba(123, 189, 232, 0.22);
   padding-top: var(--sat);
 }
 
-@media (min-width: 500px) {
+@media (max-width: 480px) {
   .mobile-viewport {
-    height: calc(100dvh - 20px);
-    margin: 10px auto;
-    border-radius: 38px;
-    border: 1.5px solid rgba(123, 189, 232, 0.28);
+    max-width: 100%;
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -148,62 +107,46 @@ code, pre, .font-mono {
   overflow: hidden;
 }
 
-@media (max-width: 499px) {
-  .mobile-viewport {
-    max-width: 100%;
-    border-left: none;
-    border-right: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-}
-
 /* Vùng nội dung cuộn bên trong điện thoại */
 .mobile-scroll-body {
   flex: 1;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 14px 16px calc(94px + var(--sab)) 16px;
+  padding: 12px 20px calc(96px + var(--sab)) 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   -webkit-overflow-scrolling: touch;
-}
-
-.desktop-viewport .mobile-scroll-body {
-  padding: 18px 24px 28px 24px;
 }
 
 .mobile-scroll-body::-webkit-scrollbar {
   width: 4px;
 }
 .mobile-scroll-body::-webkit-scrollbar-thumb {
-  background: rgba(123, 189, 232, 0.25);
+  background: rgba(34, 211, 238, 0.2);
   border-radius: 999px;
 }
 
-/* Thẻ bề mặt Ocean-Ice Glassmorphism Bo Cong 26px */
+/* Thẻ bề mặt chuẩn Neon Cyberpunk */
 .glass-card,
 .pro-card {
   width: 100%;
-  background: linear-gradient(165deg, rgba(11, 40, 76, 0.86) 0%, rgba(6, 24, 48, 0.94) 100%);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid var(--border-hairline);
-  border-radius: 26px;
-  padding: 16px 18px;
+  background: rgba(8, 18, 38, 0.85);
+  border: 1px solid rgba(30, 41, 59, 0.85);
+  border-radius: 24px;
+  padding: 16px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Ô nhập liệu Bo Tròn Mềm Mại 18px */
+/* Ô nhập liệu */
 .pro-input {
   width: 100%;
-  background: var(--bg-inset);
-  border: 1px solid var(--border-neutral);
-  border-radius: 18px;
-  padding: 11px 15px;
+  background: #030712;
+  border: 1px solid rgba(30, 41, 59, 0.9);
+  border-radius: 14px;
+  padding: 10px 14px;
   color: var(--text-main);
   font-size: 13px;
   outline: none;
@@ -211,41 +154,37 @@ code, pre, .font-mono {
 }
 
 .pro-input::placeholder {
-  color: rgba(189, 216, 233, 0.45);
+  color: #64748B;
 }
 
 .pro-input:focus {
-  border-color: #38BDF8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.20);
+  border-color: #22D3EE;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
 }
 
 img, svg, canvas, video {
   max-width: 100%;
 }
 
-/* Nút bấm đàn hồi mượt mà */
 .btn-press {
-  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), filter 0.15s ease, box-shadow 0.18s ease;
-}
-.btn-press:hover {
-  filter: brightness(1.06);
+  transition: transform 0.14s ease, filter 0.15s ease;
 }
 .btn-press:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 /* =========================================================
-   WEB PORTAL GIẢNG VIÊN / ADMIN / THANH TRA (OCEAN-ICE SHELL)
+   WEB PORTAL GIẢNG VIÊN / ADMIN / THANH TRA
    ========================================================= */
 .theme-fintech-dark {
-  background: radial-gradient(circle at 50% 0%, #0A2E58 0%, #041224 45%, #020914 100%);
-  color: #F0F7FF;
+  background: radial-gradient(circle at 50% 0%, #0B172E 0%, #050B18 48%, #030712 100%);
+  color: #F1F5F9;
   font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .dashboard-outer-shell {
-  background: linear-gradient(180deg, rgba(6, 20, 40, 0.94) 0%, rgba(3, 12, 26, 0.98) 100%);
-  border: 1px solid rgba(123, 189, 232, 0.26);
-  border-radius: 32px !important;
-  box-shadow: 0 24px 64px rgba(0, 6, 18, 0.78), inset 0 1px 0 rgba(189, 216, 233, 0.16);
+  background: linear-gradient(180deg, rgba(8, 18, 38, 0.95) 0%, rgba(5, 11, 24, 0.98) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-radius: 28px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.78);
 }
