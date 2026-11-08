@@ -467,6 +467,8 @@ export default function StudentWalletPro({
                   faculty: 'Công nghệ Thông tin',
                   avatar: credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
                   address: zkpMode ? '0x0000...ZKP' : credential.address,
+                  merkleRoot: credential.merkleRoot || '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2',
+                  merkleProof: credential.merkleProof || ['0xc20012ebb83fb968595ea40941c9a7393e8f36616ddc90df8db9cf50bb0baf85'],
                   validUntil: '2022 - 2026',
                   status: zkpMode ? 'ZKP-LITE' : 'ACTIVE'
                 }}
@@ -475,6 +477,8 @@ export default function StudentWalletPro({
                 activeCourseSession={activeCourseSession}
                 spotCheckState={spotCheckState}
                 onTriggerSpotCheckFaceID={onTriggerSpotCheckFaceID}
+                coursesCatalog={coursesCatalog}
+                onOpenHistoryTab={() => setWalletSubTab('HISTORY')}
               />
 
               {/* KHỐI CÀI ĐẶT BẢO MẬT GỌN GÀNG, DỄ THAO TÁC */}

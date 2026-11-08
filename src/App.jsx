@@ -184,7 +184,7 @@ export default function App() {
 
       setSpotCheckState({
         isActive: true,
-        isModalOpen: true,
+        isModalOpen: false,
         countdown: remaining,
         deadline,
         sessionId: payload.sessionId || 'SES_A2301',
@@ -628,23 +628,65 @@ export default function App() {
           </div>
         </header>
 
-        {/* 2. BANNER CẢNH BÁO KHẨN CẤP GHIM TRÊN MỌI MÀN HÌNH NẾU ĐANG TRONG 60S SPOT-CHECK */}
-        {spotCheckState.isActive && !spotCheckState.isModalOpen && (
+        {/* 2. THANH THÔNG BÁO KHẨN CẤP SPOT-CHECK (STICKY EMERGENCY BANNER) GHIM TRÊN ĐỈNH MÀN HÌNH */}
+        {spotCheckState.isActive && (
           <div
-            onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
-            className="sticky top-[57px] z-40 mx-4 mt-2.5 p-3 rounded-2xl bg-amber-500/20 border border-amber-400/50 backdrop-blur-md flex items-center justify-between cursor-pointer animate-pulse shadow-lg"
+            className="sticky top-[57px] z-40 mx-3.5 mt-2.5 p-3.5 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(217, 119, 6, 0.22) 55%, rgba(120, 53, 15, 0.42) 100%)',
+              border: '1.5px solid rgba(251, 191, 36, 0.85)',
+              boxShadow: '0 14px 34px rgba(245, 158, 11, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.22)',
+              animation: 'spotEmergencyShake 2.4s ease-in-out infinite'
+            }}
           >
-            <div>
-              <p className="text-xs font-bold text-amber-200 m-0">
-                Yêu cầu Hậu kiểm Spot-Check đang diễn ra
-              </p>
-              <p className="text-[11px] text-amber-100/85 m-0 mt-0.5">
-                Chạm vào đây để xác thực Face ID ngay
+            <style>{`
+              @keyframes spotEmergencyShake {
+                0%, 100% { transform: translateX(0); }
+                6% { transform: translateX(-3px) rotate(-0.4deg); }
+                12% { transform: translateX(3px) rotate(0.4deg); }
+                18% { transform: translateX(-2px); }
+                24% { transform: translateX(2px); }
+                30% { transform: translateX(0); }
+              }
+              @keyframes spotCountdownTick {
+                0% { transform: scale(1.22); }
+                45% { transform: scale(0.96); }
+                100% { transform: scale(1); }
+              }
+            `}</style>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-400/25 border border-amber-300/60 text-[10.5px] font-extrabold text-amber-200 uppercase tracking-wide">
+                  ⚡ Spot-Check Khẩn
+                </span>
+                {/* Đồng hồ đếm lùi giật nhịp từng giây */}
+                <span
+                  key={spotCheckState.countdown}
+                  className="px-2 py-0.5 rounded-lg bg-amber-950/90 border border-amber-400/70 text-amber-300 font-mono font-extrabold text-xs inline-block"
+                  style={{ animation: 'spotCountdownTick 0.45s cubic-bezier(0.22, 1, 0.36, 1)' }}
+                >
+                  ⏱ {spotCheckState.countdown}s
+                </span>
+              </div>
+              <p className="text-[12px] font-bold text-white m-0 mt-1 truncate">
+                Giảng viên yêu cầu tái điểm danh 60s
               </p>
             </div>
-            <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-slate-950 font-mono font-extrabold text-xs">
-              {spotCheckState.countdown}s
-            </span>
+
+            {/* Nút bấm xác thực ngay có hiệu ứng sóng xung kích (animate-ping) */}
+            <div className="relative flex-shrink-0">
+              <span className="pointer-events-none absolute -inset-1 rounded-xl bg-amber-400/60 animate-ping" />
+              <button
+                type="button"
+                onClick={handleTriggerSpotCheckFaceID}
+                className="relative z-10 btn-press px-3.5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer border-none shadow-lg"
+              >
+                <Fingerprint size={15} />
+                <span>Xác Thực Ngay</span>
+              </button>
+            </div>
           </div>
         )}
 
