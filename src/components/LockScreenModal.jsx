@@ -62,16 +62,16 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguyá»
         style={{
           width: '64px',
           height: '64px',
-          borderRadius: '20px',
-          background: 'rgba(56, 189, 248, 0.1)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          borderRadius: '22px',
+          background: 'rgba(79, 240, 214, 0.12)',
+          border: '1px solid rgba(79, 240, 214, 0.35)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: '16px'
         }}
       >
-        <Lock size={30} color="var(--accent-cyan)" />
+        <Lock size={30} color="#64F5DF" />
       </div>
 
       <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-main)', marginBottom: '6px' }}>
@@ -141,10 +141,10 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguyá»
           style={{
             width: '100%',
             padding: '12px',
-            borderRadius: '12px',
-            background: pin.length === 6 ? '#0284C7' : 'var(--bg-inset)',
-            color: pin.length === 6 ? '#FFF' : 'var(--text-dim)',
-            fontWeight: 700,
+            borderRadius: '16px',
+            background: pin.length === 6 ? 'linear-gradient(135deg, #4FF0D6, #22D3EE)' : 'var(--bg-inset)',
+            color: pin.length === 6 ? '#040A14' : 'var(--text-dim)',
+            fontWeight: 800,
             fontSize: '13px',
             border: pin.length === 6 ? 'none' : '1px solid var(--border-hairline)',
             cursor: pin.length === 6 ? 'pointer' : 'not-allowed',
@@ -162,13 +162,13 @@ export default function LockScreenModal({ onUnlockSuccess, studentName = 'Nguyá»
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          background: 'var(--tint-cyan)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
-          color: 'var(--tone-sky)',
-          padding: '10px 18px',
-          borderRadius: '20px',
+          background: 'rgba(79, 240, 214, 0.12)',
+          border: '1px solid rgba(79, 240, 214, 0.35)',
+          color: '#64F5DF',
+          padding: '10px 20px',
+          borderRadius: '999px',
           fontSize: '12px',
-          fontWeight: 600,
+          fontWeight: 700,
           cursor: 'pointer'
         }}
       >

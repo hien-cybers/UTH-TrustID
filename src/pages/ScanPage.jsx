@@ -1238,12 +1238,12 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         </div>
       )}
 
-      {/* 3. BỘ NHẬP MÃ PIN DỰ PHÒNG 6 Ô SỐ VIỀN NEON (OTP PIN BOXES) KHI HỎNG CAMERA / ĐỔI FACE ID */}
+      {/* 3. BỘ NHẬP MÃ PIN DỰ PHÒNG 6 Ô SỐ VIỀN MINT-CYAN (OTP PIN BOXES) KHI HỎNG CAMERA / ĐỔI FACE ID */}
       {pinModalOpen && (
-        <div className="rounded-3xl p-4 border border-cyan-400/50 bg-gradient-to-br from-[#081226] via-[#050d1e] to-[#030712] shadow-[0_12px_34px_rgba(6,182,212,0.2)] space-y-3 animate-fade-scale">
+        <div className="rounded-[26px] p-4 border border-teal-400/35 bg-gradient-to-b from-[#0C1D33] to-[#060E1C] shadow-xl space-y-3 animate-fade-scale">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
+              <div className="w-8 h-8 rounded-xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 flex items-center justify-center text-[#64F5DF]">
                 <KeyRound size={16} />
               </div>
               <h3 className="text-xs font-extrabold text-white m-0">
@@ -1253,7 +1253,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             <button
               type="button"
               onClick={handleCancelPinModal}
-              className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold cursor-pointer"
+              className="px-3 py-1 rounded-full bg-[#050A14] border border-white/10 text-slate-400 hover:text-white text-[10px] font-bold cursor-pointer"
             >
               Đóng ✕
             </button>
@@ -1280,8 +1280,8 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
                     isBouncing ? 'scale-110' : 'scale-100'
                   } ${
                     isFilled
-                      ? 'bg-cyan-500/20 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.35)]'
-                      : 'bg-[#040814] border border-cyan-500/35 text-white focus:border-cyan-400 focus:shadow-[0_0_12px_rgba(34,211,238,0.25)]'
+                      ? 'bg-[#4FF0D6]/20 border-2 border-[#4FF0D6] text-[#64F5DF] shadow-[0_0_15px_rgba(79,240,214,0.3)]'
+                      : 'bg-[#050A14] border border-teal-400/30 text-white focus:border-[#4FF0D6] focus:shadow-[0_0_12px_rgba(79,240,214,0.25)]'
                   }`}
                 />
               );
@@ -1305,14 +1305,14 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
                 }
                 handleConfirmPinValue('123456');
               }}
-              className="btn-press flex-1 py-2.5 rounded-2xl border-none bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-extrabold text-xs cursor-pointer shadow-md"
+              className="btn-press flex-1 py-2.5 rounded-2xl border-none bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 font-black text-xs cursor-pointer shadow-md"
             >
               Điền Nhanh 123456 &amp; Mở Face ID
             </button>
             <button
               type="button"
               onClick={handleCancelPinModal}
-              className="btn-press px-3.5 py-2.5 rounded-2xl border border-slate-800 bg-[#040814] text-slate-400 font-bold text-xs cursor-pointer"
+              className="btn-press px-3.5 py-2.5 rounded-2xl border border-white/10 bg-[#050A14] text-slate-400 font-bold text-xs cursor-pointer"
             >
               Hủy
             </button>
@@ -1373,16 +1373,16 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
 
       {/* 6. KẾT QUẢ XỬ LÝ ĐIỂM DANH */}
       {scanStatus && (
-        <div className="rounded-3xl p-4 border bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 shadow-lg space-y-2.5 animate-fade-scale">
+        <div className="rounded-[26px] p-4 border bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border-white/10 shadow-lg space-y-2.5 animate-fade-scale">
           <div className="flex items-center gap-2">
-            {scanStatus.type === 'SUCCESS' && <CheckCircle2 size={18} color="#10B981" />}
+            {scanStatus.type === 'SUCCESS' && <CheckCircle2 size={18} color="#4FF0D6" />}
             {scanStatus.type === 'ERROR' && <AlertTriangle size={18} color="#EF4444" />}
-            {scanStatus.type === 'PROCESSING' && <ShieldCheck size={18} color="#06B6D4" />}
+            {scanStatus.type === 'PROCESSING' && <ShieldCheck size={18} color="#22D3EE" />}
 
             <h3
               className="text-xs font-extrabold m-0"
               style={{
-                color: scanStatus.type === 'SUCCESS' ? '#10B981' : scanStatus.type === 'ERROR' ? '#EF4444' : '#06B6D4'
+                color: scanStatus.type === 'SUCCESS' ? '#64F5DF' : scanStatus.type === 'ERROR' ? '#EF4444' : '#22D3EE'
               }}
             >
               {scanStatus.title}
@@ -1397,7 +1397,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             <button
               type="button"
               onClick={() => navigate('/wallet')}
-              className="btn-press w-full py-2.5 rounded-2xl border-none bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 text-xs font-extrabold cursor-pointer shadow-md"
+              className="btn-press w-full py-2.5 rounded-2xl border-none bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-xs font-black cursor-pointer shadow-md"
             >
               Về Ví Số
             </button>
@@ -1411,14 +1411,14 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
                   setLivenessStampData(null);
                   setIsScanning(true);
                 }}
-                className="btn-press py-2.5 rounded-2xl border-none bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold cursor-pointer"
+                className="btn-press py-2.5 rounded-2xl border-none bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-xs font-black cursor-pointer"
               >
                 Quét Lại
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/wallet')}
-                className="btn-press py-2.5 rounded-2xl border border-slate-800 bg-[#040814] text-slate-200 text-xs font-bold cursor-pointer"
+                className="btn-press py-2.5 rounded-2xl border border-white/10 bg-[#050A14] text-slate-200 text-xs font-bold cursor-pointer"
               >
                 Về Ví Số
               </button>

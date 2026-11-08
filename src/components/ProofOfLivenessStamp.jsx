@@ -57,9 +57,9 @@ export default function ProofOfLivenessStamp({
 
   return (
     <div
-      className="hero-pass rounded-3xl relative overflow-hidden p-4 border shadow-[0_14px_36px_rgba(16,185,129,0.18)] bg-gradient-to-br from-[#06182c] via-[#071326] to-[#030914]"
+      className="hero-pass rounded-[26px] relative overflow-hidden p-4 border shadow-[0_14px_36px_rgba(79,240,214,0.16)] bg-gradient-to-br from-[#0F293A] via-[#0A1A2F] to-[#060E1C]"
       style={{
-        borderColor: proximityWarning ? 'rgba(245, 158, 11, 0.65)' : 'rgba(16, 185, 129, 0.5)'
+        borderColor: proximityWarning ? 'rgba(245, 158, 11, 0.65)' : 'rgba(79, 240, 214, 0.45)'
       }}
     >
       <style>{`

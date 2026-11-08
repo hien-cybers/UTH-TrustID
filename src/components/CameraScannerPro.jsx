@@ -255,7 +255,7 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
 
   return (
     <div
-      className="rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-cyan-500/35 p-4 shadow-lg"
+      className="rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/30 p-4 shadow-lg"
       style={{
         position: 'relative',
         width: '100%',
@@ -268,7 +268,7 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
       {/* Header Modal */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', fontWeight: 800, color: '#F8FAFC' }}>
-          <Camera size={16} color="#22D3EE" />
+          <Camera size={16} color="#64F5DF" />
           <span>Khung Ngắm Camera QR</span>
         </div>
         {onClose && (
@@ -289,10 +289,10 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
         position: 'relative',
         width: '100%',
         aspectRatio: '1 / 1',
-        borderRadius: '18px',
+        borderRadius: '22px',
         overflow: 'hidden',
-        background: '#020617',
-        border: '1px solid rgba(30, 41, 59, 0.9)',
+        background: '#030812',
+        border: '1px solid rgba(79, 240, 214, 0.25)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -325,8 +325,8 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
               position: 'relative',
               width: '216px',
               height: '216px',
-              border: '2px dashed rgba(56, 189, 248, 0.75)',
-              borderRadius: '18px',
+              border: '2px dashed rgba(79, 240, 214, 0.78)',
+              borderRadius: '22px',
               boxShadow: '0 0 0 9999px rgba(2, 6, 23, 0.35)'
             }}>
               <div
@@ -335,9 +335,9 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
                   position: 'absolute',
                   left: '6%',
                   width: '88%',
-                  height: '2px',
-                  background: 'linear-gradient(90deg, transparent, #38BDF8, #67E8F9, transparent)',
-                  boxShadow: '0 0 12px #38BDF8'
+                  height: '2.5px',
+                  background: 'linear-gradient(90deg, transparent, #4FF0D6, #22D3EE, transparent)',
+                  boxShadow: '0 0 12px #4FF0D6'
                 }}
               />
             </div>
