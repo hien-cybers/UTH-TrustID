@@ -2609,30 +2609,33 @@ export default function FacultyDashboard({
                   : sessionList.find((s) => s.sessionId === selectedHistorySessionId);
 
               return (
-                <section className="w-full p-6 lg:p-7 rounded-3xl bg-[#071C36] border border-sky-400/30 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
-                  {/* KHU VỰC TRÊN: THÔNG TIN LỚP HỌC PHẦN + NÚT THÊM BUỔI HỌC MỚI + XUẤT SỔ ĐIỂM TOÀN KỲ */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-sky-200/15 pb-5">
+                <section className="w-full p-7 rounded-3xl bg-[#081226] border border-cyan-500/35 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+                  {/* KHU VỰC TRÊN: THÔNG TIN LỚP HỌC PHẦN + NÚT THÊM BUỔI HỌC MỚI (SMART INHERITANCE) + XUẤT SỔ ĐIỂM TOÀN KỲ */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
                     <div>
                       <div className="flex flex-wrap items-center gap-2.5">
                         <button
                           type="button"
                           onClick={() => setHistoryCourseId(null)}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#030D1B] border border-sky-300/30 hover:border-sky-400 text-white text-xs font-bold cursor-pointer transition-all"
+                          className="px-3 py-1 rounded-lg bg-[#040814] border border-slate-700 hover:border-cyan-400 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
                         >
-                          ← Quay Lại Danh Sách Lớp
+                          ← Danh Sách Lớp Học
                         </button>
-                        <span className="px-3 py-1.5 rounded-xl bg-sky-400/15 border border-sky-300/35 font-mono text-xs font-bold text-sky-300">
+                        <span className="px-3 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/35 font-mono text-xs font-bold text-cyan-300">
                           {targetCourse.courseCode}
                         </span>
-                        <span className="px-3 py-1.5 rounded-xl bg-[#030D1B] border border-sky-200/15 text-xs font-semibold text-slate-200">
-                          Phòng {targetCourse.defaultRoom} • R ≤ {targetCourse.defaultRadius}m
+                        <span className="px-3 py-1 rounded-lg bg-[#040814] border border-slate-800 text-xs font-semibold text-slate-200">
+                          Phòng {targetCourse.defaultRoom} • Bán kính R = {targetCourse.defaultRadius}m • {targetCourse.defaultNetworkMode === 'CAMPUS_WIFI' ? 'CAMPUS_WIFI' : 'CELLULAR_ANY'}
+                        </span>
+                        <span className="text-xs text-slate-300">
+                          {targetCourse.schedule}
                         </span>
                       </div>
-                      <h2 className="text-xl font-extrabold text-white mt-3 mb-0">
-                        {targetCourse.courseName}
+                      <h2 className="text-xl font-bold text-white mt-2.5 mb-0">
+                        {targetCourse.courseCode} — {targetCourse.courseName}
                       </h2>
                       <p className="text-xs text-slate-300 mt-1 mb-0">
-                        Lịch học: <strong className="text-white">{targetCourse.schedule}</strong> • Sĩ số: <strong className="text-white">{totalClassStudents} SV</strong> • Đã dạy: <strong className="text-emerald-400">{sessionList.length} buổi</strong>
+                        Sĩ số biên chế: <strong className="text-white">{totalClassStudents} sinh viên</strong> • Đã tổ chức: <strong className="text-emerald-400">{sessionList.length} buổi học</strong> • Tự động kế thừa cấu hình cho buổi tiếp theo (Smart Inheritance)
                       </p>
                     </div>
 
@@ -2640,30 +2643,30 @@ export default function FacultyDashboard({
                       <button
                         type="button"
                         onClick={() => handleExportSemesterCSV(targetCourse)}
-                        className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-bold text-xs cursor-pointer transition-all"
+                        className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer transition-all"
                       >
-                        Xuất Sổ Điểm Toàn Kỳ (.CSV / Excel)
+                        Xuất Báo Cáo Chuyên Cần Toàn Kỳ (.CSV / Excel)
                       </button>
                       <button
                         type="button"
                         onClick={() => handleCreateNewSession(targetCourse)}
-                        className="px-5 py-3 rounded-xl bg-sky-400 hover:bg-sky-300 text-slate-950 font-extrabold text-xs cursor-pointer border-none shadow-lg transition-all"
+                        className="px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg transition-all"
                       >
-                        + Bắt Đầu Buổi Học Mới (Buổi {nextSessionIndex})
+                        + Thêm Buổi Học Mới (Buổi thứ {nextSessionIndex})
                       </button>
                     </div>
                   </div>
 
-                  {/* THÔNG BÁO BIÊN LAI CHỐT SỔ BẤT BIẾN */}
+                  {/* THÔNG BÁO BIÊN LAI CHỐT SỔ BẤT BIẾN (TAMPER-PROOF SESSION FINALIZATION) */}
                   {finalizedBannerNotice && (
-                    <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/45 text-emerald-100 space-y-2">
+                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/45 text-emerald-100 space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-bold text-xs">
-                            ĐÃ CHỐT SỔ BẤT BIẾN
+                            ĐÃ CHỐT SỔ BẤT BIẾN (TAMPER-PROOF ROOT)
                           </span>
                           <span className="text-xs font-bold text-white">
-                            {finalizedBannerNotice.courseCode} • Buổi {finalizedBannerNotice.sessionNumber}
+                            {finalizedBannerNotice.courseCode} • Buổi {finalizedBannerNotice.sessionNumber} ({finalizedBannerNotice.sessionId})
                           </span>
                         </div>
                         <button
@@ -2671,320 +2674,332 @@ export default function FacultyDashboard({
                           onClick={() => setFinalizedBannerNotice(null)}
                           className="text-xs text-slate-300 hover:text-white bg-transparent border-none cursor-pointer"
                         >
-                          Đóng ✕
+                          Đóng
                         </button>
                       </div>
+                      <p className="text-xs text-slate-200 m-0">
+                        Kết nối WebSocket của buổi học đã đóng vĩnh viễn. Toàn bộ <strong>{finalizedBannerNotice.attendeeCount} sinh viên</strong> có mặt đã được băm thành Merkle Leaf và ký điện tử bởi khóa Giảng viên. Không ai có thể chỉnh sửa danh sách mà không làm hỏng mã băm.
+                      </p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 font-mono text-xs">
-                        <div className="p-2.5 rounded-xl bg-[#030D1B] border border-sky-200/15 text-sky-300 truncate">
-                          Session Hash: {finalizedBannerNotice.sessionHash}
+                        <div className="p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-cyan-300 truncate">
+                          Session Hash (Merkle Leaf): {finalizedBannerNotice.sessionHash}
                         </div>
-                        <div className="p-2.5 rounded-xl bg-[#030D1B] border border-sky-200/15 text-emerald-300 truncate">
-                          Chữ ký GV: {finalizedBannerNotice.facultySignature}
+                        <div className="p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-emerald-300 truncate">
+                          Chữ ký số Giảng viên: {finalizedBannerNotice.facultySignature}
                         </div>
                       </div>
                     </div>
                   )}
 
+                  {/* KẾT QUẢ KIỂM TRA TOÀN VẸN MÃ BĂM BUỔI HỌC */}
                   {hashVerifyResult && (
-                    <div className="p-4 rounded-2xl bg-sky-500/15 border border-sky-400/45 text-sky-100 flex flex-wrap items-center justify-between gap-3">
+                    <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/45 text-cyan-100 flex flex-wrap items-center justify-between gap-3">
                       <div className="space-y-1">
-                        <div className="text-xs font-bold text-sky-300">
-                          KIỂM TRA TOÀN VẸN MÃ BĂM ({hashVerifyResult.sessionId})
+                        <div className="text-xs font-bold text-cyan-300">
+                          ĐỐI SOÁT TOÀN VẸN MÃ BĂM BUỔI HỌC ({hashVerifyResult.sessionId})
                         </div>
                         <div className="text-xs text-white">{hashVerifyResult.message}</div>
+                        <div className="text-xs font-mono text-emerald-300">
+                          Session Hash: {hashVerifyResult.sessionHash} • Chữ ký GV: {String(hashVerifyResult.facultySignature || '').slice(0, 34)}...
+                        </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setHashVerifyResult(null)}
-                        className="px-3 py-1.5 rounded-xl bg-[#030D1B] border border-sky-200/20 text-slate-200 text-xs font-semibold cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#040814] border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
                       >
                         Đóng
                       </button>
                     </div>
                   )}
 
-                  {/* THANH CHUYỂN ĐỔI 2 CHẾ ĐỘ XEM RÕ RÀNG: SỔ ĐIỂM TOÀN KỲ vs DANH SÁCH TỪNG BUỔI */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[#030D1B] p-2 rounded-2xl border border-sky-200/15">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedHistorySessionId('ALL')}
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer border-none transition-all ${
-                          selectedHistorySessionId === 'ALL'
-                            ? 'bg-sky-400 text-slate-950 shadow-md'
-                            : 'bg-transparent text-slate-300 hover:text-white'
-                        }`}
-                      >
-                        Bảng Điểm Chuyên Cần Toàn Kỳ ({enrolledRoster.length} SV)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedHistorySessionId(
-                            sessionList[sessionList.length - 1]?.sessionId || 'SESSIONS_LIST'
-                          )
-                        }
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer border-none transition-all ${
-                          selectedHistorySessionId !== 'ALL'
-                            ? 'bg-sky-400 text-slate-950 shadow-md'
-                            : 'bg-transparent text-slate-300 hover:text-white'
-                        }`}
-                      >
-                        Danh Sách Các Buổi Học ({sessionList.length} buổi)
-                      </button>
+                  {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC CON BÊN TRONG LỚP (HIERARCHICAL CLASS SESSIONS) */}
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold text-white m-0">
+                        Danh Sách Các Buổi Học Trong Lớp ({sessionList.length} buổi)
+                      </h3>
+                      <span className="text-xs text-slate-400">
+                        Mỗi buổi học sau khi kết thúc được khóa sổ bằng chữ ký số Giảng viên và mã băm bất biến (Merkle Leaf)
+                      </span>
                     </div>
 
-                    <span className="text-xs text-slate-300 pr-2">
-                      Sinh viên vắng &gt; 20% số buổi sẽ tự động đánh dấu <strong className="text-rose-400">Cảnh báo cấm thi</strong>
-                    </span>
-                  </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {sessionList.map((ses) => {
+                        const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
+                        const sDate = ses.date || ses.sessionDate || '';
+                        const presentCount = ses.attendees?.length || 0;
+                        const ratePercent = Math.min(100, Math.round((presentCount / enrolledRoster.length) * 100));
+                        const isSelected = selectedHistorySessionId === ses.sessionId;
+                        const isLocked = Boolean(ses.isFinalized || ses.status === 'FINALIZED');
+                        const shortHash = ses.sessionHash
+                          ? `${ses.sessionHash.slice(0, 12)}...${ses.sessionHash.slice(-8)}`
+                          : 'Chưa chốt sổ';
 
-                  {/* NỘI DUNG THEO TAB ĐANG CHỌN */}
-                  {selectedHistorySessionId === 'ALL' ? (
-                    /* TAB A: BẢNG MA TRẬN ĐIỂM CHUYÊN CẦN LŨY KẾ TOÀN KỲ + HÀNG CHỌN NHANH BUỔI HỌC */
-                    <div className="space-y-4">
-                      {/* Thanh tóm tắt ngang các buổi học để giảng viên bấm nhanh */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {sessionList.map((ses) => {
-                          const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
-                          const sDate = ses.date || ses.sessionDate || '';
-                          const presentCount = ses.attendees?.length || 0;
-                          const isLocked = Boolean(ses.isFinalized || ses.status === 'FINALIZED');
-                          return (
-                            <div
-                              key={ses.sessionId}
-                              onClick={() => setSelectedHistorySessionId(ses.sessionId)}
-                              className="p-4 rounded-2xl bg-[#030D1B] border border-sky-200/15 hover:border-sky-400/50 flex items-center justify-between gap-3 cursor-pointer transition-all"
-                            >
+                        return (
+                          <div
+                            key={ses.sessionId}
+                            className={`p-4 rounded-2xl border transition-all flex flex-wrap items-center justify-between gap-4 ${
+                              isSelected
+                                ? 'bg-[#0D2B52]/75 border-cyan-400 shadow-lg'
+                                : 'bg-[#040814] border-slate-800 hover:border-cyan-500/40'
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-center gap-3.5">
+                              <span className="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/35 font-mono text-xs font-bold text-cyan-300">
+                                Buổi {sIdx} ({sDate})
+                              </span>
                               <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-xs font-bold text-sky-300">
-                                    Buổi {sIdx} ({sDate})
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-bold text-white">
+                                    {presentCount}/{enrolledRoster.length} SV biên chế có mặt
                                   </span>
-                                  <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${
-                                    isLocked
-                                      ? 'bg-emerald-500/15 text-emerald-300'
-                                      : 'bg-amber-500/20 text-amber-300'
-                                  }`}>
-                                    {isLocked ? 'Đã chốt sổ' : 'Đang mở'}
+                                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
+                                    Tỷ lệ {ratePercent}%
                                   </span>
+                                  {isLocked ? (
+                                    <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-xs font-semibold">
+                                      Đã Chốt Sổ Bất Biến
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs font-semibold">
+                                      Đang Mở / Chưa Khóa Sổ
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="text-sm font-bold text-white mt-1">
-                                  Có mặt: {presentCount}/{enrolledRoster.length} sinh viên
+                                <div className="text-xs text-slate-400 mt-1 font-mono flex flex-wrap items-center gap-3">
+                                  <span>Mã phiên: {ses.sessionId} • Phòng {targetCourse.defaultRoom}</span>
+                                  <span className="text-cyan-300/90">Session Hash: {shortHash}</span>
                                 </div>
                               </div>
-                              <span className="text-xs font-semibold text-sky-300">
-                                Chi tiết →
-                              </span>
                             </div>
-                          );
-                        })}
-                      </div>
 
-                      {/* Bảng Ma Trận Điểm Danh */}
-                      <div className="overflow-x-auto rounded-2xl border border-sky-200/15 bg-[#030D1B]">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setSelectedHistorySessionId(isSelected ? 'ALL' : ses.sessionId)
+                                }
+                                className={`px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
+                                  isSelected
+                                    ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
+                                    : 'bg-[#081226] text-cyan-300 border-cyan-500/30 hover:border-cyan-400'
+                                }`}
+                              >
+                                {isSelected ? 'Đang xem chi tiết' : 'Xem chi tiết'}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleExportSingleSessionCSV(targetCourse, ses)}
+                                className="px-3.5 py-2 rounded-xl bg-[#081226] hover:bg-slate-900 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
+                              >
+                                Xuất CSV Buổi {sIdx}
+                              </button>
+
+                              {isLocked ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleVerifySessionIntegrity(targetCourse, ses)}
+                                  className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold cursor-pointer transition-all"
+                                >
+                                  Kiểm Tra Toàn Vẹn Mã Băm
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleFinalizeSession(targetCourse, ses)}
+                                    className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-200 text-xs font-bold cursor-pointer transition-all"
+                                  >
+                                    Kết Thúc &amp; Chốt Sổ
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleReopenExistingSession(targetCourse, ses)}
+                                    className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold cursor-pointer transition-all"
+                                  >
+                                    Mở Màn Chiếu QR
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Hàng nút Tạo Buổi Mới (Smart Inheritance 1-Click) nằm trực tiếp cuối danh sách buổi học của lớp */}
+                      <button
+                        type="button"
+                        onClick={() => handleCreateNewSession(targetCourse)}
+                        className="w-full p-4 rounded-2xl border border-dashed border-cyan-500/45 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-300 font-bold text-xs cursor-pointer transition-all flex flex-wrap items-center justify-between gap-2"
+                      >
+                        <span>
+                          + Bấm tạo buổi học mới tại đây (Buổi thứ {nextSessionIndex} — Tự động kế thừa tâm GPS, bán kính R = {targetCourse.defaultRadius}m, mạng {targetCourse.defaultNetworkMode} &amp; danh sách SV gốc)
+                        </span>
+                        <span className="px-3 py-1 rounded-lg bg-cyan-400 text-slate-950 font-bold">
+                          1-Click Chiếu QR Ngay →
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* KHU VỰC DƯỚI: SỔ ĐIỂM TỔNG HỢP CHUYÊN CẦN LŨY KẾ (CUMULATIVE ATTENDANCE MATRIX) */}
+                  <div className="space-y-3 pt-2 border-t border-slate-800">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedHistorySessionId('ALL')}
+                          className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
+                            selectedHistorySessionId === 'ALL'
+                              ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
+                              : 'bg-[#040814] text-slate-300 border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          Sổ Điểm Tổng Hợp Chuyên Cần Lũy Kế (Toàn Kỳ)
+                        </button>
+                        {selectedSessionObj && (
+                          <span className="px-3.5 py-2 rounded-xl bg-[#040814] border border-cyan-500/40 text-cyan-300 text-xs font-semibold">
+                            Đang xem chi tiết: Buổi {selectedSessionObj.sessionIndex || selectedSessionObj.sessionNumber} ({selectedSessionObj.date || selectedSessionObj.sessionDate})
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-slate-400">
+                        Hệ thống tự động bôi đỏ sinh viên vắng quá quy chế học vụ (&lt; 80%) để cảnh báo cấm thi
+                      </span>
+                    </div>
+
+                    {selectedHistorySessionId === 'ALL' ? (
+                      <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-[#040814]">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
-                            <tr className="border-b border-sky-200/15 bg-[#041224] text-slate-200">
-                              <th className="p-3.5 font-bold">MSSV</th>
-                              <th className="p-3.5 font-bold">Họ và Tên</th>
+                            <tr className="border-b border-slate-800 bg-slate-950/90 text-slate-300">
+                              <th className="p-3.5 font-semibold">MSSV</th>
+                              <th className="p-3.5 font-semibold">Họ và Tên</th>
                               {sessionList.map((s) => (
-                                <th key={s.sessionId} className="p-3.5 font-bold text-center">
+                                <th key={s.sessionId} className="p-3.5 font-semibold text-center">
                                   Buổi {s.sessionIndex || s.sessionNumber} ({String(s.date || s.sessionDate).slice(5).split('-').reverse().join('/')})
                                 </th>
                               ))}
-                              <th className="p-3.5 font-bold text-center">Tỷ lệ có mặt</th>
-                              <th className="p-3.5 font-bold text-right">Điều kiện dự thi</th>
+                              <th className="p-3.5 font-semibold text-center">Tỷ lệ hiện diện</th>
+                              <th className="p-3.5 font-semibold text-right">Đánh giá điều kiện thi</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {summaryRows.map((row) => {
-                              const attendedCount = Object.keys(row.sessionsAttended).length;
-                              const totalSess = sessionList.length;
-                              const ratioNum = totalSess > 0 ? Number(((attendedCount / totalSess) * 100).toFixed(1)) : 100;
-                              const absentCount = totalSess - attendedCount;
-                              const isWarning = totalSess > 0 && ((ratioNum < 80 && absentCount >= 2) || ratioNum < 60);
+                            {summaryRows.length === 0 ? (
+                              <tr>
+                                <td colSpan={4 + sessionList.length} className="p-8 text-center text-slate-400">
+                                  Chưa có dữ liệu điểm danh nào cho lớp học phần này.
+                                </td>
+                              </tr>
+                            ) : (
+                              summaryRows.map((row) => {
+                                const attendedCount = Object.keys(row.sessionsAttended).length;
+                                const totalSess = sessionList.length;
+                                const ratioNum = totalSess > 0 ? Number(((attendedCount / totalSess) * 100).toFixed(1)) : 100;
+                                const absentCount = totalSess - attendedCount;
+                                const isWarning = totalSess > 0 && ((ratioNum < 80 && absentCount >= 2) || ratioNum < 60);
 
-                              return (
-                                <tr
-                                  key={row.studentId}
-                                  className={`border-b transition-all ${
-                                    isWarning
-                                      ? 'bg-rose-950/35 border-rose-500/35'
-                                      : 'border-sky-200/10 hover:bg-white/5'
-                                  }`}
-                                >
-                                  <td className={`p-3.5 font-mono font-bold ${isWarning ? 'text-rose-300' : 'text-sky-300'}`}>
-                                    {row.studentId}
-                                  </td>
-                                  <td className="p-3.5 font-bold text-white">
-                                    {row.name}
-                                    <span className="block text-[11px] font-normal text-slate-400">{row.major}</span>
-                                  </td>
-                                  {sessionList.map((s) => {
-                                    const rec = row.sessionsAttended[s.sessionId];
-                                    if (!rec) {
+                                return (
+                                  <tr
+                                    key={row.studentId}
+                                    className={`border-b transition-all ${
+                                      isWarning
+                                        ? 'bg-rose-950/40 border-rose-500/40 hover:bg-rose-950/55'
+                                        : 'border-slate-800/70 hover:bg-slate-900/40'
+                                    }`}
+                                  >
+                                    <td className={`p-3.5 font-mono font-bold ${isWarning ? 'text-rose-300' : 'text-cyan-300'}`}>
+                                      {row.studentId}
+                                    </td>
+                                    <td className="p-3.5 font-semibold text-white">
+                                      {row.name}
+                                      <span className="block text-[11px] font-normal text-slate-400">{row.major}</span>
+                                    </td>
+                                    {sessionList.map((s) => {
+                                      const rec = row.sessionsAttended[s.sessionId];
+                                      if (!rec) {
+                                        return (
+                                          <td key={s.sessionId} className="p-3.5 text-center">
+                                            <span className="px-2.5 py-1 rounded-md bg-rose-500/20 border border-rose-500/35 text-rose-300 text-xs font-semibold">
+                                              Vắng
+                                            </span>
+                                          </td>
+                                        );
+                                      }
+                                      const isException =
+                                        rec.status === 'EXCEPTION' ||
+                                        rec.status === 'OUT_OF_RANGE' ||
+                                        Number(rec.distance) > (Number(targetCourse.defaultRadius) || 35);
                                       return (
                                         <td key={s.sessionId} className="p-3.5 text-center">
-                                          <span className="px-2.5 py-1 rounded-md bg-rose-500/20 border border-rose-500/35 text-rose-300 text-xs font-bold">
-                                            Vắng
-                                          </span>
+                                          {isException ? (
+                                            <span className="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-xs font-semibold">
+                                              Ngoại lệ ({rec.distance ?? 45}m)
+                                            </span>
+                                          ) : (
+                                            <span className="px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
+                                              Có mặt ({rec.distance ?? 3}m)
+                                            </span>
+                                          )}
                                         </td>
                                       );
-                                    }
-                                    const isException =
-                                      rec.status === 'EXCEPTION' ||
-                                      rec.status === 'OUT_OF_RANGE' ||
-                                      Number(rec.distance) > (Number(targetCourse.defaultRadius) || 35);
-                                    return (
-                                      <td key={s.sessionId} className="p-3.5 text-center">
-                                        {isException ? (
-                                          <span className="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-xs font-bold">
-                                            Ngoại lệ ({rec.distance ?? 45}m)
-                                          </span>
-                                        ) : (
-                                          <span className="px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-bold">
-                                            ✓ Có mặt ({rec.distance ?? 3}m)
-                                          </span>
-                                        )}
-                                      </td>
-                                    );
-                                  })}
-                                  <td className="p-3.5 text-center font-mono font-bold text-white">
-                                    {attendedCount}/{totalSess} ({ratioNum}%)
-                                  </td>
-                                  <td className="p-3.5 text-right">
-                                    {isWarning ? (
-                                      <span className="px-3 py-1 rounded-lg bg-rose-500/25 border border-rose-500 text-rose-200 font-bold text-xs">
-                                        Cảnh báo cấm thi (&lt; 80%)
-                                      </span>
-                                    ) : (
-                                      <span className="px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-bold text-xs">
-                                        Đủ điều kiện
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
+                                    })}
+                                    <td className="p-3.5 text-center font-mono font-bold text-white">
+                                      {attendedCount}/{totalSess} ({ratioNum}%)
+                                    </td>
+                                    <td className="p-3.5 text-right">
+                                      {isWarning ? (
+                                        <span className="px-3 py-1 rounded-lg bg-rose-500/25 border border-rose-500 text-rose-200 font-bold text-xs">
+                                          Cảnh báo cấm thi (&lt; 80%)
+                                        </span>
+                                      ) : (
+                                        <span className="px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-semibold text-xs">
+                                          Đủ điều kiện
+                                        </span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
                           </tbody>
                         </table>
                       </div>
-                    </div>
-                  ) : (
-                    /* TAB B: DANH SÁCH CHI TIẾT CÁC BUỔI HỌC GỌN GÀNG */
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 gap-3">
-                        {sessionList.map((ses) => {
-                          const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
-                          const sDate = ses.date || ses.sessionDate || '';
-                          const presentCount = ses.attendees?.length || 0;
-                          const isSelected = selectedHistorySessionId === ses.sessionId;
-                          const isLocked = Boolean(ses.isFinalized || ses.status === 'FINALIZED');
-                          const shortHash = ses.sessionHash
-                            ? `${ses.sessionHash.slice(0, 14)}...${ses.sessionHash.slice(-6)}`
-                            : 'Chưa chốt sổ';
-
-                          return (
-                            <div
-                              key={ses.sessionId}
-                              className={`p-4 rounded-2xl border transition-all ${
-                                isSelected
-                                  ? 'bg-[#0B284C] border-sky-400 shadow-lg'
-                                  : 'bg-[#030D1B] border-sky-200/15 hover:border-sky-400/40'
-                              }`}
-                            >
-                              <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div
-                                  onClick={() => setSelectedHistorySessionId(ses.sessionId)}
-                                  className="flex flex-wrap items-center gap-3.5 cursor-pointer"
-                                >
-                                  <span className="px-3.5 py-2 rounded-xl bg-sky-400/15 border border-sky-300/35 font-mono text-xs font-bold text-sky-300">
-                                    Buổi {sIdx} ({sDate})
-                                  </span>
-                                  <div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-sm font-bold text-white">
-                                        Có mặt: {presentCount}/{enrolledRoster.length} sinh viên
-                                      </span>
-                                      {isLocked ? (
-                                        <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-bold">
-                                          Đã chốt sổ
-                                        </span>
-                                      ) : (
-                                        <span className="px-2.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/35 text-amber-300 text-xs font-bold">
-                                          Đang mở
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-slate-300 mt-1 font-mono">
-                                      Session Hash: <span className="text-sky-300">{shortHash}</span>
-                                    </div>
-                                  </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-3.5 rounded-2xl bg-[#040814] border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                          <div>
+                            Chi tiết <strong>Buổi {selectedSessionObj?.sessionIndex || selectedSessionObj?.sessionNumber}</strong> • Ngày: <strong>{selectedSessionObj?.date || selectedSessionObj?.sessionDate}</strong> • Mã phiên: <code className="text-cyan-300">{selectedSessionObj?.sessionId}</code>
+                          </div>
+                          <div className="font-mono text-emerald-300">
+                            Session Hash: {selectedSessionObj?.sessionHash ? `${selectedSessionObj.sessionHash.slice(0, 18)}...` : 'Chưa khóa sổ'}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {(selectedSessionObj?.attendees || []).map((st) => (
+                            <div key={st.studentId} className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex flex-col justify-between gap-2">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-white m-0">{st.name}</p>
+                                  <p className="text-xs font-mono text-cyan-300 mt-0.5 mb-0">
+                                    {st.studentId} • Lúc {st.checkInTime}
+                                  </p>
                                 </div>
-
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleExportSingleSessionCSV(targetCourse, ses)}
-                                    className="px-3.5 py-2 rounded-xl bg-[#071C36] border border-sky-200/25 text-white text-xs font-semibold cursor-pointer"
-                                  >
-                                    Xuất CSV
-                                  </button>
-
-                                  {isLocked ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleVerifySessionIntegrity(targetCourse, ses)}
-                                      className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-bold cursor-pointer"
-                                    >
-                                      Kiểm Tra Mã Băm
-                                    </button>
-                                  ) : (
-                                    <>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleFinalizeSession(targetCourse, ses)}
-                                        className="px-3.5 py-2 rounded-xl bg-amber-400 text-slate-950 text-xs font-bold cursor-pointer border-none"
-                                      >
-                                        Chốt Sổ Buổi Học
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleReopenExistingSession(targetCourse, ses)}
-                                        className="px-3.5 py-2 rounded-xl bg-sky-400 text-slate-950 text-xs font-bold cursor-pointer border-none"
-                                      >
-                                        Mở Lại QR
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
+                                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                                  Cách tâm {st.distance}m
+                                </span>
                               </div>
-
-                              {/* Danh sách sinh viên của buổi đang chọn */}
-                              {isSelected && (
-                                <div className="mt-4 pt-4 border-t border-sky-200/15 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                  {(ses.attendees || []).map((st) => (
-                                    <div key={st.studentId} className="p-3.5 rounded-xl bg-[#030D1B] border border-sky-200/15 flex items-center justify-between gap-2">
-                                      <div>
-                                        <div className="text-sm font-bold text-white">{st.name}</div>
-                                        <div className="text-xs font-mono text-sky-300 mt-0.5">
-                                          {st.studentId} • {st.checkInTime}
-                                        </div>
-                                      </div>
-                                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-                                        {st.distance}m
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              <div className="pt-2 border-t border-slate-800/80 text-[11px] font-mono text-slate-400 truncate">
+                                Biên lai EIP-191: <span className="text-cyan-300">{st.signatureHash || '0x8a91f3c2d401e8b7...'}</span>
+                              </div>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </section>
               );
             })()

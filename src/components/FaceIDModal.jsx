@@ -250,14 +250,14 @@ export default function FaceIDModal({
           )}
         </div>
 
-        {/* Thông tin sinh viên & Vùng bảo mật phần cứng Bo Tròn 20px */}
+        {/* Thông tin sinh viên & Vùng bảo mật phần cứng */}
         <div
           style={{
             width: '100%',
             background: 'var(--bg-inset)',
             border: '1px solid var(--border-hairline)',
-            borderRadius: '20px',
-            padding: '12px 15px',
+            borderRadius: '14px',
+            padding: '11px 14px',
             marginBottom: '16px',
             fontSize: '11.5px',
             color: 'var(--text-muted)',
@@ -273,7 +273,7 @@ export default function FaceIDModal({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-dim)' }}>MSSV:</span>
-            <span style={{ color: '#38BDF8', fontFamily: 'JetBrains Mono', fontWeight: 700 }}>{studentId}</span>
+            <span style={{ color: 'var(--tone-sky)', fontFamily: 'JetBrains Mono', fontWeight: 700 }}>{studentId}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: 'var(--text-dim)' }}>Phần cứng:</span>
@@ -281,7 +281,7 @@ export default function FaceIDModal({
           </div>
         </div>
 
-        {/* Nút chuyển đổi sang mã PIN dự phòng & Đóng Bo Tròn Pill */}
+        {/* Nút chuyển đổi sang mã PIN dự phòng & Đóng */}
         <div style={{ display: 'grid', gridTemplateColumns: onFallbackPin ? '1.4fr 0.8fr' : '1fr', gap: '8px', width: '100%' }}>
           {onFallbackPin && (
             <button
@@ -291,12 +291,12 @@ export default function FaceIDModal({
               }}
               className="btn-press"
               style={{
-                background: 'rgba(56, 189, 248, 0.14)',
-                border: '1px solid rgba(56, 189, 248, 0.38)',
-                color: '#38BDF8',
-                borderRadius: '999px',
-                padding: '11px 14px',
-                fontSize: '12px',
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: 'var(--tone-sky)',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                fontSize: '11.5px',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
@@ -317,9 +317,9 @@ export default function FaceIDModal({
               background: 'var(--bg-inset)',
               border: '1px solid var(--border-hairline)',
               color: 'var(--text-muted)',
-              borderRadius: '999px',
-              padding: '11px 14px',
-              fontSize: '12px',
+              borderRadius: '12px',
+              padding: '10px 12px',
+              fontSize: '11.5px',
               fontWeight: 700,
               cursor: 'pointer'
             }}

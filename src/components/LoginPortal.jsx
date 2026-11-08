@@ -249,36 +249,23 @@ export default function LoginPortal() {
   };
 
   return (
-    <div
-      className="w-full max-w-md sm:max-w-lg rounded-[28px] p-4 sm:p-6 mt-1 sm:mt-3 flex flex-col items-center relative overflow-hidden box-border animate-in fade-in duration-300"
-      style={{
-        background: 'linear-gradient(165deg, rgba(11, 40, 76, 0.9) 0%, rgba(5, 20, 42, 0.96) 100%)',
-        border: '1px solid rgba(123, 189, 232, 0.30)',
-        boxShadow: '0 20px 48px rgba(1, 8, 22, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.16)'
-      }}
-    >
+    <div className="w-full max-w-md sm:max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 mt-1 sm:mt-3 shadow-lg flex flex-col items-center relative overflow-hidden box-border animate-in fade-in duration-300">
       {/* Background neon glow */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-sky-400/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Header Portal */}
-      <div className="flex items-center space-x-2.5 text-sky-400 mb-2.5">
-        <div className="w-8 h-8 rounded-2xl bg-sky-400/15 border border-sky-300/35 flex items-center justify-center flex-shrink-0">
-          <Monitor size={17} />
-        </div>
-        <h3 className="font-bold text-sm sm:text-base text-white text-center m-0">
-          Cổng Dịch Vụ Số • Xác Thực Không Mật Khẩu
-        </h3>
+      <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400 mb-2">
+        <Monitor size={18} className="sm:w-[22px] sm:h-[22px] flex-shrink-0" />
+        <h3 className="font-semibold text-xs sm:text-base text-slate-900 dark:text-slate-100 text-center">Cổng Dịch Vụ - Xác Thực Không Mật Khẩu</h3>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-sky-100/90 mb-4 bg-[#030D1B] border border-sky-300/25 px-3.5 py-1.5 rounded-full max-w-full text-center">
-        <div className="flex items-center space-x-1.5">
-          <Lock size={12} className="text-emerald-400 flex-shrink-0" />
-          <span className="truncate">
-            Domain: <strong className="text-sky-300 font-mono">uth.edu.vn</strong>
-          </span>
+      <div className="flex flex-wrap items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3 py-1 rounded-xl max-w-full text-center">
+        <div className="flex items-center space-x-1">
+          <Lock size={12} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+          <span className="truncate">Domain: <strong className="text-cyan-700 dark:text-cyan-300 font-mono">uth.edu.vn</strong></span>
         </div>
-        <span className="text-sky-300/40 hidden sm:inline">•</span>
-        <span className="text-emerald-300 font-semibold">EIP-191 Zero-Knowledge</span>
+        <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">|</span>
+        <span className="text-purple-600 dark:text-purple-400 font-medium">Polygon Amoy (80002)</span>
       </div>
 
       {authenticatedSession ? (
@@ -286,75 +273,69 @@ export default function LoginPortal() {
         // MÀN HÌNH DASHBOARD SINH VIÊN (SAU KHI QUÉT THÀNH CÔNG)
         // ==========================================
         <div className="w-full space-y-3.5 sm:space-y-4 py-1 animate-in zoom-in-95 fade-in duration-300">
-          <div className="bg-emerald-500/15 border border-emerald-400/40 rounded-[24px] p-4 text-center flex flex-col items-center relative">
-            <div className="w-13 h-13 bg-emerald-500/20 border border-emerald-400/40 rounded-full flex items-center justify-center text-emerald-300 mb-2 p-3 shadow-inner">
-              <CheckCircle2 size={28} />
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 text-center flex flex-col items-center relative">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-2 shadow-inner">
+              <CheckCircle2 size={28} className="sm:w-[32px] sm:h-[32px]" />
             </div>
-            <h4 className="font-extrabold text-sm sm:text-base text-emerald-300 m-0">
-              ĐĂNG NHẬP THÀNH CÔNG!
-            </h4>
-            <p className="text-xs text-slate-200 mt-1 max-w-xs mb-0">
+            <h4 className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300">ĐĂNG NHẬP THÀNH CÔNG!</h4>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xs">
               Thiết bị di động đã xác thực sinh trắc học và ký số mật mã EIP-191 thành công.
             </p>
           </div>
 
           {/* Student Profile Card */}
-          <div className="bg-[#030D1B] border border-sky-300/25 rounded-[24px] p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-sky-200/15 pb-3">
+          <div className="bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-sky-400/15 border border-sky-300/35 flex items-center justify-center text-sky-300">
-                  <User size={19} />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+                  <User size={18} className="sm:w-[20px] sm:h-[20px]" />
                 </div>
                 <div>
-                  <h5 className="font-bold text-sm text-white m-0">{user.fullName || 'Sinh Viên UTH'}</h5>
-                  <p className="text-xs text-sky-200 flex items-center space-x-1 m-0 mt-0.5">
-                    <GraduationCap size={13} className="text-sky-400" />
+                  <h5 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{user.fullName || 'Sinh Viên UTH'}</h5>
+                  <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 flex items-center space-x-1">
+                    <GraduationCap size={13} className="text-cyan-600 dark:text-cyan-400" />
                     <span>MSSV: {user.studentId || '2251120000'}</span>
                   </p>
                 </div>
               </div>
-              <span className="text-[10.5px] font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                HỢP LỆ
+              <span className="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                ACTIVE
               </span>
             </div>
 
             <div className="text-xs font-mono space-y-2 pt-1">
               <div>
-                <span className="text-sky-200/75 block text-[10.5px] uppercase font-sans font-semibold">
-                  Địa chỉ Ví DID (Signer):
-                </span>
-                <span className="text-sky-300 font-bold break-all text-[11px]">
+                <span className="text-slate-500 block text-[10px] uppercase font-sans">Địa chỉ Ví DID (Signer):</span>
+                <span className="text-cyan-700 dark:text-cyan-300 font-semibold break-all text-[10px] sm:text-[11px]">
                   {authenticatedSession.user?.address || authenticatedSession.signerAddress}
                 </span>
               </div>
 
               {authenticatedSession.token && (
                 <div>
-                  <span className="text-sky-200/75 block text-[10.5px] uppercase font-sans font-semibold">
-                    Phiên Ủy Quyền (Auth Token):
-                  </span>
-                  <span className="text-slate-200 break-all text-[10.5px] bg-[#071C36] px-3 py-1.5 rounded-2xl block border border-sky-300/20 mt-1">
+                  <span className="text-slate-500 block text-[10px] uppercase font-sans">Phiên Ủy Quyền (Auth Token):</span>
+                  <span className="text-slate-600 dark:text-slate-400 break-all text-[10px] bg-white dark:bg-slate-900 px-2 py-1 rounded block border border-slate-200 dark:border-slate-800/70">
                     {authenticatedSession.token}
                   </span>
                 </div>
               )}
 
-              <div className="flex justify-between items-center pt-2 text-[11px] font-sans border-t border-sky-200/15">
-                <span className="text-slate-300 flex items-center space-x-1.5">
-                  <FileCheck size={14} className="text-emerald-400" />
+              <div className="flex justify-between items-center pt-2 text-[10px] sm:text-[11px] font-sans border-t border-slate-200 dark:border-slate-800/80">
+                <span className="text-slate-500 flex items-center space-x-1">
+                  <FileCheck size={13} className="text-emerald-600 dark:text-emerald-400" />
                   <span>Xác minh chữ ký EIP-191:</span>
                 </span>
-                <span className="text-emerald-300 font-bold">Hợp Lệ (Verified)</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Hợp Lệ (On-Chain)</span>
               </div>
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="btn-press w-full bg-[#071C36] hover:bg-[#0B284C] text-white text-xs font-bold py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 transition border border-sky-300/30 cursor-pointer"
+            className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.99] text-slate-800 dark:text-slate-200 text-xs font-semibold py-2.5 sm:py-3 px-4 rounded-xl flex items-center justify-center space-x-2 transition border border-slate-200 dark:border-slate-700"
           >
             <LogOut size={14} />
-            <span>Đăng xuất &amp; Khởi tạo phiên mới</span>
+            <span>Đăng xuất & Khởi tạo phiên mới</span>
           </button>
         </div>
       ) : (
@@ -362,35 +343,30 @@ export default function LoginPortal() {
         // MÀN HÌNH CHỜ QUÉT MÃ QR
         // ==========================================
         <>
-          <p className="text-xs text-slate-200 text-center mb-3.5 max-w-sm leading-relaxed px-1">
-            Mở ứng dụng <strong>UTH TrustID</strong> trên điện thoại và quét mã QR để đăng nhập bằng Face ID / Vân tay
+          <p className="text-xs text-slate-600 dark:text-slate-400 text-center mb-3 sm:mb-4 max-w-sm leading-relaxed px-1">
+            Mở ứng dụng <strong>UTH TrustID</strong> trên điện thoại và quét mã QR để đăng nhập bằng FaceID / TouchID
           </p>
 
           {/* Countdown & Status Bar */}
           <div className="w-full flex items-center justify-between px-2 mb-3">
-            <span className="text-xs text-slate-200 flex items-center space-x-1.5 font-medium">
-              <Clock size={13} className="text-sky-400" />
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center space-x-1">
+              <Clock size={12} className="text-cyan-600 dark:text-cyan-400" />
               <span>Thời gian hiệu lực:</span>
             </span>
 
             <span
-              className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
+              className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
                 timeLeft <= 10
-                  ? 'bg-rose-500/20 border-rose-400/50 text-rose-300 animate-pulse'
-                  : 'bg-sky-400/15 border-sky-300/40 text-sky-300'
+                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-300 animate-pulse'
+                  : 'bg-cyan-50 dark:bg-cyan-950/60 border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-300'
               }`}
             >
-              {isExpired ? 'Đã hết hạn' : `${timeLeft}s còn lại`}
+              {isExpired ? 'Hết hạn (Expired)' : `${timeLeft}s còn lại`}
             </span>
           </div>
 
           {challengeData && !isExpired ? (
-            <div
-              className="p-4 bg-white rounded-[28px] shadow-xl border-4 border-sky-300/40 relative group transition transform hover:scale-[1.01] flex items-center justify-center mx-auto"
-              style={{
-                boxShadow: '0 14px 36px rgba(56, 189, 248, 0.22)'
-              }}
-            >
+            <div className="p-3 bg-white rounded-2xl sm:rounded-3xl shadow-md border border-slate-200 relative group transition transform hover:scale-[1.01] flex items-center justify-center max-w-[210px] max-h-[210px] mx-auto">
               <QRCodeSVG
                 value={JSON.stringify(challengeData)}
                 size={165}
@@ -400,40 +376,38 @@ export default function LoginPortal() {
               />
             </div>
           ) : (
-            <div className="w-48 h-48 sm:w-56 sm:h-56 bg-[#030D1B] border border-sky-300/25 rounded-[28px] flex flex-col items-center justify-center p-4 text-center space-y-2">
-              <Clock size={32} className="text-rose-400 animate-bounce" />
-              <p className="text-xs text-rose-300 font-bold m-0">Mã QR đã hết hạn!</p>
-              <p className="text-[11px] text-slate-300 m-0">Mã có TTL 60s để ngăn ngừa tấn công phát lại.</p>
+            <div className="w-48 h-48 sm:w-56 sm:h-56 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center p-4 text-center space-y-2">
+              <Clock size={32} className="text-rose-500 dark:text-rose-400 animate-bounce" />
+              <p className="text-xs text-rose-600 dark:text-rose-300 font-semibold">Mã QR đã hết hạn!</p>
+              <p className="text-[10px] text-slate-500">Mã có TTL 60s để ngăn ngừa tấn công phát lại (Replay Attack).</p>
               <button
                 onClick={generateNewSession}
-                className="btn-press mt-1 px-4 py-2 bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-extrabold rounded-full transition border-none cursor-pointer"
+                className="mt-1 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl transition"
               >
                 Tạo mã mới
               </button>
             </div>
           )}
 
-          <div className="mt-4 w-full bg-[#030D1B] border border-sky-300/20 rounded-[22px] p-3.5 text-[11px] font-mono space-y-1.5">
+          <div className="mt-3.5 sm:mt-4 w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 sm:p-3 text-[10px] sm:text-[11px] font-mono space-y-1.5">
             <div className="flex justify-between items-center">
-              <span className="text-slate-300 font-sans">Challenge Nonce:</span>
-              <span className="text-sky-300 font-bold truncate max-w-[160px] sm:max-w-[220px]">
-                {challengeData?.nonce}
-              </span>
+              <span className="text-slate-500 font-sans">Challenge Nonce:</span>
+              <span className="text-cyan-600 dark:text-cyan-400 truncate max-w-[150px] sm:max-w-[220px]">{challengeData?.nonce}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-300 font-sans">Single-Use TTL:</span>
-              <span className="text-emerald-300 font-semibold">60 Giây (Tự hủy sau 1 lần ký)</span>
+              <span className="text-slate-500 font-sans">Single-Use TTL:</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">60 Giây (Tự hủy sau 1 lần xác thực)</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-300 font-sans">Smart Contract:</span>
-              <span className="text-sky-200 font-semibold">
+              <span className="text-slate-500 font-sans">Smart Contract:</span>
+              <span className="text-slate-600 dark:text-slate-400 font-semibold">
                 {NETWORK_CONFIG.contractAddress.slice(0, 6)}...{NETWORK_CONFIG.contractAddress.slice(-4)}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs text-emerald-300 mt-3.5 text-center font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping flex-shrink-0"></span>
+          <div className="flex items-center space-x-2 text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 mt-3 sm:mt-4 text-center">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping flex-shrink-0"></span>
             <span className="truncate">
               {socketConnected
                 ? 'Kênh WebSocket đang chờ điện thoại ký số...'
@@ -444,30 +418,28 @@ export default function LoginPortal() {
           <button
             type="button"
             onClick={handleQuickDemoSignIn}
-            className="btn-press w-full mt-3.5 py-3.5 px-5 rounded-2xl text-slate-950 text-xs sm:text-[13px] font-extrabold shadow-lg flex items-center justify-center space-x-2 border-none cursor-pointer"
-            style={{
-              background: 'linear-gradient(135deg, #38BDF8 0%, #34D399 100%)',
-              boxShadow: '0 10px 26px rgba(56, 189, 248, 0.35)'
-            }}
+            className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white text-xs font-bold shadow-md flex items-center justify-center space-x-1.5 transition active:scale-[0.98]"
           >
-            <Zap size={15} />
-            <span>Ký Số EIP-191 Đăng Nhập Nhanh (1 Chạm)</span>
+            <Zap size={14} />
+            <span>Ký Số EIP-191 Đăng Nhập Nhanh (1-Chạm Trên Thiết Bị Này)</span>
           </button>
 
-          <div className="flex items-center space-x-3 mt-3.5">
+          <div className="flex items-center space-x-4 mt-3">
             <button
               onClick={generateNewSession}
-              className="btn-press px-3.5 py-1.5 rounded-full bg-[#030D1B] border border-sky-300/25 flex items-center space-x-1.5 text-xs text-sky-200 hover:text-white transition cursor-pointer"
+              className="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 transition"
             >
-              <RefreshCw size={12} />
-              <span>Làm mới QR</span>
+              <RefreshCw size={13} />
+              <span>Làm mới phiên QR</span>
             </button>
+
+            <span className="text-slate-300 dark:text-slate-700">|</span>
 
             <button
               onClick={() => setShowSelfRevokeModal(true)}
-              className="btn-press px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-400/30 flex items-center space-x-1.5 text-xs text-rose-300 hover:text-rose-200 transition cursor-pointer"
+              className="flex items-center space-x-1 text-xs text-rose-500 dark:text-rose-400/90 hover:text-rose-600 dark:hover:text-rose-300 transition"
             >
-              <ShieldAlert size={12} />
+              <ShieldAlert size={13} />
               <span>Báo mất ví từ xa</span>
             </button>
           </div>
@@ -476,72 +448,72 @@ export default function LoginPortal() {
 
       {/* MODAL THU HỒI TỪ XA TRÊN CỔNG DỊCH VỤ WEB (PORTAL) */}
       {showSelfRevokeModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <form
             onSubmit={handleRemoteSelfRevoke}
-            className="w-full max-w-sm bg-[#071C36] border border-rose-400/45 rounded-[28px] p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95"
+            className="w-full max-w-sm bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-900/60 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-3.5 animate-in zoom-in-95"
           >
-            <div className="flex justify-between items-center border-b border-sky-200/15 pb-3">
-              <div className="flex items-center space-x-2 text-rose-400">
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center space-x-2 text-rose-600 dark:text-rose-400">
                 <ShieldAlert size={18} />
-                <h4 className="font-bold text-sm text-white m-0">Báo Mất Thiết Bị / Thu Hồi Khẩn Cấp</h4>
+                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Báo Mất Thiết Bị / Thu Hồi Khẩn Cấp</h4>
               </div>
               <button
                 type="button"
                 onClick={() => setShowSelfRevokeModal(false)}
-                className="w-7 h-7 rounded-full bg-slate-900 border border-sky-200/20 text-slate-300 flex items-center justify-center cursor-pointer"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
               >
-                <X size={15} />
+                <X size={18} />
               </button>
             </div>
 
-            <p className="text-xs text-slate-200 leading-relaxed m-0">
-              Dành cho sinh viên bị mất điện thoại: Dùng mã khẩn cấp (Emergency Token) được cấp lúc khởi tạo ví để vô hiệu hóa tài khoản ngay lập tức:
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Dành cho sinh viên bị mất điện thoại: Dùng mã khẩn cấp (Emergency Token) được cấp lúc khởi tạo ví để vô hiệu hóa tài khoản ngay lập tức từ trình duyệt:
             </p>
 
-            <div className="space-y-1.5">
-              <label className="text-[11.5px] text-sky-200 block font-semibold">Địa chỉ Ví sinh viên (0x...):</label>
+            <div className="space-y-2">
+              <label className="text-[11px] text-slate-600 dark:text-slate-400 block font-medium">Địa chỉ Ví sinh viên (0x...):</label>
               <input
                 type="text"
                 value={revokeAddress}
                 onChange={(e) => setRevokeAddress(e.target.value)}
                 placeholder="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-                className="pro-input font-mono text-xs"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-mono text-slate-900 dark:text-slate-200 focus:outline-none focus:border-rose-500"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[11.5px] text-sky-200 block font-semibold">Mã bí mật khẩn cấp (Emergency Token):</label>
+            <div className="space-y-2">
+              <label className="text-[11px] text-slate-600 dark:text-slate-400 block font-medium">Mã bí mật khẩn cấp (Emergency Token):</label>
               <input
                 type="text"
                 value={revokeToken}
                 onChange={(e) => setRevokeToken(e.target.value)}
                 placeholder="EMERGENCY_UTH_9999"
-                className="pro-input font-mono text-xs text-amber-300"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs font-mono text-amber-700 dark:text-amber-300 focus:outline-none focus:border-rose-500"
               />
             </div>
 
             {revokeMsg && (
-              <p className="text-xs text-rose-300 bg-rose-950/50 p-3 rounded-2xl border border-rose-400/40 m-0">
+              <p className="text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg border border-rose-200 dark:border-rose-900/50">
                 {revokeMsg}
               </p>
             )}
 
-            <div className="flex space-x-2.5 pt-2">
+            <div className="flex space-x-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowSelfRevokeModal(false)}
-                className="btn-press flex-1 bg-[#030D1B] text-slate-200 text-xs font-bold py-3 rounded-2xl border border-sky-300/25 cursor-pointer"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs py-2.5 rounded-xl transition"
               >
                 Đóng
               </button>
               <button
                 type="submit"
                 disabled={revokeLoading}
-                className="btn-press flex-1 bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs py-3 rounded-2xl border-none cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1.5"
+                className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center space-x-1"
               >
                 {revokeLoading ? <RefreshCw size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
-                <span>{revokeLoading ? 'Đang xử lý...' : 'Vô hiệu hóa ngay'}</span>
+                <span>{revokeLoading ? 'Đang gửi lệnh...' : 'Vô hiệu hóa ngay'}</span>
               </button>
             </div>
           </form>

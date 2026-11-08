@@ -1,30 +1,535 @@
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* src/index.css - UTH-TrustID Dark Neon Design System & Universal Vietnamese Typography */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root {
+  /* Bảng phối màu Ocean Ice 7 sắc độ (#001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) */
+  --ocean-abyss: #001D39;
+  --ocean-royal: #0A4174;
+  --ocean-steel: #49769F;
+  --ocean-teal: #4E8EA2;
+  --ocean-mist: #6EA2B3;
+  --ocean-sky: #7BBDE8;
+  --ocean-frost: #BDD8E9;
 
-@layer base {
-  html,
-  body {
-    font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #030D1C;
-    color: #F0F7FF;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    letter-spacing: -0.008em;
-    line-height: 1.5;
+  --bg-main: #001D39;
+  --bg-dark: #001D39;
+  --bg-pure: #00152B;
+  --admin-bg: #001D39;
+  --bg-card: rgba(10, 65, 116, 0.58);
+  --card-bg: #072E54;
+  --card-charcoal: #052647;
+  --bg-input: #00172E;
+  --border-color: rgba(123, 189, 232, 0.22);
+  --border-hover: rgba(123, 189, 232, 0.55);
+  --border-subtle: #0A4174;
+  --border: #49769F;
+  --primary: #7BBDE8;
+  --cyan-accent: #7BBDE8;
+  --primary-glow: rgba(123, 189, 232, 0.32);
+  --accent-purple: #49769F;
+  --accent-rose: #f43f5e;
+  --accent-emerald: #4E8EA2;
+  --green-active: #7BBDE8;
+  --red-revoked: #ff5252;
+  --yellow-warn: #fbbf24;
+  --text-main: #F4F9FD;
+  --text-primary: #F4F9FD;
+  --text-white: #ffffff;
+  --text-muted: #BDD8E9;
+  --text-secondary: #7BBDE8;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --btn-bg: #0A4174;
+  --btn-border: #49769F;
+}
+
+/* Tối ưu hóa Phông chữ Tiếng Việt dễ đọc, rõ nét cho mọi lứa tuổi (Giảng viên, Quản trị viên & Sinh viên) */
+html, body {
+  height: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: normal;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  letter-spacing: normal;
+}
+
+/* Chỉ dùng Font Monospace cho mã Hash, Địa chỉ Ví và Nonce */
+code, pre, .font-mono, .mono-code {
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-variant-ligatures: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Modal Fullscreen Overlay cho máy chiếu */
+.fullscreen-qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: #050811;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Nút bấm mobile kích thước chuẩn & Chặn iOS zoom khi chạm */
+button, input, select {
+  touch-action: manipulation;
+}
+
+/* Glassmorphism panel */
+.glass-panel, .panel, .card-flat {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.glass-panel:hover, .panel:hover {
+  border-color: var(--border-hover);
+}
+
+/* Khung viền nhỏ gọn & Input */
+.custom-input, .input-sm, .input-flat {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  font-size: 13.5px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.custom-input:focus, .input-sm:focus, .input-flat:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Primary Cyan-Blue Button */
+.btn-primary, .btn-lime {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:hover, .btn-lime:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+}
+
+.btn-primary:active, .btn-lime:active {
+  transform: translateY(0);
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #0284c7;
+  color: #fff;
+  transition: opacity 0.15s;
+}
+
+.btn-sm:hover {
+  opacity: 0.9;
+}
+
+/* ==========================================================
+   Admin Navy Design System (Quản trị hệ thống)
+   ========================================================== */
+.navy-card {
+  background: #0d131f;
+  border: 1px solid #162032;
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+}
+
+.stat-box {
+  background: #0d131f;
+  border: 1px solid #162032;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.btn-refresh {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: #c0ccda;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh:hover {
+  background: #1c2742;
+  color: #fff;
+}
+
+.btn-batch-issue {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(90deg, #00b4db 0%, #0083b0 100%);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 180, 219, 0.25);
+  transition: opacity 0.2s;
+}
+
+.btn-batch-issue:hover {
+  opacity: 0.92;
+}
+
+.json-editor {
+  width: 100%;
+  height: 140px;
+  background: #060911;
+  border: 1px solid #162032;
+  border-radius: 8px;
+  color: #00f2fe;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+}
+
+.json-editor:focus {
+  border-color: #00b4db;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 4px;
+}
+
+/* ==========================================================
+   Responsive Grid & Container Optimization (iOS, Android, Web)
+   ========================================================== */
+.responsive-page-container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 16px 14px calc(24px + var(--safe-bottom)) 14px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .responsive-page-container {
+    padding: 12px 10px calc(20px + var(--safe-bottom)) 10px;
+    max-width: 100vw;
   }
+}
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif;
-    letter-spacing: -0.02em;
-    line-height: 1.3;
-  }
+/* Ngăn chặn mọi thẻ con tràn viền trên màn hình hẹp */
+.glass-panel, .panel, .navy-card, .stat-box, .card-flat {
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
-  code, pre, .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-    letter-spacing: -0.01em;
+.responsive-dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .responsive-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
   }
+}
+
+.responsive-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 768px) {
+  .responsive-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+
+/* Tối ưu nút bấm cảm ứng trên điện thoại (Touch target >= 44px) */
+.touch-btn {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==================== HIỆU ỨNG ĐỘNG CHO CỔNG ĐĂNG NHẬP NGHỆ THUẬT (ARTISTIC SPLIT-SCREEN LOGIN) ==================== */
+@keyframes loginCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes artKenBurns {
+  0% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.06) translate3d(-4px, -6px, 0);
+  }
+  100% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fireflyDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.7);
+    opacity: 0.15;
+  }
+  45% {
+    opacity: 0.95;
+    transform: translate3d(10px, -22px, 0) scale(1.2);
+  }
+  100% {
+    transform: translate3d(-8px, -46px, 0) scale(0.6);
+    opacity: 0.1;
+  }
+}
+
+@keyframes pavilionWarmPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.78;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes btnShimmerSweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+
+.animate-login-card {
+  animation: loginCardEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-art-breathe {
+  animation: artKenBurns 18s ease-in-out infinite;
+}
+
+.animate-pavilion-glow {
+  animation: pavilionWarmPulse 4.2s ease-in-out infinite;
+}
+
+.login-btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-20deg);
+  animation: btnShimmerSweep 3.8s ease-in-out infinite;
+}
+
+/* ==================== GIAO DIỆN DASHBOARD DARK NEON CHUẨN MẪU (NỀN XANH ĐÊM VỰC THẲM + VIỀN PHÁT SÁNG CYAN + PHÔNG CHỮ DỄ ĐỌC) ==================== */
+.ocean-palette-theme,
+.theme-fintech-dark {
+  background: radial-gradient(circle at 18% 15%, rgba(14, 116, 144, 0.34), transparent 45%),
+              radial-gradient(circle at 82% 85%, rgba(10, 65, 116, 0.48), transparent 50%),
+              linear-gradient(160deg, #041529 0%, #020c18 100%) !important;
+  color: #F8FAFC !important;
+  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.theme-fintech-dark .dashboard-outer-shell {
+  background: linear-gradient(165deg, rgba(7, 25, 46, 0.95) 0%, rgba(4, 16, 31, 0.98) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.38);
+  box-shadow: 0 0 65px -8px rgba(0, 210, 255, 0.25), 0 30px 70px -15px rgba(0, 0, 0, 0.85);
+}
+
+.theme-fintech-dark header {
+  background: rgba(6, 22, 41, 0.92) !important;
+  border-bottom: 1px solid rgba(73, 118, 159, 0.34) !important;
+}
+
+.theme-fintech-dark .bg-\[\#081226\] {
+  background: linear-gradient(155deg, rgba(13, 39, 70, 0.9) 0%, rgba(7, 23, 43, 0.96) 100%) !important;
+  border: 1px solid rgba(78, 142, 162, 0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.14), 0 16px 38px -10px rgba(1, 8, 20, 0.78) !important;
+}
+
+.theme-fintech-dark .hero-navy-card {
+  background: linear-gradient(145deg, #0D2B52 0%, #071933 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.18), 0 16px 36px -10px rgba(0, 210, 255, 0.18) !important;
+}
+
+.theme-fintech-dark .bg-\[\#040814\],
+.theme-fintech-dark .bg-\[\#040814\]\/80,
+.theme-fintech-dark .bg-slate-950,
+.theme-fintech-dark .bg-slate-950\/90 {
+  background: rgba(4, 15, 30, 0.88) !important;
+  border-color: rgba(73, 118, 159, 0.4) !important;
+}
+
+.theme-fintech-dark .bg-cyan-400 {
+  background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 55%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
+}
+
+/* Cân chỉnh kích thước chữ & độ tương phản để mọi giảng viên, cán bộ đều nhìn rõ và êm mắt */
+.theme-fintech-dark .text-slate-400 {
+  color: #CBD5E1 !important;
+}
+
+.theme-fintech-dark .text-slate-300 {
+  color: #E2E8F0 !important;
+}
+
+.theme-fintech-dark .text-xs {
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+}
+
+.theme-fintech-dark .text-sm {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+}
+
+.theme-fintech-dark .text-base {
+  font-size: 16.5px !important;
+  line-height: 1.5 !important;
+}
+
+.theme-fintech-dark .text-lg {
+  font-size: 18.5px !important;
+  line-height: 1.45 !important;
 }

@@ -24,7 +24,7 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink, LayoutGrid } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -184,7 +184,7 @@ export default function App() {
 
       setSpotCheckState({
         isActive: true,
-        isModalOpen: false,
+        isModalOpen: true,
         countdown: remaining,
         deadline,
         sessionId: payload.sessionId || 'SES_A2301',
@@ -535,7 +535,7 @@ export default function App() {
   );
 
   return (
-    <div className="w-full min-h-screen bg-[#030712] text-slate-100 flex flex-col items-center justify-center select-none antialiased">
+    <div className="w-full min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200 flex flex-col items-center justify-center">
       {/* Màn hình khởi động động (Animated Splash Screen) hiển thị khi vừa mở ứng dụng */}
       {showSplash && (
         <SplashScreen onFinish={() => setShowSplash(false)} />
@@ -551,120 +551,107 @@ export default function App() {
 
       {/* Giao diện chính của ứng dụng Sinh viên (Holder Node) */}
       <BrowserRouter>
-      {/* Khung màn hình điện thoại iPhone tỉ lệ chuẩn */}
-      <div className="mobile-viewport mobile-app-root text-slate-100">
-        {/* ================= 1. STATUS BAR & TOP HEADER ================= */}
-        <header className="pt-3 px-5 pb-2 flex-shrink-0 z-50 bg-[#050B18]/95 backdrop-blur-md">
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-cyan-950/60 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_12px_rgba(0,242,254,0.25)]">
-                <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-xs font-black tracking-wider text-white flex items-center gap-1 m-0">
-                  UTH TRUST<span className="text-cyan-400">ID</span>
-                </h1>
-                <p className="text-[9px] font-mono text-slate-400 tracking-tight m-0">HOLDER NODE • SINH VIÊN</p>
+      {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
+      <div className="mobile-viewport mobile-app-root bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+        
+        {/* Top Header Chuẩn Native iOS / Android (Tránh đè lên Tai Thỏ / Dynamic Island) */}
+        <header className="bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200" style={{
+          flexShrink: 0,
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          padding: '11px 15px',
+          width: '100%'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            
+            {/* Logo Thương Hiệu UTH-TrustID */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+              <UthTrustLogo size={30} />
+              <div style={{ minWidth: 0 }}>
+                <div className="text-slate-900 dark:text-slate-100" style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
+                  UTH TRUST<span className="text-cyan-500">ID</span>
+                </div>
+                <div className="text-slate-500 dark:text-slate-400" style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                  HOLDER NODE • SINH VIÊN
+                </div>
               </div>
             </div>
 
-            {/* Các badge bảo mật góc phải */}
-            <div className="flex items-center gap-1.5 font-mono text-[11px]">
+            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Khóa phiên + Huy hiệu Holder FIDO2 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               <LiveClock />
+
               <button
-                type="button"
                 onClick={handleLockSession}
-                title="Khóa phiên bảo mật ngay (PIN: 123456)"
-                className="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-cyan-400 cursor-pointer flex items-center justify-center"
+                title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
+                className="btn-press bg-slate-800 border border-slate-700 text-cyan-400"
+                style={{
+                  padding: '5px 7px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <Lock size={12} />
               </button>
-              <div className="px-2 py-1 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold flex items-center gap-1">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                FIDO2
-              </div>
+
+              <span
+                title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
+                className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                style={{
+                  padding: '4px 7px',
+                  borderRadius: '8px',
+                  fontSize: '9.5px',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  letterSpacing: '0.3px'
+                }}
+              >
+                <ShieldCheck size={11} />
+                <span>FIDO2</span>
+              </span>
             </div>
+
           </div>
         </header>
 
-        {/* 2. THANH THÔNG BÁO KHẨN CẤP SPOT-CHECK (STICKY EMERGENCY BANNER) GHIM TRÊN ĐỈNH MÀN HÌNH */}
-        {spotCheckState.isActive && (
+        {/* 2. BANNER CẢNH BÁO KHẨN CẤP GHIM TRÊN MỌI MÀN HÌNH NẾU ĐANG TRONG 60S SPOT-CHECK */}
+        {spotCheckState.isActive && !spotCheckState.isModalOpen && (
           <div
-            className="sticky top-[57px] z-40 mx-3.5 mt-2.5 p-3.5 rounded-2xl backdrop-blur-xl flex items-center justify-between gap-3 shadow-2xl"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(245, 158, 11, 0.28) 0%, rgba(217, 119, 6, 0.22) 55%, rgba(120, 53, 15, 0.42) 100%)',
-              border: '1.5px solid rgba(251, 191, 36, 0.85)',
-              boxShadow: '0 14px 34px rgba(245, 158, 11, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.22)',
-              animation: 'spotEmergencyShake 2.4s ease-in-out infinite'
-            }}
+            onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
+            className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-amber-500/20 border border-amber-500/50 backdrop-blur-md flex items-center justify-between cursor-pointer animate-pulse shadow-lg"
           >
-            <style>{`
-              @keyframes spotEmergencyShake {
-                0%, 100% { transform: translateX(0); }
-                6% { transform: translateX(-3px) rotate(-0.4deg); }
-                12% { transform: translateX(3px) rotate(0.4deg); }
-                18% { transform: translateX(-2px); }
-                24% { transform: translateX(2px); }
-                30% { transform: translateX(0); }
-              }
-              @keyframes spotCountdownTick {
-                0% { transform: scale(1.22); }
-                45% { transform: scale(0.96); }
-                100% { transform: scale(1); }
-              }
-            `}</style>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-400/25 border border-amber-300/60 text-[10.5px] font-extrabold text-amber-200 uppercase tracking-wide">
-                  ⚡ Spot-Check Khẩn
-                </span>
-                {/* Đồng hồ đếm lùi giật nhịp từng giây */}
-                <span
-                  key={spotCheckState.countdown}
-                  className="px-2 py-0.5 rounded-lg bg-amber-950/90 border border-amber-400/70 text-amber-300 font-mono font-extrabold text-xs inline-block"
-                  style={{ animation: 'spotCountdownTick 0.45s cubic-bezier(0.22, 1, 0.36, 1)' }}
-                >
-                  ⏱ {spotCheckState.countdown}s
-                </span>
-              </div>
-              <p className="text-[12px] font-bold text-white m-0 mt-1 truncate">
-                Giảng viên yêu cầu tái điểm danh 60s
+            <div>
+              <p className="text-xs font-bold text-amber-300 m-0">
+                Yêu cầu Hậu kiểm Spot-Check đang diễn ra
+              </p>
+              <p className="text-[10px] text-amber-200/80 m-0">
+                Chạm vào đây để quét Face ID xác thực ngay
               </p>
             </div>
-
-            {/* Nút bấm xác thực ngay có hiệu ứng sóng xung kích (animate-ping) */}
-            <div className="relative flex-shrink-0">
-              <span className="pointer-events-none absolute -inset-1 rounded-xl bg-amber-400/60 animate-ping" />
-              <button
-                type="button"
-                onClick={handleTriggerSpotCheckFaceID}
-                className="relative z-10 btn-press px-3.5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer border-none shadow-lg"
-              >
-                <Fingerprint size={15} />
-                <span>Xác Thực Ngay</span>
-              </button>
-            </div>
+            <span className="px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-mono font-black text-xs">
+              {spotCheckState.countdown}s
+            </span>
           </div>
         )}
 
         {/* Thông báo hoàn tất Spot-check toàn cục */}
         {spotVerifiedNotice && (
-          <div className="mx-4 mt-2.5 p-3 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-xs font-semibold flex items-center gap-2">
-            <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
+          <div className="mx-3 mt-2 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 size={15} className="text-emerald-500 flex-shrink-0" />
             <span>{spotVerifiedNotice}</span>
           </div>
         )}
 
         {/* Vùng Nội Dung Cuộn Bên Trong Khung Điện Thoại */}
-        <main className="mobile-scroll-body">
+        <main className="mobile-scroll-body bg-slate-950 transition-colors duration-200">
           <Routes>
             {/* 1. VAI TRÒ HOLDER - SINH VIÊN (/student & /wallet) */}
             <Route path="/" element={<Navigate to="/student" replace />} />

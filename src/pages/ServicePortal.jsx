@@ -131,29 +131,38 @@ export default function ServicePortal() {
     <div className="page-enter" style={{ width: '100%', color: 'var(--text-main)', boxSizing: 'border-box' }}>
       
       {/* 1. Header Cổng Dịch Vụ */}
-      <div className="glass-card stagger-1" style={{ borderRadius: '18px', padding: '16px', marginBottom: '14px' }}>
+      <div className="glass-card stagger-1" style={{ borderRadius: '16px', padding: '18px 16px', marginBottom: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '10px',
-                background: 'rgba(123, 189, 232, 0.14)',
-                border: '1px solid rgba(123, 189, 232, 0.32)',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(0, 242, 254, 0.12)',
+                border: '1px solid rgba(0, 242, 254, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <Building2 size={18} color="#7BBDE8" strokeWidth={2} />
+                <Building2 size={18} color="#0284c7" strokeWidth={1.8} />
               </div>
-              <h2 style={{ fontSize: '15.5px', fontWeight: 800, margin: 0, color: '#F0F7FF', letterSpacing: '-0.02em' }}>
-                Cổng Dịch Vụ &amp; Thẩm Tra Danh Tính
+              <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
+                Cổng Dịch Vụ & Thẩm Tra Danh Tính UTH
               </h2>
             </div>
-            <p style={{ margin: '5px 0 0', fontSize: '12px', color: '#BDD8E9', lineHeight: 1.45 }}>
-              Tra cứu hồ sơ, thẩm tra thẻ số phi tập trung và tiện ích học vụ không mật khẩu
+            <p style={{ margin: '4px 0 0', fontSize: '11.5px', color: 'var(--text-muted)' }}>
+              Tra cứu hồ sơ, thẩm tra thẻ số phi tập trung và tiện ích trường học không mật khẩu
             </p>
+          </div>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '5px 10px', borderRadius: '8px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#0284c7', display: 'inline-block' }} />
+              <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: 600 }}>
+                HOLDER NODE • Sinh Viên
+              </span>
+            </div>
           </div>
         </div>
 
@@ -163,14 +172,14 @@ export default function ServicePortal() {
             onClick={() => switchTab('lookup')}
             className="btn-press"
             style={{
-              padding: '9px 6px',
-              fontSize: '11.5px',
+              padding: '8px 6px',
+              fontSize: '11px',
               fontWeight: 700,
-              borderRadius: '10px',
-              border: activeTab === 'lookup' ? '1px solid rgba(123, 189, 232, 0.45)' : '1px solid var(--border-hairline)',
+              borderRadius: '8px',
+              border: activeTab === 'lookup' ? '1px solid #0284c7' : '1px solid var(--border-hairline)',
               cursor: 'pointer',
-              background: activeTab === 'lookup' ? 'linear-gradient(135deg, rgba(10, 65, 116, 0.75), rgba(2, 132, 199, 0.35))' : 'var(--bg-inset)',
-              color: activeTab === 'lookup' ? '#F0F7FF' : '#BDD8E9',
+              background: activeTab === 'lookup' ? 'rgba(2, 132, 199, 0.14)' : 'var(--bg-inset)',
+              color: activeTab === 'lookup' ? '#0284c7' : 'var(--text-muted)',
               transition: 'all 0.15s ease',
               display: 'flex',
               alignItems: 'center',
@@ -186,14 +195,14 @@ export default function ServicePortal() {
             onClick={() => switchTab('services')}
             className="btn-press"
             style={{
-              padding: '9px 6px',
-              fontSize: '11.5px',
+              padding: '8px 6px',
+              fontSize: '11px',
               fontWeight: 700,
-              borderRadius: '10px',
-              border: activeTab === 'services' ? '1px solid rgba(123, 189, 232, 0.45)' : '1px solid var(--border-hairline)',
+              borderRadius: '8px',
+              border: activeTab === 'services' ? '1px solid #0284c7' : '1px solid var(--border-hairline)',
               cursor: 'pointer',
-              background: activeTab === 'services' ? 'linear-gradient(135deg, rgba(10, 65, 116, 0.75), rgba(2, 132, 199, 0.35))' : 'var(--bg-inset)',
-              color: activeTab === 'services' ? '#F0F7FF' : '#BDD8E9',
+              background: activeTab === 'services' ? 'rgba(2, 132, 199, 0.14)' : 'var(--bg-inset)',
+              color: activeTab === 'services' ? '#0284c7' : 'var(--text-muted)',
               transition: 'all 0.15s ease',
               display: 'flex',
               alignItems: 'center',
@@ -209,14 +218,14 @@ export default function ServicePortal() {
             onClick={() => switchTab('weblogin')}
             className="btn-press"
             style={{
-              padding: '9px 6px',
-              fontSize: '11.5px',
+              padding: '8px 6px',
+              fontSize: '11px',
               fontWeight: 700,
-              borderRadius: '10px',
-              border: activeTab === 'weblogin' ? '1px solid rgba(123, 189, 232, 0.45)' : '1px solid var(--border-hairline)',
+              borderRadius: '8px',
+              border: activeTab === 'weblogin' ? '1px solid #0284c7' : '1px solid var(--border-hairline)',
               cursor: 'pointer',
-              background: activeTab === 'weblogin' ? 'linear-gradient(135deg, rgba(10, 65, 116, 0.75), rgba(2, 132, 199, 0.35))' : 'var(--bg-inset)',
-              color: activeTab === 'weblogin' ? '#F0F7FF' : '#BDD8E9',
+              background: activeTab === 'weblogin' ? 'rgba(2, 132, 199, 0.14)' : 'var(--bg-inset)',
+              color: activeTab === 'weblogin' ? '#0284c7' : 'var(--text-muted)',
               transition: 'all 0.15s ease',
               display: 'flex',
               alignItems: 'center',
