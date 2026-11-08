@@ -1113,31 +1113,30 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
   return (
     <div className="page-enter" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
       
-      {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+      {/* Top Header Gọn Gàng */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
         <button
           onClick={() => navigate('/wallet')}
           className="btn-press"
           style={{
-            background: 'var(--bg-inset)',
-            border: '1px solid var(--border-hairline)',
-            borderRadius: '8px',
-            padding: '5px 10px',
-            color: 'var(--text-muted)',
+            background: '#030D1B',
+            border: '1px solid rgba(123, 189, 232, 0.25)',
+            borderRadius: '10px',
+            padding: '6px 12px',
+            color: '#BDD8E9',
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
-            fontSize: '11.5px',
+            gap: '6px',
+            fontSize: '12px',
             fontWeight: 600,
             cursor: 'pointer'
           }}
         >
-          <ArrowLeft size={13} />
+          <ArrowLeft size={14} />
           <span>Về Ví Số</span>
         </button>
 
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {/* Nút bật/tắt giả lập Sinh viên đổi FaceID mới trên iPhone để test Seamless PIN Re-enrollment */}
+        <div style={{ display: 'flex', gap: '6px' }}>
           <button
             onClick={() => {
               const next = !simBiometricChanged;
@@ -1148,22 +1147,21 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              padding: '5px 8px',
-              borderRadius: '8px',
-              border: simBiometricChanged ? '1px solid rgba(244, 63, 94, 0.5)' : '1px solid rgba(6, 182, 212, 0.3)',
-              background: simBiometricChanged ? 'rgba(244, 63, 94, 0.15)' : 'rgba(6, 182, 212, 0.1)',
-              color: simBiometricChanged ? '#F43F5E' : '#06B6D4',
-              fontSize: '10px',
-              fontWeight: 700,
+              gap: '5px',
+              padding: '6px 10px',
+              borderRadius: '10px',
+              border: simBiometricChanged ? '1px solid rgba(251, 113, 133, 0.5)' : '1px solid rgba(123, 189, 232, 0.28)',
+              background: simBiometricChanged ? 'rgba(244, 63, 94, 0.16)' : 'rgba(10, 65, 116, 0.45)',
+              color: simBiometricChanged ? '#FB7185' : '#7BBDE8',
+              fontSize: '11px',
+              fontWeight: 600,
               cursor: 'pointer'
             }}
           >
-            <Fingerprint size={12} />
-            <span>{simBiometricChanged ? 'Đang Giả Lập Đổi FaceID' : 'Test Đổi FaceID'}</span>
+            <Fingerprint size={13} />
+            <span>{simBiometricChanged ? 'Đang đổi FaceID' : 'Đổi FaceID'}</span>
           </button>
 
-          {/* Chuyển đổi Online / Offline Proof-of-Presence */}
           <button
             onClick={() => {
               const nextOffline = !isOfflineMode;
@@ -1176,102 +1174,102 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              padding: '5px 8px',
-              borderRadius: '8px',
-              border: isOfflineMode ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid rgba(16, 185, 129, 0.35)',
-              background: isOfflineMode ? 'rgba(245, 158, 11, 0.14)' : 'rgba(16, 185, 129, 0.12)',
-              color: isOfflineMode ? '#F59E0B' : '#10B981',
-              fontSize: '10px',
+              gap: '5px',
+              padding: '6px 10px',
+              borderRadius: '10px',
+              border: isOfflineMode ? '1px solid rgba(251, 191, 36, 0.45)' : '1px solid rgba(52, 211, 153, 0.35)',
+              background: isOfflineMode ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.14)',
+              color: isOfflineMode ? '#FBBF24' : '#34D399',
+              fontSize: '11px',
               fontWeight: 700,
               cursor: 'pointer'
             }}
           >
-            {isOfflineMode ? <WifiOff size={12} /> : <Wifi size={12} />}
+            {isOfflineMode ? <WifiOff size={13} /> : <Wifi size={13} />}
             <span>{isOfflineMode ? 'Offline' : 'Online'}</span>
           </button>
         </div>
       </div>
 
-      {/* THÔNG TIN LỚP HỌC PHẦN & BUỔI HỌC ĐANG ĐIỂM DANH (ĐỒNG BỘ CẤU TRÚC 1 LỚP -> N BUỔI HỌC) */}
+      {/* THÔNG TIN LỚP HỌC PHẦN & BUỔI HỌC ĐANG ĐIỂM DANH */}
       <div
         className="glass-card"
         style={{
-          padding: '12px 14px',
-          borderRadius: '16px',
-          border: '1px solid rgba(56, 189, 248, 0.42)',
-          background: 'linear-gradient(135deg, rgba(13, 43, 82, 0.85), rgba(8, 18, 38, 0.95))'
+          padding: '13px 15px',
+          borderRadius: '18px',
+          border: '1px solid rgba(123, 189, 232, 0.36)',
+          background: 'linear-gradient(135deg, rgba(11, 48, 92, 0.88), rgba(6, 22, 44, 0.96))'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
           <span
             style={{
-              padding: '3px 9px',
-              borderRadius: '7px',
-              background: 'rgba(56, 189, 248, 0.18)',
-              border: '1px solid rgba(56, 189, 248, 0.45)',
-              color: '#38BDF8',
-              fontSize: '10.5px',
+              padding: '3px 10px',
+              borderRadius: '8px',
+              background: 'rgba(56, 189, 248, 0.16)',
+              border: '1px solid rgba(123, 189, 232, 0.38)',
+              color: '#7BBDE8',
+              fontSize: '11px',
               fontFamily: 'JetBrains Mono',
-              fontWeight: 800
+              fontWeight: 700
             }}
           >
-            {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
+            {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • Buổi {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
           </span>
-          <span style={{ fontSize: '10.5px', fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#10B981' }}>
+          <span style={{ fontSize: '11.5px', fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#34D399' }}>
             Phòng {courseMeta.room || activeCourseSession?.room || 'A2-301'}
           </span>
         </div>
-        <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>
+        <div style={{ fontSize: '14px', fontWeight: 700, color: '#F0F7FF' }}>
           {courseMeta.courseName || activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
         </div>
       </div>
 
-      {/* BẢNG THỰC NGHIỆM NCKH: KIỂM SOÁT KẾT NỐI MẠNG & VỊ TRÍ GPS */}
+      {/* BẢNG THỰC NGHIỆM NCKH GỌN GÀNG: MẠNG & VỊ TRÍ GPS */}
       <div
         className="glass-card"
         style={{
-          padding: '10px 12px',
-          borderRadius: '14px',
+          padding: '12px 14px',
+          borderRadius: '16px',
           border: sessionNetworkMode === 'CAMPUS_WIFI' && phoneNetworkMode === '4G'
-            ? '1px solid rgba(245, 158, 11, 0.5)'
-            : '1px solid rgba(56, 189, 248, 0.35)'
+            ? '1px solid rgba(251, 191, 36, 0.5)'
+            : '1px solid rgba(123, 189, 232, 0.26)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-              Mạng Điện Thoại:
+            <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#BDD8E9' }}>
+              Kết nối:
             </span>
             <button
               type="button"
               onClick={() => setPhoneNetworkMode('4G')}
               className="btn-press"
               style={{
-                padding: '3px 8px',
-                borderRadius: '7px',
-                fontSize: '10px',
-                fontWeight: 800,
+                padding: '4px 9px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 700,
                 border: phoneNetworkMode === '4G' ? '1px solid #38BDF8' : '1px solid var(--border-hairline)',
-                background: phoneNetworkMode === '4G' ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-inset)',
-                color: phoneNetworkMode === '4G' ? '#38BDF8' : 'var(--text-muted)',
+                background: phoneNetworkMode === '4G' ? 'rgba(56, 189, 248, 0.18)' : 'var(--bg-inset)',
+                color: phoneNetworkMode === '4G' ? '#7BBDE8' : '#93B8D8',
                 cursor: 'pointer'
               }}
             >
-              Đang bật 4G/5G
+              4G/5G
             </button>
             <button
               type="button"
               onClick={() => setPhoneNetworkMode('WIFI')}
               className="btn-press"
               style={{
-                padding: '3px 8px',
-                borderRadius: '7px',
-                fontSize: '10px',
-                fontWeight: 800,
-                border: phoneNetworkMode === 'WIFI' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
+                padding: '4px 9px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                border: phoneNetworkMode === 'WIFI' ? '1px solid #34D399' : '1px solid var(--border-hairline)',
                 background: phoneNetworkMode === 'WIFI' ? 'rgba(16, 185, 129, 0.16)' : 'var(--bg-inset)',
-                color: phoneNetworkMode === 'WIFI' ? '#10B981' : 'var(--text-muted)',
+                color: phoneNetworkMode === 'WIFI' ? '#34D399' : '#93B8D8',
                 cursor: 'pointer'
               }}
             >
@@ -1284,29 +1282,29 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             onClick={() => setShowServerUrlBar((v) => !v)}
             className="btn-press"
             style={{
-              padding: '3px 7px',
-              borderRadius: '7px',
-              fontSize: '9.5px',
+              padding: '4px 8px',
+              borderRadius: '8px',
+              fontSize: '10px',
               fontFamily: 'JetBrains Mono',
-              fontWeight: 700,
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              background: 'rgba(16, 185, 129, 0.1)',
-              color: '#10B981',
+              fontWeight: 600,
+              border: '1px solid rgba(123, 189, 232, 0.28)',
+              background: 'var(--bg-inset)',
+              color: '#7BBDE8',
               cursor: 'pointer'
             }}
           >
-            SERVER_URL
+            Cấu hình Server
           </button>
         </div>
 
-        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: '7px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#BDD8E9' }}>
           <span>
-            Chính sách Giảng viên:{' '}
-            <b style={{ color: sessionNetworkMode === 'CAMPUS_WIFI' ? '#F59E0B' : '#10B981' }}>
+            Yêu cầu lớp:{' '}
+            <b style={{ color: sessionNetworkMode === 'CAMPUS_WIFI' ? '#FBBF24' : '#34D399' }}>
               {sessionNetworkMode === 'CAMPUS_WIFI' ? `Wi-Fi Trường (R ≤ ${sessionRadius}m)` : `4G/5G Tự do (R ≤ ${sessionRadius}m)`}
             </b>
           </span>
-          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9.5px', color: '#38BDF8' }}>
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '10px', color: '#7BBDE8' }}>
             {serverUrlInput.replace(/^https?:\/\//, '')}
           </span>
         </div>
@@ -1314,32 +1312,32 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         {/* BỘ CHỈNH KHOẢNG CÁCH GPS & FAKE GPS THỰC NGHIỆM TRÊN ĐIỆN THOẠI */}
         <div
           style={{
-            marginTop: '7px',
-            paddingTop: '7px',
+            marginTop: '8px',
+            paddingTop: '8px',
             borderTop: '1px solid var(--border-hairline)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '5px',
+            gap: '6px',
             flexWrap: 'wrap'
           }}
         >
-          <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-main)' }}>
-            Test GPS (R ≤ {sessionRadius}m):
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#BDD8E9' }}>
+            Vị trí GPS:
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => setSimDistanceMeters('8')}
               className="btn-press"
               style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === '8' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
+                padding: '4px 8px',
+                borderRadius: '8px',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                border: simDistanceMeters === '8' ? '1px solid #34D399' : '1px solid var(--border-hairline)',
                 background: simDistanceMeters === '8' ? 'rgba(16, 185, 129, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === '8' ? '#10B981' : 'var(--text-muted)',
+                color: simDistanceMeters === '8' ? '#34D399' : '#93B8D8',
                 cursor: 'pointer'
               }}
             >
@@ -1350,13 +1348,13 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               onClick={() => setSimDistanceMeters('85')}
               className="btn-press"
               style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === '85' ? '1px solid #F43F5E' : '1px solid var(--border-hairline)',
+                padding: '4px 8px',
+                borderRadius: '8px',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                border: simDistanceMeters === '85' ? '1px solid #FB7185' : '1px solid var(--border-hairline)',
                 background: simDistanceMeters === '85' ? 'rgba(244, 63, 94, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === '85' ? '#F43F5E' : 'var(--text-muted)',
+                color: simDistanceMeters === '85' ? '#FB7185' : '#93B8D8',
                 cursor: 'pointer'
               }}
             >
@@ -1367,37 +1365,37 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               onClick={() => setSimDistanceMeters('FAKE_GPS')}
               className="btn-press"
               style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === 'FAKE_GPS' ? '1px solid #F59E0B' : '1px solid var(--border-hairline)',
+                padding: '4px 8px',
+                borderRadius: '8px',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                border: simDistanceMeters === 'FAKE_GPS' ? '1px solid #FBBF24' : '1px solid var(--border-hairline)',
                 background: simDistanceMeters === 'FAKE_GPS' ? 'rgba(245, 158, 11, 0.18)' : 'var(--bg-inset)',
-                color: simDistanceMeters === 'FAKE_GPS' ? '#F59E0B' : 'var(--text-muted)',
+                color: simDistanceMeters === 'FAKE_GPS' ? '#FBBF24' : '#93B8D8',
                 cursor: 'pointer'
               }}
             >
-              Fake GPS (0.0m)
+              Fake GPS
             </button>
             <button
               type="button"
               onClick={() => setSimDistanceMeters('REAL_GPS')}
               className="btn-press"
               style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
+                padding: '4px 8px',
+                borderRadius: '8px',
+                fontSize: '10.5px',
+                fontWeight: 700,
                 border: simDistanceMeters === 'REAL_GPS' ? '1px solid #38BDF8' : '1px solid var(--border-hairline)',
-                background: simDistanceMeters === 'REAL_GPS' ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === 'REAL_GPS' ? '#38BDF8' : 'var(--text-muted)',
+                background: simDistanceMeters === 'REAL_GPS' ? 'rgba(56, 189, 248, 0.18)' : 'var(--bg-inset)',
+                color: simDistanceMeters === 'REAL_GPS' ? '#7BBDE8' : '#93B8D8',
                 cursor: 'pointer'
               }}
             >
               GPS Thật
             </button>
             {simDistanceMeters !== 'REAL_GPS' && simDistanceMeters !== 'FAKE_GPS' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                 <input
                   type="number"
                   min={0}
@@ -1406,18 +1404,18 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
                   onChange={(e) => setSimDistanceMeters(e.target.value)}
                   style={{
                     width: '48px',
-                    padding: '2px 4px',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(56, 189, 248, 0.4)',
+                    padding: '3px 5px',
+                    borderRadius: '7px',
+                    border: '1px solid rgba(123, 189, 232, 0.35)',
                     background: 'var(--bg-inset)',
-                    color: '#38BDF8',
+                    color: '#7BBDE8',
                     fontFamily: 'JetBrains Mono',
-                    fontSize: '9.5px',
+                    fontSize: '10.5px',
                     textAlign: 'center'
                   }}
                   title="Nhập khoảng cách mét bất kỳ của sinh viên tới máy chiếu"
                 />
-                <span style={{ fontSize: '9.5px', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono' }}>m</span>
+                <span style={{ fontSize: '10px', color: '#7BBDE8', fontFamily: 'JetBrains Mono' }}>m</span>
               </div>
             )}
           </div>
@@ -1431,7 +1429,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               onChange={(e) => setServerUrlInput(e.target.value)}
               placeholder="https://uth-trustid-demo.loca.lt"
               className="pro-input"
-              style={{ flex: 1, fontSize: '11px', fontFamily: 'JetBrains Mono', padding: '6px 8px' }}
+              style={{ flex: 1, fontSize: '11.5px', fontFamily: 'JetBrains Mono', padding: '7px 10px' }}
             />
             <button
               type="button"
@@ -1441,13 +1439,13 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               }}
               className="btn-press"
               style={{
-                padding: '6px 10px',
-                borderRadius: '8px',
+                padding: '7px 12px',
+                borderRadius: '10px',
                 border: 'none',
-                background: '#06B6D4',
-                color: '#040814',
-                fontSize: '10.5px',
-                fontWeight: 800,
+                background: 'linear-gradient(135deg, #38BDF8, #0284C7)',
+                color: '#020A15',
+                fontSize: '11.5px',
+                fontWeight: 700,
                 cursor: 'pointer'
               }}
             >

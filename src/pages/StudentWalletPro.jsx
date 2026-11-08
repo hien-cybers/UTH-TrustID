@@ -329,53 +329,53 @@ export default function StudentWalletPro({
   return (
     <div className="page-enter" style={{ width: '100%' }}>
       
-      {/* HEADER */}
+      {/* HEADER TRANG VÍ SINH VIÊN */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div>
-          <div style={{ fontSize: '10px', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.4px' }}>
-            SINH VIÊN (HOLDER) • PASSWORDLESS
+          <div style={{ fontSize: '11px', color: '#7BBDE8', fontWeight: 600, letterSpacing: '0.01em' }}>
+            Định Danh Phi Tập Trung • Не-Custodial
           </div>
-          <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-main)' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 800, margin: '2px 0 0', color: '#F0F7FF', letterSpacing: '-0.02em' }}>
             Ví Danh Tính DID
           </h1>
         </div>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '5px',
-          padding: '4px 10px',
+          gap: '6px',
+          padding: '5px 11px',
           borderRadius: '999px',
-          fontSize: '10.5px',
+          fontSize: '11.5px',
           fontWeight: 700,
-          background: credential ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-          color: credential ? '#10B981' : '#EF4444',
-          border: credential ? '1px solid rgba(16,185,129,0.28)' : '1px solid rgba(239,68,68,0.28)'
+          background: credential ? 'rgba(16,185,129,0.14)' : 'rgba(244,63,94,0.14)',
+          color: credential ? '#34D399' : '#FB7185',
+          border: credential ? '1px solid rgba(52,211,153,0.34)' : '1px solid rgba(251,113,133,0.34)'
         }}>
-          <span className={credential ? 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-rose-500'} />
+          <span className={credential ? 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-rose-400'} />
           {credential ? 'Đã kích hoạt' : 'Chưa nạp thẻ'}
         </div>
       </div>
 
       {/* TRƯỜNG HỢP 1: LẦN ĐẦU MỞ MÁY CHƯA CÓ THẺ (FIRST-TIME ONBOARDING + WEBAUTHN + RECOVERY PIN) */}
       {!credential ? (
-        <div className="glass-card animate-fade-scale" style={{ padding: '20px 16px', textAlign: 'center' }}>
-          <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-            <UserCheck size={23} color="#38BDF8" />
+        <div className="glass-card animate-fade-scale" style={{ padding: '22px 18px', textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '16px', background: 'rgba(123,189,232,0.14)', border: '1px solid rgba(123,189,232,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <UserCheck size={24} color="#7BBDE8" />
           </div>
-          <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px', color: 'var(--text-main)' }}>
-            Kích Hoạt Danh Tính & Sinh Trắc Học
+          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 6px', color: '#F0F7FF' }}>
+            Kích Hoạt Danh Tính &amp; Sinh Trắc Học
           </h3>
-          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.45 }}>
+          <p style={{ fontSize: '12.5px', color: '#BDD8E9', margin: '0 0 14px', lineHeight: 1.5 }}>
             Nạp Thẻ Sinh Viên Số (VC) vào IndexedDB, đăng ký <b>WebAuthn FaceID/TouchID</b> và bọc khóa bằng <b>AES-GCM 256-bit</b>.
           </p>
 
           {/* CÀI ĐẶT SINH TRẮC HỌC FACE ID / VÂN TAY NATIVE PHẦN CỨNG */}
-          <div style={{ textAlign: 'left', marginBottom: '10px', background: 'var(--bg-inset)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(56,189,248,0.22)' }}>
+          <div style={{ textAlign: 'left', marginBottom: '12px', background: 'var(--bg-inset)', padding: '12px', borderRadius: '14px', border: '1px solid rgba(123,189,232,0.22)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Fingerprint size={15} color="#38BDF8" />
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  Bật Face ID / Vân Tay Native:
+              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <Fingerprint size={16} color="#38BDF8" />
+                <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#F0F7FF' }}>
+                  Bật Face ID / Vân Tay Phần Cứng
                 </span>
               </div>
               <button
@@ -383,20 +383,20 @@ export default function StudentWalletPro({
                 onClick={() => setBioEnabled(v => !v)}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                {bioEnabled ? <ToggleRight size={26} color="#10B981" /> : <ToggleLeft size={26} color="#64748B" />}
+                {bioEnabled ? <ToggleRight size={28} color="#10B981" /> : <ToggleLeft size={28} color="#64748B" />}
               </button>
             </div>
-            <div style={{ fontSize: '9.5px', color: bioEnabled ? '#10B981' : 'var(--text-muted)' }}>
+            <div style={{ fontSize: '11px', color: bioEnabled ? '#34D399' : '#BDD8E9', lineHeight: 1.4 }}>
               {bioEnabled
                 ? '✓ Đã kích hoạt: Gọi trực tiếp Apple Secure Enclave / Android Keystore khi điểm danh.'
                 : '○ Đang tắt: Sẽ chỉ sử dụng mã PIN 6 số khi mở khóa và điểm danh.'}
             </div>
           </div>
 
-          <div style={{ textAlign: 'left', marginBottom: '12px', background: 'var(--bg-inset)', padding: '10px', borderRadius: '10px', border: pinError ? '1px solid #EF4444' : '1px solid var(--border-hairline)' }}>
-            <div style={{ fontSize: '10.5px', fontWeight: 700, color: '#38BDF8', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <KeyRound size={12} />
-              <span>Mã PIN Dự Phòng 6 Số (Fallback PIN: 123456):</span>
+          <div style={{ textAlign: 'left', marginBottom: '14px', background: 'var(--bg-inset)', padding: '12px', borderRadius: '14px', border: pinError ? '1px solid #FB7185' : '1px solid var(--border-hairline)' }}>
+            <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#7BBDE8', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <KeyRound size={13} />
+              <span>Mã PIN Dự Phòng 6 Số (Mặc định: 123456)</span>
             </div>
             <input
               type="password"
@@ -411,14 +411,14 @@ export default function StudentWalletPro({
               className="pro-input"
               style={{
                 fontFamily: 'JetBrains Mono',
-                fontSize: '13px',
+                fontSize: '14px',
                 letterSpacing: '3px',
                 textAlign: 'center',
-                border: pinError ? '1px solid #EF4444' : undefined
+                border: pinError ? '1px solid #FB7185' : undefined
               }}
             />
             {pinError && (
-              <div style={{ color: '#EF4444', fontSize: '11px', fontWeight: 700, marginTop: '6px', textAlign: 'center' }}>
+              <div style={{ color: '#FB7185', fontSize: '11.5px', fontWeight: 700, marginTop: '6px', textAlign: 'center' }}>
                 {pinError}
               </div>
             )}
@@ -429,60 +429,66 @@ export default function StudentWalletPro({
             className="btn-press"
             style={{
               width: '100%',
-              padding: '12px',
-              borderRadius: '12px',
+              padding: '13px',
+              borderRadius: '14px',
               border: 'none',
-              background: 'linear-gradient(135deg, #0284C7, #0369A1)',
-              color: '#FFF',
-              fontWeight: 700,
-              fontSize: '12.5px',
+              background: 'linear-gradient(135deg, #38BDF8, #0284C7)',
+              color: '#020A15',
+              fontWeight: 800,
+              fontSize: '13px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)'
+              boxShadow: '0 8px 20px rgba(2, 132, 199, 0.35)'
             }}
           >
-            <DownloadCloud size={16} /> Kích Hoạt Thẻ Bằng Face ID (2251120000)
+            <DownloadCloud size={17} /> Kích Hoạt Thẻ Bằng Face ID (2251120000)
           </button>
         </div>
       ) : (
-        /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> HIỂN THỊ THẺ SINH VIÊN & LỚP HỌC PHẦN ĐANG ĐIỂM DANH */
-        <div className="flex flex-col gap-3">
+        /* TRƯỜNG HỢP 2: ĐÃ CÓ THẺ SỐ -> HIỂN THỊ THẺ SINH VIÊN & LỊCH SỬ CHUYÊN CẦN */
+        <div className="flex flex-col gap-3.5">
           {pinSavedNotice && (
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/35 text-emerald-400 text-[11px] font-bold">
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
               {pinSavedNotice}
             </div>
           )}
 
           {/* THANH CHUYỂN ĐỔI 2 MỤC CHÍNH TRÊN APP SINH VIÊN: THẺ SỐ DID vs LỊCH SỬ CHUYÊN CẦN */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#040814] border border-slate-800">
+          <div
+            className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl"
+            style={{
+              background: '#030D1B',
+              border: '1px solid rgba(123, 189, 232, 0.22)'
+            }}
+          >
             <button
               type="button"
               onClick={() => setWalletSubTab('CARD')}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
+              className={`py-2.5 px-3 rounded-xl text-[12.5px] font-bold transition-all cursor-pointer border-none ${
                 walletSubTab === 'CARD'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
+                  ? 'bg-gradient-to-r from-[#0A4174] to-[#0284C7] text-white shadow-md'
+                  : 'bg-transparent text-[#BDD8E9] hover:text-white'
               }`}
             >
-              Thẻ Số DID &amp; Bảo Mật
+              Thẻ Số &amp; Bảo Mật
             </button>
             <button
               type="button"
               onClick={() => setWalletSubTab('HISTORY')}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
+              className={`py-2.5 px-3 rounded-xl text-[12.5px] font-bold transition-all cursor-pointer border-none ${
                 walletSubTab === 'HISTORY'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
+                  ? 'bg-gradient-to-r from-[#0A4174] to-[#0284C7] text-white shadow-md'
+                  : 'bg-transparent text-[#BDD8E9] hover:text-white'
               }`}
             >
               Lịch Sử Chuyên Cần
             </button>
           </div>
 
-          {/* COMPONENT THẺ SINH VIÊN ĐỒNG BỘ DARK NEON & CHẠY TỨC THÌ (< 50MS) */}
+          {/* COMPONENT THẺ SINH VIÊN ĐỒNG BỘ OCEAN-ICE */}
           {walletSubTab === 'CARD' && (
             <StudentCardClean
               student={{
@@ -494,7 +500,7 @@ export default function StudentWalletPro({
                 faculty: 'Công nghệ Thông tin',
                 avatar: credential.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
                 address: zkpMode ? '0x0000...ZKP' : credential.address,
-                validUntil: '2027',
+                validUntil: '2026 - 2030',
                 status: zkpMode ? 'ZKP-LITE' : 'ACTIVE'
               }}
               onScanClick={() => navigate('/scan')}
@@ -503,36 +509,6 @@ export default function StudentWalletPro({
               spotCheckState={spotCheckState}
               onTriggerSpotCheckFaceID={onTriggerSpotCheckFaceID}
             />
-          )}
-
-          {/* LỚP HỌC PHẦN & BUỔI HỌC ĐANG MỞ ĐIỂM DANH (ĐỒNG BỘ TRỰC TIẾP TỪ GIẢNG VIÊN) */}
-          {activeCourseSession?.isOpen && (
-            <div className="card-interactive rounded-2xl p-4 border shadow-lg bg-gradient-to-br from-[#0D2B52]/90 via-[#081226] to-[#041529] border-cyan-400/45 text-slate-100">
-              <div className="flex justify-between items-center gap-2 mb-1.5">
-                <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10.5px] font-mono font-extrabold">
-                  {activeCourseSession.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {activeCourseSession.sessionNumber || 1}
-                </span>
-                <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  Đang mở QR
-                </span>
-              </div>
-              <div className="text-xs font-extrabold text-white mb-2">
-                {activeCourseSession.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
-              </div>
-              <div className="flex justify-between items-center gap-2 pt-2 border-t border-slate-800/80 text-[10.5px] text-slate-300">
-                <span>
-                  Phòng <b className="text-white">{activeCourseSession.room || 'A2-301'}</b> • <b className="text-cyan-300">R ≤ {activeCourseSession.radius || 35}m</b> • {activeCourseSession.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => navigate('/scan')}
-                  className="btn-press px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-[10.5px] font-extrabold border-none cursor-pointer"
-                >
-                  Quét QR Ngay
-                </button>
-              </div>
-            </div>
           )}
 
           {/* 4. CƠ CHẾ CHO PHÉP SINH VIÊN "XEM LỊCH SỬ ĐIỂM DANH CÁ NHÂN" & BIÊN LAI CHỮ KÝ EIP-191 TRÊN APP */}
@@ -635,36 +611,36 @@ export default function StudentWalletPro({
             const myMssv = previewStudentMssv || holderMssv;
 
             return walletSubTab === 'HISTORY' ? (
-              <div className="stagger-2 rounded-2xl p-4 border shadow-sm bg-[#081226] border-slate-800 text-slate-100 space-y-3">
+              <div className="glass-card stagger-2 space-y-3.5">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-xs font-extrabold text-white m-0">
-                      Lịch Sử Chuyên Cần Cá Nhân &amp; Biên Lai EIP-191
+                    <h3 className="text-[14px] font-bold text-[#F0F7FF] m-0">
+                      Sổ Điểm Chuyên Cần &amp; Biên Lai EIP-191
                     </h3>
-                    <p className="text-[10px] text-slate-400 m-0 mt-0.5">
-                      Tự đối soát từng buổi học kèm chữ ký số EIP-191 và mã băm chốt sổ của Giảng viên
+                    <p className="text-[11.5px] text-[#BDD8E9] m-0 mt-0.5">
+                      Đối soát từng buổi học kèm chữ ký số EIP-191 và mã băm chốt sổ
                     </p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold">
-                    {displayCourses.length} môn học
+                  <span className="px-2.5 py-1 rounded-lg bg-[#0A4174]/50 border border-[#7BBDE8]/30 text-[#7BBDE8] font-mono text-[11px] font-bold flex-shrink-0">
+                    {displayCourses.length} học phần
                   </span>
                 </div>
 
                 {/* Bộ chọn nhanh MSSV để đối soát thử trường hợp Đủ điều kiện vs Vắng / Cảnh báo cấm thi */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {[
-                    { id: holderMssv, label: `${holderMssv} (Thẻ của tôi • 100%)` },
-                    { id: '2251120002', label: '2251120002 (Trần Thị Mai • 66.7%)' },
-                    { id: '2251120003', label: '2251120003 (Lê Hoàng Quân • 33.3%)' }
+                    { id: holderMssv, label: `${holderMssv} (Tôi • 100%)` },
+                    { id: '2251120002', label: '2251120002 (Mai • 66.7%)' },
+                    { id: '2251120003', label: '2251120003 (Quân • 33.3%)' }
                   ].map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => setPreviewStudentMssv(item.id === holderMssv ? '' : item.id)}
-                      className={`px-2 py-1 rounded-lg text-[9.5px] font-mono font-semibold cursor-pointer border transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-semibold cursor-pointer border transition-all ${
                         myMssv === item.id
-                          ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
-                          : 'bg-[#040814] border-slate-800 text-slate-400 hover:text-white'
+                          ? 'bg-[#0A4174]/80 border-[#38BDF8] text-white font-bold'
+                          : 'bg-[#030D1B] border-[#7BBDE8]/20 text-[#BDD8E9] hover:text-white'
                       }`}
                     >
                       {item.label}
@@ -691,59 +667,59 @@ export default function StudentWalletPro({
                     return (
                       <div
                         key={cid}
-                        className={`rounded-xl border transition-all overflow-hidden ${
+                        className={`rounded-2xl border transition-all overflow-hidden ${
                           isWarning
-                            ? 'bg-rose-950/25 border-rose-500/45'
+                            ? 'bg-rose-950/30 border-rose-500/45'
                             : isExpanded
-                            ? 'bg-[#040814] border-cyan-500/45'
-                            : 'bg-[#040814]/80 border-slate-800'
+                            ? 'bg-[#030D1B] border-[#38BDF8]/45'
+                            : 'bg-[#030D1B]/80 border-[#7BBDE8]/20'
                         }`}
                       >
                         <button
                           type="button"
                           onClick={() => setExpandedCourseId(isExpanded ? null : cid)}
-                          className="w-full p-3 text-left bg-transparent border-none cursor-pointer flex items-center justify-between gap-2"
+                          className="w-full p-3.5 text-left bg-transparent border-none cursor-pointer flex items-center justify-between gap-2"
                         >
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/35 font-mono text-[10px] font-bold text-cyan-300">
+                              <span className="px-2 py-0.5 rounded-md bg-[#0A4174]/60 border border-[#7BBDE8]/35 font-mono text-[10.5px] font-bold text-[#7BBDE8]">
                                 {course.courseCode}
                               </span>
-                              <span className="text-[10px] text-slate-400">
+                              <span className="text-[11px] text-[#BDD8E9]">
                                 Phòng {course.defaultRoom}
                               </span>
                               {isWarning ? (
-                                <span className="px-1.5 py-0.5 rounded bg-rose-500/25 border border-rose-500/40 text-rose-200 font-bold text-[9.5px]">
+                                <span className="px-2 py-0.5 rounded-md bg-rose-500/20 border border-rose-400/40 text-rose-200 font-bold text-[10px]">
                                   Cảnh báo cấm thi (&lt; 80%)
                                 </span>
                               ) : (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold text-[9.5px]">
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 font-semibold text-[10px]">
                                   Đủ điều kiện thi
                                 </span>
                               )}
                               {isCourseLive && (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[9.5px] font-bold">
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">
                                   Buổi {activeCourseSession.sessionNumber} đang mở
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs font-bold text-white truncate mt-1">
+                            <div className="text-[13px] font-bold text-[#F0F7FF] truncate mt-1">
                               {course.courseName}
                             </div>
                           </div>
 
                           <div className="text-right flex-shrink-0">
-                            <div className={`font-mono text-xs font-extrabold ${isWarning ? 'text-rose-400' : 'text-emerald-400'}`}>
+                            <div className={`font-mono text-[13px] font-extrabold ${isWarning ? 'text-rose-400' : 'text-emerald-400'}`}>
                               {myAttendedCount}/{totalSess} ({ratioNum}%)
                             </div>
-                            <div className="text-[9.5px] text-slate-400">
+                            <div className="text-[10.5px] text-[#7BBDE8] mt-0.5">
                               {isExpanded ? 'Thu gọn ▲' : 'Chi tiết ▼'}
                             </div>
                           </div>
                         </button>
 
                         {isExpanded && (
-                          <div className="px-3 pb-3 pt-1.5 border-t border-slate-800/80 space-y-2">
+                          <div className="px-3.5 pb-3.5 pt-2 border-t border-[#7BBDE8]/15 space-y-2">
                             {sesList.map((ses) => {
                               const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
                               const sDate = ses.date || ses.sessionDate || '';
@@ -766,51 +742,51 @@ export default function StudentWalletPro({
                               return (
                                 <div
                                   key={ses.sessionId}
-                                  className={`p-2.5 rounded-xl border space-y-1.5 text-[10.5px] ${
+                                  className={`p-3 rounded-xl border space-y-1.5 text-[11.5px] ${
                                     !myRec
-                                      ? 'bg-rose-950/20 border-rose-500/30'
+                                      ? 'bg-rose-950/25 border-rose-500/35'
                                       : isException
-                                      ? 'bg-amber-950/20 border-amber-500/35'
-                                      : 'bg-[#081226] border-slate-800/90'
+                                      ? 'bg-amber-950/25 border-amber-500/35'
+                                      : 'bg-[#071C36]/90 border-[#7BBDE8]/20'
                                   }`}
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <div>
-                                      <span className="font-mono font-bold text-cyan-300">
+                                      <span className="font-mono font-bold text-[#7BBDE8]">
                                         Buổi {sIdx} ({sDate})
                                       </span>
                                       {myRec ? (
-                                        <span className="block text-[9.5px] text-slate-300 font-mono mt-0.5">
+                                        <span className="block text-[10.5px] text-[#BDD8E9] font-mono mt-0.5">
                                           Lúc {myRec.checkInTime} • Khoảng cách GPS: {myRec.distance}m
                                         </span>
                                       ) : (
-                                        <span className="block text-[9.5px] text-rose-300/90 mt-0.5">
-                                          Không có gói tin điểm danh trong phiên đã khóa sổ
+                                        <span className="block text-[10.5px] text-rose-300 mt-0.5">
+                                          Vắng mặt (Không có biên lai trong phiên đã chốt sổ)
                                         </span>
                                       )}
                                     </div>
                                     {myRec ? (
                                       isException ? (
-                                        <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-[10px]">
+                                        <span className="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/40 text-amber-300 font-mono font-bold text-[10.5px]">
                                           Ngoại lệ ({myRec.distance}m)
                                         </span>
                                       ) : (
-                                        <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-[10px]">
+                                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 font-mono font-bold text-[10.5px]">
                                           ✓ Có mặt ({myRec.distance}m)
                                         </span>
                                       )
                                     ) : (
-                                      <span className="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/35 text-rose-300 font-bold text-[10px]">
+                                      <span className="px-2 py-0.5 rounded-md bg-rose-500/20 border border-rose-400/35 text-rose-300 font-bold text-[10.5px]">
                                         ✕ Vắng mặt
                                       </span>
                                     )}
                                   </div>
 
                                   {myRec && (
-                                    <div className="pt-1.5 border-t border-slate-800/80 space-y-1">
-                                      <div className="flex items-center justify-between gap-2 font-mono text-[9.5px]">
-                                        <span className="text-slate-400 truncate">
-                                          Biên lai chữ ký EIP-191: <code className="text-cyan-300">{receiptSig.slice(0, 16)}...{receiptSig.slice(-6)}</code>
+                                    <div className="pt-2 border-t border-[#7BBDE8]/15 space-y-1.5">
+                                      <div className="flex items-center justify-between gap-2 font-mono text-[10.5px]">
+                                        <span className="text-[#BDD8E9] truncate">
+                                          Biên lai EIP-191: <code className="text-[#7BBDE8]">{receiptSig.slice(0, 14)}...{receiptSig.slice(-6)}</code>
                                         </span>
                                         <button
                                           type="button"
@@ -819,23 +795,23 @@ export default function StudentWalletPro({
                                               isReceiptOpen ? null : `${ses.sessionId}_${myMssv}`
                                             )
                                           }
-                                          className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-sans font-bold text-[9.5px] cursor-pointer flex-shrink-0"
+                                          className="px-2.5 py-1 rounded-md bg-[#0A4174]/60 border border-[#7BBDE8]/35 text-[#7BBDE8] font-sans font-bold text-[10.5px] cursor-pointer flex-shrink-0"
                                         >
-                                          {isReceiptOpen ? 'Ẩn biên lai' : 'Đối soát EIP-191'}
+                                          {isReceiptOpen ? 'Ẩn biên lai' : 'Đối soát chữ ký'}
                                         </button>
                                       </div>
 
                                       {isReceiptOpen && (
-                                        <div className="p-2 rounded-lg bg-[#040814] border border-emerald-500/35 font-mono text-[9.5px] space-y-1 text-slate-300">
-                                          <div className="text-emerald-400 font-sans font-bold">
+                                        <div className="p-2.5 rounded-xl bg-[#030D1B] border border-emerald-400/35 font-mono text-[10px] space-y-1 text-[#BDD8E9]">
+                                          <div className="text-emerald-400 font-sans font-bold text-[11px]">
                                             ✓ Biên lai chữ ký số EIP-191 hợp lệ &amp; khớp mã băm chốt sổ
                                           </div>
                                           <div className="break-all">
-                                            <span className="text-slate-400">Chữ ký SV (EIP-191): </span>
-                                            <span className="text-cyan-300">{receiptSig}</span>
+                                            <span className="text-[#7BBDE8]">Chữ ký SV (EIP-191): </span>
+                                            <span className="text-[#F0F7FF]">{receiptSig}</span>
                                           </div>
                                           <div className="break-all">
-                                            <span className="text-slate-400">Session Hash (GV khóa sổ): </span>
+                                            <span className="text-[#7BBDE8]">Session Hash (GV khóa sổ): </span>
                                             <span className="text-emerald-300">{sessionRootHash}</span>
                                           </div>
                                         </div>
@@ -850,7 +826,7 @@ export default function StudentWalletPro({
                               <button
                                 type="button"
                                 onClick={() => navigate('/scan')}
-                                className="btn-press w-full py-2 px-3 rounded-lg bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-bold text-[10.5px] cursor-pointer flex items-center justify-between"
+                                className="btn-press w-full py-2.5 px-3 rounded-xl bg-[#0A4174]/60 border border-[#38BDF8]/45 text-[#7BBDE8] font-bold text-[11.5px] cursor-pointer flex items-center justify-between"
                               >
                                 <span>+ Buổi {activeCourseSession.sessionNumber} đang mở điểm danh</span>
                                 <span className="underline">Quét QR ngay →</span>
@@ -866,131 +842,150 @@ export default function StudentWalletPro({
             ) : (
               <div
                 onClick={() => setWalletSubTab('HISTORY')}
-                className="stagger-2 card-interactive rounded-2xl p-3.5 border shadow-sm bg-[#081226] border-slate-800 hover:border-cyan-500/40 text-slate-100 flex items-center justify-between gap-2 cursor-pointer"
+                className="glass-card stagger-2 flex items-center justify-between gap-3 cursor-pointer hover:border-[#38BDF8]/50"
               >
-                <div>
-                  <div className="text-xs font-bold text-white">
-                    Sổ Điểm &amp; Lịch Sử Chuyên Cần Cá Nhân ({displayCourses.length} môn học)
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-[#F0F7FF]">
+                    Sổ Điểm &amp; Lịch Sử Chuyên Cần ({displayCourses.length} học phần)
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">
-                    Đối soát buổi có mặt/vắng &amp; biên lai chữ ký số EIP-191 từng buổi
+                  <div className="text-[11.5px] text-[#BDD8E9] mt-0.5">
+                    Đối soát buổi có mặt/vắng &amp; biên lai chữ ký số EIP-191
                   </div>
                 </div>
-                <span className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-[10.5px] font-bold flex-shrink-0">
-                  Xem Lịch Sử →
+                <span className="px-3 py-1.5 rounded-xl bg-[#0A4174]/60 border border-[#7BBDE8]/35 text-[#7BBDE8] text-[11.5px] font-bold flex-shrink-0">
+                  Xem sổ →
                 </span>
               </div>
             );
           })()}
 
-          {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}
+          {/* TRUNG TÂM BẢO MẬT & QUYỀN RIÊNG TƯ (GỘP GỌN ZKP-LITE + SINH TRẮC HỌC FACE ID + MÃ PIN) */}
           {walletSubTab === 'CARD' && (
-          <>
-          <div className="stagger-2 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-[#081226] border-slate-800 text-slate-100">
-            <div className="flex justify-between items-center gap-2">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${zkpMode ? 'bg-emerald-500/15 text-emerald-500' : 'bg-cyan-500/10 text-cyan-500'}`}>
-                  {zkpMode ? <EyeOff size={15} /> : <Eye size={15} />}
+            <div className="glass-card stagger-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield size={16} className="text-[#38BDF8]" />
+                  <h3 className="text-[13.5px] font-bold m-0 text-[#F0F7FF]">
+                    Trung Tâm Bảo Mật &amp; Quyền Riêng Tư
+                  </h3>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-slate-100">
-                    Tiết Lộ Có Chọn Lọc (ZKP-lite)
+                <span className="text-[10.5px] font-mono font-semibold text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
+                  {bioHardwareInfo?.label || 'Face ID'} Native
+                </span>
+              </div>
+
+              {/* 1. Chế độ Ẩn danh ZKP-lite */}
+              <div
+                className="p-3 rounded-xl flex items-center justify-between gap-2.5"
+                style={{
+                  background: '#030D1B',
+                  border: '1px solid rgba(123, 189, 232, 0.2)'
+                }}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      zkpMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#0A4174]/55 text-[#7BBDE8]'
+                    }`}
+                  >
+                    {zkpMode ? <EyeOff size={16} /> : <Eye size={16} />}
                   </div>
-                  <div className="text-[10px] text-slate-400">
-                    Ẩn Họ tên, Ngày sinh, Địa chỉ ví khi qua cổng / thư viện
+                  <div className="min-w-0">
+                    <div className="text-[12.5px] font-bold text-[#F0F7FF]">
+                      Tiết lộ có chọn lọc (ZKP-lite)
+                    </div>
+                    <div className="text-[11px] text-[#BDD8E9] truncate">
+                      Ẩn Họ tên &amp; MSSV khi qua cổng / thư viện
+                    </div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleToggleZkp}
+                  className={`btn-press px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer flex-shrink-0 transition-all border ${
+                    zkpMode
+                      ? 'bg-emerald-400 text-slate-950 border-emerald-300'
+                      : 'bg-[#0A4174]/60 text-[#7BBDE8] border-[#7BBDE8]/35'
+                  }`}
+                >
+                  {zkpMode ? 'Đang bật ZKP' : 'Bật ẩn danh'}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleToggleZkp}
-                className={`btn-press px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold cursor-pointer flex-shrink-0 transition-all border ${
-                  zkpMode
-                    ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                    : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-                }`}
-              >
-                {zkpMode ? 'ĐANG BẬT ZKP' : 'Bật Ẩn Danh'}
-              </button>
-            </div>
 
-            {zkpMode && (
-              <div className="animate-fade-scale mt-2 p-2 rounded-lg bg-emerald-950/40 border border-emerald-800 text-[10.5px] text-emerald-400 font-bold">
-                {zkpVerifiedBadge || 'Hợp lệ: Sinh viên UTH (Active)'}
-              </div>
-            )}
-          </div>
-
-          {/* CÀI ĐẶT BẢO MẬT & SINH TRẮC HỌC PHẦN CỨNG (FACE ID / MÃ PIN) */}
-          <div className="stagger-3 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-[#081226] border-slate-800 text-slate-100">
-            <div className="flex justify-between items-center mb-2.5">
-              <div className="flex items-center gap-1.5">
-                <Fingerprint size={16} className="text-cyan-500" />
-                <h3 className="text-xs font-bold m-0 text-slate-100">
-                  Cài Đặt Sinh Trắc Học & Mã PIN
-                </h3>
-              </div>
-              <span className="text-[9.5px] font-mono font-semibold text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-800">
-                {bioHardwareInfo?.label || 'Face ID'} Native
-              </span>
-            </div>
-
-            {/* Switch Bật/Tắt Face ID */}
-            <div className="flex justify-between items-center bg-[#040814] p-2.5 rounded-xl mb-2 border border-slate-800">
-              <div>
-                <div className="text-[11px] font-bold text-slate-200">
-                  Bật Face ID / Vân Tay Phần Cứng
+              {zkpMode && (
+                <div className="animate-fade-scale p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-[11.5px] text-emerald-300 font-semibold">
+                  ✓ {zkpVerifiedBadge || 'Hợp lệ: Sinh viên UTH (Active)'}
                 </div>
-                <div className="text-[9.5px] text-slate-400">
-                  Apple Secure Enclave / Android Keystore
+              )}
+
+              {/* 2. Switch Sinh trắc học phần cứng Face ID / Vân tay */}
+              <div
+                className="p-3 rounded-xl flex items-center justify-between gap-2.5"
+                style={{
+                  background: '#030D1B',
+                  border: '1px solid rgba(123, 189, 232, 0.2)'
+                }}
+              >
+                <div>
+                  <div className="text-[12.5px] font-bold text-[#F0F7FF]">
+                    Xác thực Face ID / Vân tay phần cứng
+                  </div>
+                  <div className="text-[11px] text-[#BDD8E9]">
+                    Bảo vệ khóa ký trong Apple Secure Enclave / Keystore
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setBioEnabled(v => !v)}
+                  className="bg-transparent border-none cursor-pointer p-0 flex-shrink-0"
+                >
+                  {bioEnabled ? <ToggleRight size={28} color="#10B981" /> : <ToggleLeft size={28} color="#64748B" />}
+                </button>
+              </div>
+
+              {/* 3. Thử nghiệm Face ID & Mã PIN dự phòng */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={handleTriggerFaceIdTest}
+                  className="btn-press col-span-2 py-2.5 px-3 rounded-xl bg-[#0A4174]/55 border border-[#7BBDE8]/35 text-[#7BBDE8] hover:text-white text-[12px] font-bold flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Fingerprint size={15} />
+                  <span>Kiểm Tra Cảm Biến Face ID</span>
+                </button>
+
+                <div
+                  className="rounded-xl py-2 px-2.5 text-center flex flex-col justify-center"
+                  style={{
+                    background: '#030D1B',
+                    border: '1px solid rgba(123, 189, 232, 0.2)'
+                  }}
+                >
+                  <span className="text-[10px] text-[#BDD8E9]">PIN dự phòng</span>
+                  <span className="text-[12px] font-bold font-mono text-[#38BDF8]">123456</span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setBioEnabled(v => !v)}
-                className="bg-transparent border-none cursor-pointer p-0"
-              >
-                {bioEnabled ? <ToggleRight size={26} color="#10B981" /> : <ToggleLeft size={26} color="#64748B" />}
-              </button>
-            </div>
 
-            {/* Nút Thử Nghiệm Face ID Ngay & Thông Tin PIN */}
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              <button
-                type="button"
-                onClick={handleTriggerFaceIdTest}
-                className="col-span-2 py-2 px-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-              >
-                <Fingerprint size={13} />
-                <span>Thử Quét Face ID</span>
-              </button>
+              {bioTestSuccessMsg && (
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[11.5px] font-semibold">
+                  {bioTestSuccessMsg}
+                </div>
+              )}
 
-              <div className="bg-[#040814] border border-slate-800 rounded-xl py-1.5 px-2 text-center flex flex-col justify-center">
-                <span className="text-[9px] text-slate-400">PIN Dự Phòng</span>
-                <span className="text-[11px] font-bold font-mono text-cyan-400">123456</span>
+              {/* 4. Merkle Root & Nút đặt lại thẻ */}
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <span className="text-[10.5px] font-mono text-[#7BBDE8] truncate">
+                  Merkle Root: {credential.merkleRoot.slice(0, 18)}...
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRevokeLocal}
+                  className="btn-press py-1.5 px-2.5 bg-rose-500/10 border border-rose-400/30 rounded-lg text-rose-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer flex-shrink-0"
+                >
+                  <Trash2 size={12} /> Gỡ thẻ số
+                </button>
               </div>
             </div>
-
-            {bioTestSuccessMsg && (
-              <div className="mb-2 p-2 rounded-lg bg-emerald-950/40 border border-emerald-800 text-emerald-400 text-[10px] font-semibold">
-                {bioTestSuccessMsg}
-              </div>
-            )}
-
-            <div className="bg-[#040814] py-1.5 px-2.5 rounded-lg border border-slate-800 text-[9.5px] text-cyan-400 font-mono break-all">
-              Merkle Root: {credential.merkleRoot.slice(0, 26)}...
-            </div>
-          </div>
-
-          {/* NÚT GỠ THẺ SỐ KHỎI MÁY */}
-          <button
-            type="button"
-            onClick={handleRevokeLocal}
-            className="w-full py-2.5 bg-transparent border border-rose-500/25 rounded-xl text-rose-500 text-[11.5px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-          >
-            <Trash2 size={13} /> Gỡ thẻ số khỏi máy này
-          </button>
-          </>
           )}
         </div>
       )}
