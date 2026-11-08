@@ -253,26 +253,49 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
     };
   }, [startCamera, stopCamera]);
 
+  const cornerStyle = {
+    position: 'absolute',
+    width: '34px',
+    height: '34px',
+    filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.7))'
+  };
+
   return (
-    <div className="glass-card" style={{
-      position: 'relative',
-      width: '100%',
-      margin: '0 auto',
-      background: 'var(--bg-card)',
-      borderRadius: '18px',
-      border: '1px solid var(--border-hairline)',
-      padding: '14px',
-      boxSizing: 'border-box',
-      boxShadow: 'var(--shadow-card)'
-    }}>
+    <div
+      className="glass-card"
+      style={{
+        position: 'relative',
+        width: '100%',
+        margin: '0 auto',
+        background: 'linear-gradient(165deg, rgba(11, 40, 76, 0.88) 0%, rgba(5, 20, 42, 0.96) 100%)',
+        borderRadius: '28px',
+        border: '1px solid rgba(123, 189, 232, 0.32)',
+        padding: '16px',
+        boxSizing: 'border-box',
+        boxShadow: '0 18px 42px rgba(1, 8, 22, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.16)'
+      }}
+    >
       {/* Canvas ẩn phục vụ giải mã khung hình jsQR */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Header Modal */}
+      {/* Header Modal Bo Tròn Mềm Mại */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-          <Camera size={16} color="var(--accent-cyan)" />
-          <span>Quét mã QR xác thực</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)' }}>
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: '12px',
+              background: 'rgba(56, 189, 248, 0.16)',
+              border: '1px solid rgba(123, 189, 232, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Camera size={15} color="#38BDF8" />
+          </div>
+          <span>Khung Ngắm Quét Mã QR</span>
         </div>
         {onClose && (
           <button
@@ -280,25 +303,39 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
               stopCamera();
               if (onCloseRef.current) onCloseRef.current();
             }}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+            style={{
+              background: 'rgba(123, 189, 232, 0.12)',
+              border: '1px solid rgba(123, 189, 232, 0.25)',
+              borderRadius: '999px',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              width: 30,
+              height: 30,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         )}
       </div>
 
-      {/* Khung chứa Camera */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        aspectRatio: '1 / 1',
-        borderRadius: '14px',
-        overflow: 'hidden',
-        background: '#020617',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+      {/* Khung chứa Camera Bo Tròn 24px */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '1 / 1',
+          borderRadius: '24px',
+          overflow: 'hidden',
+          background: '#020814',
+          border: '1px solid rgba(123, 189, 232, 0.22)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         {/* Thẻ Video tối ưu cho Safari iOS: BẮT BUỘC có autoPlay, playsInline, muted */}
         <video
           ref={videoRef}
@@ -313,45 +350,92 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
           }}
         />
 
-        {/* Khung ngắm định vị qrbox 220x220 căn tâm tuyệt đối và vạch quét laser */}
+        {/* Khung ngắm định vị Squircle 216x216 với 4 Góc Bo Tròn Mềm Mại (Không góc nhọn) */}
         {!errorMsg && (
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none'
-          }}>
-            <div style={{
-              position: 'relative',
-              width: '216px',
-              height: '216px',
-              border: '2px dashed rgba(56, 189, 248, 0.75)',
-              borderRadius: '18px',
-              boxShadow: '0 0 0 9999px rgba(2, 6, 23, 0.35)'
-            }}>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pointerEvents: 'none'
+            }}
+          >
+            <div
+              style={{
+                position: 'relative',
+                width: '216px',
+                height: '216px',
+                border: '1.5px solid rgba(123, 189, 232, 0.35)',
+                borderRadius: '30px',
+                boxShadow: '0 0 0 9999px rgba(2, 8, 22, 0.42), inset 0 0 24px rgba(56, 189, 248, 0.12)'
+              }}
+            >
+              {/* 4 Góc Bo Cong Mềm Mại (24px Squircle Brackets) */}
+              <div
+                style={{
+                  ...cornerStyle,
+                  top: -2,
+                  left: -2,
+                  borderTop: '4px solid #38BDF8',
+                  borderLeft: '4px solid #38BDF8',
+                  borderTopLeftRadius: '24px'
+                }}
+              />
+              <div
+                style={{
+                  ...cornerStyle,
+                  top: -2,
+                  right: -2,
+                  borderTop: '4px solid #38BDF8',
+                  borderRight: '4px solid #38BDF8',
+                  borderTopRightRadius: '24px'
+                }}
+              />
+              <div
+                style={{
+                  ...cornerStyle,
+                  bottom: -2,
+                  left: -2,
+                  borderBottom: '4px solid #38BDF8',
+                  borderLeft: '4px solid #38BDF8',
+                  borderBottomLeftRadius: '24px'
+                }}
+              />
+              <div
+                style={{
+                  ...cornerStyle,
+                  bottom: -2,
+                  right: -2,
+                  borderBottom: '4px solid #38BDF8',
+                  borderRight: '4px solid #38BDF8',
+                  borderBottomRightRadius: '24px'
+                }}
+              />
+
               <div
                 className="laser-bar"
                 style={{
                   position: 'absolute',
-                  left: '6%',
-                  width: '88%',
-                  height: '2px',
+                  left: '8%',
+                  width: '84%',
+                  height: '2.5px',
+                  borderRadius: '999px',
                   background: 'linear-gradient(90deg, transparent, #38BDF8, #67E8F9, transparent)',
-                  boxShadow: '0 0 12px #38BDF8'
+                  boxShadow: '0 0 14px #38BDF8'
                 }}
               />
             </div>
           </div>
         )}
 
-        {/* Thông báo lỗi nếu bị Safari từ chối quyền + Nút Thử Bật Lại Camera */}
+        {/* Thông báo lỗi nếu bị Safari từ chối quyền + Nút Thử Bật Lại Camera Bo Tròn */}
         {errorMsg && (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#EF4444', fontSize: '12px', lineHeight: 1.5 }}>
+          <div style={{ padding: '22px', textAlign: 'center', color: '#FB7185', fontSize: '12.5px', lineHeight: 1.5 }}>
             <AlertCircle size={32} style={{ margin: '0 auto 10px', display: 'block' }} />
-            <div style={{ marginBottom: '10px', fontWeight: 600 }}>{errorMsg}</div>
-            <div style={{ fontSize: '10.5px', color: '#94A3B8', marginBottom: '12px', lineHeight: 1.45 }}>
+            <div style={{ marginBottom: '10px', fontWeight: 700 }}>{errorMsg}</div>
+            <div style={{ fontSize: '11px', color: '#BDD8E9', marginBottom: '14px', lineHeight: 1.45 }}>
               Mẹo iPhone: Bấm biểu tượng <b>aA</b> trên thanh địa chỉ Safari &rarr; <b>Cài đặt trang web</b> &rarr; <b>Camera: Cho phép</b>.
             </div>
             <button
@@ -359,13 +443,14 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
                 stopCamera();
                 startCamera();
               }}
+              className="btn-press"
               style={{
-                padding: '8px 14px',
-                borderRadius: '10px',
-                border: '1px solid rgba(56, 189, 248, 0.4)',
-                background: 'rgba(56, 189, 248, 0.15)',
+                padding: '9px 18px',
+                borderRadius: '999px',
+                border: '1px solid rgba(56, 189, 248, 0.45)',
+                background: 'rgba(56, 189, 248, 0.18)',
                 color: '#38BDF8',
-                fontSize: '11.5px',
+                fontSize: '12px',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -381,8 +466,8 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
       </div>
 
       {!errorMsg && (
-        <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '11.5px', color: '#94A3B8' }}>
-          Căn chỉnh mã QR Challenge vào giữa khung ngắm
+        <div style={{ marginTop: '11px', textAlign: 'center', fontSize: '12px', color: '#BDD8E9', fontWeight: 500 }}>
+          Đưa mã QR vào giữa khung bo tròn để tự động nhận diện
         </div>
       )}
     </div>

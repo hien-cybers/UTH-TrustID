@@ -18,19 +18,19 @@ const LiveClock = memo(function LiveClock({ showIcon = true, style = {} }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '4px',
+        gap: '5px',
         fontSize: '10.5px',
         fontFamily: 'JetBrains Mono, monospace',
-        color: 'var(--text-muted)',
-        background: 'var(--bg-inset)',
-        padding: '3px 7px',
-        borderRadius: '10px',
-        border: '1px solid var(--border-hairline)',
+        color: '#E0F2FE',
+        background: 'rgba(3, 13, 27, 0.85)',
+        padding: '4px 10px',
+        borderRadius: '999px',
+        border: '1px solid rgba(123, 189, 232, 0.28)',
         fontWeight: 600,
         ...style
       }}
     >
-      {showIcon && <Clock size={11} color="var(--accent-cyan)" />}
+      {showIcon && <Clock size={11} color="#38BDF8" />}
       <span>{currentTime.toLocaleTimeString('vi-VN', { hour12: false })}</span>
     </div>
   );

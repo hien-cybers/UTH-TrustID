@@ -591,8 +591,8 @@ export default function App() {
                 title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
                 className="btn-press"
                 style={{
-                  padding: '6px 8px',
-                  borderRadius: '10px',
+                  padding: '6px 10px',
+                  borderRadius: '999px',
                   background: 'rgba(10, 65, 116, 0.45)',
                   border: '1px solid rgba(123, 189, 232, 0.28)',
                   color: '#7BBDE8',
@@ -608,8 +608,8 @@ export default function App() {
               <span
                 title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
                 style={{
-                  padding: '5px 8px',
-                  borderRadius: '10px',
+                  padding: '5px 10px',
+                  borderRadius: '999px',
                   background: 'rgba(16, 185, 129, 0.14)',
                   border: '1px solid rgba(16, 185, 129, 0.35)',
                   color: '#34D399',

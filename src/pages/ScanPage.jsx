@@ -1200,16 +1200,16 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
   return (
     <div className="page-enter" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
       
-      {/* 1. THANH TIÊU ĐỀ & LỚP HỌC GỌN GÀNG TRÊN CÙNG */}
+      {/* 1. THANH TIÊU ĐỀ & LỚP HỌC BO TRÒN PILL MỀM MẠI TRÊN CÙNG */}
       <div className="flex items-center justify-between gap-2">
         <button
           onClick={() => navigate('/wallet')}
           className="btn-press"
           style={{
             background: '#071C36',
-            border: '1px solid rgba(123, 189, 232, 0.3)',
-            borderRadius: '12px',
-            padding: '8px 14px',
+            border: '1px solid rgba(123, 189, 232, 0.35)',
+            borderRadius: '999px',
+            padding: '8px 16px',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
@@ -1223,7 +1223,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
           <span>Về Ví</span>
         </button>
 
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#071C36] border border-sky-300/30">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#071C36] border border-sky-300/35">
           <span className="font-mono text-xs font-bold text-sky-300">
             {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'}
           </span>
@@ -1459,15 +1459,15 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             </div>
           )}
 
-          {/* Hàng 2 nút thao tác: Quét Nhanh 1 Chạm + Nhập PIN (Khi Hỏng Camera) */}
+          {/* Hàng 2 nút thao tác: Quét Nhanh 1 Chạm + Nhập PIN (Khi Hỏng Camera) Bo Tròn 22px */}
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
               className="btn-press col-span-2"
               style={{
                 width: '100%',
-                padding: '13.5px 12px',
-                borderRadius: '16px',
+                padding: '14px 12px',
+                borderRadius: '22px',
                 border: 'none',
                 background: isOfflineMode
                   ? 'linear-gradient(135deg, #F59E0B, #D97706)'
@@ -1506,8 +1506,8 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               className="btn-press"
               style={{
                 width: '100%',
-                padding: '13.5px 10px',
-                borderRadius: '16px',
+                padding: '14px 10px',
+                borderRadius: '22px',
                 border: showOtpPinMode
                   ? '1.5px solid #38BDF8'
                   : '1px solid rgba(123, 189, 232, 0.4)',
@@ -1529,8 +1529,8 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         </div>
       )}
 
-      {/* 3. BẢNG TÙY CHỌN GIẢ LẬP THỰC NGHIỆM NCKH (GOM GỌN BÊN DƯỚI CAMERA ĐỂ DỄ THAO TÁC) */}
-      <div className="glass-card" style={{ padding: '12px 14px', borderRadius: '16px' }}>
+      {/* 3. BẢNG TÙY CHỌN GIẢ LẬP THỰC NGHIỆM NCKH BO TRÒN 26PX MỀM MẠI */}
+      <div className="glass-card" style={{ padding: '14px 16px', borderRadius: '26px' }}>
         <div className="flex items-center justify-between gap-2 mb-2.5">
           <span className="text-xs font-bold text-white">
             Chế độ Thực nghiệm (Mạng &amp; Vị trí GPS)
@@ -1722,12 +1722,12 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               disabled={syncingOffline}
               className="btn-press"
               style={{
-                padding: '7px 11px',
-                borderRadius: '10px',
+                padding: '8px 14px',
+                borderRadius: '999px',
                 border: 'none',
                 background: '#38BDF8',
                 color: '#04060A',
-                fontSize: '10.5px',
+                fontSize: '11px',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
@@ -1767,11 +1767,11 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             </h3>
           </div>
 
-          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px', lineHeight: 1.45 }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.45 }}>
             {scanStatus.message}
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <button
               onClick={() => {
                 isTerminatedRef.current = false;
@@ -1781,13 +1781,13 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               }}
               className="btn-press"
               style={{
-                padding: '10.5px',
-                borderRadius: '10px',
+                padding: '12px',
+                borderRadius: '999px',
                 border: 'none',
-                background: 'linear-gradient(135deg, #06B6D4, #0284C7)',
-                color: '#FFF',
-                fontSize: '12px',
-                fontWeight: 700,
+                background: 'linear-gradient(135deg, #38BDF8, #0284C7)',
+                color: '#020A15',
+                fontSize: '12.5px',
+                fontWeight: 800,
                 cursor: 'pointer'
               }}
             >
@@ -1797,12 +1797,12 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               onClick={() => navigate('/wallet')}
               className="btn-press"
               style={{
-                padding: '10.5px',
-                borderRadius: '10px',
+                padding: '12px',
+                borderRadius: '999px',
                 border: '1px solid var(--border-hairline)',
                 background: 'var(--bg-inset)',
                 color: 'var(--text-main)',
-                fontSize: '12px',
+                fontSize: '12.5px',
                 fontWeight: 700,
                 cursor: 'pointer'
               }}

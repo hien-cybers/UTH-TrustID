@@ -1,4 +1,4 @@
-// src/components/MobileNavigation.jsx - Thanh Điều Hướng Holder Node (Sinh Viên) Chuẩn Ocean-Ice Dark Neon
+// src/components/MobileNavigation.jsx - Thanh Điều Hướng Nổi Dạng Viên Thuốc (Floating Soft Pill Dock)
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Wallet, LayoutGrid, QrCode } from 'lucide-react';
@@ -12,27 +12,28 @@ export default function MobileNavigation({ activeCourseSession }) {
       <style>{`
         .bottom-nav {
           position: absolute;
-          bottom: 0;
+          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
           left: 50%;
           transform: translateX(-50%);
-          width: 100%;
-          max-width: 430px;
-          height: calc(68px + env(safe-area-inset-bottom, 0px));
-          padding: 6px 12px env(safe-area-inset-bottom, 0px);
-          background: rgba(4, 15, 32, 0.94);
-          backdrop-filter: blur(22px);
-          -webkit-backdrop-filter: blur(22px);
-          border-top: 1px solid rgba(123, 189, 232, 0.22);
+          width: calc(100% - 24px);
+          max-width: 406px;
+          height: 64px;
+          padding: 6px;
+          background: rgba(5, 19, 39, 0.92);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(123, 189, 232, 0.30);
+          border-radius: 28px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           z-index: 100;
           box-sizing: border-box;
-          box-shadow: 0 -10px 32px rgba(0, 8, 20, 0.72);
+          box-shadow: 0 14px 36px rgba(0, 6, 18, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.16);
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 499px) {
           .bottom-nav {
             position: fixed;
           }
@@ -44,16 +45,16 @@ export default function MobileNavigation({ activeCourseSession }) {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 4px;
+          gap: 3px;
           text-decoration: none;
           color: #93B8D8;
           font-size: 11.5px;
           font-weight: 600;
           letter-spacing: -0.01em;
-          transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+          transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
           flex: 1;
-          height: 52px;
-          border-radius: 15px;
+          height: 50px;
+          border-radius: 22px;
           border: 1px solid transparent;
         }
 
@@ -62,10 +63,10 @@ export default function MobileNavigation({ activeCourseSession }) {
         }
 
         .tab-active {
-          color: #F0F9FF !important;
-          background: linear-gradient(135deg, rgba(10, 65, 116, 0.78), rgba(56, 189, 248, 0.22));
-          border: 1px solid rgba(123, 189, 232, 0.42);
-          box-shadow: 0 4px 16px rgba(10, 65, 116, 0.45), inset 0 1px 0 rgba(189, 216, 233, 0.2);
+          color: #FFFFFF !important;
+          background: linear-gradient(135deg, rgba(14, 79, 140, 0.85), rgba(56, 189, 248, 0.28));
+          border: 1px solid rgba(123, 189, 232, 0.50);
+          box-shadow: 0 6px 18px rgba(10, 65, 116, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.24);
           font-weight: 700;
         }
       `}</style>
