@@ -341,7 +341,7 @@ export default function StudentWalletPro({
             SINH VIÊN (HOLDER) • PASSWORDLESS
           </div>
           <h1 style={{ fontSize: '17px', fontWeight: 800, margin: '2px 0 0', color: 'var(--text-main)' }}>
-            Ví Danh Tính DID
+            {walletSubTab === 'HISTORY' ? 'Sổ Chuyên Cần' : 'Ví Danh Tính DID'}
           </h1>
         </div>
         <div style={{
@@ -357,7 +357,7 @@ export default function StudentWalletPro({
           border: credential ? '1px solid rgba(16,185,129,0.28)' : '1px solid rgba(239,68,68,0.28)'
         }}>
           <span className={credential ? 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' : 'w-1.5 h-1.5 rounded-full bg-rose-500'} />
-          {credential ? 'Đã kích hoạt' : 'Chưa nạp thẻ'}
+          {walletSubTab === 'HISTORY' ? 'EIP-191 Verified' : credential ? 'Đã kích hoạt' : 'Chưa nạp thẻ'}
         </div>
       </div>
 
@@ -460,38 +460,6 @@ export default function StudentWalletPro({
               {pinSavedNotice}
             </div>
           )}
-
-          {/* THANH CHUYỂN ĐỔI 2 MỤC CHÍNH TRÊN APP SINH VIÊN: THẺ SỐ DID vs LỊCH SỬ CHUYÊN CẦN */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#040814] border border-slate-800">
-            <button
-              type="button"
-              onClick={() => {
-                setWalletSubTab('CARD');
-                navigate('/student');
-              }}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
-                walletSubTab === 'CARD'
-                  ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              Thẻ Số DID &amp; Bảo Mật
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setWalletSubTab('HISTORY');
-                navigate('/history');
-              }}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
-                walletSubTab === 'HISTORY'
-                  ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              Lịch Sử Chuyên Cần
-            </button>
-          </div>
 
           {/* COMPONENT THẺ SINH VIÊN ĐỒNG BỘ DARK NEON & CHẠY TỨC THÌ (< 50MS) */}
           {walletSubTab === 'CARD' && (
@@ -870,50 +838,7 @@ export default function StudentWalletPro({
                   })}
                 </div>
               </div>
-            ) : (
-              <div className="stagger-2 card-interactive rounded-3xl p-4 border shadow-sm bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 hover:border-cyan-500/40 text-slate-100 space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs font-extrabold text-white">
-                    Lịch Sử Chuyên Cần &amp; Biên Lai EIP-191
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWalletSubTab('HISTORY');
-                      navigate('/history');
-                    }}
-                    className="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-[10px] font-mono font-bold flex-shrink-0 cursor-pointer hover:bg-cyan-500/25"
-                  >
-                    {displayCourses.length} môn học →
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {[
-                    { id: holderMssv, label: `${holderMssv} (100%)` },
-                    { id: '2251120002', label: '2251120002 (66.7%)' },
-                    { id: '2251120003', label: '2251120003 (33.3%)' }
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setPreviewStudentMssv(item.id === holderMssv ? '' : item.id);
-                        setWalletSubTab('HISTORY');
-                        navigate('/history');
-                      }}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-semibold cursor-pointer border transition-all ${
-                        myMssv === item.id
-                          ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
-                          : 'bg-[#040814] border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
+            ) : null;
           })()}
 
           {/* KHỐI GOM GỌN: BẢO MẬT SINH TRẮC HỌC FIDO2 & TIẾT LỘ CÓ CHỌN LỌC (ZKP-LITE) */}
