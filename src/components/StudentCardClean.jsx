@@ -1,6 +1,5 @@
-// src/components/StudentCardClean.jsx - Thẻ Sinh Viên Số Phong Cách Mint Pastel Bento (Lấy cảm hứng từ Smart Home UI)
+// src/components/StudentCardClean.jsx - Thẻ Sinh Viên Số UTH (Bo Góc Mềm Mại & Gradient Teal-Cyan Hiện Đại)
 import React, { useState } from 'react';
-import { ShieldCheck, Copy, Check, Camera } from 'lucide-react';
 
 export default function StudentCardClean({
   student = {
@@ -26,130 +25,98 @@ export default function StudentCardClean({
   };
 
   const shortAddress = student.address
-    ? student.address.length > 12
-      ? `${student.address.slice(0, 6)}..${student.address.slice(-4)}`
+    ? student.address.length > 14
+      ? `${student.address.slice(0, 6)}...${student.address.slice(-4)}`
       : student.address
-    : '0xf39F..2266';
+    : '';
 
   return (
-    <div className="w-full mx-auto stagger-1">
-      {/* HERO CARD MINT PASTEL GRADIENT (Chuẩn ảnh mẫu "Cloudy 28°") */}
-      <div
-        className="relative rounded-[28px] p-5 overflow-hidden transition-all duration-300"
-        style={{
-          background: 'linear-gradient(135deg, #6CE5D4 0%, #9AF2E5 55%, #CCFBF4 100%)',
-          boxShadow: '0 16px 36px rgba(108, 229, 212, 0.18)',
-          color: '#0D2628'
-        }}
-      >
-        {/* Ánh sáng trang trí mềm mại góc phải */}
-        <div
-          className="absolute -right-8 -top-8 w-36 h-36 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.55) 0%, transparent 70%)' }}
-        />
+    <div className="w-full mx-auto transition-colors duration-200 stagger-1">
+      {/* Thẻ Sinh Viên UTH Gradient Teal-Navy Mềm Mại */}
+      <div className="relative rounded-[26px] p-5 border shadow-xl transition-all duration-200 bg-gradient-to-br from-[#0F293A] via-[#0A1A2F] to-[#060E1C] border-teal-400/30 text-slate-100 overflow-hidden">
+        <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-teal-400/15 blur-2xl pointer-events-none" />
+        <div className="absolute -left-10 -bottom-10 w-36 h-36 rounded-full bg-cyan-500/10 blur-2xl pointer-events-none" />
 
-        {/* HÀNG TRÊN: AVATAR + HỌ TÊN NGÀNH (TRÁI) & TRẠNG THÁI LỚN (PHẢI) */}
-        <div className="relative z-10 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="relative flex-shrink-0">
-              <img
-                src={student.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"}
-                alt={student.name}
-                className="w-14 h-14 rounded-2xl object-cover shadow-md block"
-                style={{ border: '2px solid rgba(255, 255, 255, 0.85)', background: '#0D2628' }}
-              />
-              {onAvatarChange && (
-                <>
-                  <label
-                    htmlFor="student-card-avatar-upload"
-                    title="Đổi ảnh thẻ"
-                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#0D2628] text-[#7CE8D8] flex items-center justify-center cursor-pointer shadow-md hover:scale-105 transition-transform"
-                  >
-                    <Camera size={12} />
-                  </label>
-                  <input
-                    id="student-card-avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={onAvatarChange}
-                  />
-                </>
-              )}
+        {/* Header Thẻ */}
+        <div className="relative z-10 flex items-center justify-between pb-3.5 border-b border-white/10 gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#4FF0D6]/25 to-cyan-400/15 border border-[#4FF0D6]/40 flex items-center justify-center font-extrabold text-[#64F5DF] text-xs flex-shrink-0">
+              UTH
             </div>
-
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0D2628]/10 text-[#0D2628] text-[9.5px] font-extrabold tracking-wide uppercase mb-1">
-                <ShieldCheck size={11} />
-                <span>UTH Verifiable ID</span>
-              </div>
-              <h3 className="text-[16px] font-black truncate text-[#0A1F22] m-0 tracking-tight leading-tight">
-                {student.name}
-              </h3>
-              <p className="text-[11.5px] font-semibold text-[#1E4B4E] m-0 truncate mt-0.5">
-                {student.major} • {student.faculty || "CNTT"}
+              <p className="text-[11px] font-extrabold uppercase tracking-tight text-white m-0 truncate">
+                ĐH Giao thông Vận tải TP.HCM
+              </p>
+              <p className="text-[9px] font-mono font-bold text-[#64F5DF] m-0 truncate">
+                W3C VERIFIABLE CREDENTIAL • FIDO2
               </p>
             </div>
           </div>
 
-          {/* Góc phải kiểu "28°" trong ảnh mẫu */}
-          <div className="text-right flex-shrink-0">
-            <div className="text-[22px] font-black tracking-tight text-[#0A1F22] leading-none">
-              {student.validUntil || "2027"}
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#4FF0D6]/15 text-[#64F5DF] border border-[#4FF0D6]/35 flex items-center gap-1.5 flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#64F5DF] animate-pulse" />
+            {student.status || "ACTIVE"}
+          </span>
+        </div>
+
+        {/* Nội dung: Ảnh thẻ và thông tin cá nhân */}
+        <div className="relative z-10 flex gap-4 items-center my-4">
+          <div className="relative flex-shrink-0 text-center">
+            <img
+              src={student.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"}
+              alt={student.name}
+              className="w-20 h-24 rounded-2xl object-cover border-2 border-[#4FF0D6]/40 shadow-md block bg-slate-900"
+            />
+            {onAvatarChange && (
+              <>
+                <label
+                  htmlFor="student-card-avatar-upload"
+                  className="block text-[10px] font-bold text-[#64F5DF] mt-1.5 cursor-pointer hover:underline"
+                >
+                  Đổi ảnh
+                </label>
+                <input
+                  id="student-card-avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onAvatarChange}
+                />
+              </>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-extrabold truncate text-white m-0 tracking-tight">
+              {student.name}
+            </h3>
+            <p className="text-xs font-mono font-bold text-[#64F5DF] mt-0.5 mb-0">
+              MSSV: {student.studentId}
+            </p>
+            <div className="mt-2 space-y-1 text-xs text-slate-300">
+              <p className="truncate m-0"><span className="text-slate-400">Ngành:</span> <b className="text-white">{student.major}</b></p>
+              <p className="truncate m-0"><span className="text-slate-400">Khoa:</span> <b className="text-white">{student.faculty || "Công nghệ Thông tin"}</b></p>
             </div>
-            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-[#0A1F22] text-[#7CE8D8] text-[9.5px] font-mono font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#7CE8D8] animate-pulse" />
-              {student.status || "ACTIVE"}
-            </span>
           </div>
         </div>
 
-        {/* HÀNG DƯỚI: 4 CỘT THÔNG SỐ (Chuẩn bố cục 31° Sensible | 65% Humidity | 3 W.force | 1009hpa Pressure) */}
-        <div
-          className="relative z-10 grid grid-cols-4 gap-2 mt-5 pt-3.5"
-          style={{ borderTop: '1px solid rgba(13, 38, 40, 0.12)' }}
-        >
-          <div>
-            <div className="text-[12px] font-black font-mono text-[#0A1F22] truncate">
-              {student.studentId}
-            </div>
-            <div className="text-[10px] font-semibold text-[#255457] mt-0.5">
-              Mã số SV
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-[12px] font-black text-[#0A1F22]">
-              100%
-            </div>
-            <div className="text-[10px] font-semibold text-[#255457] mt-0.5">
-              Chuyên cần
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="text-[12px] font-black text-[#0A1F22]">
-              FIDO2
-            </div>
-            <div className="text-[10px] font-semibold text-[#255457] mt-0.5">
-              Chuẩn khóa
-            </div>
-          </div>
-
+        {/* Footer Thẻ */}
+        <div className="relative z-10 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono">
           <button
             type="button"
             onClick={handleCopy}
-            className="text-right bg-transparent border-none p-0 cursor-pointer group"
-            title="Chạm để sao chép địa chỉ DID"
+            className="flex items-center gap-1.5 text-slate-400 hover:text-[#64F5DF] transition-colors bg-transparent border-none p-0 cursor-pointer"
           >
-            <div className="text-[11.5px] font-black font-mono text-[#0A1F22] flex items-center justify-end gap-1 group-hover:opacity-80">
-              <span className="truncate">{shortAddress}</span>
-              {copied ? <Check size={11} /> : <Copy size={10} />}
-            </div>
-            <div className="text-[10px] font-semibold text-[#255457] mt-0.5">
-              {copied ? "Đã chép DID" : "Ví DID"}
-            </div>
+            <span>DID:</span>
+            <span className="underline decoration-dotted font-semibold text-[#64F5DF]">{shortAddress}</span>
+            <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[10px] text-slate-300">
+              {copied ? "✓ Đã chép" : "Sao chép"}
+            </span>
           </button>
+
+          <span className="text-slate-400 text-[11px]">
+            Hạn: <strong className="text-white">{student.validUntil || "2027"}</strong>
+          </span>
         </div>
       </div>
     </div>

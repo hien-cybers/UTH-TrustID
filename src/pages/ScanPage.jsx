@@ -1179,41 +1179,34 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
   };
 
   return (
-    <div className="page-enter space-y-4" style={{ width: '100%' }}>
-      {/* 1. HERO CARD MINT PASTEL THÔNG TIN BUỔI HỌC (ĐỒNG BỘ ẢNH MẪU) */}
-      <div
-        className="rounded-[28px] p-4 shadow-lg"
-        style={{
-          background: 'linear-gradient(135deg, #6CE5D4 0%, #9AF2E5 55%, #CCFBF4 100%)',
-          color: '#0A1F22',
-          boxShadow: '0 14px 32px rgba(108, 229, 212, 0.18)'
-        }}
-      >
-        <div className="flex items-center justify-between gap-2 mb-2.5">
+    <div className="page-enter space-y-3" style={{ width: '100%' }}>
+      {/* 1. THANH ĐIỀU HƯỚNG & THÔNG TIN BUỔI HỌC GỌN GÀNG TRÊN ĐẦU */}
+      <div className="rounded-3xl p-3.5 border bg-gradient-to-br from-[#0D2B52]/90 via-[#081226] to-[#041529] border-cyan-500/40 shadow-lg">
+        <div className="flex items-center justify-between gap-2 mb-2">
           <button
             type="button"
             onClick={() => navigate('/wallet')}
-            className="btn-press px-3 py-1 rounded-full bg-[#0A1F22] text-[#7CE8D8] flex items-center gap-1.5 text-[11px] font-bold border-none cursor-pointer"
+            className="btn-press px-2.5 py-1 rounded-xl bg-[#040814] border border-slate-800 text-slate-300 hover:text-cyan-300 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer"
           >
             <ArrowLeft size={13} />
-            <span>Trang Chủ</span>
+            <span>Về Ví Số</span>
           </button>
 
           <div className="flex items-center gap-1.5">
-            <span className="px-2.5 py-1 rounded-full bg-[#0A1F22]/10 text-[#0A1F22] text-[10px] font-mono font-extrabold">
+            <span className="px-2.5 py-1 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-extrabold">
               {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • Buổi {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
             </span>
-            <span className="px-2.5 py-1 rounded-full bg-[#0A1F22] text-[#7CE8D8] text-[10px] font-mono font-bold">
+            <span className="px-2 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-[10px] font-mono font-bold">
               {courseMeta.room || activeCourseSession?.room || 'A2-301'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-2 text-xs">
-          <span className="font-black text-[#0A1F22] truncate text-[13.5px]">
+          <span className="font-extrabold text-white truncate">
             {courseMeta.courseName || activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
           </span>
-          <span className="text-[10.5px] font-mono font-extrabold text-[#1E4B4E] flex-shrink-0">
+          <span className="text-[10px] font-mono text-cyan-300 flex-shrink-0">
             R ≤ {sessionRadius}m
           </span>
         </div>
@@ -1335,24 +1328,13 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             onClose={handleCloseCamera}
           />
 
-          {/* Khối nút Quét Thử & Nhập PIN tách riêng thành 1 cụm Bento độc lập cách khung Camera 16px */}
-          <div
-            className="p-3.5 rounded-[26px] shadow-lg grid grid-cols-3 gap-2.5"
-            style={{
-              background: '#22222E',
-              border: '1px solid rgba(255, 255, 255, 0.06)'
-            }}
-          >
-            {/* Nút Quét Điểm Danh Nhanh (Mint Pastel Gradient) */}
+          {/* Khối nút Quét Thử & Nhập PIN tách riêng thành 1 cụm độc lập cách khung Camera 16px */}
+          <div className="p-3.5 rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-slate-800/90 shadow-lg grid grid-cols-3 gap-2.5">
+            {/* Nút Quét Điểm Danh Nhanh */}
             <button
               type="button"
               onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
-              className="btn-press col-span-2 py-3 px-3 rounded-2xl border-none text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer"
-              style={{
-                background: 'linear-gradient(135deg, #6CE5D4 0%, #BEF8F0 100%)',
-                color: '#0A1F22',
-                boxShadow: '0 6px 18px rgba(108, 229, 212, 0.25)'
-              }}
+              className="btn-press col-span-2 py-3 px-3 rounded-2xl border border-cyan-400/40 bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_6px_18px_rgba(6,182,212,0.25)]"
             >
               <Zap size={15} />
               <span>Quét Thử Điểm Danh</span>
@@ -1362,7 +1344,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             <button
               type="button"
               onClick={handleOpenCameraPinBackup}
-              className="btn-press py-3 px-2.5 rounded-2xl border border-[#7CE8D8]/30 bg-[#171721] text-[#7CE8D8] text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
+              className="btn-press py-3 px-2.5 rounded-2xl border border-cyan-500/40 bg-[#040814] hover:bg-cyan-950/50 text-cyan-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <KeyRound size={14} />
               <span>Nhập PIN</span>

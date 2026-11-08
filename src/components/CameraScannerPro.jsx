@@ -255,13 +255,11 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
 
   return (
     <div
-      className="rounded-[28px] p-4 shadow-xl"
+      className="rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-cyan-500/35 p-4 shadow-lg"
       style={{
         position: 'relative',
         width: '100%',
-        boxSizing: 'border-box',
-        background: '#22222E',
-        border: '1px solid rgba(255, 255, 255, 0.06)'
+        boxSizing: 'border-box'
       }}
     >
       {/* Canvas ẩn phục vụ giải mã khung hình jsQR */}
@@ -270,7 +268,7 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
       {/* Header Modal */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', fontWeight: 800, color: '#F8FAFC' }}>
-          <Camera size={16} color="#7CE8D8" />
+          <Camera size={16} color="#22D3EE" />
           <span>Khung Ngắm Camera QR</span>
         </div>
         {onClose && (
@@ -291,10 +289,10 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
         position: 'relative',
         width: '100%',
         aspectRatio: '1 / 1',
-        borderRadius: '20px',
+        borderRadius: '18px',
         overflow: 'hidden',
-        background: '#12121A',
-        border: '1px solid rgba(124, 232, 216, 0.25)',
+        background: '#020617',
+        border: '1px solid rgba(30, 41, 59, 0.9)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
