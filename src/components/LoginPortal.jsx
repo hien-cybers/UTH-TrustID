@@ -327,7 +327,7 @@ export default function LoginPortal() {
           </div>
 
           {challengeData && !isExpired ? (
-            <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200 flex items-center justify-center mx-auto">
+            <div className="my-3 p-3.5 bg-white rounded-2xl shadow-md border border-slate-200 flex items-center justify-center mx-auto">
               <QRCodeSVG
                 value={JSON.stringify(challengeData)}
                 size={156}
@@ -336,7 +336,7 @@ export default function LoginPortal() {
               />
             </div>
           ) : (
-            <div className="w-44 h-44 bg-[#040814] border border-slate-800 rounded-2xl flex flex-col items-center justify-center p-4 text-center space-y-2">
+            <div className="my-3 w-44 h-44 bg-[#040814] border border-slate-800 rounded-2xl flex flex-col items-center justify-center p-4 text-center space-y-2">
               <Clock size={28} className="text-rose-400" />
               <p className="text-xs text-rose-300 font-bold m-0">Mã QR đã hết hạn</p>
               <button
@@ -351,7 +351,7 @@ export default function LoginPortal() {
           <button
             type="button"
             onClick={handleQuickDemoSignIn}
-            className="btn-press w-full mt-3 py-2.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-xs font-extrabold shadow-md flex items-center justify-center gap-1.5 border-none cursor-pointer"
+            className="btn-press w-full mt-4 py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-xs font-extrabold shadow-md flex items-center justify-center gap-1.5 border-none cursor-pointer"
           >
             <Zap size={14} />
             <span>Ký Số EIP-191 Đăng Nhập Ngay</span>

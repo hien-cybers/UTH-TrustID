@@ -208,7 +208,10 @@ export default function ServicePortal() {
               type="text"
               placeholder="Nhập MSSV hoặc địa chỉ ví 0x..."
               value={searchMssv}
-              onChange={(e) => setSearchMssv(e.target.value)}
+              onChange={(e) => {
+                setSearchMssv(e.target.value);
+                if (searchResult) setSearchResult(null);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleLookup();
               }}
@@ -223,7 +226,7 @@ export default function ServicePortal() {
             </button>
           </div>
 
-          {/* Chọn nhanh MSSV */}
+          {/* Chọn nhanh MSSV (Chỉ điền vào ô, bấm Kiểm Tra mới hiện thông tin) */}
           <div className="flex items-center gap-1.5 flex-wrap">
             {['2251120000', '2251120001', '2251120002', '2251120005'].map((id) => (
               <button
@@ -231,9 +234,13 @@ export default function ServicePortal() {
                 type="button"
                 onClick={() => {
                   setSearchMssv(id);
-                  handleLookup(id);
+                  setSearchResult(null);
                 }}
-                className="px-2.5 py-1 rounded-xl bg-[#040814] border border-slate-800 hover:border-cyan-500/40 text-cyan-300 font-mono text-[10px] font-semibold cursor-pointer transition-all"
+                className={`px-2.5 py-1 rounded-xl border font-mono text-[10px] font-semibold cursor-pointer transition-all ${
+                  searchMssv === id
+                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
+                    : 'bg-[#040814] border-slate-800 hover:border-cyan-500/40 text-cyan-300'
+                }`}
               >
                 {id}
               </button>

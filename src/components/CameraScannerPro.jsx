@@ -254,25 +254,22 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
   }, [startCamera, stopCamera]);
 
   return (
-    <div className="glass-card" style={{
-      position: 'relative',
-      width: '100%',
-      margin: '0 auto',
-      background: 'var(--bg-card)',
-      borderRadius: '18px',
-      border: '1px solid var(--border-hairline)',
-      padding: '14px',
-      boxSizing: 'border-box',
-      boxShadow: 'var(--shadow-card)'
-    }}>
+    <div
+      className="rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-cyan-500/35 p-4 shadow-lg"
+      style={{
+        position: 'relative',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}
+    >
       {/* Canvas ẩn phục vụ giải mã khung hình jsQR */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {/* Header Modal */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
-          <Camera size={16} color="var(--accent-cyan)" />
-          <span>Quét mã QR xác thực</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', fontWeight: 800, color: '#F8FAFC' }}>
+          <Camera size={16} color="#22D3EE" />
+          <span>Khung Ngắm Camera QR</span>
         </div>
         {onClose && (
           <button
@@ -280,7 +277,7 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
               stopCamera();
               if (onCloseRef.current) onCloseRef.current();
             }}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+            style={{ background: 'transparent', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 4 }}
           >
             <X size={18} />
           </button>
@@ -292,9 +289,10 @@ const CameraScannerPro = memo(function CameraScannerPro({ onClose, onScanSuccess
         position: 'relative',
         width: '100%',
         aspectRatio: '1 / 1',
-        borderRadius: '14px',
+        borderRadius: '18px',
         overflow: 'hidden',
         background: '#020617',
+        border: '1px solid rgba(30, 41, 59, 0.9)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'

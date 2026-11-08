@@ -1320,36 +1320,31 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         </div>
       )}
 
-      {/* 4. KHUNG NGẮM CAMERA QR & 2 NÚT THAO TÁC CHÍNH (QUÉT NHANH + NHẬP PIN 6 Ô SỐ) */}
+      {/* 4. KHUNG NGẮM CAMERA QR & KHU VỰC THAO TÁC TÁCH BIỆT RÕ RÀNG */}
       {isScanning && !pinModalOpen && (
-        <div className="space-y-2.5">
+        <div className="flex flex-col gap-4">
           <CameraScannerPro
             onScanSuccess={handleScanSuccess}
             onClose={handleCloseCamera}
           />
 
-          <div className="grid grid-cols-3 gap-2">
+          {/* Khối nút Quét Thử & Nhập PIN tách riêng thành 1 cụm độc lập cách khung Camera 16px */}
+          <div className="p-3.5 rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-slate-800/90 shadow-lg grid grid-cols-3 gap-2.5">
             {/* Nút Quét Điểm Danh Nhanh */}
             <button
               type="button"
               onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
-              className="btn-press col-span-2 py-3 px-3 rounded-2xl border border-cyan-400/40 bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_8px_22px_rgba(6,182,212,0.28)]"
+              className="btn-press col-span-2 py-3 px-3 rounded-2xl border border-cyan-400/40 bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_6px_18px_rgba(6,182,212,0.25)]"
             >
               <Zap size={15} />
-              <span>
-                {simBiometricChanged
-                  ? 'Quét Thử (Đổi FaceID)'
-                  : isOfflineMode
-                  ? 'Quét Ngoại Tuyến'
-                  : 'Quét Điểm Danh Nhanh'}
-              </span>
+              <span>Quét Thử Điểm Danh</span>
             </button>
 
-            {/* Nút Mở Bộ Nhập PIN Dự Phòng 6 Ô Số Viền Neon */}
+            {/* Nút Mở Bộ Nhập PIN Dự Phòng 6 Ô Số */}
             <button
               type="button"
               onClick={handleOpenCameraPinBackup}
-              className="btn-press py-3 px-2.5 rounded-2xl border border-cyan-500/40 bg-[#081226] hover:bg-cyan-950/50 text-cyan-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
+              className="btn-press py-3 px-2.5 rounded-2xl border border-cyan-500/40 bg-[#040814] hover:bg-cyan-950/50 text-cyan-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <KeyRound size={14} />
               <span>Nhập PIN</span>
