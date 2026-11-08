@@ -636,33 +636,28 @@ export default function StudentWalletPro({
             const myMssv = previewStudentMssv || holderMssv;
 
             return walletSubTab === 'HISTORY' ? (
-              <div className="stagger-2 rounded-3xl p-4 border shadow-sm bg-[#081226] border-slate-800 text-slate-100 space-y-3">
+              <div className="stagger-2 rounded-3xl p-4 border shadow-sm bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 text-slate-100 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-xs font-extrabold text-white m-0">
-                      Lịch Sử Chuyên Cần Cá Nhân &amp; Biên Lai EIP-191
-                    </h3>
-                    <p className="text-[10px] text-slate-400 m-0 mt-0.5">
-                      Tự đối soát từng buổi học kèm chữ ký số EIP-191 và mã băm chốt sổ của Giảng viên
-                    </p>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold">
+                  <h3 className="text-xs font-extrabold text-white m-0">
+                    Lịch Sử Chuyên Cần &amp; Biên Lai EIP-191
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold">
                     {displayCourses.length} môn học
                   </span>
                 </div>
 
-                {/* Bộ chọn nhanh MSSV để đối soát thử trường hợp Đủ điều kiện vs Vắng / Cảnh báo cấm thi */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                {/* Bộ chọn nhanh MSSV */}
+                <div className="flex flex-wrap items-center gap-1.5">
                   {[
-                    { id: holderMssv, label: `${holderMssv} (Thẻ của tôi • 100%)` },
-                    { id: '2251120002', label: '2251120002 (Trần Thị Mai • 66.7%)' },
-                    { id: '2251120003', label: '2251120003 (Lê Hoàng Quân • 33.3%)' }
+                    { id: holderMssv, label: `${holderMssv} (100%)` },
+                    { id: '2251120002', label: '2251120002 (66.7%)' },
+                    { id: '2251120003', label: '2251120003 (33.3%)' }
                   ].map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => setPreviewStudentMssv(item.id === holderMssv ? '' : item.id)}
-                      className={`px-2.5 py-1 rounded-xl text-[9.5px] font-mono font-semibold cursor-pointer border transition-all ${
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-semibold cursor-pointer border transition-all ${
                         myMssv === item.id
                           ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
                           : 'bg-[#040814] border-slate-800 text-slate-400 hover:text-white'
@@ -865,15 +860,10 @@ export default function StudentWalletPro({
                 </div>
               </div>
             ) : (
-              <div className="stagger-2 card-interactive rounded-3xl p-4 border shadow-sm bg-[#081226] border-slate-800 hover:border-cyan-500/40 text-slate-100 space-y-2.5">
+              <div className="stagger-2 card-interactive rounded-3xl p-4 border shadow-sm bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 hover:border-cyan-500/40 text-slate-100 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <div className="text-xs font-extrabold text-white">
-                      Lịch Sử Chuyên Cần Cá Nhân &amp; Biên Lai EIP-191
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      Tự đối soát từng buổi học kèm chữ ký số EIP-191 và mã băm chốt sổ của Giảng viên
-                    </div>
+                  <div className="text-xs font-extrabold text-white">
+                    Lịch Sử Chuyên Cần &amp; Biên Lai EIP-191
                   </div>
                   <button
                     type="button"
@@ -884,12 +874,11 @@ export default function StudentWalletPro({
                   </button>
                 </div>
 
-                {/* Bộ chọn nhanh MSSV ngay tại trang chính và mở sang tab Lịch Sử */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   {[
-                    { id: holderMssv, label: `${holderMssv} (Thẻ của tôi • 100%)` },
-                    { id: '2251120002', label: '2251120002 (Trần Thị Mai • 66.7%)' },
-                    { id: '2251120003', label: '2251120003 (Lê Hoàng Quân • 33.3%)' }
+                    { id: holderMssv, label: `${holderMssv} (100%)` },
+                    { id: '2251120002', label: '2251120002 (66.7%)' },
+                    { id: '2251120003', label: '2251120003 (33.3%)' }
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -898,7 +887,7 @@ export default function StudentWalletPro({
                         setPreviewStudentMssv(item.id === holderMssv ? '' : item.id);
                         setWalletSubTab('HISTORY');
                       }}
-                      className={`px-2.5 py-1 rounded-xl text-[9.5px] font-mono font-semibold cursor-pointer border transition-all ${
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-semibold cursor-pointer border transition-all ${
                         myMssv === item.id
                           ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
                           : 'bg-[#040814] border-slate-800 text-slate-400 hover:text-white'
@@ -914,21 +903,16 @@ export default function StudentWalletPro({
 
           {/* KHỐI GOM GỌN: BẢO MẬT SINH TRẮC HỌC FIDO2 & TIẾT LỘ CÓ CHỌN LỌC (ZKP-LITE) */}
           {walletSubTab === 'CARD' && (
-            <div className="stagger-3 card-interactive rounded-3xl p-4 border shadow-sm transition-colors duration-200 bg-[#081226] border-slate-800 text-slate-100 space-y-3">
+            <div className="stagger-3 card-interactive rounded-3xl p-4 border shadow-sm transition-colors duration-200 bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 text-slate-100 space-y-2.5">
               {/* Header chung */}
-              <div className="flex justify-between items-center pb-2.5 border-b border-slate-800/80">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
                     <Fingerprint size={15} />
                   </div>
-                  <div>
-                    <h3 className="text-xs font-extrabold m-0 text-white">
-                      Bảo Mật Sinh Trắc Học &amp; Ẩn Danh ZKP
-                    </h3>
-                    <p className="text-[9.5px] text-slate-400 m-0">
-                      Khóa phần cứng WebAuthn • Zero-Knowledge Proof
-                    </p>
-                  </div>
+                  <h3 className="text-xs font-extrabold m-0 text-white">
+                    Bảo Mật Sinh Trắc Học &amp; Ẩn Danh ZKP
+                  </h3>
                 </div>
                 <span className="text-[9.5px] font-mono font-semibold text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-lg border border-emerald-800">
                   {bioHardwareInfo?.label || 'Face ID'} Native
@@ -937,18 +921,13 @@ export default function StudentWalletPro({
 
               {/* 1. Tiết lộ có chọn lọc (ZKP-lite) */}
               <div className="flex justify-between items-center gap-2 bg-[#040814] p-2.5 rounded-2xl border border-slate-800">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <div className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${zkpMode ? 'bg-emerald-500/15 text-emerald-400' : 'bg-cyan-500/10 text-cyan-400'}`}>
                     {zkpMode ? <EyeOff size={14} /> : <Eye size={14} />}
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] font-bold text-slate-100">
-                      Tiết Lộ Có Chọn Lọc (ZKP-lite)
-                    </div>
-                    <div className="text-[9.5px] text-slate-400 truncate">
-                      Ẩn Họ tên, MSSV, Địa chỉ ví khi qua cổng / thư viện
-                    </div>
-                  </div>
+                  <span className="text-[11px] font-bold text-slate-100 truncate">
+                    Chế Độ Ẩn Danh ZKP-Lite
+                  </span>
                 </div>
                 <button
                   type="button"
@@ -959,7 +938,7 @@ export default function StudentWalletPro({
                       : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
                   }`}
                 >
-                  {zkpMode ? 'ĐANG BẬT ZKP' : 'Bật Ẩn Danh'}
+                  {zkpMode ? 'ĐANG BẬT' : 'Bật Ẩn Danh'}
                 </button>
               </div>
 
@@ -971,14 +950,9 @@ export default function StudentWalletPro({
 
               {/* 2. Switch Bật/Tắt Face ID */}
               <div className="flex justify-between items-center bg-[#040814] p-2.5 rounded-2xl border border-slate-800">
-                <div>
-                  <div className="text-[11px] font-bold text-slate-200">
-                    Bật Face ID / Vân Tay Phần Cứng
-                  </div>
-                  <div className="text-[9.5px] text-slate-400">
-                    Apple Secure Enclave / Android Keystore
-                  </div>
-                </div>
+                <span className="text-[11px] font-bold text-slate-200">
+                  Mở Khóa Face ID / Vân Tay
+                </span>
                 <button
                   type="button"
                   onClick={() => setBioEnabled(v => !v)}
@@ -1000,7 +974,7 @@ export default function StudentWalletPro({
                 </button>
 
                 <div className="bg-[#040814] border border-slate-800 rounded-xl py-1.5 px-2 text-center flex flex-col justify-center">
-                  <span className="text-[9px] text-slate-400">PIN Dự Phòng</span>
+                  <span className="text-[9px] text-slate-400">Mã PIN</span>
                   <span className="text-[11px] font-bold font-mono text-cyan-400">123456</span>
                 </div>
               </div>

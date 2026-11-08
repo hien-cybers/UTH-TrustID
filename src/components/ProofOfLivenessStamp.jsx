@@ -171,11 +171,8 @@ export default function ProofOfLivenessStamp({
           </div>
 
           <div className="min-w-0">
-            <div className="text-[11px] font-black tracking-wider text-emerald-400 flex items-center gap-1.5">
-              <span>VERIFIED • LIVENESS STAMP</span>
-            </div>
-            <div className="text-[9.5px] text-slate-400 truncate">
-              Chứng chỉ hiện diện sống • Chống chụp màn hình Zalo
+            <div className="text-xs font-black tracking-wider text-emerald-400">
+              VERIFIED • LIVENESS STAMP
             </div>
           </div>
         </div>
@@ -195,10 +192,7 @@ export default function ProofOfLivenessStamp({
           className="w-11 h-11 rounded-xl border border-cyan-400/60 flex-shrink-0 object-cover"
         />
         <div className="min-w-0 flex-1">
-          <div className="text-[9px] text-cyan-400 font-bold tracking-wider uppercase">
-            HỒ SƠ ĐỐI SOÁT TRỰC QUAN (VC HOLDER)
-          </div>
-          <div className="text-[15px] font-extrabold text-white truncate mt-0.5">
+          <div className="text-[15px] font-extrabold text-white truncate">
             {studentName}
           </div>
           <div className="flex justify-between items-center mt-0.5">
@@ -209,11 +203,6 @@ export default function ProofOfLivenessStamp({
               {courseCode} • {room} ({distance})
             </span>
           </div>
-          {courseName && (
-            <div className="text-[10px] text-slate-400 mt-0.5 truncate">
-              {courseName} • Buổi {sessionNumber || 1} ({sessionId})
-            </div>
-          )}
         </div>
       </div>
 

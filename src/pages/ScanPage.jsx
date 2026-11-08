@@ -1246,14 +1246,9 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
               <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
                 <KeyRound size={16} />
               </div>
-              <div>
-                <h3 className="text-xs font-extrabold text-white m-0">
-                  Nhập Mã PIN Dự Phòng (6 Ô Số Neon)
-                </h3>
-                <p className="text-[10px] text-slate-400 m-0">
-                  Mặc định: <b className="text-cyan-300 font-mono">123456</b> • Đủ 6 số tự mở Face ID
-                </p>
-              </div>
+              <h3 className="text-xs font-extrabold text-white m-0">
+                Nhập Mã PIN Dự Phòng (6 Số)
+              </h3>
             </div>
             <button
               type="button"
@@ -1383,7 +1378,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
 
       {/* 6. KẾT QUẢ XỬ LÝ ĐIỂM DANH */}
       {scanStatus && (
-        <div className="rounded-3xl p-4 border bg-[#081226] border-slate-800 shadow-lg space-y-2.5 animate-fade-scale">
+        <div className="rounded-3xl p-4 border bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 shadow-lg space-y-2.5 animate-fade-scale">
           <div className="flex items-center gap-2">
             {scanStatus.type === 'SUCCESS' && <CheckCircle2 size={18} color="#10B981" />}
             {scanStatus.type === 'ERROR' && <AlertTriangle size={18} color="#EF4444" />}
@@ -1403,40 +1398,45 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             {scanStatus.message}
           </p>
 
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                isTerminatedRef.current = false;
-                setScanStatus(null);
-                setLivenessStampData(null);
-                setIsScanning(true);
-              }}
-              className="btn-press py-2.5 rounded-2xl border-none bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold cursor-pointer"
-            >
-              Quét Lại
-            </button>
+          {scanStatus.type === 'SUCCESS' ? (
             <button
               type="button"
               onClick={() => navigate('/wallet')}
-              className="btn-press py-2.5 rounded-2xl border border-slate-800 bg-[#040814] text-slate-200 text-xs font-bold cursor-pointer"
+              className="btn-press w-full py-2.5 rounded-2xl border-none bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 text-xs font-extrabold cursor-pointer shadow-md"
             >
               Về Ví Số
             </button>
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  isTerminatedRef.current = false;
+                  setScanStatus(null);
+                  setLivenessStampData(null);
+                  setIsScanning(true);
+                }}
+                className="btn-press py-2.5 rounded-2xl border-none bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold cursor-pointer"
+              >
+                Quét Lại
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/wallet')}
+                className="btn-press py-2.5 rounded-2xl border border-slate-800 bg-[#040814] text-slate-200 text-xs font-bold cursor-pointer"
+              >
+                Về Ví Số
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* 7. HÀNG ĐỢI INDEXEDDB & DUAL-LAYER AUTO-SYNC */}
       {offlineQueue.length > 0 && (
-        <div className="rounded-3xl p-3.5 border border-cyan-500/40 bg-[#081226] flex items-center justify-between gap-2">
-          <div>
-            <div className="text-xs font-bold text-white">
-              Hàng Đợi IndexedDB ({offlineQueue.length} gói chữ ký)
-            </div>
-            <div className="text-[10px] text-slate-400">
-              Auto-Sync 2 Lớp: SW Sync + Online Listener
-            </div>
+        <div className="rounded-3xl p-3.5 border border-cyan-500/40 bg-gradient-to-br from-[#0B1930] to-[#060E1E] flex items-center justify-between gap-2">
+          <div className="text-xs font-bold text-white">
+            Hàng Đợi Ngoại Tuyến ({offlineQueue.length} gói chữ ký)
           </div>
           <button
             type="button"

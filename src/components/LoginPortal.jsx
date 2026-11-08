@@ -249,198 +249,131 @@ export default function LoginPortal() {
   };
 
   return (
-    <div className="w-full max-w-md sm:max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 mt-1 sm:mt-3 shadow-lg flex flex-col items-center relative overflow-hidden box-border animate-in fade-in duration-300">
-      {/* Background neon glow */}
-      <div className="absolute top-0 right-0 w-44 h-44 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
+    <div className="w-full bg-gradient-to-br from-[#0B1930] to-[#060E1E] border border-slate-800 rounded-3xl p-4 shadow-lg flex flex-col items-center relative overflow-hidden box-border">
       {/* Header Portal */}
-      <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400 mb-2">
-        <Monitor size={18} className="sm:w-[22px] sm:h-[22px] flex-shrink-0" />
-        <h3 className="font-semibold text-xs sm:text-base text-slate-900 dark:text-slate-100 text-center">Cổng Dịch Vụ - Xác Thực Không Mật Khẩu</h3>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 px-2.5 sm:px-3 py-1 rounded-xl max-w-full text-center">
-        <div className="flex items-center space-x-1">
-          <Lock size={12} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-          <span className="truncate">Domain: <strong className="text-cyan-700 dark:text-cyan-300 font-mono">uth.edu.vn</strong></span>
+      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+        <div className="flex items-center gap-2 text-cyan-400">
+          <Monitor size={16} />
+          <h3 className="font-extrabold text-xs text-white m-0">Đăng Nhập Web Không Mật Khẩu</h3>
         </div>
-        <span className="text-slate-400 dark:text-slate-600 hidden sm:inline">|</span>
-        <span className="text-purple-600 dark:text-purple-400 font-medium">Polygon Amoy (80002)</span>
+        <span className="text-[10px] font-mono text-cyan-300 bg-[#040814] border border-slate-800 px-2 py-0.5 rounded-lg">
+          uth.edu.vn
+        </span>
       </div>
 
       {authenticatedSession ? (
-        // ==========================================
-        // MÀN HÌNH DASHBOARD SINH VIÊN (SAU KHI QUÉT THÀNH CÔNG)
-        // ==========================================
-        <div className="w-full space-y-3.5 sm:space-y-4 py-1 animate-in zoom-in-95 fade-in duration-300">
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 text-center flex flex-col items-center relative">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-2 shadow-inner">
-              <CheckCircle2 size={28} className="sm:w-[32px] sm:h-[32px]" />
+        <div className="w-full space-y-3 py-1">
+          <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-3.5 text-center flex flex-col items-center">
+            <div className="w-11 h-11 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-400 mb-1.5">
+              <CheckCircle2 size={24} />
             </div>
-            <h4 className="font-bold text-sm sm:text-base text-emerald-700 dark:text-emerald-300">ĐĂNG NHẬP THÀNH CÔNG!</h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xs">
-              Thiết bị di động đã xác thực sinh trắc học và ký số mật mã EIP-191 thành công.
-            </p>
+            <h4 className="font-extrabold text-sm text-emerald-400 m-0">ĐĂNG NHẬP THÀNH CÔNG</h4>
           </div>
 
-          {/* Student Profile Card */}
-          <div className="bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
-                  <User size={18} className="sm:w-[20px] sm:h-[20px]" />
+          <div className="bg-[#040814] border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <User size={18} />
                 </div>
                 <div>
-                  <h5 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">{user.fullName || 'Sinh Viên UTH'}</h5>
-                  <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 flex items-center space-x-1">
-                    <GraduationCap size={13} className="text-cyan-600 dark:text-cyan-400" />
-                    <span>MSSV: {user.studentId || '2251120000'}</span>
+                  <h5 className="font-extrabold text-xs text-white m-0">{user.fullName || 'Sinh Viên UTH'}</h5>
+                  <p className="text-[11px] text-cyan-400 font-mono m-0 mt-0.5">
+                    MSSV: {user.studentId || '2251120000'}
                   </p>
                 </div>
               </div>
-              <span className="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/35">
                 ACTIVE
               </span>
             </div>
 
-            <div className="text-xs font-mono space-y-2 pt-1">
-              <div>
-                <span className="text-slate-500 block text-[10px] uppercase font-sans">Địa chỉ Ví DID (Signer):</span>
-                <span className="text-cyan-700 dark:text-cyan-300 font-semibold break-all text-[10px] sm:text-[11px]">
-                  {authenticatedSession.user?.address || authenticatedSession.signerAddress}
-                </span>
+            <div className="text-[11px] font-mono space-y-1.5">
+              <div className="text-slate-400 break-all">
+                DID: <span className="text-cyan-300 font-semibold">{authenticatedSession.user?.address || authenticatedSession.signerAddress}</span>
               </div>
-
-              {authenticatedSession.token && (
-                <div>
-                  <span className="text-slate-500 block text-[10px] uppercase font-sans">Phiên Ủy Quyền (Auth Token):</span>
-                  <span className="text-slate-600 dark:text-slate-400 break-all text-[10px] bg-white dark:bg-slate-900 px-2 py-1 rounded block border border-slate-200 dark:border-slate-800/70">
-                    {authenticatedSession.token}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center pt-2 text-[10px] sm:text-[11px] font-sans border-t border-slate-200 dark:border-slate-800/80">
-                <span className="text-slate-500 flex items-center space-x-1">
-                  <FileCheck size={13} className="text-emerald-600 dark:text-emerald-400" />
-                  <span>Xác minh chữ ký EIP-191:</span>
-                </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Hợp Lệ (On-Chain)</span>
+              <div className="flex justify-between items-center pt-1.5 border-t border-slate-800 font-sans text-[11px]">
+                <span className="text-slate-400">Chữ ký EIP-191:</span>
+                <span className="text-emerald-400 font-bold">✓ Hợp lệ</span>
               </div>
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.99] text-slate-800 dark:text-slate-200 text-xs font-semibold py-2.5 sm:py-3 px-4 rounded-xl flex items-center justify-center space-x-2 transition border border-slate-200 dark:border-slate-700"
+            className="w-full bg-[#040814] hover:bg-slate-900 text-slate-200 text-xs font-bold py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 border border-slate-800 cursor-pointer"
           >
             <LogOut size={14} />
-            <span>Đăng xuất & Khởi tạo phiên mới</span>
+            <span>Đăng xuất phiên</span>
           </button>
         </div>
       ) : (
-        // ==========================================
-        // MÀN HÌNH CHỜ QUÉT MÃ QR
-        // ==========================================
         <>
-          <p className="text-xs text-slate-600 dark:text-slate-400 text-center mb-3 sm:mb-4 max-w-sm leading-relaxed px-1">
-            Mở ứng dụng <strong>UTH TrustID</strong> trên điện thoại và quét mã QR để đăng nhập bằng FaceID / TouchID
-          </p>
-
-          {/* Countdown & Status Bar */}
-          <div className="w-full flex items-center justify-between px-2 mb-3">
-            <span className="text-[11px] text-slate-600 dark:text-slate-400 flex items-center space-x-1">
-              <Clock size={12} className="text-cyan-600 dark:text-cyan-400" />
-              <span>Thời gian hiệu lực:</span>
+          <div className="w-full flex items-center justify-between px-1 mb-2.5">
+            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+              <Clock size={12} className="text-cyan-400" />
+              <span>Hiệu lực QR:</span>
             </span>
 
             <span
-              className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
+              className={`text-[10.5px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
                 timeLeft <= 10
-                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-300 animate-pulse'
-                  : 'bg-cyan-50 dark:bg-cyan-950/60 border-cyan-200 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-300'
+                  ? 'bg-rose-950/60 border-rose-500/50 text-rose-300 animate-pulse'
+                  : 'bg-cyan-950/60 border-cyan-500/40 text-cyan-300'
               }`}
             >
-              {isExpired ? 'Hết hạn (Expired)' : `${timeLeft}s còn lại`}
+              {isExpired ? 'Hết hạn' : `${timeLeft}s`}
             </span>
           </div>
 
           {challengeData && !isExpired ? (
-            <div className="p-3 bg-white rounded-2xl sm:rounded-3xl shadow-md border border-slate-200 relative group transition transform hover:scale-[1.01] flex items-center justify-center max-w-[210px] max-h-[210px] mx-auto">
+            <div className="p-3 bg-white rounded-2xl shadow-md border border-slate-200 flex items-center justify-center mx-auto">
               <QRCodeSVG
                 value={JSON.stringify(challengeData)}
-                size={165}
+                size={156}
                 level="M"
                 includeMargin={false}
-                className="w-36 h-36 sm:w-44 sm:h-44"
               />
             </div>
           ) : (
-            <div className="w-48 h-48 sm:w-56 sm:h-56 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center p-4 text-center space-y-2">
-              <Clock size={32} className="text-rose-500 dark:text-rose-400 animate-bounce" />
-              <p className="text-xs text-rose-600 dark:text-rose-300 font-semibold">Mã QR đã hết hạn!</p>
-              <p className="text-[10px] text-slate-500">Mã có TTL 60s để ngăn ngừa tấn công phát lại (Replay Attack).</p>
+            <div className="w-44 h-44 bg-[#040814] border border-slate-800 rounded-2xl flex flex-col items-center justify-center p-4 text-center space-y-2">
+              <Clock size={28} className="text-rose-400" />
+              <p className="text-xs text-rose-300 font-bold m-0">Mã QR đã hết hạn</p>
               <button
                 onClick={generateNewSession}
-                className="mt-1 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl transition"
+                className="px-3 py-1.5 bg-cyan-400 text-slate-950 text-xs font-extrabold rounded-xl border-none cursor-pointer"
               >
                 Tạo mã mới
               </button>
             </div>
           )}
 
-          <div className="mt-3.5 sm:mt-4 w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 sm:p-3 text-[10px] sm:text-[11px] font-mono space-y-1.5">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-sans">Challenge Nonce:</span>
-              <span className="text-cyan-600 dark:text-cyan-400 truncate max-w-[150px] sm:max-w-[220px]">{challengeData?.nonce}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-sans">Single-Use TTL:</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">60 Giây (Tự hủy sau 1 lần xác thực)</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-sans">Smart Contract:</span>
-              <span className="text-slate-600 dark:text-slate-400 font-semibold">
-                {NETWORK_CONFIG.contractAddress.slice(0, 6)}...{NETWORK_CONFIG.contractAddress.slice(-4)}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 mt-3 sm:mt-4 text-center">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping flex-shrink-0"></span>
-            <span className="truncate">
-              {socketConnected
-                ? 'Kênh WebSocket đang chờ điện thoại ký số...'
-                : 'Đang kết nối kênh bảo mật...'}
-            </span>
-          </div>
-
           <button
             type="button"
             onClick={handleQuickDemoSignIn}
-            className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white text-xs font-bold shadow-md flex items-center justify-center space-x-1.5 transition active:scale-[0.98]"
+            className="btn-press w-full mt-3 py-2.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-xs font-extrabold shadow-md flex items-center justify-center gap-1.5 border-none cursor-pointer"
           >
             <Zap size={14} />
-            <span>Ký Số EIP-191 Đăng Nhập Nhanh (1-Chạm Trên Thiết Bị Này)</span>
+            <span>Ký Số EIP-191 Đăng Nhập Ngay</span>
           </button>
 
-          <div className="flex items-center space-x-4 mt-3">
+          <div className="flex items-center gap-4 mt-2.5">
             <button
               onClick={generateNewSession}
-              className="flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-300 transition"
+              className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-cyan-300 bg-transparent border-none cursor-pointer"
             >
-              <RefreshCw size={13} />
-              <span>Làm mới phiên QR</span>
+              <RefreshCw size={12} />
+              <span>Làm mới QR</span>
             </button>
 
-            <span className="text-slate-300 dark:text-slate-700">|</span>
+            <span className="text-slate-700">|</span>
 
             <button
               onClick={() => setShowSelfRevokeModal(true)}
-              className="flex items-center space-x-1 text-xs text-rose-500 dark:text-rose-400/90 hover:text-rose-600 dark:hover:text-rose-300 transition"
+              className="flex items-center gap-1 text-[11px] text-rose-400 hover:text-rose-300 bg-transparent border-none cursor-pointer"
             >
-              <ShieldAlert size={13} />
-              <span>Báo mất ví từ xa</span>
+              <ShieldAlert size={12} />
+              <span>Báo mất ví</span>
             </button>
           </div>
         </>
