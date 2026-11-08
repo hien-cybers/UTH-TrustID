@@ -1,6 +1,5 @@
 // src/components/StudentCardClean.jsx - Thẻ Sinh Viên Số Gradient Dark Neon Gọn Gàng
 import React, { useState } from 'react';
-import { QrCode } from 'lucide-react';
 
 export default function StudentCardClean({
   student = {
@@ -13,11 +12,7 @@ export default function StudentCardClean({
     validUntil: "2027",
     status: "ACTIVE"
   },
-  onScanClick,
-  onAvatarChange,
-  activeCourseSession,
-  spotCheckState,
-  onTriggerSpotCheckFaceID
+  onAvatarChange
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -123,30 +118,6 @@ export default function StudentCardClean({
           </span>
         </div>
       </div>
-
-      {/* Nút hành động chính bên dưới thẻ */}
-      {spotCheckState?.isActive ? (
-        <button
-          type="button"
-          onClick={() => onTriggerSpotCheckFaceID && onTriggerSpotCheckFaceID()}
-          className="mt-3.5 w-full py-3.5 px-4 rounded-2xl font-bold text-sm tracking-wide text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-[0.98] transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 border-none cursor-pointer"
-        >
-          Xác Thực Lại Face ID ({spotCheckState.countdown}s)
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={onScanClick}
-          className="btn-press mt-3.5 w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm tracking-wide text-slate-950 bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 active:scale-[0.98] transition-all shadow-[0_8px_24px_rgba(6,182,212,0.28)] flex items-center justify-center gap-2 border-none cursor-pointer"
-        >
-          <QrCode size={17} />
-          <span>
-            {activeCourseSession?.isOpen
-              ? `Quét QR Điểm Danh • ${activeCourseSession.courseCode || 'IT402.N01'} (Buổi ${activeCourseSession.sessionNumber || 1})`
-              : 'Quét QR Điểm Danh'}
-          </span>
-        </button>
-      )}
     </div>
   );
 }

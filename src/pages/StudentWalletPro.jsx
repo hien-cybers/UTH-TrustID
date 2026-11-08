@@ -485,33 +485,49 @@ export default function StudentWalletPro({
             />
           )}
 
-          {/* LỚP HỌC PHẦN & BUỔI HỌC ĐANG MỞ ĐIỂM DANH (ĐỒNG BỘ TRỰC TIẾP TỪ GIẢNG VIÊN) */}
-          {walletSubTab === 'CARD' && activeCourseSession?.isOpen && (
-            <div className="card-interactive rounded-3xl p-4 border shadow-lg bg-gradient-to-br from-[#0D2B52]/90 via-[#081226] to-[#041529] border-cyan-400/45 text-slate-100">
-              <div className="flex justify-between items-center gap-2 mb-1.5">
-                <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10.5px] font-mono font-extrabold">
-                  {activeCourseSession.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {activeCourseSession.sessionNumber || 1}
+          {/* THẺ LỚP HỌC ĐANG MỞ ĐIỂM DANH (GỘP CHUẨN GỌN GÀNG) */}
+          {walletSubTab === 'CARD' && (
+            <div className="p-4 rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-cyan-500/30 space-y-3 shadow-lg shadow-cyan-950/40">
+              <div className="flex items-center justify-between">
+                <span className="px-2.5 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold">
+                  {activeCourseSession?.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {activeCourseSession?.sessionNumber || 3}
                 </span>
-                <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-emerald-400">
+                <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1.5 font-bold">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  Đang mở QR
+                  Đang mở nhận diện
                 </span>
               </div>
-              <div className="text-xs font-extrabold text-white mb-2">
-                {activeCourseSession.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
+
+              <div>
+                <h3 className="text-sm font-bold text-white tracking-wide m-0">
+                  {activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
+                </h3>
+                <p className="text-[10px] font-mono text-slate-400 mt-0.5 mb-0">
+                  Phòng <strong className="text-white">{activeCourseSession?.room || 'A2-301'}</strong> • <span className="text-cyan-300">R ≤ {activeCourseSession?.radius || 35}m</span> • Chế độ: <span className="text-slate-200">{activeCourseSession?.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G'}</span>
+                </p>
               </div>
-              <div className="flex justify-between items-center gap-2 pt-2 border-t border-slate-800/80 text-[10.5px] text-slate-300">
-                <span>
-                  Phòng <b className="text-white">{activeCourseSession.room || 'A2-301'}</b> • <b className="text-cyan-300">R ≤ {activeCourseSession.radius || 35}m</b> • {activeCourseSession.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G'}
-                </span>
+
+              {/* NÚT QUÉT DUY NHẤT TO, ĐẸP, ĐẶT NGAY DƯỚI THẺ */}
+              {spotCheckState?.isActive ? (
+                <button
+                  type="button"
+                  onClick={() => onTriggerSpotCheckFaceID && onTriggerSpotCheckFaceID()}
+                  className="w-full py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                >
+                  XÁC THỰC LẠI FACE ID ({spotCheckState.countdown}s)
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => navigate('/scan')}
-                  className="btn-press px-3 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-[10.5px] font-extrabold border-none cursor-pointer"
+                  className="w-full py-3.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 active:scale-[0.98] text-slate-950 font-black text-xs tracking-wider shadow-[0_0_20px_rgba(0,242,254,0.3)] transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
                 >
-                  Quét QR Ngay
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                  </svg>
+                  QUÉT QR ĐIỂM DANH BUỔI {activeCourseSession?.sessionNumber || 3}
                 </button>
-              </div>
+              )}
             </div>
           )}
 
