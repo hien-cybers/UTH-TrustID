@@ -163,7 +163,12 @@ async function fetchCandidate(url, options, timeoutMs = 1800) {
     let facultyToken = '';
     try {
       if (typeof window !== 'undefined') {
-        facultyToken = localStorage.getItem('faculty_token') || localStorage.getItem('uth_staff_token') || '';
+        facultyToken =
+          localStorage.getItem('faculty_token') ||
+          localStorage.getItem('uth_staff_token') ||
+          localStorage.getItem('uth_faculty_token') ||
+          localStorage.getItem('uth_jwt_token') ||
+          '';
       }
     } catch {}
 

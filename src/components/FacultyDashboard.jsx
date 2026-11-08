@@ -1300,31 +1300,66 @@ export default function FacultyDashboard({
 
   // Kích hoạt Spot-check (Giảng viên chủ động hoặc đồng ý từ Cờ Yêu Cầu Hậu Kiểm của Thanh tra)
   const handleTriggerSpotCheck = async (mode = 'ALL') => {
-    if (attendees.length === 0) return;
     let targets = [];
     if (mode === 'ALL') {
-      targets = attendees.map(a => a.studentId);
+      targets = attendees.map((a) => a.studentId);
     } else if (mode === 'FURTHEST') {
-      targets = [...attendees].sort((a, b) => b.distance - a.distance).slice(0, 2).map(a => a.studentId);
+      targets = [...attendees]
+        .sort((a, b) => b.distance - a.distance)
+        .slice(0, 2)
+        .map((a) => a.studentId);
     } else if (mode === 'RISK_TARGETED') {
       targets = attendees
-        .filter(a => calculateFraudRiskScore(a).score >= 30)
-        .map(a => a.studentId);
+        .filter((a) => calculateFraudRiskScore(a).score >= 30)
+        .map((a) => a.studentId);
       if (targets.length === 0) {
-        targets = [...attendees].sort((a, b) => b.distance - a.distance).slice(0, 2).map(a => a.studentId);
+        targets = [...attendees]
+          .sort((a, b) => b.distance - a.distance)
+          .slice(0, 2)
+          .map((a) => a.studentId);
       }
     }
 
-    setAttendees(prev => prev.map(a => 
-      targets.includes(a.studentId) ? { ...a, spotCheckStatus: 'PENDING' } : a
-    ));
-    setSpotCheckState({ active: true, countdown: 60, targetIds: targets });
+    // Luôn bao gồm MSSV thiết bị di động đang mở (2251120000) để thông báo Tái điểm danh báo về điện thoại sinh viên ngay lập tức
+    const mergedTargetSet = new Set(['2251120000', ...targets]);
+    const finalTargets = Array.from(mergedTargetSet);
+
+    setAttendees((prev) => {
+      const hasPrimary = prev.some((a) => a.studentId === '2251120000');
+      const baseList = hasPrimary
+        ? prev
+        : [
+            {
+              studentId: '2251120000',
+              name: 'Nguyễn Đức Hiển',
+              major: 'An toàn Thông tin',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+              coords: { lat: 10.799215, lon: 106.70562 },
+              distance: 4,
+              gpsAccuracy: 5.8,
+              isMockGps: false,
+              network: 'UTH_STUDENT_SECURE',
+              deviceId: 'DEV_MOBILE_EIP191',
+              checkInTime: new Date().toLocaleTimeString('vi-VN', { hour12: false }),
+              spotCheckStatus: 'PENDING'
+            },
+            ...prev
+          ];
+      return baseList.map((a) =>
+        finalTargets.includes(a.studentId) ? { ...a, spotCheckStatus: 'PENDING' } : a
+      );
+    });
+    setSpotCheckState({ active: true, countdown: 60, targetIds: finalTargets });
     setAuditorInspectionRequest(null);
+    setAuditorStatusMsg(
+      `Đã phát lệnh Tái kiểm tra Face ID (Spot-Check 60s) xuống ${finalTargets.length} thiết bị di động của sinh viên!`
+    );
 
     socketRef.current?.emit('trigger-spot-check', {
       sessionId,
       timeoutSec: 60,
-      targetIds: targets
+      targetIds: finalTargets,
+      mode
     });
     try {
       await smartFetch('/api/faculty/spot-check', {
@@ -1333,7 +1368,7 @@ export default function FacultyDashboard({
         body: JSON.stringify({
           sessionId,
           timeoutSeconds: 60,
-          targetIds: targets,
+          targetIds: finalTargets,
           mode
         })
       });

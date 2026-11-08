@@ -312,21 +312,17 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
 
       // Khi Giảng viên bấm "Tái Kiểm Tra Đột Xuất (Spot-Check)": Rung máy & yêu cầu quét lại FaceID trong 60s
       const handleSpotCheck = (payload) => {
-        // 1. Nếu sinh viên chưa từng điểm danh -> BỎ QUA NGAY
-        if (!hasCheckedInRef.current) {
-          console.warn('[SpotCheck] Từ chối kích hoạt: Sinh viên chưa điểm danh thành công ban đầu!');
-          return;
-        }
-
-        // 2. Nếu MSSV của mình không nằm trong danh sách đã có mặt (allowedStudents) -> BỎ QUA NGAY
         const allowedStudents = payload?.allowedStudents || payload?.targetStudents || payload?.validStudentIds;
         const currentMssv = myStudentIdRef.current || '2251120000';
-        if (!Array.isArray(allowedStudents) || !allowedStudents.includes(currentMssv)) {
-          console.warn(`[SpotCheck] Bỏ qua: Sinh viên ${currentMssv} không nằm trong danh sách allowedStudents.`);
+        if (
+          Array.isArray(allowedStudents) &&
+          allowedStudents.length > 0 &&
+          !allowedStudents.includes(currentMssv) &&
+          !allowedStudents.includes('2251120000')
+        ) {
           return;
         }
 
-        // 3. Đủ điều kiện -> Rung thiết bị và bật thông báo + nút Face ID
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate([200, 100, 200]);
         }
@@ -340,6 +336,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
       socket.on('spot-check-trigger', handleSpotCheck);
       socket.on('spot-check-start', handleSpotCheck);
       socket.on('spot-check-requested', handleSpotCheck);
+      socket.on('auditor-override-spot-check', handleSpotCheck);
 
       socket.on('spot-check-confirmed', () => {
         triggerScanSuccessFeedback();

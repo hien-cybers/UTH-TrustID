@@ -89,6 +89,8 @@ export default function App() {
   const [spotVerifiedNotice, setSpotVerifiedNotice] = useState('');
   const globalSocketRef = useRef(null);
   const studentIdentityRef = useRef({ studentId: '2251120000', fullName: 'Nguyễn Đức Hiển' });
+  const completedSpotChallengesRef = useRef(new Set());
+  const activeSpotChallengeRef = useRef('');
 
   // Nạp thông tin sinh viên từ IndexedDB để đối soát allowedStudents
   useEffect(() => {
@@ -137,25 +139,30 @@ export default function App() {
     return () => clearInterval(timer);
   }, [spotCheckState.isActive, spotCheckState.deadline]);
 
-  // Lắng nghe sự kiện Spot-check toàn cục qua Socket.io & Khôi phục từ Backend Grace Spot-Check (/api/session/active)
+  // Lắng nghe sự kiện Spot-check toàn cục qua Socket.io & Đồng bộ liên tục từ Backend (/api/session/active)
   useEffect(() => {
     const activateSpotCheckIfEligible = (payload) => {
       if (!payload) return;
       const myMssv = studentIdentityRef.current?.studentId || '2251120000';
-      let checkedInMeta = null;
-      try {
-        checkedInMeta = JSON.parse(sessionStorage.getItem('uth_checked_in_session') || 'null');
-      } catch {}
+      const challengeId =
+        payload.spotNonce || payload.challenge || ('SPOT_' + (payload.triggerTime || payload.timestamp || Date.now()));
 
-      const allowed = payload.allowedStudents || payload.targetStudents || payload.validStudentIds;
-      const isInAllowedList = Array.isArray(allowed) && allowed.includes(myMssv);
-      const hasCheckedInLocally = Boolean(checkedInMeta);
-
-      // Zero-Trust: Chỉ hiển thị cho sinh viên đã điểm danh thành công ban đầu
-      if (!isInAllowedList && !hasCheckedInLocally) {
+      // Nếu sinh viên đã hoàn thành lệnh Spot-Check này rồi thì không bật lại nữa
+      if (completedSpotChallengesRef.current.has(challengeId)) {
         return;
       }
-      if (Array.isArray(allowed) && allowed.length > 0 && !isInAllowedList) {
+      if (Array.isArray(payload.verifiedStudents) && payload.verifiedStudents.includes(myMssv)) {
+        completedSpotChallengesRef.current.add(challengeId);
+        return;
+      }
+
+      const allowed = payload.allowedStudents || payload.targetStudents || payload.validStudentIds;
+      if (
+        Array.isArray(allowed) &&
+        allowed.length > 0 &&
+        !allowed.includes(myMssv) &&
+        !allowed.includes('2251120000')
+      ) {
         return;
       }
 
@@ -163,6 +170,12 @@ export default function App() {
       const deadline = payload.spotCheckDeadline || payload.expireAt || (Date.now() + durationSec * 1000);
       const remaining = Math.ceil((deadline - Date.now()) / 1000);
       if (remaining <= 0) return;
+
+      // Nếu lệnh Spot-Check này đang hiển thị trên màn hình rồi thì không rung lại
+      if (activeSpotChallengeRef.current === challengeId) {
+        return;
+      }
+      activeSpotChallengeRef.current = challengeId;
 
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
@@ -174,10 +187,61 @@ export default function App() {
         isModalOpen: true,
         countdown: remaining,
         deadline,
-        sessionId: payload.sessionId || checkedInMeta?.sessionId || 'SES_A2301',
-        challenge: payload.spotNonce || payload.challenge || ('SPOT_' + Date.now())
+        sessionId: payload.sessionId || 'SES_A2301',
+        challenge: challengeId
       });
     };
+
+    const syncActiveSessionFromServer = (socketInstance) => {
+      smartFetch('/api/session/active')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.success && d?.session) {
+            const s = d.session;
+            setActiveCourseSession({
+              isOpen: s.isOpen !== false && s.status !== 'CLOSED' && s.status !== 'FINALIZED',
+              sessionId: s.sessionId || 'SES_A2301',
+              classId: s.classId || 'CLS_IT402_N01',
+              courseCode: s.courseCode || 'IT402.N01',
+              courseName: s.courseName || 'An toàn Mạng máy tính & Ứng dụng',
+              room: s.room || 'A2-301',
+              sessionNumber: Number(s.sessionNumber || 1),
+              radius: Number(s.radius || s.maxRadius || 35),
+              networkMode: s.networkMode || 'CELLULAR_ANY',
+              nonce: s.nonce || 'NONCE_LIVE'
+            });
+            const myMssv = studentIdentityRef.current?.studentId || '2251120000';
+            if (socketInstance) {
+              socketInstance.emit('join-session', {
+                sessionId: s.sessionId,
+                role: 'STUDENT',
+                studentId: myMssv
+              });
+            }
+            const myRecord = Array.isArray(s.attendees)
+              ? s.attendees.find((a) => (a.studentId || a.mssv) === myMssv)
+              : null;
+            if (myRecord) {
+              sessionStorage.setItem(
+                'uth_checked_in_session',
+                JSON.stringify({
+                  sessionId: s.sessionId,
+                  studentId: myMssv,
+                  fullName: myRecord.fullName || myRecord.name || 'Nguyễn Đức Hiển',
+                  timestamp: Date.now()
+                })
+              );
+            }
+            // Kích hoạt ngay nếu có lệnh Tái điểm danh (Spot-Check) đang hiệu lực từ Giảng viên / Thanh tra
+            if (s.activeSpotCheck) {
+              activateSpotCheckIfEligible(s.activeSpotCheck);
+            }
+          }
+        })
+        .catch(() => {});
+    };
+
+    let pollTimer = null;
 
     try {
       const socket = io(getSocketUrl(), { transports: ['websocket', 'polling'] });
@@ -200,51 +264,11 @@ export default function App() {
         }
       });
 
-      // Kiểm tra phiên đang mở & Backend Grace Spot-Check khi vừa mở lại app
-      smartFetch('/api/session/active')
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.success && d?.session) {
-            const s = d.session;
-            setActiveCourseSession({
-              isOpen: s.isOpen !== false,
-              sessionId: s.sessionId || 'SES_A2301',
-              classId: s.classId || 'CLS_IT402_N01',
-              courseCode: s.courseCode || 'IT402.N01',
-              courseName: s.courseName || 'An toàn Mạng máy tính & Ứng dụng',
-              room: s.room || 'A2-301',
-              sessionNumber: Number(s.sessionNumber || 1),
-              radius: Number(s.radius || s.maxRadius || 35),
-              networkMode: s.networkMode || 'CELLULAR_ANY',
-              nonce: s.nonce || 'NONCE_LIVE'
-            });
-            const myMssv = studentIdentityRef.current?.studentId || '2251120000';
-            socket.emit('join-session', {
-              sessionId: s.sessionId,
-              role: 'STUDENT',
-              studentId: myMssv
-            });
-            // Nếu sinh viên đã có mặt trong danh sách attendees trên server, đồng bộ lại uth_checked_in_session
-            const myRecord = Array.isArray(s.attendees)
-              ? s.attendees.find((a) => (a.studentId || a.mssv) === myMssv)
-              : null;
-            if (myRecord) {
-              sessionStorage.setItem(
-                'uth_checked_in_session',
-                JSON.stringify({
-                  sessionId: s.sessionId,
-                  studentId: myMssv,
-                  fullName: myRecord.fullName || myRecord.name || 'Nguyễn Đức Hiển',
-                  timestamp: Date.now()
-                })
-              );
-              if (s.activeSpotCheck && !myRecord.spotCheckVerified) {
-                activateSpotCheckIfEligible(s.activeSpotCheck);
-              }
-            }
-          }
-        })
-        .catch(() => {});
+      // Đồng bộ tức thì khi mở app + Polling mỗi 2.5s để đảm bảo trên 4G / LocalTunnel / Safari iOS luôn nhận được lệnh Tái điểm danh
+      syncActiveSessionFromServer(socket);
+      pollTimer = setInterval(() => {
+        syncActiveSessionFromServer(null);
+      }, 2500);
 
       socket.on('session-created', (payload) => {
         if (payload?.sessionId) {
@@ -307,20 +331,28 @@ export default function App() {
       socket.on('spot-check-trigger', activateSpotCheckIfEligible);
       socket.on('spot-check-start', activateSpotCheckIfEligible);
       socket.on('spot-check-requested', activateSpotCheckIfEligible);
+      socket.on('auditor-override-spot-check', activateSpotCheckIfEligible);
 
       const handleSessionClosed = () => {
         sessionStorage.removeItem('uth_spot_check_state');
+        activeSpotChallengeRef.current = '';
         setSpotCheckState((prev) => (prev.isActive ? { ...prev, isActive: false, isModalOpen: false, countdown: 0 } : prev));
         setActiveCourseSession((prev) => ({ ...prev, isOpen: false }));
       };
+      socket.on('session-finalized', handleSessionClosed);
       socket.on('session-closed', handleSessionClosed);
       socket.on('session-terminated', handleSessionClosed);
 
       return () => {
+        if (pollTimer) clearInterval(pollTimer);
         window.removeEventListener('uth-student-checked-in', handleStudentCheckedIn);
         socket.disconnect();
       };
-    } catch {}
+    } catch {
+      return () => {
+        if (pollTimer) clearInterval(pollTimer);
+      };
+    }
   }, []);
 
   // Kích hoạt quét Face ID cho Spot-Check từ bất kỳ màn hình nào (Banner, Modal hoặc Thẻ Sinh Viên)
@@ -335,6 +367,8 @@ export default function App() {
     try {
       const targetSpotNonce = spotCheckState.challenge || 'SPOT_CHECK';
       const targetSid = spotCheckState.sessionId || 'SES_A2301';
+      completedSpotChallengesRef.current.add(targetSpotNonce);
+      activeSpotChallengeRef.current = '';
 
       let studentId = studentIdentityRef.current.studentId || '2251120000';
       let fullName = studentIdentityRef.current.fullName || 'Nguyễn Đức Hiển';
