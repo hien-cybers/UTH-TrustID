@@ -38,6 +38,7 @@ import '../styles/animations.css';
 
 export default function StudentWalletPro({
   isDarkMode = true,
+  initialTab = 'CARD',
   activeCourseSession,
   coursesCatalog = [],
   spotCheckState,
@@ -48,7 +49,11 @@ export default function StudentWalletPro({
   const [copied, setCopied] = useState(false);
   const [showPassQr, setShowPassQr] = useState(false);
   const [expandedCourseId, setExpandedCourseId] = useState('CLS_IT402_N01');
-  const [walletSubTab, setWalletSubTab] = useState('CARD'); // 'CARD' | 'HISTORY'
+  const [walletSubTab, setWalletSubTab] = useState(initialTab); // 'CARD' | 'HISTORY'
+
+  useEffect(() => {
+    setWalletSubTab(initialTab);
+  }, [initialTab]);
   const [previewStudentMssv, setPreviewStudentMssv] = useState('');
   const [verifiedReceiptSessionId, setVerifiedReceiptSessionId] = useState(null);
 
@@ -460,10 +465,13 @@ export default function StudentWalletPro({
           <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-[#040814] border border-slate-800">
             <button
               type="button"
-              onClick={() => setWalletSubTab('CARD')}
+              onClick={() => {
+                setWalletSubTab('CARD');
+                navigate('/student');
+              }}
               className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
                 walletSubTab === 'CARD'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
@@ -471,10 +479,13 @@ export default function StudentWalletPro({
             </button>
             <button
               type="button"
-              onClick={() => setWalletSubTab('HISTORY')}
+              onClick={() => {
+                setWalletSubTab('HISTORY');
+                navigate('/history');
+              }}
               className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-none ${
                 walletSubTab === 'HISTORY'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
@@ -867,7 +878,10 @@ export default function StudentWalletPro({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setWalletSubTab('HISTORY')}
+                    onClick={() => {
+                      setWalletSubTab('HISTORY');
+                      navigate('/history');
+                    }}
                     className="px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-[10px] font-mono font-bold flex-shrink-0 cursor-pointer hover:bg-cyan-500/25"
                   >
                     {displayCourses.length} môn học →
@@ -886,6 +900,7 @@ export default function StudentWalletPro({
                       onClick={() => {
                         setPreviewStudentMssv(item.id === holderMssv ? '' : item.id);
                         setWalletSubTab('HISTORY');
+                        navigate('/history');
                       }}
                       className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-semibold cursor-pointer border transition-all ${
                         myMssv === item.id

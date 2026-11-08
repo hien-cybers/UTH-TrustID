@@ -1,9 +1,9 @@
-// src/components/MobileNavigation.jsx - Thanh Điều Hướng Holder Node (Sinh Viên) Chuẩn Dark Neon & Đồng Bộ Buổi Điểm Danh
+// src/components/MobileNavigation.jsx - Thanh Điều Hướng Holder Node (Sinh Viên) Chuẩn Dark Neon
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Wallet, LayoutGrid, QrCode } from 'lucide-react';
+import { Wallet, ClipboardCheck, LayoutGrid } from 'lucide-react';
 
-export default function MobileNavigation({ activeCourseSession }) {
+export default function MobileNavigation() {
   const getTabClass = ({ isActive }) =>
     `tab-item btn-press ${isActive ? 'tab-active' : ''}`;
 
@@ -69,29 +69,9 @@ export default function MobileNavigation({ activeCourseSession }) {
           <span>Ví &amp; Lớp Học</span>
         </NavLink>
 
-        <NavLink to="/scan" className={getTabClass}>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <QrCode size={18} strokeWidth={2.2} />
-            {activeCourseSession?.isOpen && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: -3,
-                  right: -8,
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: '#10B981',
-                  boxShadow: '0 0 8px #10B981'
-                }}
-              />
-            )}
-          </div>
-          <span>
-            {activeCourseSession?.isOpen
-              ? `Quét QR (Buổi ${activeCourseSession.sessionNumber || 1})`
-              : 'Quét QR'}
-          </span>
+        <NavLink to="/history" className={getTabClass}>
+          <ClipboardCheck size={18} strokeWidth={2} />
+          <span>Sổ Chuyên Cần</span>
         </NavLink>
 
         <NavLink to="/services" className={getTabClass}>

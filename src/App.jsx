@@ -669,6 +669,7 @@ export default function App() {
               element={
                 <StudentWalletPro
                   isDarkMode={true}
+                  initialTab="CARD"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}
                   spotCheckState={spotCheckState}
@@ -681,6 +682,20 @@ export default function App() {
               element={
                 <StudentWalletPro
                   isDarkMode={true}
+                  initialTab="CARD"
+                  activeCourseSession={activeCourseSession}
+                  coursesCatalog={coursesCatalog}
+                  spotCheckState={spotCheckState}
+                  onTriggerSpotCheckFaceID={handleTriggerSpotCheckFaceID}
+                />
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <StudentWalletPro
+                  isDarkMode={true}
+                  initialTab="HISTORY"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}
                   spotCheckState={spotCheckState}
