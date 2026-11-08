@@ -24,7 +24,7 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink, LayoutGrid } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -551,74 +551,90 @@ export default function App() {
 
       {/* Giao diện chính của ứng dụng Sinh viên (Holder Node) */}
       <BrowserRouter>
-      {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
-      <div className="mobile-viewport mobile-app-root bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* Khung Smartphone 430px Cố Định Chính Giữa + Nền Dark Matte Teal-Charcoal Chuẩn Ảnh Mẫu */}
+      <div
+        className="mobile-viewport mobile-app-root text-slate-100"
+        style={{
+          background: 'linear-gradient(180deg, #1E3336 0%, #161722 26%, #13131C 100%)'
+        }}
+      >
         
-        {/* Top Header Chuẩn Native iOS / Android (Tránh đè lên Tai Thỏ / Dynamic Island) */}
-        <header className="bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200" style={{
-          flexShrink: 0,
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          padding: '11px 15px',
-          width: '100%'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            
-            {/* Logo Thương Hiệu UTH-TrustID */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <UthTrustLogo size={30} />
-              <div style={{ minWidth: 0 }}>
-                <div className="text-slate-900 dark:text-slate-100" style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
-                  UTH TRUST<span className="text-cyan-500">ID</span>
-                </div>
-                <div className="text-slate-500 dark:text-slate-400" style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                  HOLDER NODE • SINH VIÊN
-                </div>
+        {/* Top Header Chuẩn Ảnh Mẫu ("Hey, Nguyễn Đức Hiển!" + Ngày giờ bên trái, Icon Grid 2x2 bên phải) */}
+        <header
+          style={{
+            flexShrink: 0,
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            background: 'rgba(26, 42, 46, 0.72)',
+            padding: '14px 18px 10px',
+            width: '100%'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+            {/* Lời chào cá nhân hóa + Ngày & Đồng hồ trực tiếp */}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: '18px', color: '#FFFFFF', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+                Hey, Đức Hiển!
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px', fontSize: '11px', color: '#A3B1B8', fontWeight: 500 }}>
+                <span>
+                  {new Date().toLocaleDateString('vi-VN', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })}
+                </span>
+                <span>•</span>
+                <LiveClock />
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Khóa phiên + Huy hiệu Holder FIDO2 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-              <LiveClock />
-
+            {/* Cụm nút góc phải: Khóa phiên & Icon 4 ô vuông (Grid) chuẩn ảnh mẫu */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <button
                 onClick={handleLockSession}
-                title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
-                className="btn-press bg-slate-800 border border-slate-700 text-cyan-400"
+                title="Khóa phiên bảo mật ngay (PIN 123456)"
+                className="btn-press"
                 style={{
-                  padding: '5px 7px',
-                  borderRadius: '8px',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.07)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: '#7CE8D8',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
               >
-                <Lock size={12} />
+                <Lock size={15} />
               </button>
 
-              <span
-                title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
-                className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+              <a
+                href="/services"
+                title="Tiện ích & Dịch vụ số UTH"
+                className="btn-press"
                 style={{
-                  padding: '4px 7px',
-                  borderRadius: '8px',
-                  fontSize: '9.5px',
-                  fontWeight: 800,
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.09)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '3px',
-                  letterSpacing: '0.3px'
+                  justifyContent: 'center',
+                  textDecoration: 'none'
                 }}
               >
-                <ShieldCheck size={11} />
-                <span>FIDO2</span>
-              </span>
+                <LayoutGrid size={17} />
+              </a>
             </div>
-
           </div>
         </header>
 
@@ -626,7 +642,7 @@ export default function App() {
         {spotCheckState.isActive && !spotCheckState.isModalOpen && (
           <div
             onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
-            className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/25 border border-amber-400/60 backdrop-blur-md flex items-center justify-between gap-2 cursor-pointer shadow-[0_8px_24px_rgba(245,158,11,0.25)]"
+            className="sticky top-[58px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/25 border border-amber-400/60 backdrop-blur-md flex items-center justify-between gap-2 cursor-pointer shadow-[0_8px_24px_rgba(245,158,11,0.25)]"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="relative flex h-3 w-3 flex-shrink-0">
@@ -660,7 +676,7 @@ export default function App() {
         )}
 
         {/* Vùng Nội Dung Cuộn Bên Trong Khung Điện Thoại */}
-        <main className="mobile-scroll-body bg-slate-950 transition-colors duration-200">
+        <main className="mobile-scroll-body bg-transparent transition-colors duration-200">
           <Routes>
             {/* 1. VAI TRÒ HOLDER - SINH VIÊN (/student & /wallet) */}
             <Route path="/" element={<Navigate to="/student" replace />} />
