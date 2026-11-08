@@ -249,14 +249,14 @@ export default function LoginPortal() {
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-[#0B1930] to-[#060E1E] border border-slate-800 rounded-3xl p-4 shadow-lg flex flex-col items-center relative overflow-hidden box-border">
+    <div className="w-full bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-white/10 rounded-[26px] p-4 shadow-lg flex flex-col items-center relative overflow-hidden box-border">
       {/* Header Portal */}
-      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-        <div className="flex items-center gap-2 text-cyan-400">
+      <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+        <div className="flex items-center gap-2 text-[#64F5DF]">
           <Monitor size={16} />
           <h3 className="font-extrabold text-xs text-white m-0">Đăng Nhập Web Không Mật Khẩu</h3>
         </div>
-        <span className="text-[10px] font-mono text-cyan-300 bg-[#040814] border border-slate-800 px-2 py-0.5 rounded-lg">
+        <span className="text-[10px] font-mono text-[#64F5DF] bg-[#4FF0D6]/10 border border-[#4FF0D6]/30 px-2.5 py-0.5 rounded-full">
           uth.edu.vn
         </span>
       </div>
@@ -351,7 +351,7 @@ export default function LoginPortal() {
           <button
             type="button"
             onClick={handleQuickDemoSignIn}
-            className="btn-press w-full mt-4 py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 text-xs font-extrabold shadow-md flex items-center justify-center gap-1.5 border-none cursor-pointer"
+            className="btn-press w-full mt-4 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-xs font-black shadow-[0_6px_18px_rgba(79,240,214,0.28)] flex items-center justify-center gap-1.5 border-none cursor-pointer"
           >
             <Zap size={14} />
             <span>Ký Số EIP-191 Đăng Nhập Ngay</span>

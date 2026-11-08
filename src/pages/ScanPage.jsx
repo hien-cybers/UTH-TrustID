@@ -1179,24 +1179,24 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
   };
 
   return (
-    <div className="page-enter space-y-3" style={{ width: '100%' }}>
-      {/* 1. THANH ĐIỀU HƯỚNG & THÔNG TIN BUỔI HỌC GỌN GÀNG TRÊN ĐẦU */}
-      <div className="rounded-3xl p-3.5 border bg-gradient-to-br from-[#0D2B52]/90 via-[#081226] to-[#041529] border-cyan-500/40 shadow-lg">
+    <div className="page-enter space-y-3.5" style={{ width: '100%' }}>
+      {/* 1. THANH ĐIỀU HƯỚNG & THÔNG TIN BUỔI HỌC GỌN GÀNG TRÊN ĐẦU (MÀU MINT-CYAN MỀM MẠI) */}
+      <div className="rounded-[26px] p-4 border bg-gradient-to-br from-[#0F293A] via-[#0A1A2F] to-[#060E1C] border-teal-400/30 shadow-lg">
         <div className="flex items-center justify-between gap-2 mb-2">
           <button
             type="button"
             onClick={() => navigate('/wallet')}
-            className="btn-press px-2.5 py-1 rounded-xl bg-[#040814] border border-slate-800 text-slate-300 hover:text-cyan-300 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer"
+            className="btn-press px-3 py-1 rounded-full bg-[#050A14] border border-white/10 text-slate-300 hover:text-[#64F5DF] flex items-center gap-1.5 text-[11px] font-bold cursor-pointer"
           >
             <ArrowLeft size={13} />
             <span>Về Ví Số</span>
           </button>
 
           <div className="flex items-center gap-1.5">
-            <span className="px-2.5 py-1 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-extrabold">
+            <span className="px-2.5 py-1 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[10px] font-mono font-extrabold">
               {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • Buổi {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
             </span>
-            <span className="px-2 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-[10px] font-mono font-bold">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-[10px] font-mono font-bold">
               {courseMeta.room || activeCourseSession?.room || 'A2-301'}
             </span>
           </div>
@@ -1206,7 +1206,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
           <span className="font-extrabold text-white truncate">
             {courseMeta.courseName || activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
           </span>
-          <span className="text-[10px] font-mono text-cyan-300 flex-shrink-0">
+          <span className="text-[10px] font-mono text-[#64F5DF] flex-shrink-0">
             R ≤ {sessionRadius}m
           </span>
         </div>
@@ -1329,12 +1329,12 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
           />
 
           {/* Khối nút Quét Thử & Nhập PIN tách riêng thành 1 cụm độc lập cách khung Camera 16px */}
-          <div className="p-3.5 rounded-3xl bg-gradient-to-b from-[#08152e] to-[#050d1e] border border-slate-800/90 shadow-lg grid grid-cols-3 gap-2.5">
+          <div className="p-3.5 rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-white/10 shadow-lg grid grid-cols-3 gap-2.5">
             {/* Nút Quét Điểm Danh Nhanh */}
             <button
               type="button"
               onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
-              className="btn-press col-span-2 py-3 px-3 rounded-2xl border border-cyan-400/40 bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_6px_18px_rgba(6,182,212,0.25)]"
+              className="btn-press col-span-2 py-3 px-3 rounded-2xl border-none bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_6px_18px_rgba(79,240,214,0.28)]"
             >
               <Zap size={15} />
               <span>Quét Thử Điểm Danh</span>
@@ -1344,7 +1344,7 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
             <button
               type="button"
               onClick={handleOpenCameraPinBackup}
-              className="btn-press py-3 px-2.5 rounded-2xl border border-cyan-500/40 bg-[#040814] hover:bg-cyan-950/50 text-cyan-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
+              className="btn-press py-3 px-2.5 rounded-2xl border border-[#4FF0D6]/35 bg-[#050A14] hover:bg-[#4FF0D6]/10 text-[#64F5DF] text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <KeyRound size={14} />
               <span>Nhập PIN</span>

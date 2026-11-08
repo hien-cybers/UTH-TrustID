@@ -631,39 +631,51 @@ export default function StudentWalletPro({
             const myMssv = previewStudentMssv || holderMssv;
 
             return walletSubTab === 'HISTORY' ? (
-              <div className="stagger-2 rounded-3xl p-4 border shadow-sm bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 text-slate-100 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-extrabold text-white m-0">
-                    Lịch Sử Chuyên Cần &amp; Biên Lai EIP-191
-                  </h3>
-                  <span className="px-2 py-0.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono text-[10px] font-bold">
-                    {displayCourses.length} môn học
-                  </span>
+              <div className="stagger-2 space-y-3.5">
+                {/* 1. Khối Tổng Quan Sổ Chuyên Cần & Bộ Lọc Pill Mềm Mại */}
+                <div className="rounded-[26px] p-4 border shadow-lg bg-gradient-to-br from-[#0F293A] via-[#0A1A2F] to-[#060E1C] border-teal-400/30 text-slate-100 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-[9.5px] font-mono font-bold text-[#64F5DF] uppercase tracking-wider">
+                        W3C • EIP-191 ATTENDANCE LEDGER
+                      </span>
+                      <h3 className="text-sm font-extrabold text-white m-0 mt-0.5">
+                        Lịch Sử Chuyên Cần &amp; Biên Lai Số
+                      </h3>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] font-mono text-[10px] font-bold">
+                      {displayCourses.length} học phần
+                    </span>
+                  </div>
+
+                  {/* Bộ chọn nhanh MSSV kiểu Pill hiện đại */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {[
+                      { id: holderMssv, label: `${holderMssv} (100%)` },
+                      { id: '2251120002', label: '2251120002 (66.7%)' },
+                      { id: '2251120003', label: '2251120003 (33.3%)' }
+                    ].map((item) => {
+                      const active = myMssv === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setPreviewStudentMssv(item.id === holderMssv ? '' : item.id)}
+                          className={`px-3 py-1.5 rounded-full text-[10.5px] font-mono cursor-pointer transition-all border ${
+                            active
+                              ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] border-transparent text-slate-950 font-extrabold shadow-[0_4px_14px_rgba(79,240,214,0.28)]'
+                              : 'bg-[#050A14] border-white/10 text-slate-400 hover:text-white font-semibold'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Bộ chọn nhanh MSSV */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {[
-                    { id: holderMssv, label: `${holderMssv} (100%)` },
-                    { id: '2251120002', label: '2251120002 (66.7%)' },
-                    { id: '2251120003', label: '2251120003 (33.3%)' }
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setPreviewStudentMssv(item.id === holderMssv ? '' : item.id)}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-semibold cursor-pointer border transition-all ${
-                        myMssv === item.id
-                          ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold'
-                          : 'bg-[#040814] border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-2.5">
+                {/* 2. Danh Sách Các Học Phần Bo Góc Mềm Mại Kèm Thanh Tiến Độ */}
+                <div className="space-y-3">
                   {displayCourses.map((course) => {
                     const cid = course.courseId || course.id;
                     const sesList = Array.isArray(course.sessions) ? course.sessions : [];
@@ -682,59 +694,73 @@ export default function StudentWalletPro({
                     return (
                       <div
                         key={cid}
-                        className={`rounded-2xl border transition-all overflow-hidden ${
+                        className={`rounded-[24px] border transition-all overflow-hidden shadow-md ${
                           isWarning
-                            ? 'bg-rose-950/25 border-rose-500/45'
+                            ? 'bg-gradient-to-b from-rose-950/35 to-[#070D19] border-rose-500/40'
                             : isExpanded
-                            ? 'bg-[#040814] border-cyan-500/45'
-                            : 'bg-[#040814]/80 border-slate-800'
+                            ? 'bg-gradient-to-b from-[#0C1E35] to-[#060E1C] border-teal-400/35'
+                            : 'bg-gradient-to-b from-[#0B192C] to-[#060D1A] border-white/10'
                         }`}
                       >
                         <button
                           type="button"
                           onClick={() => setExpandedCourseId(isExpanded ? null : cid)}
-                          className="w-full p-3 text-left bg-transparent border-none cursor-pointer flex items-center justify-between gap-2"
+                          className="w-full p-3.5 text-left bg-transparent border-none cursor-pointer space-y-2.5"
                         >
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/35 font-mono text-[10px] font-bold text-cyan-300">
-                                {course.courseCode}
-                              </span>
-                              <span className="text-[10px] text-slate-400">
-                                Phòng {course.defaultRoom}
-                              </span>
-                              {isWarning ? (
-                                <span className="px-1.5 py-0.5 rounded bg-rose-500/25 border border-rose-500/40 text-rose-200 font-bold text-[9.5px]">
-                                  Cảnh báo cấm thi (&lt; 80%)
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="px-2.5 py-0.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/30 font-mono text-[10px] font-bold text-[#64F5DF]">
+                                  {course.courseCode}
                                 </span>
-                              ) : (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold text-[9.5px]">
-                                  Đủ điều kiện thi
+                                <span className="text-[10px] text-slate-400">
+                                  Phòng {course.defaultRoom}
                                 </span>
-                              )}
-                              {isCourseLive && (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[9.5px] font-bold">
-                                  Buổi {activeCourseSession.sessionNumber} đang mở
-                                </span>
-                              )}
+                                {isWarning ? (
+                                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/35 text-rose-200 font-bold text-[9.5px]">
+                                    Cảnh báo (&lt; 80%)
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full bg-[#4FF0D6]/10 border border-[#4FF0D6]/25 text-[#64F5DF] font-semibold text-[9.5px]">
+                                    Đủ điều kiện thi
+                                  </span>
+                                )}
+                                {isCourseLive && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[9.5px] font-bold">
+                                    Buổi {activeCourseSession.sessionNumber} đang mở
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs font-extrabold text-white truncate mt-1.5">
+                                {course.courseName}
+                              </div>
                             </div>
-                            <div className="text-xs font-bold text-white truncate mt-1">
-                              {course.courseName}
+
+                            <div className="text-right flex-shrink-0">
+                              <div className={`font-mono text-xs font-extrabold ${isWarning ? 'text-rose-400' : 'text-[#64F5DF]'}`}>
+                                {myAttendedCount}/{totalSess} ({ratioNum}%)
+                              </div>
+                              <div className="text-[9.5px] text-slate-400 mt-0.5">
+                                {isExpanded ? 'Thu gọn ▲' : 'Chi tiết ▼'}
+                              </div>
                             </div>
                           </div>
 
-                          <div className="text-right flex-shrink-0">
-                            <div className={`font-mono text-xs font-extrabold ${isWarning ? 'text-rose-400' : 'text-emerald-400'}`}>
-                              {myAttendedCount}/{totalSess} ({ratioNum}%)
-                            </div>
-                            <div className="text-[9.5px] text-slate-400">
-                              {isExpanded ? 'Thu gọn ▲' : 'Chi tiết ▼'}
-                            </div>
+                          {/* Thanh tiến độ chuyên cần trực quan */}
+                          <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                isWarning
+                                  ? 'bg-gradient-to-r from-rose-500 to-amber-400'
+                                  : 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE]'
+                              }`}
+                              style={{ width: `${Math.max(8, Math.min(100, ratioNum))}%` }}
+                            />
                           </div>
                         </button>
 
                         {isExpanded && (
-                          <div className="px-3 pb-3 pt-1.5 border-t border-slate-800/80 space-y-2">
+                          <div className="px-3.5 pb-3.5 pt-2 border-t border-white/10 space-y-2">
                             {sesList.map((ses) => {
                               const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
                               const sDate = ses.date || ses.sessionDate || '';
@@ -757,17 +783,17 @@ export default function StudentWalletPro({
                               return (
                                 <div
                                   key={ses.sessionId}
-                                  className={`p-2.5 rounded-xl border space-y-1.5 text-[10.5px] ${
+                                  className={`p-3 rounded-2xl border space-y-1.5 text-[10.5px] ${
                                     !myRec
                                       ? 'bg-rose-950/20 border-rose-500/30'
                                       : isException
                                       ? 'bg-amber-950/20 border-amber-500/35'
-                                      : 'bg-[#081226] border-slate-800/90'
+                                      : 'bg-[#050B16] border-white/10'
                                   }`}
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <div>
-                                      <span className="font-mono font-bold text-cyan-300">
+                                      <span className="font-mono font-bold text-[#64F5DF]">
                                         Buổi {sIdx} ({sDate})
                                       </span>
                                       {myRec ? (
@@ -782,26 +808,26 @@ export default function StudentWalletPro({
                                     </div>
                                     {myRec ? (
                                       isException ? (
-                                        <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-[10px]">
+                                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-[10px]">
                                           Ngoại lệ ({myRec.distance}m)
                                         </span>
                                       ) : (
-                                        <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-[10px]">
+                                        <span className="px-2.5 py-0.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/30 text-[#64F5DF] font-mono font-bold text-[10px]">
                                           ✓ Có mặt ({myRec.distance}m)
                                         </span>
                                       )
                                     ) : (
-                                      <span className="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/35 text-rose-300 font-bold text-[10px]">
+                                      <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/35 text-rose-300 font-bold text-[10px]">
                                         ✕ Vắng mặt
                                       </span>
                                     )}
                                   </div>
 
                                   {myRec && (
-                                    <div className="pt-1.5 border-t border-slate-800/80 space-y-1">
+                                    <div className="pt-1.5 border-t border-white/10 space-y-1">
                                       <div className="flex items-center justify-between gap-2 font-mono text-[9.5px]">
                                         <span className="text-slate-400 truncate">
-                                          Biên lai chữ ký EIP-191: <code className="text-cyan-300">{receiptSig.slice(0, 16)}...{receiptSig.slice(-6)}</code>
+                                          Biên lai EIP-191: <code className="text-[#64F5DF]">{receiptSig.slice(0, 14)}...{receiptSig.slice(-6)}</code>
                                         </span>
                                         <button
                                           type="button"
@@ -810,20 +836,20 @@ export default function StudentWalletPro({
                                               isReceiptOpen ? null : `${ses.sessionId}_${myMssv}`
                                             )
                                           }
-                                          className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-sans font-bold text-[9.5px] cursor-pointer flex-shrink-0"
+                                          className="px-2.5 py-0.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/30 text-[#64F5DF] font-sans font-bold text-[9.5px] cursor-pointer flex-shrink-0"
                                         >
                                           {isReceiptOpen ? 'Ẩn biên lai' : 'Đối soát EIP-191'}
                                         </button>
                                       </div>
 
                                       {isReceiptOpen && (
-                                        <div className="p-2 rounded-lg bg-[#040814] border border-emerald-500/35 font-mono text-[9.5px] space-y-1 text-slate-300">
-                                          <div className="text-emerald-400 font-sans font-bold">
+                                        <div className="p-2.5 rounded-xl bg-[#030710] border border-[#4FF0D6]/30 font-mono text-[9.5px] space-y-1 text-slate-300">
+                                          <div className="text-[#64F5DF] font-sans font-bold">
                                             ✓ Biên lai chữ ký số EIP-191 hợp lệ &amp; khớp mã băm chốt sổ
                                           </div>
                                           <div className="break-all">
                                             <span className="text-slate-400">Chữ ký SV (EIP-191): </span>
-                                            <span className="text-cyan-300">{receiptSig}</span>
+                                            <span className="text-[#64F5DF]">{receiptSig}</span>
                                           </div>
                                           <div className="break-all">
                                             <span className="text-slate-400">Session Hash (GV khóa sổ): </span>
@@ -841,10 +867,10 @@ export default function StudentWalletPro({
                               <button
                                 type="button"
                                 onClick={() => navigate('/scan')}
-                                className="btn-press w-full py-2 px-3 rounded-lg bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-bold text-[10.5px] cursor-pointer flex items-center justify-between"
+                                className="btn-press w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] border-none text-slate-950 font-extrabold text-[11px] cursor-pointer flex items-center justify-between shadow-md"
                               >
                                 <span>+ Buổi {activeCourseSession.sessionNumber} đang mở điểm danh</span>
-                                <span className="underline">Quét QR ngay →</span>
+                                <span>Quét QR ngay →</span>
                               </button>
                             )}
                           </div>

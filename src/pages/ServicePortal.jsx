@@ -127,6 +127,12 @@ export default function ServicePortal() {
         title: 'CẤP GIẤY CHỨNG NHẬN ĐIỆN TỬ THÀNH CÔNG',
         detail: `Bản PDF có mã QR đối soát Merkle Root đã được lưu vào Ví Sinh Viên lúc ${time}.`
       });
+    } else if (serviceName === 'exam_pass') {
+      setServiceActionMsg({
+        type: 'SUCCESS',
+        title: 'ĐỒNG BỘ THẺ DỰ THI HỌC KỲ THÀNH CÔNG',
+        detail: `Thẻ dự thi điện tử (Phòng A2-301) đã được xác thực chữ ký số lúc ${time}.`
+      });
     }
   };
 
@@ -236,10 +242,10 @@ export default function ServicePortal() {
                   setSearchMssv(id);
                   setSearchResult(null);
                 }}
-                className={`px-3 py-1 rounded-full border font-mono text-[10px] font-semibold cursor-pointer transition-all ${
+                className={`px-3 py-1 rounded-full border font-mono text-[10.5px] cursor-pointer transition-all ${
                   searchMssv === id
-                    ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF] font-bold'
-                    : 'bg-[#050A14] border-white/10 hover:border-[#4FF0D6]/40 text-slate-300'
+                    ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] border-transparent text-slate-950 font-extrabold shadow-sm'
+                    : 'bg-[#050A14] border-white/10 hover:border-[#4FF0D6]/40 text-slate-300 font-semibold'
                 }`}
               >
                 {id}
@@ -250,10 +256,10 @@ export default function ServicePortal() {
           {/* Kết quả trả về */}
           {searchResult && (
             <div
-              className={`rounded-2xl p-3.5 border text-xs animate-fade-scale ${
+              className={`rounded-[22px] p-4 border text-xs animate-fade-scale ${
                 searchResult.notFound
                   ? 'bg-rose-950/30 border-rose-500/40 text-rose-300'
-                  : 'bg-[#040814] border-slate-800 text-slate-200 space-y-2'
+                  : 'bg-[#050B16] border-teal-400/30 text-slate-200 space-y-2.5'
               }`}
             >
               {searchResult.notFound ? (
@@ -265,15 +271,15 @@ export default function ServicePortal() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-800">
+                  <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/10">
                     <div>
                       <strong className="text-sm text-white">{searchResult.fullName}</strong>{' '}
-                      <span className="text-cyan-400 font-mono text-xs">({searchResult.studentId})</span>
+                      <span className="text-[#64F5DF] font-mono text-xs">({searchResult.studentId})</span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                         searchResult.cardStatus === 'Active'
-                          ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-400'
+                          ? 'bg-[#4FF0D6]/15 border-[#4FF0D6]/35 text-[#64F5DF]'
                           : 'bg-rose-500/20 border-rose-500/40 text-rose-300'
                       }`}
                     >
@@ -286,14 +292,14 @@ export default function ServicePortal() {
                       Ngành: <b className="text-white">{searchResult.major}</b> • {searchResult.faculty}
                     </div>
                     <div className="font-mono text-[10.5px] text-slate-400 break-all">
-                      DID: <span className="text-cyan-300">{searchResult.walletAddress}</span>
+                      DID: <span className="text-[#64F5DF]">{searchResult.walletAddress}</span>
                     </div>
                     <div className="font-mono text-[10.5px] text-slate-400">
                       Merkle Root: <span className="text-emerald-400">{searchResult.merkleRoot.slice(0, 24)}...</span>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+                  <div className="pt-2 border-t border-white/10 flex items-center gap-1.5 text-[11px] font-bold text-[#64F5DF]">
                     <CheckCircle2 size={14} />
                     <span>Đã xác thực Merkle Registry UTH</span>
                   </div>
@@ -304,12 +310,12 @@ export default function ServicePortal() {
         </div>
       )}
 
-      {/* TAB 2: TIỆN ÍCH HỌC VỤ MỘT CHẠM */}
+      {/* TAB 2: TIỆN ÍCH HỌC VỤ MỘT CHẠM (BO GÓC MỀM MẠI & GRADIENT MINT-CYAN) */}
       {activeTab === 'services' && (
-        <div className="rounded-3xl p-4 border shadow-lg bg-gradient-to-br from-[#0B1930] to-[#060E1E] border-slate-800 text-slate-100 space-y-3 animate-fade-scale">
+        <div className="rounded-[26px] p-4 border shadow-lg bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border-white/10 text-slate-100 space-y-3 animate-fade-scale">
           {serviceActionMsg && (
-            <div className="rounded-2xl p-3 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs space-y-1 animate-fade-scale">
-              <div className="font-extrabold flex items-center gap-1.5 text-emerald-400">
+            <div className="rounded-2xl p-3.5 bg-[#4FF0D6]/10 border border-[#4FF0D6]/35 text-[#64F5DF] text-xs space-y-1 animate-fade-scale">
+              <div className="font-extrabold flex items-center gap-1.5 text-[#64F5DF]">
                 <CheckCircle2 size={14} />
                 <span>{serviceActionMsg.title}</span>
               </div>
@@ -319,9 +325,9 @@ export default function ServicePortal() {
 
           <div className="grid grid-cols-1 gap-2.5">
             {/* Dịch vụ 1: Thư viện số */}
-            <div className="rounded-2xl p-3.5 bg-[#040814] border border-slate-800 flex items-center justify-between gap-3">
+            <div className="rounded-[22px] p-3.5 bg-[#050B16] border border-white/10 hover:border-teal-400/30 transition-all flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-500/35 flex items-center justify-center text-cyan-400 flex-shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 flex items-center justify-center text-[#64F5DF] flex-shrink-0">
                   <BookOpen size={19} />
                 </div>
                 <div className="min-w-0">
@@ -336,16 +342,16 @@ export default function ServicePortal() {
               <button
                 type="button"
                 onClick={() => handleServiceRequest('library')}
-                className="btn-press px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-[11px] font-extrabold border-none cursor-pointer flex-shrink-0"
+                className="btn-press px-3.5 py-2 rounded-full bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-[11px] font-extrabold border-none cursor-pointer flex-shrink-0 shadow-sm"
               >
                 Ký Xác Thực
               </button>
             </div>
 
             {/* Dịch vụ 2: Giấy xác nhận sinh viên */}
-            <div className="rounded-2xl p-3.5 bg-[#040814] border border-slate-800 flex items-center justify-between gap-3">
+            <div className="rounded-[22px] p-3.5 bg-[#050B16] border border-white/10 hover:border-teal-400/30 transition-all flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 border border-cyan-400/35 flex items-center justify-center text-cyan-300 flex-shrink-0">
                   <FileText size={19} />
                 </div>
                 <div className="min-w-0">
@@ -360,9 +366,33 @@ export default function ServicePortal() {
               <button
                 type="button"
                 onClick={() => handleServiceRequest('student_cert')}
-                className="btn-press px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 text-[11px] font-extrabold border-none cursor-pointer flex-shrink-0"
+                className="btn-press px-3.5 py-2 rounded-full bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-[11px] font-extrabold border-none cursor-pointer flex-shrink-0 shadow-sm"
               >
                 Cấp Ngay
+              </button>
+            </div>
+
+            {/* Dịch vụ 3: Thẻ dự thi điện tử */}
+            <div className="rounded-[22px] p-3.5 bg-[#050B16] border border-white/10 hover:border-teal-400/30 transition-all flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 flex-shrink-0">
+                  <CheckCircle2 size={19} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-extrabold text-white truncate">
+                    Thẻ Dự Thi Học Kỳ
+                  </div>
+                  <div className="text-[10.5px] text-slate-400 truncate">
+                    Đối soát tư cách dự thi &amp; phòng thi
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleServiceRequest('exam_pass')}
+                className="btn-press px-3.5 py-2 rounded-full bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 text-[11px] font-extrabold border-none cursor-pointer flex-shrink-0 shadow-sm"
+              >
+                Đồng Bộ
               </button>
             </div>
           </div>
