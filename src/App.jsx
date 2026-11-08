@@ -343,6 +343,35 @@ export default function App() {
       socket.on('session-closed', handleSessionClosed);
       socket.on('session-terminated', handleSessionClosed);
 
+      // Lắng nghe sự kiện Thu hồi khóa (revokeKey) / Khôi phục khóa (unrevokeKey) từ Quản trị viên Tối cao
+      socket.on('identity-revoked', () => {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([250, 100, 250]);
+        }
+        triggerSessionTerminatedFeedback();
+        setSpotVerifiedNotice(
+          '🚫 CẢNH BÁO AN NINH: Thẻ định danh DID trên thiết bị này vừa bị Quản trị viên thu hồi khóa (revokeKey)!'
+        );
+      });
+
+      socket.on('identity-unrevoked', () => {
+        triggerScanSuccessFeedback();
+        setSpotVerifiedNotice(
+          '🔓 Thẻ định danh DID đã được Quản trị viên khôi phục trạng thái Hợp lệ (unrevokeKey)!'
+        );
+        setTimeout(() => setSpotVerifiedNotice(''), 6000);
+      });
+
+      socket.on('attendee-revoked', (payload) => {
+        const myMssv = studentIdentityRef.current?.studentId || '2251120000';
+        if (payload?.studentId === myMssv) {
+          triggerSessionTerminatedFeedback();
+          setSpotVerifiedNotice(
+            `⚠️ Kết quả điểm danh phiên ${payload.sessionId} đã bị hủy bởi Thanh tra/Giảng viên: ${payload.reason || 'Vi phạm quy chế IDS'}`
+          );
+        }
+      });
+
       return () => {
         if (pollTimer) clearInterval(pollTimer);
         window.removeEventListener('uth-student-checked-in', handleStudentCheckedIn);

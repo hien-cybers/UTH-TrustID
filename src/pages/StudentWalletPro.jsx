@@ -634,7 +634,7 @@ export default function StudentWalletPro({
             const holderMssv = credential?.studentId || '2251120000';
             const myMssv = previewStudentMssv || holderMssv;
 
-            return (
+            return walletSubTab === 'HISTORY' ? (
               <div className="stagger-2 rounded-2xl p-4 border shadow-sm bg-[#081226] border-slate-800 text-slate-100 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
@@ -863,10 +863,29 @@ export default function StudentWalletPro({
                   })}
                 </div>
               </div>
+            ) : (
+              <div
+                onClick={() => setWalletSubTab('HISTORY')}
+                className="stagger-2 card-interactive rounded-2xl p-3.5 border shadow-sm bg-[#081226] border-slate-800 hover:border-cyan-500/40 text-slate-100 flex items-center justify-between gap-2 cursor-pointer"
+              >
+                <div>
+                  <div className="text-xs font-bold text-white">
+                    Sổ Điểm &amp; Lịch Sử Chuyên Cần Cá Nhân ({displayCourses.length} môn học)
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    Đối soát buổi có mặt/vắng &amp; biên lai chữ ký số EIP-191 từng buổi
+                  </div>
+                </div>
+                <span className="px-2.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-[10.5px] font-bold flex-shrink-0">
+                  Xem Lịch Sử →
+                </span>
+              </div>
             );
           })()}
 
           {/* TÙY CHỌN TIẾT LỘ CÓ CHỌN LỌC (SELECTIVE DISCLOSURE / ZKP-LITE) */}
+          {walletSubTab === 'CARD' && (
+          <>
           <div className="stagger-2 card-interactive rounded-2xl p-3.5 border shadow-sm transition-colors duration-200 bg-[#081226] border-slate-800 text-slate-100">
             <div className="flex justify-between items-center gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -971,6 +990,8 @@ export default function StudentWalletPro({
           >
             <Trash2 size={13} /> Gỡ thẻ số khỏi máy này
           </button>
+          </>
+          )}
         </div>
       )}
 

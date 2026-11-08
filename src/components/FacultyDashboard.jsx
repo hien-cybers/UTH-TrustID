@@ -470,7 +470,7 @@ export default function FacultyDashboard({
             const targetCourseCode = rec.courseCode;
             const targetSid = rec.sessionId;
             const updated = prevCourses.map((c) => {
-              if (targetCourseCode && c.courseCode !== targetCourseCode && c.id !== rec.classId) return c;
+              if (targetCourseCode && c.courseCode !== targetCourseCode && (c.courseId || c.id) !== rec.classId) return c;
               const sessList = Array.isArray(c.sessions) ? c.sessions : [];
               if (!targetSid || !sessList.some((s) => s.sessionId === targetSid)) return c;
               return {
@@ -485,13 +485,16 @@ export default function FacultyDashboard({
                           major: a.major,
                           checkInTime: a.checkInTime,
                           distance: a.distance,
-                          status: a.distance <= 100 ? 'VERIFIED' : 'OUT_OF_RANGE'
+                          status: a.distance <= 100 ? 'VERIFIED' : 'OUT_OF_RANGE',
+                          signatureHash: a.signatureHash
                         }))
                       }
                     : s
                 )
               };
             });
+            localStorage.setItem('uth_courses_catalog_v4', JSON.stringify(updated));
+            localStorage.setItem('uth_courses_catalog_v3', JSON.stringify(updated));
             localStorage.setItem('uth_courses_catalog_v2', JSON.stringify(updated));
             return updated;
           });
@@ -515,6 +518,66 @@ export default function FacultyDashboard({
     socket.on('student-checked-in', upsertAttendee);
     socket.on('student-verified', upsertAttendee);
     socket.on('attendee-updated', upsertAttendee);
+
+    // Lắng nghe đồng bộ danh mục lớp học phần (courses-updated) từ Backend
+    socket.on('courses-updated', (payload) => {
+      if (Array.isArray(payload?.courses) && payload.courses.length > 0) {
+        setCourses(payload.courses);
+        try {
+          localStorage.setItem('uth_courses_catalog_v4', JSON.stringify(payload.courses));
+        } catch {}
+      }
+    });
+
+    // Lắng nghe sự kiện hủy kết quả điểm danh gian lận từ Thanh tra / Giảng viên
+    socket.on('attendee-revoked', (payload) => {
+      const revokedMssv = payload?.studentId;
+      if (revokedMssv) {
+        setAttendees((prev) => prev.filter((a) => a.studentId !== revokedMssv));
+        setAuditorStatusMsg(
+          `Đã đình chỉ & hủy kết quả điểm danh của SV ${payload.studentName || revokedMssv} (${revokedMssv})`
+        );
+      }
+    });
+
+    // Lắng nghe cảnh báo IDS thời gian thực (Xung đột thiết bị, Mock GPS, Geo-IP Mismatch)
+    socket.on('ids-alert', (alert) => {
+      if (alert) {
+        setAuditLogs((prev) => [
+          {
+            id: alert.id || 'ids_' + Date.now(),
+            time: alert.time || new Date().toLocaleTimeString('vi-VN'),
+            action: `CẢNH BÁO IDS [${alert.type}]`,
+            detail: alert.detail,
+            result: alert.severity || 'HIGH'
+          },
+          ...prev.slice(0, 49)
+        ]);
+      }
+    });
+
+    socket.on('security-alert', (alert) => {
+      if (alert) {
+        setAuditorStatusMsg(
+          `CẢNH BÁO GIAN LẬN: Thiết bị ${alert.deviceId} đã điểm danh cho ${alert.firstStudent}, nay cố điểm danh hộ cho ${alert.attemptedStudent}!`
+        );
+      }
+    });
+
+    // Lắng nghe sự kiện cập nhật Merkle Root & Thu hồi khóa trên chuỗi
+    socket.on('merkle-root-updated', (payload) => {
+      if (payload?.merkleRoot) {
+        setAdminStats((prev) => ({ ...prev, merkleRoot: payload.merkleRoot }));
+      }
+    });
+
+    socket.on('identity-revoked', () => {
+      fetchAdminAuditLogs();
+    });
+
+    socket.on('identity-unrevoked', () => {
+      fetchAdminAuditLogs();
+    });
 
     // Lắng nghe Yêu cầu Hậu kiểm (Inspection Request Flag) hoặc Override từ Thanh tra (Auditor)
     socket.on('auditor-inspection-request', (payload) => {
@@ -1186,7 +1249,7 @@ export default function FacultyDashboard({
     link.click();
   };
 
-  // Đóng hoặc mở lại nhận diện phiên
+  // Đóng hoặc mở lại nhận diện phiên (Giữ nguyên buổi học hiện tại, KHÔNG tạo buổi học mới khi bấm Mở lại)
   const handleToggleSessionState = async () => {
     const nextState = !isSessionOpen;
     setIsSessionOpen(nextState);
@@ -1200,7 +1263,30 @@ export default function FacultyDashboard({
         });
       } catch {}
     } else {
-      handleStartProjectorSession();
+      setTimerProgress(ROTATE_INTERVAL);
+      try {
+        const res = await smartFetch('/api/session/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            classId: activeCourseId,
+            sessionNumber: sessionConfig.sessionNumber || 1,
+            courseCode: sessionConfig.courseCode,
+            courseName: sessionConfig.courseName,
+            room: sessionConfig.room,
+            centerCoords: sessionConfig.centerCoords,
+            maxRadiusMeters: sessionConfig.maxRadiusMeters,
+            networkMode: sessionConfig.networkMode,
+            campusSsid: sessionConfig.campusSsid
+          })
+        });
+        const data = await res.json();
+        if (data?.success && data.initialNonce) {
+          setCurrentNonce(data.initialNonce);
+          socketRef.current?.emit('join-session', { sessionId, role: 'FACULTY' });
+        }
+      } catch {}
     }
   };
 
@@ -1418,6 +1504,59 @@ export default function FacultyDashboard({
     }
   };
 
+  // Phát lệnh Hậu kiểm 60s đích danh 1 sinh viên nghi vấn từ bảng IDS
+  const handleTriggerSingleStudentSpotCheck = async (student) => {
+    if (!student?.studentId) return;
+    const targetIds = Array.from(new Set([student.studentId, '2251120000']));
+    setAttendees((prev) =>
+      prev.map((a) => (targetIds.includes(a.studentId) ? { ...a, spotCheckStatus: 'PENDING' } : a))
+    );
+    setSpotCheckState({ active: true, countdown: 60, targetIds });
+    setAuditorStatusMsg(
+      `Đã phát lệnh Hậu kiểm Face ID 60s đích danh tới sinh viên ${student.name} (${student.studentId})!`
+    );
+    socketRef.current?.emit('trigger-spot-check', {
+      sessionId,
+      timeoutSec: 60,
+      targetIds,
+      mode: 'SINGLE_TARGET'
+    });
+    try {
+      await smartFetch('/api/faculty/spot-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          timeoutSeconds: 60,
+          targetIds,
+          mode: 'SINGLE_TARGET'
+        })
+      });
+    } catch {}
+  };
+
+  // Đình chỉ & Hủy kết quả điểm danh gian lận từ bảng IDS (Thanh tra hoặc Giảng viên)
+  const handleRevokeFraudulentAttendee = async (student) => {
+    if (!student?.studentId) return;
+    setAttendees((prev) => prev.filter((a) => a.studentId !== student.studentId));
+    setAuditorStatusMsg(
+      `Đã hủy kết quả điểm danh của sinh viên ${student.name} (${student.studentId}) do vi phạm quy chế IDS!`
+    );
+    try {
+      await smartFetch('/api/auditor/revoke-attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          studentId: student.studentId,
+          studentName: student.name,
+          reason: `Vi phạm quy chế IDS (Thiết bị: ${student.deviceId}, Khoảng cách: ${student.distance}m)`
+        })
+      });
+      fetchAdminAuditLogs();
+    } catch {}
+  };
+
   // Giả lập sinh viên vượt qua Spot-check
   const handleMockPass = (studentId) => {
     setAttendees(prev => prev.map(a => 
@@ -1471,8 +1610,15 @@ export default function FacultyDashboard({
     try {
       const res = await smartFetch('/api/admin/audit-logs');
       const data = await res.json();
-      if (data?.success && Array.isArray(data.auditLogs)) {
-        setAuditLogs(data.auditLogs);
+      if (data?.success) {
+        if (Array.isArray(data.auditLogs)) {
+          setAuditLogs(data.auditLogs);
+        }
+        setAdminStats((prev) => ({
+          ...prev,
+          merkleRoot: data.merkleRoot || prev.merkleRoot,
+          revokedDID: Array.isArray(data.revokedAddresses) ? data.revokedAddresses.length : prev.revokedDID
+        }));
       }
     } catch {}
   };
@@ -3883,10 +4029,28 @@ export default function FacultyDashboard({
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <span className={`px-2.5 py-1 rounded-lg border font-mono font-bold text-xs ${badgeStyle}`}>
                                   Risk Score: {risk.score}/100
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTriggerSingleStudentSpotCheck(st)}
+                                  className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-300 text-xs font-semibold cursor-pointer transition-all"
+                                  title="Yêu cầu sinh viên này quét lại Face ID trong 60s"
+                                >
+                                  Hậu Kiểm 60s
+                                </button>
+                                {risk.score >= 30 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRevokeFraudulentAttendee(st)}
+                                    className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 text-rose-300 text-xs font-bold cursor-pointer transition-all"
+                                    title="Đình chỉ và hủy kết quả điểm danh nghi vấn gian lận"
+                                  >
+                                    Hủy Điểm Danh
+                                  </button>
+                                )}
                               </div>
                             </div>
                           );
