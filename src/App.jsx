@@ -626,18 +626,27 @@ export default function App() {
         {spotCheckState.isActive && !spotCheckState.isModalOpen && (
           <div
             onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
-            className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-amber-500/20 border border-amber-500/50 backdrop-blur-md flex items-center justify-between cursor-pointer animate-pulse shadow-lg"
+            className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/25 border border-amber-400/60 backdrop-blur-md flex items-center justify-between gap-2 cursor-pointer shadow-[0_8px_24px_rgba(245,158,11,0.25)]"
           >
-            <div>
-              <p className="text-xs font-bold text-amber-300 m-0">
-                Yêu cầu Hậu kiểm Spot-Check đang diễn ra
-              </p>
-              <p className="text-[10px] text-amber-200/80 m-0">
-                Chạm vào đây để quét Face ID xác thực ngay
-              </p>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="relative flex h-3 w-3 flex-shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-400" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold text-amber-300 m-0 truncate">
+                  Hậu kiểm Spot-Check đang diễn ra ({spotCheckState.countdown}s)
+                </p>
+                <p className="text-[10px] text-amber-200/85 m-0 truncate">
+                  Chạm để xác thực Face ID ngay • Tránh bị đánh vắng
+                </p>
+              </div>
             </div>
-            <span className="px-2.5 py-1 rounded-xl bg-amber-500 text-slate-950 font-mono font-black text-xs">
-              {spotCheckState.countdown}s
+            <span className="relative inline-flex items-center flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-xl bg-amber-400 opacity-40" />
+              <span className="relative px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-mono font-black text-xs">
+                Xác thực • {spotCheckState.countdown}s
+              </span>
             </span>
           </div>
         )}

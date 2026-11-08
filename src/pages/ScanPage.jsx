@@ -462,37 +462,69 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
     }
   };
 
-  // Mở Modal yêu cầu nhập Mã PIN 6 số khi FaceID/Vân tay trên thiết bị thay đổi (InvalidStateError / NotAllowedError)
+  // Mở Modal yêu cầu nhập Mã PIN 6 số (6 ô OTP viền Neon) khi hỏng Camera hoặc đổi FaceID
+  const [pinDigits, setPinDigits] = useState(['', '', '', '', '', '']);
+  const [activeBounceIdx, setActiveBounceIdx] = useState(-1);
+  const pinBoxRefs = useRef([]);
+
   const requestPinFallbackModal = () => {
     return new Promise((resolve) => {
       setPinInput('');
+      setPinDigits(['', '', '', '', '', '']);
       setPinError('');
       setPinModalOpen(true);
       pinResolverRef.current = resolve;
+      setTimeout(() => {
+        pinBoxRefs.current[0]?.focus();
+      }, 60);
     });
   };
 
-  const handleConfirmPinModal = async () => {
+  // Mở trực tiếp 6 ô nhập mã PIN dự phòng khi hỏng Camera -> Đủ 6 số tự rung 100ms & mở Face ID ngay!
+  const handleOpenCameraPinBackup = () => {
+    setPinInput('');
+    setPinDigits(['', '', '', '', '', '']);
+    setPinError('');
+    setPinModalOpen(true);
+    pinResolverRef.current = (ok) => {
+      if (ok) {
+        handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`);
+      }
+    };
+    setTimeout(() => {
+      pinBoxRefs.current[0]?.focus();
+    }, 60);
+  };
+
+  const handleConfirmPinValue = async (candidatePin) => {
+    const code = candidatePin ?? pinDigits.join('') ?? pinInput;
     if (pinAttempts >= 5) {
       setPinError('Bạn đã nhập sai quá 5 lần. Vui lòng chờ 5 phút.');
       return;
     }
 
-    if (pinInput !== '123456') {
+    if (code !== '123456') {
       const nextAttempts = pinAttempts + 1;
       setPinAttempts(nextAttempts);
-      setPinError(`Mã PIN không chính xác! (${nextAttempts}/5)`);
+      setPinError(`Mã PIN không chính xác! (Mặc định: 123456 • Lần ${nextAttempts}/5)`);
       setPinInput('');
+      setPinDigits(['', '', '', '', '', '']);
+      setTimeout(() => pinBoxRefs.current[0]?.focus(), 40);
       return;
     }
 
-    const check = await verifyRecoveryPinAndUnwrap(pinInput);
+    const check = await verifyRecoveryPinAndUnwrap(code);
     if (!check.valid) {
       const nextAttempts = pinAttempts + 1;
       setPinAttempts(nextAttempts);
       setPinError(`Mã PIN không chính xác! (${nextAttempts}/5)`);
       setPinInput('');
+      setPinDigits(['', '', '', '', '', '']);
       return;
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(100);
     }
     setPinAttempts(0);
     setPinError('');
@@ -500,8 +532,44 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
     setSimBiometricChanged(false);
     setSimulatedBiometricInvalidation(false);
     if (pinResolverRef.current) {
-      pinResolverRef.current(true);
+      const fn = pinResolverRef.current;
       pinResolverRef.current = null;
+      fn(true);
+    }
+  };
+
+  const handleConfirmPinModal = () => handleConfirmPinValue(pinDigits.join('') || pinInput);
+
+  const handleOtpDigitChange = (idx, rawVal) => {
+    const digit = rawVal.replace(/\D/g, '').slice(-1);
+    const next = [...pinDigits];
+    next[idx] = digit;
+    setPinDigits(next);
+    const joined = next.join('');
+    setPinInput(joined);
+    setPinError('');
+
+    if (digit) {
+      setActiveBounceIdx(idx);
+      setTimeout(() => setActiveBounceIdx(-1), 180);
+      if (idx < 5) {
+        pinBoxRefs.current[idx + 1]?.focus();
+      } else if (joined.length === 6) {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+        setTimeout(() => {
+          handleConfirmPinValue(joined);
+        }, 120);
+      }
+    }
+  };
+
+  const handleOtpKeyDown = (idx, e) => {
+    if (e.key === 'Backspace' && !pinDigits[idx] && idx > 0) {
+      pinBoxRefs.current[idx - 1]?.focus();
+    } else if (e.key === 'Enter' && pinDigits.join('').length === 6) {
+      handleConfirmPinValue(pinDigits.join(''));
     }
   };
 
@@ -1111,472 +1179,145 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
   };
 
   return (
-    <div className="page-enter" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      
-      {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-        <button
-          onClick={() => navigate('/wallet')}
-          className="btn-press"
-          style={{
-            background: 'var(--bg-inset)',
-            border: '1px solid var(--border-hairline)',
-            borderRadius: '8px',
-            padding: '5px 10px',
-            color: 'var(--text-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '11.5px',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          <ArrowLeft size={13} />
-          <span>Về Ví Số</span>
-        </button>
-
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {/* Nút bật/tắt giả lập Sinh viên đổi FaceID mới trên iPhone để test Seamless PIN Re-enrollment */}
-          <button
-            onClick={() => {
-              const next = !simBiometricChanged;
-              setSimBiometricChanged(next);
-              setSimulatedBiometricInvalidation(next);
-            }}
-            className="btn-press"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '5px 8px',
-              borderRadius: '8px',
-              border: simBiometricChanged ? '1px solid rgba(244, 63, 94, 0.5)' : '1px solid rgba(6, 182, 212, 0.3)',
-              background: simBiometricChanged ? 'rgba(244, 63, 94, 0.15)' : 'rgba(6, 182, 212, 0.1)',
-              color: simBiometricChanged ? '#F43F5E' : '#06B6D4',
-              fontSize: '10px',
-              fontWeight: 700,
-              cursor: 'pointer'
-            }}
-          >
-            <Fingerprint size={12} />
-            <span>{simBiometricChanged ? 'Đang Giả Lập Đổi FaceID' : 'Test Đổi FaceID'}</span>
-          </button>
-
-          {/* Chuyển đổi Online / Offline Proof-of-Presence */}
-          <button
-            onClick={() => {
-              const nextOffline = !isOfflineMode;
-              setIsOfflineMode(nextOffline);
-              if (!nextOffline && offlineQueue.length > 0) {
-                handleBackgroundSync();
-              }
-            }}
-            className="btn-press"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '5px 8px',
-              borderRadius: '8px',
-              border: isOfflineMode ? '1px solid rgba(245, 158, 11, 0.45)' : '1px solid rgba(16, 185, 129, 0.35)',
-              background: isOfflineMode ? 'rgba(245, 158, 11, 0.14)' : 'rgba(16, 185, 129, 0.12)',
-              color: isOfflineMode ? '#F59E0B' : '#10B981',
-              fontSize: '10px',
-              fontWeight: 700,
-              cursor: 'pointer'
-            }}
-          >
-            {isOfflineMode ? <WifiOff size={12} /> : <Wifi size={12} />}
-            <span>{isOfflineMode ? 'Offline' : 'Online'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* THÔNG TIN LỚP HỌC PHẦN & BUỔI HỌC ĐANG ĐIỂM DANH (ĐỒNG BỘ CẤU TRÚC 1 LỚP -> N BUỔI HỌC) */}
-      <div
-        className="glass-card"
-        style={{
-          padding: '12px 14px',
-          borderRadius: '16px',
-          border: '1px solid rgba(56, 189, 248, 0.42)',
-          background: 'linear-gradient(135deg, rgba(13, 43, 82, 0.85), rgba(8, 18, 38, 0.95))'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-          <span
-            style={{
-              padding: '3px 9px',
-              borderRadius: '7px',
-              background: 'rgba(56, 189, 248, 0.18)',
-              border: '1px solid rgba(56, 189, 248, 0.45)',
-              color: '#38BDF8',
-              fontSize: '10.5px',
-              fontFamily: 'JetBrains Mono',
-              fontWeight: 800
-            }}
-          >
-            {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
-          </span>
-          <span style={{ fontSize: '10.5px', fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#10B981' }}>
-            Phòng {courseMeta.room || activeCourseSession?.room || 'A2-301'}
-          </span>
-        </div>
-        <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-          {courseMeta.courseName || activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
-        </div>
-      </div>
-
-      {/* BẢNG THỰC NGHIỆM NCKH: KIỂM SOÁT KẾT NỐI MẠNG & VỊ TRÍ GPS */}
-      <div
-        className="glass-card"
-        style={{
-          padding: '10px 12px',
-          borderRadius: '14px',
-          border: sessionNetworkMode === 'CAMPUS_WIFI' && phoneNetworkMode === '4G'
-            ? '1px solid rgba(245, 158, 11, 0.5)'
-            : '1px solid rgba(56, 189, 248, 0.35)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-main)' }}>
-              Mạng Điện Thoại:
-            </span>
-            <button
-              type="button"
-              onClick={() => setPhoneNetworkMode('4G')}
-              className="btn-press"
-              style={{
-                padding: '3px 8px',
-                borderRadius: '7px',
-                fontSize: '10px',
-                fontWeight: 800,
-                border: phoneNetworkMode === '4G' ? '1px solid #38BDF8' : '1px solid var(--border-hairline)',
-                background: phoneNetworkMode === '4G' ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-inset)',
-                color: phoneNetworkMode === '4G' ? '#38BDF8' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              Đang bật 4G/5G
-            </button>
-            <button
-              type="button"
-              onClick={() => setPhoneNetworkMode('WIFI')}
-              className="btn-press"
-              style={{
-                padding: '3px 8px',
-                borderRadius: '7px',
-                fontSize: '10px',
-                fontWeight: 800,
-                border: phoneNetworkMode === 'WIFI' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
-                background: phoneNetworkMode === 'WIFI' ? 'rgba(16, 185, 129, 0.16)' : 'var(--bg-inset)',
-                color: phoneNetworkMode === 'WIFI' ? '#10B981' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              Wi-Fi Trường
-            </button>
-          </div>
-
+    <div className="page-enter space-y-3" style={{ width: '100%' }}>
+      {/* 1. THANH ĐIỀU HƯỚNG & THÔNG TIN BUỔI HỌC GỌN GÀNG TRÊN ĐẦU */}
+      <div className="rounded-3xl p-3.5 border bg-gradient-to-br from-[#0D2B52]/90 via-[#081226] to-[#041529] border-cyan-500/40 shadow-lg">
+        <div className="flex items-center justify-between gap-2 mb-2">
           <button
             type="button"
-            onClick={() => setShowServerUrlBar((v) => !v)}
-            className="btn-press"
-            style={{
-              padding: '3px 7px',
-              borderRadius: '7px',
-              fontSize: '9.5px',
-              fontFamily: 'JetBrains Mono',
-              fontWeight: 700,
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              background: 'rgba(16, 185, 129, 0.1)',
-              color: '#10B981',
-              cursor: 'pointer'
-            }}
+            onClick={() => navigate('/wallet')}
+            className="btn-press px-2.5 py-1 rounded-xl bg-[#040814] border border-slate-800 text-slate-300 hover:text-cyan-300 flex items-center gap-1.5 text-[11px] font-bold cursor-pointer"
           >
-            SERVER_URL
+            <ArrowLeft size={13} />
+            <span>Về Ví Số</span>
           </button>
-        </div>
 
-        <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)' }}>
-          <span>
-            Chính sách Giảng viên:{' '}
-            <b style={{ color: sessionNetworkMode === 'CAMPUS_WIFI' ? '#F59E0B' : '#10B981' }}>
-              {sessionNetworkMode === 'CAMPUS_WIFI' ? `Wi-Fi Trường (R ≤ ${sessionRadius}m)` : `4G/5G Tự do (R ≤ ${sessionRadius}m)`}
-            </b>
-          </span>
-          <span style={{ fontFamily: 'JetBrains Mono', fontSize: '9.5px', color: '#38BDF8' }}>
-            {serverUrlInput.replace(/^https?:\/\//, '')}
-          </span>
-        </div>
-
-        {/* BỘ CHỈNH KHOẢNG CÁCH GPS & FAKE GPS THỰC NGHIỆM TRÊN ĐIỆN THOẠI */}
-        <div
-          style={{
-            marginTop: '7px',
-            paddingTop: '7px',
-            borderTop: '1px solid var(--border-hairline)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '5px',
-            flexWrap: 'wrap'
-          }}
-        >
-          <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-main)' }}>
-            Test GPS (R ≤ {sessionRadius}m):
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => setSimDistanceMeters('8')}
-              className="btn-press"
-              style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === '8' ? '1px solid #10B981' : '1px solid var(--border-hairline)',
-                background: simDistanceMeters === '8' ? 'rgba(16, 185, 129, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === '8' ? '#10B981' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              Trong lớp (8m)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSimDistanceMeters('85')}
-              className="btn-press"
-              style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === '85' ? '1px solid #F43F5E' : '1px solid var(--border-hairline)',
-                background: simDistanceMeters === '85' ? 'rgba(244, 63, 94, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === '85' ? '#F43F5E' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              Ngoài lớp (85m)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSimDistanceMeters('FAKE_GPS')}
-              className="btn-press"
-              style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === 'FAKE_GPS' ? '1px solid #F59E0B' : '1px solid var(--border-hairline)',
-                background: simDistanceMeters === 'FAKE_GPS' ? 'rgba(245, 158, 11, 0.18)' : 'var(--bg-inset)',
-                color: simDistanceMeters === 'FAKE_GPS' ? '#F59E0B' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              Fake GPS (0.0m)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSimDistanceMeters('REAL_GPS')}
-              className="btn-press"
-              style={{
-                padding: '3px 7px',
-                borderRadius: '6px',
-                fontSize: '9.5px',
-                fontWeight: 800,
-                border: simDistanceMeters === 'REAL_GPS' ? '1px solid #38BDF8' : '1px solid var(--border-hairline)',
-                background: simDistanceMeters === 'REAL_GPS' ? 'rgba(56, 189, 248, 0.16)' : 'var(--bg-inset)',
-                color: simDistanceMeters === 'REAL_GPS' ? '#38BDF8' : 'var(--text-muted)',
-                cursor: 'pointer'
-              }}
-            >
-              GPS Thật
-            </button>
-            {simDistanceMeters !== 'REAL_GPS' && simDistanceMeters !== 'FAKE_GPS' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                <input
-                  type="number"
-                  min={0}
-                  max={50000}
-                  value={simDistanceMeters}
-                  onChange={(e) => setSimDistanceMeters(e.target.value)}
-                  style={{
-                    width: '48px',
-                    padding: '2px 4px',
-                    borderRadius: '6px',
-                    border: '1px solid rgba(56, 189, 248, 0.4)',
-                    background: 'var(--bg-inset)',
-                    color: '#38BDF8',
-                    fontFamily: 'JetBrains Mono',
-                    fontSize: '9.5px',
-                    textAlign: 'center'
-                  }}
-                  title="Nhập khoảng cách mét bất kỳ của sinh viên tới máy chiếu"
-                />
-                <span style={{ fontSize: '9.5px', color: 'var(--text-dim)', fontFamily: 'JetBrains Mono' }}>m</span>
-              </div>
-            )}
+          <div className="flex items-center gap-1.5">
+            <span className="px-2.5 py-1 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-extrabold">
+              {courseMeta.courseCode || activeCourseSession?.courseCode || 'IT402.N01'} • Buổi {courseMeta.sessionNumber || activeCourseSession?.sessionNumber || 3}
+            </span>
+            <span className="px-2 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 text-[10px] font-mono font-bold">
+              {courseMeta.room || activeCourseSession?.room || 'A2-301'}
+            </span>
           </div>
         </div>
 
-        {showServerUrlBar && (
-          <div style={{ marginTop: '8px', display: 'flex', gap: '6px' }}>
-            <input
-              type="text"
-              value={serverUrlInput}
-              onChange={(e) => setServerUrlInput(e.target.value)}
-              placeholder="https://uth-trustid-demo.loca.lt"
-              className="pro-input"
-              style={{ flex: 1, fontSize: '11px', fontFamily: 'JetBrains Mono', padding: '6px 8px' }}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setCustomServerUrl(serverUrlInput);
-                setShowServerUrlBar(false);
-              }}
-              className="btn-press"
-              style={{
-                padding: '6px 10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#06B6D4',
-                color: '#040814',
-                fontSize: '10.5px',
-                fontWeight: 800,
-                cursor: 'pointer'
-              }}
-            >
-              Lưu URL
-            </button>
-          </div>
-        )}
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="font-extrabold text-white truncate">
+            {courseMeta.courseName || activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
+          </span>
+          <span className="text-[10px] font-mono text-cyan-300 flex-shrink-0">
+            R ≤ {sessionRadius}m
+          </span>
+        </div>
       </div>
 
-      {/* BANNER TÁI KIỂM TRA ĐIỂM DANH ĐỘT XUẤT (SPOT-CHECK 60S TỪ GIẢNG VIÊN) */}
+      {/* 2. BANNER TÁI KIỂM TRA ĐIỂM DANH ĐỘT XUẤT (SPOT-CHECK 60S TỪ GIẢNG VIÊN) */}
       {(spotCheckState?.isActive || spotCheckRequest) && (
-        <div
-          className="glass-card"
-          style={{
-            borderColor: 'rgba(245, 158, 11, 0.65)',
-            background: 'var(--tint-amber)',
-            padding: '14px'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--tone-amber)' }}>
-              YÊU CẦU TÁI KIỂM TRA ĐỘT XUẤT (SPOT-CHECK)
+        <div className="rounded-3xl p-3.5 border border-amber-400/60 bg-amber-950/35 shadow-lg space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-wide flex items-center gap-1.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
+              </span>
+              Yêu Cầu Hậu Kiểm Spot-Check 60s
             </span>
-            <span style={{ fontSize: '11.5px', fontFamily: 'JetBrains Mono', fontWeight: 800, color: '#F59E0B' }}>
-              Còn {spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s
+            <span className="px-2 py-0.5 rounded-lg bg-amber-400 text-slate-950 font-mono font-black text-xs">
+              {spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s
             </span>
           </div>
-          <p style={{ fontSize: '11px', color: 'var(--text-main)', margin: '0 0 10px', lineHeight: 1.45 }}>
-            Giảng viên vừa kích hoạt lệnh kiểm tra hiện diện giữa giờ. Vui lòng xác thực lại <b>FaceID / TouchID</b> trong vòng 60 giây để không bị đánh vắng:
-          </p>
           <button
+            type="button"
             onClick={handleConfirmSpotCheckFaceId}
-            className="btn-press"
-            style={{
-              width: '100%',
-              padding: '10.5px',
-              borderRadius: '10px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-              color: '#04060A',
-              fontWeight: 800,
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              cursor: 'pointer'
-            }}
+            className="btn-press w-full py-2.5 rounded-2xl border-none bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
           >
             <Fingerprint size={15} />
-            <span>Xác Thực Lại Face ID ({spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s)</span>
+            <span>Xác Thực Lại Face ID Ngay ({spotCheckState?.isActive ? spotCheckState.countdown : spotCheckCountdown}s)</span>
           </button>
         </div>
       )}
 
-      {/* MODAL NHẬP MÃ PIN KHÔI PHỤC 6 SỐ KHI SINH VIÊN ĐỔI FACEID / VÂN TAY TRÊN ĐIỆN THOẠI */}
+      {/* 3. BỘ NHẬP MÃ PIN DỰ PHÒNG 6 Ô SỐ VIỀN NEON (OTP PIN BOXES) KHI HỎNG CAMERA / ĐỔI FACE ID */}
       {pinModalOpen && (
-        <div
-          className="glass-card"
-          style={{
-            borderColor: 'rgba(245, 158, 11, 0.55)',
-            background: 'var(--tint-amber)',
-            padding: '16px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-            <KeyRound size={18} color="#F59E0B" />
-            <h3 style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--tone-amber)', margin: 0 }}>
-              Cập Nhật Lại Liên Kết FaceID / Vân Tay
-            </h3>
+        <div className="rounded-3xl p-4 border border-cyan-400/50 bg-gradient-to-br from-[#081226] via-[#050d1e] to-[#030712] shadow-[0_12px_34px_rgba(6,182,212,0.2)] space-y-3 animate-fade-scale">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
+                <KeyRound size={16} />
+              </div>
+              <div>
+                <h3 className="text-xs font-extrabold text-white m-0">
+                  Nhập Mã PIN Dự Phòng (6 Ô Số Neon)
+                </h3>
+                <p className="text-[10px] text-slate-400 m-0">
+                  Mặc định: <b className="text-cyan-300 font-mono">123456</b> • Đủ 6 số tự mở Face ID
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelPinModal}
+              className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold cursor-pointer"
+            >
+              Đóng ✕
+            </button>
           </div>
-          <p style={{ fontSize: '11.5px', color: 'var(--text-main)', lineHeight: 1.45, margin: '0 0 10px' }}>
-            Dữ liệu sinh trắc học trên thiết bị đã thay đổi (<code>InvalidStateError</code>). Nhập <b>Mã PIN cá nhân 6 số</b> để giải mã khóa <code>AES-GCM 256-bit</code> và kích hoạt lại FaceID mới mà không mất thẻ số:
-          </p>
 
-          <input
-            type="password"
-            maxLength={6}
-            value={pinInput}
-            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            placeholder="Nhập PIN 6 số (Mặc định: 123456)"
-            className="pro-input"
-            style={{
-              fontFamily: 'JetBrains Mono',
-              fontSize: '15px',
-              fontWeight: 800,
-              letterSpacing: '4px',
-              textAlign: 'center',
-              marginBottom: '8px'
-            }}
-          />
+          {/* 6 Ô SỐ VIỀN NEON CÓ HIỆU ỨNG NẢY (SCALE-110 -> SCALE-100) */}
+          <div className="grid grid-cols-6 gap-2 pt-1">
+            {pinDigits.map((digit, idx) => {
+              const isBouncing = activeBounceIdx === idx;
+              const isFilled = Boolean(digit);
+              return (
+                <input
+                  key={idx}
+                  ref={(el) => {
+                    pinBoxRefs.current[idx] = el;
+                  }}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                  className={`w-full h-12 rounded-2xl text-center font-mono text-lg font-black transition-all duration-150 outline-none ${
+                    isBouncing ? 'scale-110' : 'scale-100'
+                  } ${
+                    isFilled
+                      ? 'bg-cyan-500/20 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.35)]'
+                      : 'bg-[#040814] border border-cyan-500/35 text-white focus:border-cyan-400 focus:shadow-[0_0_12px_rgba(34,211,238,0.25)]'
+                  }`}
+                />
+              );
+            })}
+          </div>
 
           {pinError && (
-            <div style={{ fontSize: '11px', color: '#EF4444', marginBottom: '8px', fontWeight: 600 }}>
+            <div className="text-[11px] text-rose-400 font-semibold text-center bg-rose-950/30 border border-rose-500/30 rounded-xl py-1.5 px-2">
               {pinError}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="flex gap-2 pt-1">
             <button
-              onClick={handleConfirmPinModal}
-              className="btn-press"
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: '10px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #10B981, #059669)',
-                color: '#FFF',
-                fontWeight: 800,
-                fontSize: '12px',
-                cursor: 'pointer'
+              type="button"
+              onClick={() => {
+                setPinDigits(['1', '2', '3', '4', '5', '6']);
+                setPinInput('123456');
+                if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                  navigator.vibrate(100);
+                }
+                handleConfirmPinValue('123456');
               }}
+              className="btn-press flex-1 py-2.5 rounded-2xl border-none bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-extrabold text-xs cursor-pointer shadow-md"
             >
-              Xác Nhận PIN &amp; Liên Kết Lại FaceID
+              Điền Nhanh 123456 &amp; Mở Face ID
             </button>
             <button
+              type="button"
               onClick={handleCancelPinModal}
-              className="btn-press"
-              style={{
-                padding: '10px 14px',
-                borderRadius: '10px',
-                border: '1px solid var(--border-neutral)',
-                background: 'var(--bg-inset)',
-                color: 'var(--text-muted)',
-                fontWeight: 600,
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}
+              className="btn-press px-3.5 py-2.5 rounded-2xl border border-slate-800 bg-[#040814] text-slate-400 font-bold text-xs cursor-pointer"
             >
               Hủy
             </button>
@@ -1584,49 +1325,45 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         </div>
       )}
 
-      {/* Vùng Camera Scanner Chuẩn iOS Safari (CameraScannerPro - Chống Chớp Tắt Triệt Để) */}
+      {/* 4. KHUNG NGẮM CAMERA QR & 2 NÚT THAO TÁC CHÍNH (QUÉT NHANH + NHẬP PIN 6 Ô SỐ) */}
       {isScanning && !pinModalOpen && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="space-y-2.5">
           <CameraScannerPro
             onScanSuccess={handleScanSuccess}
             onClose={handleCloseCamera}
           />
 
-          {/* Nút Quét Thử Nhanh để test ngay WebAuthn + Haptic + Beep + Proof of Liveness + Offline IndexedDB */}
-          <button
-            onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
-            className="btn-press"
-            style={{
-              width: '100%',
-              padding: '11.5px',
-              borderRadius: '12px',
-              border: '1px solid rgba(56, 189, 248, 0.35)',
-              background: isOfflineMode
-                ? 'linear-gradient(135deg, #D97706, #B45309)'
-                : 'linear-gradient(135deg, #0284C7, #0369A1)',
-              color: '#FFF',
-              fontSize: '12.5px',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '7px',
-              cursor: 'pointer'
-            }}
-          >
-            <Zap size={15} />
-            <span>
-              {simBiometricChanged
-                ? 'Quét Thử (Sẽ Bật Popup Nhập PIN 123456 Do Đổi FaceID)'
-                : isOfflineMode
-                ? 'Quét Thử Ngoại Tuyến (Lưu Chữ Ký Vào IndexedDB)'
-                : 'Quét Thử Nhanh (WebAuthn + Pre-warm GPS + Liveness Stamp)'}
-            </span>
-          </button>
+          <div className="grid grid-cols-3 gap-2">
+            {/* Nút Quét Điểm Danh Nhanh */}
+            <button
+              type="button"
+              onClick={() => handleScanSuccess(`UTH_ID:SES_A2301:NONCE_${Date.now().toString(36).toUpperCase()}:10.7992:106.7056`)}
+              className="btn-press col-span-2 py-3 px-3 rounded-2xl border border-cyan-400/40 bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_8px_22px_rgba(6,182,212,0.28)]"
+            >
+              <Zap size={15} />
+              <span>
+                {simBiometricChanged
+                  ? 'Quét Thử (Đổi FaceID)'
+                  : isOfflineMode
+                  ? 'Quét Ngoại Tuyến'
+                  : 'Quét Điểm Danh Nhanh'}
+              </span>
+            </button>
+
+            {/* Nút Mở Bộ Nhập PIN Dự Phòng 6 Ô Số Viền Neon */}
+            <button
+              type="button"
+              onClick={handleOpenCameraPinBackup}
+              className="btn-press py-3 px-2.5 rounded-2xl border border-cyan-500/40 bg-[#081226] hover:bg-cyan-950/50 text-cyan-300 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <KeyRound size={14} />
+              <span>Nhập PIN</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {/* TẦNG 2 NGHIỆP VỤ: CON DẤU SỐ ĐỘNG & HỒ SƠ ĐỐI SOÁT TRỰC QUAN (VISUAL LIVENESS STAMP) */}
+      {/* 5. CON DẤU SỐ ĐỘNG CHỐNG CHỤP MÀN HÌNH (DYNAMIC LIVENESS STAMP) */}
       {livenessStampData && (
         <ProofOfLivenessStamp
           studentName={livenessStampData.studentName}
@@ -1644,113 +1381,227 @@ export default function ScanPage({ activeCourseSession, spotCheckState, onTrigge
         />
       )}
 
-      {/* MẢNH GHÉP #4: HÀNG ĐỢI INDEXEDDB & DUAL-LAYER AUTO-SYNC */}
-      {offlineQueue.length > 0 && (
-        <div className="glass-card" style={{ borderColor: 'rgba(56, 189, 248, 0.38)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-            <div>
-              <div style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-main)' }}>
-                Hàng Đợi IndexedDB ({offlineQueue.length} gói chữ ký)
-              </div>
-              <div style={{ fontSize: '10px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                Auto-Sync 2 Lớp: Android SW Sync + iOS online/visibilitychange
-              </div>
-            </div>
-            <button
-              onClick={handleBackgroundSync}
-              disabled={syncingOffline}
-              className="btn-press"
-              style={{
-                padding: '7px 11px',
-                borderRadius: '10px',
-                border: 'none',
-                background: '#38BDF8',
-                color: '#04060A',
-                fontSize: '10.5px',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                cursor: 'pointer',
-                flexShrink: 0
-              }}
-            >
-              <RefreshCw size={12} />
-              <span>{syncingOffline ? 'Đang Sync...' : 'Đồng Bộ Ngay'}</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {syncMessage && (
-        <div style={{ fontSize: '11px', color: '#10B981', fontWeight: 600, textAlign: 'center' }}>
-          {syncMessage}
-        </div>
-      )}
-
-      {/* Kết Quả Xử Lý */}
+      {/* 6. KẾT QUẢ XỬ LÝ ĐIỂM DANH */}
       {scanStatus && (
-        <div className="glass-card animate-fade-scale">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+        <div className="rounded-3xl p-4 border bg-[#081226] border-slate-800 shadow-lg space-y-2.5 animate-fade-scale">
+          <div className="flex items-center gap-2">
             {scanStatus.type === 'SUCCESS' && <CheckCircle2 size={18} color="#10B981" />}
             {scanStatus.type === 'ERROR' && <AlertTriangle size={18} color="#EF4444" />}
             {scanStatus.type === 'PROCESSING' && <ShieldCheck size={18} color="#06B6D4" />}
-            
-            <h3 style={{
-              fontSize: '13px',
-              fontWeight: 800,
-              margin: 0,
-              color: scanStatus.type === 'SUCCESS' ? '#10B981' : (scanStatus.type === 'ERROR' ? '#EF4444' : '#06B6D4')
-            }}>
+
+            <h3
+              className="text-xs font-extrabold m-0"
+              style={{
+                color: scanStatus.type === 'SUCCESS' ? '#10B981' : scanStatus.type === 'ERROR' ? '#EF4444' : '#06B6D4'
+              }}
+            >
               {scanStatus.title}
             </h3>
           </div>
 
-          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 10px', lineHeight: 1.45 }}>
+          <p className="text-[11.5px] text-slate-300 m-0 leading-relaxed">
             {scanStatus.message}
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <button
+              type="button"
               onClick={() => {
                 isTerminatedRef.current = false;
                 setScanStatus(null);
                 setLivenessStampData(null);
                 setIsScanning(true);
               }}
-              className="btn-press"
-              style={{
-                padding: '10.5px',
-                borderRadius: '10px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #06B6D4, #0284C7)',
-                color: '#FFF',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
+              className="btn-press py-2.5 rounded-2xl border-none bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 text-xs font-extrabold cursor-pointer"
             >
-              <span>Quét Lại</span>
+              Quét Lại
             </button>
             <button
+              type="button"
               onClick={() => navigate('/wallet')}
-              className="btn-press"
-              style={{
-                padding: '10.5px',
-                borderRadius: '10px',
-                border: '1px solid var(--border-hairline)',
-                background: 'var(--bg-inset)',
-                color: 'var(--text-main)',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
+              className="btn-press py-2.5 rounded-2xl border border-slate-800 bg-[#040814] text-slate-200 text-xs font-bold cursor-pointer"
             >
-              <span>Về Ví Số</span>
+              Về Ví Số
             </button>
           </div>
         </div>
       )}
+
+      {/* 7. HÀNG ĐỢI INDEXEDDB & DUAL-LAYER AUTO-SYNC */}
+      {offlineQueue.length > 0 && (
+        <div className="rounded-3xl p-3.5 border border-cyan-500/40 bg-[#081226] flex items-center justify-between gap-2">
+          <div>
+            <div className="text-xs font-bold text-white">
+              Hàng Đợi IndexedDB ({offlineQueue.length} gói chữ ký)
+            </div>
+            <div className="text-[10px] text-slate-400">
+              Auto-Sync 2 Lớp: SW Sync + Online Listener
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleBackgroundSync}
+            disabled={syncingOffline}
+            className="btn-press px-3 py-1.5 rounded-xl border-none bg-cyan-400 text-slate-950 text-[10.5px] font-extrabold flex items-center gap-1 cursor-pointer flex-shrink-0"
+          >
+            <RefreshCw size={12} />
+            <span>{syncingOffline ? 'Đang Sync...' : 'Đồng Bộ'}</span>
+          </button>
+        </div>
+      )}
+
+      {syncMessage && (
+        <div className="text-[11px] text-emerald-400 font-semibold text-center">
+          {syncMessage}
+        </div>
+      )}
+
+      {/* 8. BẢNG ĐIỀU KHIỂN THỰC NGHIỆM NCKH GOM GỌN BÊN DƯỚI (MẠNG 4G/WIFI, KHOẢNG CÁCH GPS, TEST FACE ID) */}
+      <div
+        className="rounded-3xl p-3.5 border bg-[#081226]/95 space-y-2.5"
+        style={{
+          borderColor:
+            sessionNetworkMode === 'CAMPUS_WIFI' && phoneNetworkMode === '4G'
+              ? 'rgba(245, 158, 11, 0.5)'
+              : 'rgba(30, 41, 59, 0.9)'
+        }}
+      >
+        <div className="flex items-center justify-between gap-1.5 flex-wrap">
+          <span className="text-[10.5px] font-extrabold text-slate-200 uppercase tracking-wider">
+            Giả lập Thực nghiệm NCKH
+          </span>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                const next = !simBiometricChanged;
+                setSimBiometricChanged(next);
+                setSimulatedBiometricInvalidation(next);
+              }}
+              className={`px-2 py-1 rounded-xl text-[9.5px] font-bold flex items-center gap-1 cursor-pointer border ${
+                simBiometricChanged
+                  ? 'bg-rose-500/20 border-rose-500/50 text-rose-300'
+                  : 'bg-[#040814] border-slate-800 text-cyan-300'
+              }`}
+            >
+              <Fingerprint size={11} />
+              <span>{simBiometricChanged ? 'Đang Đổi FaceID' : 'Test Đổi FaceID'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const nextOffline = !isOfflineMode;
+                setIsOfflineMode(nextOffline);
+                if (!nextOffline && offlineQueue.length > 0) {
+                  handleBackgroundSync();
+                }
+              }}
+              className={`px-2 py-1 rounded-xl text-[9.5px] font-bold flex items-center gap-1 cursor-pointer border ${
+                isOfflineMode
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                  : 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+              }`}
+            >
+              {isOfflineMode ? <WifiOff size={11} /> : <Wifi size={11} />}
+              <span>{isOfflineMode ? 'Offline' : 'Online'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowServerUrlBar((v) => !v)}
+              className="px-2 py-1 rounded-xl text-[9.5px] font-mono font-bold bg-[#040814] border border-slate-800 text-cyan-400 cursor-pointer"
+            >
+              URL
+            </button>
+          </div>
+        </div>
+
+        {/* Chế độ mạng điện thoại */}
+        <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-800/80 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-slate-400">Mạng ĐT:</span>
+            <button
+              type="button"
+              onClick={() => setPhoneNetworkMode('4G')}
+              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer border ${
+                phoneNetworkMode === '4G'
+                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
+                  : 'bg-[#040814] border-slate-800 text-slate-400'
+              }`}
+            >
+              4G/5G
+            </button>
+            <button
+              type="button"
+              onClick={() => setPhoneNetworkMode('WIFI')}
+              className={`px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer border ${
+                phoneNetworkMode === 'WIFI'
+                  ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                  : 'bg-[#040814] border-slate-800 text-slate-400'
+              }`}
+            >
+              Wi-Fi Trường
+            </button>
+          </div>
+
+          <span className="text-[9.5px] text-slate-400">
+            Yêu cầu GV:{' '}
+            <b className={sessionNetworkMode === 'CAMPUS_WIFI' ? 'text-amber-400' : 'text-emerald-400'}>
+              {sessionNetworkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G Tự do'}
+            </b>
+          </span>
+        </div>
+
+        {/* Chế độ khoảng cách GPS */}
+        <div className="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-800/80 flex-wrap">
+          <span className="text-[10px] font-bold text-slate-400">Vị trí GPS:</span>
+          <div className="flex items-center gap-1 flex-wrap">
+            {[
+              { id: '8', label: 'Trong lớp (8m)', activeClass: 'bg-emerald-500/20 border-emerald-400 text-emerald-300' },
+              { id: '85', label: 'Ngoài (85m)', activeClass: 'bg-rose-500/20 border-rose-400 text-rose-300' },
+              { id: 'FAKE_GPS', label: 'Fake GPS', activeClass: 'bg-amber-500/20 border-amber-400 text-amber-300' },
+              { id: 'REAL_GPS', label: 'GPS Thật', activeClass: 'bg-cyan-500/20 border-cyan-400 text-cyan-300' }
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSimDistanceMeters(item.id)}
+                className={`px-2 py-1 rounded-xl text-[9.5px] font-bold cursor-pointer border ${
+                  simDistanceMeters === item.id
+                    ? item.activeClass
+                    : 'bg-[#040814] border-slate-800 text-slate-400'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {showServerUrlBar && (
+          <div className="flex gap-1.5 pt-1">
+            <input
+              type="text"
+              value={serverUrlInput}
+              onChange={(e) => setServerUrlInput(e.target.value)}
+              placeholder="https://uth-trustid-demo.loca.lt"
+              className="pro-input flex-1 text-[11px] font-mono py-1.5 px-2.5 rounded-xl"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setCustomServerUrl(serverUrlInput);
+                setShowServerUrlBar(false);
+              }}
+              className="px-3 py-1.5 rounded-xl border-none bg-cyan-400 text-slate-950 text-[10.5px] font-extrabold cursor-pointer"
+            >
+              Lưu
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Modal Face ID Apple Laser Scanning & Native Biometric */}
       <FaceIDModal
