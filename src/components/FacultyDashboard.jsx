@@ -529,6 +529,37 @@ export default function FacultyDashboard({
       }
     });
 
+    // Lắng nghe sự kiện Sinh viên kích hoạt Ví lần đầu qua Gmail OTP & FIDO2 (Stage 1 Enrollment)
+    socket.on('enrollment-otp-sent', (payload) => {
+      if (payload?.studentId) {
+        setAuditLogs((prev) => [
+          {
+            id: 'otp_' + Date.now(),
+            time: new Date().toLocaleTimeString('vi-VN'),
+            action: 'Gửi OTP Kích Hoạt Ví (Stage 1)',
+            detail: `Đã gửi OTP 6 số về ${payload.email} cho SV ${payload.name} (${payload.studentId})`,
+            result: 'Thành công'
+          },
+          ...prev.slice(0, 49)
+        ]);
+      }
+    });
+
+    socket.on('identity-enrolled', (payload) => {
+      if (payload?.studentId) {
+        setAuditLogs((prev) => [
+          {
+            id: 'enroll_' + Date.now(),
+            time: new Date().toLocaleTimeString('vi-VN'),
+            action: 'Kích Hoạt Ví FIDO2 & Khóa secp256k1',
+            detail: `SV ${payload.fullName} (${payload.studentId}) đã neo khóa DID ${payload.address?.slice(0, 8)}...`,
+            result: 'ACTIVE'
+          },
+          ...prev.slice(0, 49)
+        ]);
+      }
+    });
+
     // Lắng nghe sự kiện hủy kết quả điểm danh gian lận từ Thanh tra / Giảng viên
     socket.on('attendee-revoked', (payload) => {
       const revokedMssv = payload?.studentId;

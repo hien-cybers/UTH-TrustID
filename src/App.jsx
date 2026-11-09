@@ -11,7 +11,7 @@ import ServicePortal from './pages/ServicePortal';
 import MobileNavigation from './components/MobileNavigation';
 import UthTrustLogo from './components/UthTrustLogo';
 import LiveClock from './components/LiveClock';
-import LockScreenModal from './components/LockScreenModal';
+import StudentAuthEnrollment from './components/StudentAuthEnrollment';
 import FaceIDModal from './components/FaceIDModal';
 import { useAutoLock } from './hooks/useAutoLock';
 import { preWarmGPS } from './utils/gpsDriftFilter';
@@ -30,6 +30,18 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
+  // Trạng thái xác thực phiên 2 giai đoạn (Stage 1: Gmail OTP Claim -> Stage 2: Daily FaceID/PIN)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [forceEnrollStage1, setForceEnrollStage1] = useState(false);
+
+  useEffect(() => {
+    const handleOpenEnroll = () => {
+      setForceEnrollStage1(true);
+      setIsAuthenticated(false);
+    };
+    window.addEventListener('uth-open-enrollment', handleOpenEnroll);
+    return () => window.removeEventListener('uth-open-enrollment', handleOpenEnroll);
+  }, []);
 
   useEffect(() => {
     getInitialThemeIsDark();
@@ -541,11 +553,22 @@ export default function App() {
         <SplashScreen onFinish={() => setShowSplash(false)} />
       )}
 
-      {/* Khi bị khóa do thoát app quá 30 giây hoặc bấm khóa nhanh, modal này đè lên toàn bộ app */}
-      {isLocked && (
-        <LockScreenModal
-          studentName="Nguyễn Đức Hiển"
-          onUnlockSuccess={unlock}
+      {/* CỔNG XÁC THỰC 2 GIAI ĐOẠN (Stage 1: Gmail OTP Claim & Enrollment | Stage 2: Mở khóa hàng ngày bằng FaceID / PIN) */}
+      {(!isAuthenticated || isLocked || forceEnrollStage1) && (
+        <StudentAuthEnrollment
+          forceEnroll={forceEnrollStage1}
+          onAuthSuccess={(profile) => {
+            if (profile?.studentId) {
+              studentIdentityRef.current = {
+                studentId: profile.studentId,
+                fullName: profile.fullName || profile.name || 'Nguyễn Đức Hiển'
+              };
+            }
+            setForceEnrollStage1(false);
+            setIsAuthenticated(true);
+            unlock();
+            window.dispatchEvent(new CustomEvent('uth-vc-updated', { detail: profile }));
+          }}
         />
       )}
 

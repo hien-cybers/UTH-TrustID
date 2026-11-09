@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { INITIAL_STUDENTS } from '../data/studentsData';
+import { smartFetch } from '../utils/backendUrl';
 import LoginPortal from '../components/LoginPortal';
 import {
   Building2,
@@ -37,11 +38,27 @@ export default function ServicePortal() {
     setSearchParams({ tab });
   };
 
-  // Xử lý tra cứu hồ sơ
-  const handleLookup = (overrideQuery) => {
+  // Xử lý tra cứu hồ sơ (Đồng bộ trực tiếp với Backend /api/student/lookup + CSDL cục bộ)
+  const handleLookup = async (overrideQuery) => {
     const rawQuery = typeof overrideQuery === 'string' ? overrideQuery : searchMssv;
     if (!rawQuery.trim()) return;
     const cleanId = rawQuery.trim();
+
+    // 1. Thử truy vấn trực tiếp từ Backend để đồng bộ thời gian thực với Admin Web Portal & App
+    try {
+      const res = await smartFetch(`/api/student/lookup/${encodeURIComponent(cleanId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success && data?.student) {
+          setSearchResult({
+            ...data.student,
+            leafHash: '0xLeafHashSolidityPackedKeccak256',
+            cohort: '2022 - 2026'
+          });
+          return;
+        }
+      }
+    } catch {}
 
     let revokedList = [];
     try {

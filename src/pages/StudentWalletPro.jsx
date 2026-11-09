@@ -157,6 +157,12 @@ export default function StudentWalletPro({
     };
 
     loadInitialVC();
+
+    const handleVcUpdated = () => {
+      loadInitialVC();
+    };
+    window.addEventListener('uth-vc-updated', handleVcUpdated);
+    return () => window.removeEventListener('uth-vc-updated', handleVcUpdated);
   }, []);
 
   // KÍCH HOẠT THẺ LẦN ĐẦU (First-time Onboarding + WebAuthn Passkey + AES-GCM Key Wrapping)
@@ -318,8 +324,10 @@ export default function StudentWalletPro({
   };
 
   const handleRevokeLocal = async () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa Thẻ số khỏi thiết bị này để thử lại kích hoạt lần đầu?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa Thẻ số khỏi thiết bị này để thử lại kích hoạt lần đầu qua Gmail OTP?')) {
       localStorage.setItem('uth_vc_explicitly_removed', 'true');
+      localStorage.removeItem('trustid_enrolled');
+      localStorage.removeItem('trustid_profile');
       await removeItem('uth_student_vc');
       await removeItem('uth_secure_vault');
       await removeItem('uth_vc_storage');
@@ -328,6 +336,7 @@ export default function StudentWalletPro({
       setCredential(null);
       setZkpMode(false);
       setPinSavedNotice('');
+      window.dispatchEvent(new CustomEvent('uth-open-enrollment'));
     }
   };
 
