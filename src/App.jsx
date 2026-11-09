@@ -553,8 +553,8 @@ export default function App() {
         <SplashScreen onFinish={() => setShowSplash(false)} />
       )}
 
-      {/* CỔNG XÁC THỰC 2 GIAI ĐOẠN (Stage 1: Gmail OTP Claim & Enrollment | Stage 2: Mở khóa hàng ngày bằng FaceID / PIN) */}
-      {(!isAuthenticated || isLocked || forceEnrollStage1) && (
+      {/* CỔNG XÁC THỰC 2 GIAI ĐOẠN (Hiển thị ngay sau khi Splash Screen hoàn tất) */}
+      {!showSplash && (!isAuthenticated || isLocked || forceEnrollStage1) && (
         <StudentAuthEnrollment
           forceEnroll={forceEnrollStage1}
           onAuthSuccess={(profile) => {

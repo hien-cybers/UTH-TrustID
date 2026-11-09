@@ -12,12 +12,6 @@ export default function SplashScreen({ onFinish }) {
   }, [onFinish]);
 
   useEffect(() => {
-    if (sessionStorage.getItem('uth_splash_shown') === 'true') {
-      if (onFinishRef.current) onFinishRef.current();
-      return;
-    }
-    sessionStorage.setItem('uth_splash_shown', 'true');
-
     // 1. Sau 2.2 giây thì bắt đầu hiệu ứng tan dần (Fade out & Scale up) để người dùng kịp quan sát trọn vẹn hiệu ứng logo + thanh tiến trình
     const fadeTimer = setTimeout(() => {
       setFading(true);

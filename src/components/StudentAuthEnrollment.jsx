@@ -703,3 +703,4 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     </>
   );
 }
+
