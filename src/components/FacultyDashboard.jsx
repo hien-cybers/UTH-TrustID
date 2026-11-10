@@ -8,21 +8,31 @@ import { saveCredentialToStorage } from '../utils/credentialStorage';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
 
 export default function FacultyDashboard({
-  initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN' | 'AUDITOR'
+  initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
 }) {
-  // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên, Admin & Thanh tra)
+  // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên & Admin)
   const [token, setToken] = useState(() => localStorage.getItem('faculty_token') || null);
   const [facultyUser, setFacultyUser] = useState(() => {
     try {
       const raw = localStorage.getItem('faculty_user');
-      return raw
-        ? JSON.parse(raw)
-        : {
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.role === 'AUDITOR') {
+          return {
             email: 'giangvien@uth.edu.vn',
             fullName: 'TS. Trần Thế Vinh',
             department: 'Khoa Công nghệ Thông tin',
             role: 'FACULTY'
           };
+        }
+        return parsed;
+      }
+      return {
+        email: 'giangvien@uth.edu.vn',
+        fullName: 'TS. Trần Thế Vinh',
+        department: 'Khoa Công nghệ Thông tin',
+        role: 'FACULTY'
+      };
     } catch {
       return {
         email: 'giangvien@uth.edu.vn',
@@ -41,7 +51,6 @@ export default function FacultyDashboard({
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Mô hình Kiến Trúc Phân Cấp 1 - N (1 Lớp học -> Nhiều Buổi học con):
-  // Cấp 1 - Lớp học (Course / Classroom - Tạo 1 lần đầu kỳ, dùng xuyên suốt 15 tuần)
   // Danh sách sinh viên đăng ký môn học gốc (Enrolled Roster) — Dùng cho Ma trận Chuyên cần Lũy kế & Smart Inheritance
   const DEFAULT_ENROLLED_ROSTER = [
     { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin' },
@@ -73,179 +82,18 @@ export default function FacultyDashboard({
     return `0x${hex1}${hex2}${hex1}${hex2}${hex1}${hex2}${hex1}${hex2}`;
   };
 
-  // Cấp 2 - Buổi học (ClassSession - Nằm trực tiếp bên trong từng Lớp học)
-  const INITIAL_COURSES_DB = [
-    {
-      id: 'CLS_IT402_N01',
-      courseId: 'CLS_IT402_N01',
-      courseCode: 'IT402.N01',
-      courseName: 'An toàn Mạng máy tính & Ứng dụng',
-      defaultRoom: 'A2-301',
-      defaultRadius: 35,
-      defaultCoords: { lat: 10.799200, lon: 106.705600 },
-      defaultNetworkMode: 'CAMPUS_WIFI',
-      schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
-      totalStudents: 50,
-      createdAt: '2026-09-05',
-      enrolledStudents: DEFAULT_ENROLLED_ROSTER,
-      sessions: [
-        {
-          sessionId: 'SES_IT402_B01',
-          sessionIndex: 1,
-          sessionNumber: 1,
-          date: '2026-09-15',
-          sessionDate: '2026-09-15',
-          centerCoords: { lat: 10.799200, lon: 106.705600 },
-          maxRadiusMeters: 35,
-          networkMode: 'CAMPUS_WIFI',
-          status: 'FINALIZED',
-          isFinalized: true,
-          finalizedAt: '2026-09-15T16:00:12+07:00',
-          sessionHash: '0x9f84b2c71e09a43d5c621b8e74031a92d8f4c6e1b2a093847561029384756102',
-          facultySignature: '0x4b7e91c2a08f3d1652e89c4a7103b5d28910fe34a1bc89213048ab92cd1980121c',
-          facultySigner: 'did:ethr:0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          nonce: 'NONCE_B01_9A2F',
-          attendees: [
-            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '13:31:15', distance: 3, status: 'VERIFIED', signatureHash: '0x8a91f3c2d401e8b7a1290c4f8e21309a7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b21' },
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '13:32:10', distance: 3, status: 'VERIFIED', signatureHash: '0x7c82e1d4a502f9b8c2310d5e9f32410b8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c32' },
-            { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '13:33:45', distance: 5, status: 'VERIFIED', signatureHash: '0x5d61c9b8e304a7f2d1420e6f1a43521c9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d43' },
-            { studentId: '2251120004', name: 'Phạm Minh Tuấn', major: 'Kỹ thuật Phần mềm', checkInTime: '13:35:12', distance: 7, status: 'VERIFIED', signatureHash: '0x3b42a7c9d105e8f3b2530f7a2b54632d0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e54' },
-            { studentId: '2251120005', name: 'Hoàng Bảo Ngọc', major: 'An toàn Thông tin', checkInTime: '13:36:05', distance: 8, status: 'VERIFIED', signatureHash: '0x1e23f5a8c906d7e4a3640a8b3c65743e1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f65' }
-          ]
-        },
-        {
-          sessionId: 'SES_IT402_B02',
-          sessionIndex: 2,
-          sessionNumber: 2,
-          date: '2026-09-22',
-          sessionDate: '2026-09-22',
-          centerCoords: { lat: 10.799200, lon: 106.705600 },
-          maxRadiusMeters: 35,
-          networkMode: 'CAMPUS_WIFI',
-          status: 'FINALIZED',
-          isFinalized: true,
-          finalizedAt: '2026-09-22T16:02:45+07:00',
-          sessionHash: '0x3e71c8a94d02f65b1a839c7e42019b84f1d2e3c4b5a697887766554433221100',
-          facultySignature: '0x6d12a8f4c903e7b154d28a9c6301f4e29812ab45c6de78901234ef56ab78cd901b',
-          facultySigner: 'did:ethr:0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          nonce: 'NONCE_B02_4C8E',
-          attendees: [
-            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '13:30:40', distance: 4, status: 'VERIFIED', signatureHash: '0x9b12e4f7a803c6d5b4750b9c4d76854f2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a76' },
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '13:31:04', distance: 4, status: 'VERIFIED', signatureHash: '0x4f63d8a1c209e5b7d8120c3f6e87965a3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b87' },
-            { studentId: '2251120004', name: 'Phạm Minh Tuấn', major: 'Kỹ thuật Phần mềm', checkInTime: '13:34:20', distance: 6, status: 'VERIFIED', signatureHash: '0x2a84c9e3f107b6d8e9230d4a7f98076b4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c98' }
-          ]
-        },
-        {
-          sessionId: 'SES_IT402_B03',
-          sessionIndex: 3,
-          sessionNumber: 3,
-          date: '2026-11-08',
-          sessionDate: '2026-11-08',
-          centerCoords: { lat: 10.799200, lon: 106.705600 },
-          maxRadiusMeters: 35,
-          networkMode: 'CAMPUS_WIFI',
-          status: 'FINALIZED',
-          isFinalized: true,
-          finalizedAt: '2026-11-08T16:01:08+07:00',
-          sessionHash: '0x7a42d9e15c08b34f2e918d6a53027c95e2f3a4b5c6d7e8f90123456789abcdef',
-          facultySignature: '0x8f23b9d5e104c8a265e39b0d7412a5f30923bc56d7ef89012345fa67bc89de011c',
-          facultySigner: 'did:ethr:0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          nonce: 'NONCE_B03_7D1A',
-          attendees: [
-            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '13:29:50', distance: 2, status: 'VERIFIED', signatureHash: '0x6c95d0f4a208c7e9f0340e5b8a09187c5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d09' },
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '13:30:18', distance: 2, status: 'VERIFIED', signatureHash: '0x5e74b1d3c902a8f6e1450f6c9b10298d6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e10' },
-            { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '13:32:05', distance: 4, status: 'VERIFIED', signatureHash: '0x8d16f2a5b403c9e7d2560a7d0c21309e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f21' },
-            { studentId: '2251120003', name: 'Lê Hoàng Quân', major: 'Hệ thống Thông tin', checkInTime: '13:41:30', distance: 48, status: 'EXCEPTION', signatureHash: '0x3c91a4e7d605b2f8c3670b8e1d32410f8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a32' },
-            { studentId: '2251120004', name: 'Phạm Minh Tuấn', major: 'Kỹ thuật Phần mềm', checkInTime: '13:33:12', distance: 5, status: 'VERIFIED', signatureHash: '0x9a27e3b6c504d1f9e4780c9f2e43521a9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b43' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'CLS_IT308_M11',
-      courseId: 'CLS_IT308_M11',
-      courseCode: 'IT308.M11',
-      courseName: 'Mật mã học & Ứng dụng Blockchain',
-      defaultRoom: 'B1-204',
-      defaultRadius: 35,
-      defaultCoords: { lat: 10.799350, lon: 106.705750 },
-      defaultNetworkMode: 'CAMPUS_WIFI',
-      schedule: 'Thứ 5 • Ca 1 (07:30 - 10:00)',
-      totalStudents: 50,
-      createdAt: '2026-09-06',
-      enrolledStudents: DEFAULT_ENROLLED_ROSTER,
-      sessions: [
-        {
-          sessionId: 'SES_IT308_B01',
-          sessionIndex: 1,
-          sessionNumber: 1,
-          date: '2026-09-18',
-          sessionDate: '2026-09-18',
-          centerCoords: { lat: 10.799350, lon: 106.705750 },
-          maxRadiusMeters: 35,
-          networkMode: 'CAMPUS_WIFI',
-          status: 'FINALIZED',
-          isFinalized: true,
-          finalizedAt: '2026-09-18T10:00:30+07:00',
-          sessionHash: '0x5c83e1f26a09d45b3f029e7b64138d06f3a4b5c6d7e8f90123456789abcdef01',
-          facultySignature: '0x7e34c0e6f205d9b376f40c1e8523b6a41034cd67e8fa90123456ab78cd90ef121b',
-          facultySigner: 'did:ethr:0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          nonce: 'NONCE_M11_3F7A',
-          attendees: [
-            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '07:32:10', distance: 5, status: 'VERIFIED', signatureHash: '0x4b38f4c7d605e2a0f5890d0a3f54632b0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c54' },
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '07:33:15', distance: 8, status: 'VERIFIED', signatureHash: '0x7d49a5d8e706f3b1a6900e1b4a65743c1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d65' },
-            { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '07:35:02', distance: 10, status: 'VERIFIED', signatureHash: '0x2f50b6e9f807a4c2b7010f2c5b76854d2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e76' },
-            { studentId: '2251120004', name: 'Phạm Minh Tuấn', major: 'Kỹ thuật Phần mềm', checkInTime: '07:36:40', distance: 9, status: 'VERIFIED', signatureHash: '0x8e61c7f0a908b5d3c8120a3d6c87965e3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f87' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 'CLS_IT415_P02',
-      courseId: 'CLS_IT415_P02',
-      courseCode: 'IT415.P02',
-      courseName: 'Bảo mật Web & Hệ thống Phân tán',
-      defaultRoom: 'A3-402',
-      defaultRadius: 50,
-      defaultCoords: { lat: 10.799500, lon: 106.705900 },
-      defaultNetworkMode: 'CELLULAR_ANY',
-      schedule: 'Thứ 6 • Ca 2 (09:30 - 12:00)',
-      totalStudents: 60,
-      createdAt: '2026-09-07',
-      enrolledStudents: DEFAULT_ENROLLED_ROSTER,
-      sessions: [
-        {
-          sessionId: 'SES_IT415_B01',
-          sessionIndex: 1,
-          sessionNumber: 1,
-          date: '2026-09-25',
-          sessionDate: '2026-09-25',
-          centerCoords: { lat: 10.799500, lon: 106.705900 },
-          maxRadiusMeters: 50,
-          networkMode: 'CELLULAR_ANY',
-          status: 'FINALIZED',
-          isFinalized: true,
-          finalizedAt: '2026-09-25T12:00:15+07:00',
-          sessionHash: '0x2d94f0a37b10e56c4a130f8c75249e17a4b5c6d7e8f90123456789abcdef0123',
-          facultySignature: '0x9f45d1f7a306e0c487a51d2f9634c7b52145de78f9ab01234567bc89de01fa231c',
-          facultySigner: 'did:ethr:0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-          nonce: 'NONCE_P02_5E9D',
-          attendees: [
-            { studentId: '2251120000', name: 'Nguyễn Đức Hiển', major: 'An toàn Thông tin', checkInTime: '09:31:45', distance: 8, status: 'VERIFIED', signatureHash: '0x1c72d8a1b009c6e4d9230b4e7d98076f4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a98' },
-            { studentId: '2251120001', name: 'Nguyễn Văn An', major: 'An toàn Thông tin', checkInTime: '09:32:11', distance: 9, status: 'VERIFIED', signatureHash: '0x6a83e9b2c10ad7f5ea340c5f8ea9187a5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b09' },
-            { studentId: '2251120002', name: 'Trần Thị Mai', major: 'Khoa học Máy tính', checkInTime: '09:34:05', distance: 12, status: 'VERIFIED', signatureHash: '0x3d94f0c3d20be8a6fb450d6a9fb0298b6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c10' }
-          ]
-        }
-      ]
-    }
-  ];
+  // Danh mục lớp học khởi tạo rỗng ban đầu — Chỉ hiển thị khi Giảng viên tạo lớp mới
+  const INITIAL_COURSES_DB = [];
 
   const [courses, setCourses] = useState(() => {
     try {
-      const saved = localStorage.getItem('uth_courses_catalog_v4');
+      localStorage.removeItem('uth_courses_catalog_v4');
+      localStorage.removeItem('uth_courses_catalog_v3');
+      localStorage.removeItem('uth_courses_catalog_v2');
+      const saved = localStorage.getItem('uth_courses_catalog_v5');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
     return INITIAL_COURSES_DB;
@@ -254,9 +102,7 @@ export default function FacultyDashboard({
   const saveCoursesToStorage = (nextCourses) => {
     setCourses(nextCourses);
     try {
-      localStorage.setItem('uth_courses_catalog_v4', JSON.stringify(nextCourses));
-      localStorage.setItem('uth_courses_catalog_v3', JSON.stringify(nextCourses));
-      localStorage.setItem('uth_courses_catalog_v2', JSON.stringify(nextCourses));
+      localStorage.setItem('uth_courses_catalog_v5', JSON.stringify(nextCourses));
     } catch {}
     smartFetch('/api/courses/sync', {
       method: 'POST',
@@ -265,16 +111,16 @@ export default function FacultyDashboard({
     }).catch(() => {});
   };
 
-  const [activeCourseId, setActiveCourseId] = useState('CLS_IT402_N01');
+  const [activeCourseId, setActiveCourseId] = useState('');
   const [showCreateCourseForm, setShowCreateCourseForm] = useState(false);
   const [newCourseForm, setNewCourseForm] = useState({
     courseCode: '',
     courseName: '',
     defaultRoom: '',
     defaultRadius: 35,
-    defaultNetworkMode: 'CAMPUS_WIFI',
+    defaultNetworkMode: 'CELLULAR_ANY',
     schedule: 'Thứ 2 • Ca 1 (07:30 - 10:00)',
-    totalStudents: 60
+    totalStudents: 50
   });
   const [historyCourseId, setHistoryCourseId] = useState(null);
   const [selectedHistorySessionId, setSelectedHistorySessionId] = useState('ALL');
@@ -285,80 +131,34 @@ export default function FacultyDashboard({
 
   // Cấu hình phiên học của buổi điểm danh đang mở
   const [sessionConfig, setSessionConfig] = useState({
-    courseCode: "IT402.N01",
-    courseName: "An toàn Mạng máy tính & Ứng dụng",
-    room: "A2-301",
+    courseCode: '',
+    courseName: '',
+    room: '',
     centerCoords: { lat: 10.799200, lon: 106.705600 },
     maxRadiusMeters: 35,
-    networkMode: "CAMPUS_WIFI", // 'CAMPUS_WIFI' | 'CELLULAR_ANY'
-    campusSsid: "UTH_STUDENT_SECURE"
+    networkMode: 'CELLULAR_ANY', // 'CAMPUS_WIFI' | 'CELLULAR_ANY'
+    campusSsid: 'UTH_STUDENT_SECURE'
   });
 
-  const resolvedInitialRole = facultyUser?.role || (initialMode === 'ADMIN' ? 'ADMIN' : 'FACULTY');
-  const [sessionId, setSessionId] = useState("SES_A2301");
-  const [staffRole, setStaffRole] = useState(resolvedInitialRole); // 'FACULTY' | 'ADMIN' | 'AUDITOR'
+  const resolvedInitialRole =
+    facultyUser?.role === 'ADMIN' || initialMode === 'ADMIN' ? 'ADMIN' : 'FACULTY';
+  const [sessionId, setSessionId] = useState('');
+  const [staffRole, setStaffRole] = useState(resolvedInitialRole); // 'FACULTY' | 'ADMIN'
   // Mặc định isCreated = false đối với Giảng viên — Hiển thị màn hình Quản lý Danh mục Lớp học (Course Hub)
   const [isCreated, setIsCreated] = useState(false);
   const [isSessionOpen, setIsSessionOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(
-    resolvedInitialRole === 'ADMIN'
-      ? 'ADMIN_ISSUANCE'
-      : resolvedInitialRole === 'AUDITOR'
-      ? 'IDS'
-      : 'STAGE'
+    resolvedInitialRole === 'ADMIN' ? 'ADMIN_ISSUANCE' : 'STAGE'
   );
   
   // Nonce xoay vòng & Tiến trình đếm lùi 35 giây
   const ROTATE_INTERVAL = 35;
-  const [currentNonce, setCurrentNonce] = useState("NONCE_STAGE_8X9K");
+  const [currentNonce, setCurrentNonce] = useState('NONCE_STAGE_8X9K');
   const [timerProgress, setTimerProgress] = useState(ROTATE_INTERVAL);
   const socketRef = useRef(null);
 
-  // Danh sách sinh viên hiện diện thời gian thực (Kèm thông số Telemetry chống Fake GPS: gpsAccuracy & isMockGps)
-  const [attendees, setAttendees] = useState([
-    {
-      studentId: "2251120001",
-      name: "Nguyễn Văn An",
-      major: "An toàn Thông tin",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      coords: { lat: 10.799215, lon: 106.705620 },
-      distance: 4,
-      gpsAccuracy: 5.8,
-      isMockGps: false,
-      network: "UTH_STUDENT_SECURE",
-      deviceId: "DEV_IPHONE_15_A1",
-      checkInTime: "13:30:15",
-      spotCheckStatus: "VERIFIED" // 'NONE' | 'PENDING' | 'VERIFIED' | 'FAILED'
-    },
-    {
-      studentId: "2251120002",
-      name: "Trần Thị Mai",
-      major: "Khoa học Máy tính",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      coords: { lat: 10.799260, lon: 106.705680 },
-      distance: 12,
-      gpsAccuracy: 7.2,
-      isMockGps: false,
-      network: "UTH_STUDENT_SECURE",
-      deviceId: "DEV_SAMSUNG_S23_B2",
-      checkInTime: "13:31:02",
-      spotCheckStatus: "NONE"
-    },
-    {
-      studentId: "2251120003",
-      name: "Lê Hoàng Quân",
-      major: "Hệ thống Thông tin",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      coords: { lat: 10.799480, lon: 106.706100 },
-      distance: 65, // Ngoài vùng 35m
-      gpsAccuracy: 0.0, // Sai số 0.0000m quá hoàn hảo -> Nghi vấn Mock Location / Fake GPS
-      isMockGps: true,
-      network: "VIETTEL_4G",
-      deviceId: "DEV_IPHONE_15_A1", // Trùng deviceId với bạn An -> IDS Trigger
-      checkInTime: "13:32:40",
-      spotCheckStatus: "FAILED"
-    }
-  ]);
+  // Danh sách sinh viên hiện diện thời gian thực (Khởi tạo rỗng, đồng bộ khi sinh viên quét QR)
+  const [attendees, setAttendees] = useState([]);
 
   // Trạng thái Tái kiểm tra đột xuất (Spot-check)
   const [spotCheckState, setSpotCheckState] = useState({
@@ -399,11 +199,8 @@ export default function FacultyDashboard({
   const [isProjectorFullscreen, setIsProjectorFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [rosterFilter, setRosterFilter] = useState('ALL'); // 'ALL' | 'VALID' | 'SUSPICIOUS'
-  // 1. Chế độ Bảo vệ Quyền riêng tư Màn chiếu (Projection Privacy Mode / Stage Safe Mode - ZKP Light)
   const [stageSafeMode, setStageSafeMode] = useState(false);
-  // 2. Cờ Yêu cầu Hậu kiểm từ Thanh tra gửi sang Giảng viên (Inspection Request Flag)
-  const [auditorInspectionRequest, setAuditorInspectionRequest] = useState(null);
-  const [auditorStatusMsg, setAuditorStatusMsg] = useState('');
+  const [statusBannerMsg, setStatusBannerMsg] = useState('');
   const [offlineSyncCount, setOfflineSyncCount] = useState(0);
 
   // Đồng bộ thời gian thực qua WebSocket với Backend
@@ -421,12 +218,36 @@ export default function FacultyDashboard({
     };
     window.addEventListener('uth-backend-url-changed', handleBackendChanged);
 
+    smartFetch('/api/courses')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.success && Array.isArray(d.courses)) {
+          setCourses((prev) => {
+            if (d.courses.length > 0) {
+              try {
+                localStorage.setItem('uth_courses_catalog_v5', JSON.stringify(d.courses));
+              } catch {}
+              return d.courses;
+            }
+            if (prev.length > 0) {
+              smartFetch('/api/courses/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ courses: prev })
+              }).catch(() => {});
+            }
+            return prev;
+          });
+        }
+      })
+      .catch(() => {});
+
     smartFetch('/api/session/active')
       .then((r) => r.json())
       .then((d) => {
-        if (d?.success && d?.session && d.session.isOpen) {
+        if (d?.success && d?.active && d?.session && d.session.isOpen) {
           const s = d.session;
-          setSessionId(s.sessionId || "SES_A2301");
+          setSessionId(s.sessionId || 'SES_A2301');
           if (s.nonce) setCurrentNonce(s.nonce);
           socket.emit('join-session', { sessionId: s.sessionId, role: 'FACULTY' });
         }
@@ -493,9 +314,7 @@ export default function FacultyDashboard({
                 )
               };
             });
-            localStorage.setItem('uth_courses_catalog_v4', JSON.stringify(updated));
-            localStorage.setItem('uth_courses_catalog_v3', JSON.stringify(updated));
-            localStorage.setItem('uth_courses_catalog_v2', JSON.stringify(updated));
+            localStorage.setItem('uth_courses_catalog_v5', JSON.stringify(updated));
             return updated;
           });
         } catch {}
@@ -521,10 +340,10 @@ export default function FacultyDashboard({
 
     // Lắng nghe đồng bộ danh mục lớp học phần (courses-updated) từ Backend
     socket.on('courses-updated', (payload) => {
-      if (Array.isArray(payload?.courses) && payload.courses.length > 0) {
+      if (Array.isArray(payload?.courses)) {
         setCourses(payload.courses);
         try {
-          localStorage.setItem('uth_courses_catalog_v4', JSON.stringify(payload.courses));
+          localStorage.setItem('uth_courses_catalog_v5', JSON.stringify(payload.courses));
         } catch {}
       }
     });
@@ -560,12 +379,12 @@ export default function FacultyDashboard({
       }
     });
 
-    // Lắng nghe sự kiện hủy kết quả điểm danh gian lận từ Thanh tra / Giảng viên
+    // Lắng nghe sự kiện hủy kết quả điểm danh gian lận từ Giảng viên
     socket.on('attendee-revoked', (payload) => {
       const revokedMssv = payload?.studentId;
       if (revokedMssv) {
         setAttendees((prev) => prev.filter((a) => a.studentId !== revokedMssv));
-        setAuditorStatusMsg(
+        setStatusBannerMsg(
           `Đã đình chỉ & hủy kết quả điểm danh của SV ${payload.studentName || revokedMssv} (${revokedMssv})`
         );
       }
@@ -589,7 +408,7 @@ export default function FacultyDashboard({
 
     socket.on('security-alert', (alert) => {
       if (alert) {
-        setAuditorStatusMsg(
+        setStatusBannerMsg(
           `CẢNH BÁO GIAN LẬN: Thiết bị ${alert.deviceId} đã điểm danh cho ${alert.firstStudent}, nay cố điểm danh hộ cho ${alert.attemptedStudent}!`
         );
       }
@@ -608,24 +427,6 @@ export default function FacultyDashboard({
 
     socket.on('identity-unrevoked', () => {
       fetchAdminAuditLogs();
-    });
-
-    // Lắng nghe Yêu cầu Hậu kiểm (Inspection Request Flag) hoặc Override từ Thanh tra (Auditor)
-    socket.on('auditor-inspection-request', (payload) => {
-      if (payload) {
-        setAuditorInspectionRequest(payload);
-      }
-    });
-
-    socket.on('auditor-override-spot-check', (payload) => {
-      if (payload) {
-        setAuditorInspectionRequest({ ...payload, isOverride: true });
-        setSpotCheckState({
-          active: true,
-          countdown: 60,
-          targetIds: payload.targetIds?.length ? payload.targetIds : ['2251120001', '2251120003']
-        });
-      }
     });
 
     socket.on('network-enforcement-blocked', (payload) => {
@@ -753,7 +554,7 @@ export default function FacultyDashboard({
   };
 
   // Tạo mới Lớp học phần (Classroom Entity - Tồn tại suốt học kỳ 15 tuần)
-  const handleCreateNewCourse = (e) => {
+  const handleCreateNewCourse = async (e, launchQrImmediately = false) => {
     if (e && e.preventDefault) e.preventDefault();
     const code = newCourseForm.courseCode.trim().toUpperCase();
     const name = newCourseForm.courseName.trim();
@@ -766,10 +567,11 @@ export default function FacultyDashboard({
       courseName: name,
       defaultRoom: room,
       defaultRadius: Number(newCourseForm.defaultRadius) || 35,
-      defaultNetworkMode: newCourseForm.defaultNetworkMode || 'CAMPUS_WIFI',
+      defaultNetworkMode: newCourseForm.defaultNetworkMode || 'CELLULAR_ANY',
       schedule: newCourseForm.schedule.trim() || 'Thứ 2 • Ca 1 (07:30 - 10:00)',
       totalStudents: Number(newCourseForm.totalStudents) || 60,
       createdAt: new Date().toISOString().slice(0, 10),
+      enrolledStudents: DEFAULT_ENROLLED_ROSTER,
       sessions: []
     };
 
@@ -780,32 +582,101 @@ export default function FacultyDashboard({
       courseName: '',
       defaultRoom: '',
       defaultRadius: 35,
-      defaultNetworkMode: 'CAMPUS_WIFI',
+      defaultNetworkMode: 'CELLULAR_ANY',
       schedule: 'Thứ 2 • Ca 1 (07:30 - 10:00)',
       totalStudents: 60
     });
     setShowCreateCourseForm(false);
+
+    if (launchQrImmediately) {
+      await handleCreateNewSession(createdCourse, nextList);
+    }
   };
 
-  // Xóa vĩnh viễn Lớp học phần khi kết thúc môn học (kèm xác nhận an toàn)
+  // Điền nhanh thông tin mẫu vào biểu mẫu tạo lớp
+  const handleQuickFillCoursePreset = () => {
+    setNewCourseForm({
+      courseCode: 'IT402.N01',
+      courseName: 'An toàn Mạng máy tính & Ứng dụng',
+      defaultRoom: 'A2-301',
+      defaultRadius: 35,
+      defaultNetworkMode: 'CELLULAR_ANY',
+      schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
+      totalStudents: 60
+    });
+  };
+
+  // Xóa vĩnh viễn Lớp học phần (kèm đóng phiên QR nếu lớp đang mở)
   const handleConfirmDeleteCourse = () => {
     if (!courseToDelete) return;
-    const nextList = courses.filter((c) => c.id !== courseToDelete.id);
+    const targetId = courseToDelete.courseId || courseToDelete.id;
+    const nextList = courses.filter((c) => (c.courseId || c.id) !== targetId);
     saveCoursesToStorage(nextList);
-    if (historyCourseId === courseToDelete.id) {
+
+    if (historyCourseId === targetId) {
       setHistoryCourseId(null);
     }
+    if (activeCourseId === targetId || sessionConfig.courseCode === courseToDelete.courseCode) {
+      socketRef.current?.emit('close-session', { sessionId });
+      smartFetch('/api/session/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      }).catch(() => {});
+      setIsCreated(false);
+      setIsSessionOpen(false);
+      setActiveCourseId(nextList[0]?.id || '');
+    }
     setCourseToDelete(null);
+  };
+
+  // Xóa một buổi điểm danh cụ thể bên trong Lớp học phần
+  const handleDeleteSession = (course, sessionObj) => {
+    if (!course || !sessionObj) return;
+    const targetCourseId = course.courseId || course.id;
+    const targetSid = sessionObj.sessionId;
+
+    const updatedCourses = courses.map((c) => {
+      if ((c.courseId || c.id) !== targetCourseId) return c;
+      const nextSessions = (c.sessions || [])
+        .filter((s) => s.sessionId !== targetSid)
+        .map((s, idx) => ({
+          ...s,
+          sessionIndex: idx + 1,
+          sessionNumber: idx + 1
+        }));
+      return {
+        ...c,
+        sessions: nextSessions
+      };
+    });
+
+    saveCoursesToStorage(updatedCourses);
+
+    if (sessionId === targetSid) {
+      socketRef.current?.emit('close-session', { sessionId: targetSid });
+      smartFetch('/api/session/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: targetSid })
+      }).catch(() => {});
+      setIsCreated(false);
+      setIsSessionOpen(false);
+    }
+    if (selectedHistorySessionId === targetSid) {
+      setSelectedHistorySessionId('ALL');
+    }
   };
 
   // 3. TÁI SỬ DỤNG CẤU HÌNH CHO BUỔI TIẾP THEO (SMART INHERITANCE — 1-CLICK LAUNCH)
   // Khi bấm "+ Thêm Buổi Học Mới", hệ thống tự động kế thừa Tâm tọa độ GPS phòng học, Bán kính R = 35m,
   // Chế độ mạng (CAMPUS_WIFI / CELLULAR_ANY) và Danh sách sinh viên gốc (enrolledStudents) từ buổi trước
-  const handleCreateNewSession = async (courseOrId) => {
+  const handleCreateNewSession = async (courseOrId, customCoursesList = null) => {
+    const sourceCourses = Array.isArray(customCoursesList) ? customCoursesList : courses;
     const targetCourse =
       typeof courseOrId === 'string'
-        ? courses.find((c) => (c.courseId || c.id) === courseOrId)
-        : courseOrId || courses.find((c) => (c.courseId || c.id) === activeCourseId) || courses[0];
+        ? sourceCourses.find((c) => (c.courseId || c.id) === courseOrId)
+        : courseOrId || sourceCourses.find((c) => (c.courseId || c.id) === activeCourseId) || sourceCourses[0];
     if (!targetCourse) return;
 
     const targetId = targetCourse.courseId || targetCourse.id;
@@ -822,7 +693,7 @@ export default function FacultyDashboard({
       targetCourse.defaultCoords ||
       sessionConfig.centerCoords || { lat: 10.799200, lon: 106.705600 };
     const inheritedRadius = Number(lastSession?.maxRadiusMeters || targetCourse.defaultRadius || 35);
-    const inheritedNetworkMode = lastSession?.networkMode || targetCourse.defaultNetworkMode || 'CAMPUS_WIFI';
+    const inheritedNetworkMode = lastSession?.networkMode || targetCourse.defaultNetworkMode || 'CELLULAR_ANY';
     const inheritedRoster =
       Array.isArray(targetCourse.enrolledStudents) && targetCourse.enrolledStudents.length > 0
         ? targetCourse.enrolledStudents
@@ -844,7 +715,7 @@ export default function FacultyDashboard({
     };
 
     // Cập nhật buổi học mới trực tiếp vào mảng sessions của lớp đó (Kiến trúc 1 - N)
-    const updatedCourses = courses.map((c) =>
+    const updatedCourses = sourceCourses.map((c) =>
       (c.courseId || c.id) === targetId
         ? {
             ...c,
@@ -1467,8 +1338,7 @@ export default function FacultyDashboard({
       );
     });
     setSpotCheckState({ active: true, countdown: 60, targetIds: finalTargets });
-    setAuditorInspectionRequest(null);
-    setAuditorStatusMsg(
+    setStatusBannerMsg(
       `Đã phát lệnh Tái kiểm tra Face ID (Spot-Check 60s) xuống ${finalTargets.length} thiết bị di động của sinh viên!`
     );
 
@@ -1492,49 +1362,6 @@ export default function FacultyDashboard({
     } catch {}
   };
 
-  // Thanh tra (AUDITOR): Gửi Cờ Yêu Cầu Hậu Kiểm (Inspection Request Flag) cho Giảng viên
-  // hoặc Kích hoạt Ép Hậu Kiểm Khẩn Cấp (Override Trigger có ghi nhận lý do vào Audit Log)
-  const handleAuditorSendInspectionRequest = async (override = false) => {
-    const suspiciousTargets = attendees
-      .filter(a => calculateFraudRiskScore(a).score >= 30)
-      .map(a => a.studentId);
-
-    const reason = override
-      ? 'Ép hậu kiểm khẩn cấp (Override Trigger): Phát hiện xung đột phần cứng Device ID & rủi ro gian lận > 70 điểm'
-      : 'Đề nghị Giảng viên phát lệnh Spot-check 60s đối với nhóm sinh viên có điểm rủi ro (Risk Score ≥ 30)';
-
-    try {
-      const res = await smartFetch('/api/auditor/request-spot-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          auditorEmail: facultyUser?.email || 'thanhtra@ut.edu.vn',
-          reason,
-          targetIds: suspiciousTargets,
-          override
-        })
-      });
-      const data = await res.json();
-      if (data?.success) {
-        setAuditorStatusMsg(data.message);
-        if (override) {
-          handleTriggerSpotCheck('RISK_TARGETED');
-        }
-        fetchAdminAuditLogs();
-      }
-    } catch {
-      setAuditorStatusMsg(
-        override
-          ? '🚨 Đã kích hoạt Ép hậu kiểm khẩn cấp (Override Trigger) và ghi vết Audit Log!'
-          : '🚩 Đã gửi Cờ Yêu Cầu Hậu Kiểm (Inspection Request Flag) tới màn hình Giảng viên!'
-      );
-      if (override) {
-        handleTriggerSpotCheck('RISK_TARGETED');
-      }
-    }
-  };
-
   // Phát lệnh Hậu kiểm 60s đích danh 1 sinh viên nghi vấn từ bảng IDS
   const handleTriggerSingleStudentSpotCheck = async (student) => {
     if (!student?.studentId) return;
@@ -1543,7 +1370,7 @@ export default function FacultyDashboard({
       prev.map((a) => (targetIds.includes(a.studentId) ? { ...a, spotCheckStatus: 'PENDING' } : a))
     );
     setSpotCheckState({ active: true, countdown: 60, targetIds });
-    setAuditorStatusMsg(
+    setStatusBannerMsg(
       `Đã phát lệnh Hậu kiểm Face ID 60s đích danh tới sinh viên ${student.name} (${student.studentId})!`
     );
     socketRef.current?.emit('trigger-spot-check', {
@@ -1566,11 +1393,11 @@ export default function FacultyDashboard({
     } catch {}
   };
 
-  // Đình chỉ & Hủy kết quả điểm danh gian lận từ bảng IDS (Thanh tra hoặc Giảng viên)
+  // Đình chỉ & Hủy kết quả điểm danh gian lận từ bảng IDS (Giảng viên)
   const handleRevokeFraudulentAttendee = async (student) => {
     if (!student?.studentId) return;
     setAttendees((prev) => prev.filter((a) => a.studentId !== student.studentId));
-    setAuditorStatusMsg(
+    setStatusBannerMsg(
       `Đã hủy kết quả điểm danh của sinh viên ${student.name} (${student.studentId}) do vi phạm quy chế IDS!`
     );
     try {
@@ -1655,7 +1482,7 @@ export default function FacultyDashboard({
   };
 
   useEffect(() => {
-    if (staffRole === 'ADMIN' || staffRole === 'AUDITOR' || activeTab.startsWith('ADMIN')) {
+    if (staffRole === 'ADMIN' || activeTab.startsWith('ADMIN')) {
       fetchAdminAuditLogs();
     }
   }, [activeTab, staffRole]);
@@ -1738,20 +1565,16 @@ export default function FacultyDashboard({
       }:${encodeURIComponent(SERVER_URL)}`
     : '';
 
-  // Áp dụng phân quyền giao diện theo đúng Role đăng nhập
+  // Áp dụng phân quyền giao diện theo đúng Role đăng nhập (Chỉ còn FACULTY & ADMIN)
   const applyRoleWorkspace = (role, userObj) => {
+    const cleanRole = role === 'ADMIN' ? 'ADMIN' : 'FACULTY';
     setFacultyUser(userObj);
-    setStaffRole(role);
-    if (role === 'ADMIN') {
+    setStaffRole(cleanRole);
+    if (cleanRole === 'ADMIN') {
       setIsCreated(false);
       setIsSessionOpen(false);
       setActiveTab('ADMIN_ISSUANCE');
-    } else if (role === 'AUDITOR') {
-      setIsCreated(false);
-      setIsSessionOpen(false);
-      setActiveTab('IDS');
     } else {
-      // Giảng viên (FACULTY): Bắt đầu ở màn hình Tạo Lớp (isCreated = false -> chưa có QR)
       setIsCreated(false);
       setIsSessionOpen(false);
       setActiveTab('STAGE');
@@ -1772,20 +1595,16 @@ export default function FacultyDashboard({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || 'Đăng nhập thất bại');
 
-      const resolvedRole = data.role || data.user?.role || 'FACULTY';
+      const resolvedRole = (data.role || data.user?.role) === 'ADMIN' ? 'ADMIN' : 'FACULTY';
       const userObj = data.user || {
         email: loginForm.email,
         fullName:
           resolvedRole === 'ADMIN'
             ? 'Quản Trị Viên Tối Cao'
-            : resolvedRole === 'AUDITOR'
-            ? 'Ban Thanh Tra & Khảo Thí UTH'
             : 'TS. Trần Thế Vinh',
         department:
           resolvedRole === 'ADMIN'
             ? 'Phòng Đào tạo & Quản trị Hệ thống'
-            : resolvedRole === 'AUDITOR'
-            ? 'Phòng Thanh tra & Đảm bảo Chất lượng'
             : 'Khoa Công nghệ Thông tin',
         role: resolvedRole
       };
@@ -1801,7 +1620,7 @@ export default function FacultyDashboard({
     }
   };
 
-  // Chuyển nhanh giữa các tài khoản Thầy/Cô, Admin, Thanh tra để kiểm thử phân quyền RBAC
+  // Chuyển nhanh giữa tài khoản Giảng Viên và Quản Trị Viên
   const handleQuickSwitchAccount = async (targetEmail) => {
     setLoginForm({ email: targetEmail, password: 'Admin@2026' });
     try {
@@ -1812,7 +1631,7 @@ export default function FacultyDashboard({
       });
       const data = await res.json();
       if (res.ok && data?.token) {
-        const resolvedRole = data.role || data.user?.role || 'FACULTY';
+        const resolvedRole = (data.role || data.user?.role) === 'ADMIN' ? 'ADMIN' : 'FACULTY';
         localStorage.setItem('faculty_token', data.token);
         localStorage.setItem('faculty_user', JSON.stringify(data.user));
         setToken(data.token);
@@ -2052,7 +1871,7 @@ export default function FacultyDashboard({
                       type="button"
                       onClick={() =>
                         setLoginHelperNotice(
-                          '🔑 Mật khẩu SSO mặc định cho Cán bộ / Giảng viên / Admin / Thanh tra là: Admin@2026'
+                          '🔑 Mật khẩu SSO mặc định cho Giảng viên (giangvien@uth.edu.vn) và Quản trị viên (admin@uth.edu.vn) là: Admin@2026'
                         )
                       }
                       className="text-[11.5px] font-bold text-[#0A4174] hover:text-[#4E8EA2] bg-transparent border-none cursor-pointer p-0 transition-colors z-10"
@@ -2112,17 +1931,40 @@ export default function FacultyDashboard({
                   </button>
                 </div>
               </form>
+
+              {/* Cụm chọn nhanh vai trò Giảng Viên / Quản Trị Viên 1 chạm */}
+              <div className="mt-5 pt-4 border-t border-[#BDD8E9]/70">
+                <p className="text-[11px] font-bold text-[#49769F] text-center uppercase tracking-wider mb-2.5">
+                  Truy Cập Nhanh (Demo 1-Chạm)
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
+                    className="py-2.5 px-3 rounded-xl bg-[#001D39]/8 hover:bg-[#001D39]/15 border border-[#0A4174]/25 text-[#001D39] text-xs font-bold cursor-pointer transition-all"
+                  >
+                    👨‍🏫 Cổng Giảng Viên
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
+                    className="py-2.5 px-3 rounded-xl bg-[#0A4174]/10 hover:bg-[#0A4174]/20 border border-[#0A4174]/25 text-[#0A4174] text-xs font-bold cursor-pointer transition-all"
+                  >
+                    🛡️ Cổng Quản Trị
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Chân Form: "Don't have an account? Sign up" phối màu #49769F & #001D39 */}
-            <div className="text-center pt-6">
+            <div className="text-center pt-4">
               <p className="text-[12.5px] font-medium text-[#49769F] m-0">
                 Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={() =>
                     setLoginHelperNotice(
-                      '🏛️ Tài khoản Cán bộ / Giảng viên (@uth.edu.vn) được cấp tập trung qua Phòng Đào tạo & CNTT (ví dụ: giangvien@uth.edu.vn, admin@uth.edu.vn, thanhtra@uth.edu.vn).'
+                      '🏛️ Tài khoản Giảng viên (giangvien@uth.edu.vn) và Quản trị viên (admin@uth.edu.vn) được cấp tập trung qua Phòng Đào tạo & CNTT.'
                     )
                   }
                   className="font-extrabold text-[#001D39] hover:text-[#0A4174] hover:underline bg-transparent border-none cursor-pointer p-0 transition-colors"
@@ -2162,43 +2004,33 @@ export default function FacultyDashboard({
       {/* KHUNG VIỀN BO TRÒN NỔI DARK NEON (FLOATING ROUNDED DASHBOARD SHELL) */}
       <div className="dashboard-outer-shell w-full max-w-[1620px] mx-auto flex-1 rounded-[28px] overflow-hidden flex flex-col">
       
-      {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH THEO ĐÚNG VAI TRÒ (ROLE-AWARE TOP NAVBAR) ==================== */}
-      <header className="sticky top-0 z-30 px-6 py-4 border-b border-slate-800/80 bg-[#060D1F]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
+      {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH THEO ĐÚNG VAI TRÒ (FACULTY & ADMIN) ==================== */}
+      <header className="sticky top-0 z-30 px-6 py-4 border-b border-cyan-500/20 bg-[#060E1C]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
         
         {/* Cụm Thương hiệu & Thông tin Người dùng đang đăng nhập */}
         <div className="flex items-center gap-3.5">
-          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-slate-950 text-lg shadow-lg ${
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-[#03141A] text-lg shadow-[0_0_24px_rgba(79,240,214,0.3)] ${
             staffRole === 'ADMIN'
-              ? 'bg-gradient-to-br from-emerald-400 to-teal-600'
-              : staffRole === 'AUDITOR'
-              ? 'bg-gradient-to-br from-amber-400 to-orange-500'
-              : 'bg-gradient-to-br from-cyan-400 to-blue-600'
+              ? 'bg-gradient-to-br from-[#4FF0D6] to-[#10B981]'
+              : 'bg-gradient-to-br from-[#4FF0D6] to-[#22D3EE]'
           }`}>
             U
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-base font-bold text-white m-0">
+              <h1 className="text-base font-extrabold text-white m-0 tracking-tight">
                 {staffRole === 'ADMIN'
                   ? 'UTH-TrustID • Cổng Quản Trị Hệ Thống'
-                  : staffRole === 'AUDITOR'
-                  ? 'UTH-TrustID • Cổng Thanh Tra & Khảo Thí'
-                  : 'UTH-TrustID • Cổng Giảng Viên'}
+                  : 'UTH-TrustID • Cổng Điều Hành Giảng Viên'}
               </h1>
 
               {/* Nhãn Role hiện tại */}
-              <span className={`px-2.5 py-0.5 rounded-lg text-xs font-semibold border ${
+              <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
                 staffRole === 'ADMIN'
                   ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300'
-                  : staffRole === 'AUDITOR'
-                  ? 'bg-amber-500/15 border-amber-400/40 text-amber-300'
-                  : 'bg-cyan-500/15 border-cyan-400/40 text-cyan-300'
+                  : 'bg-[#22D3EE]/15 border-[#4FF0D6]/40 text-[#4FF0D6]'
               }`}>
-                {staffRole === 'ADMIN'
-                  ? 'Quản Trị Viên'
-                  : staffRole === 'AUDITOR'
-                  ? 'Thanh Tra Khảo Thí'
-                  : 'Giảng Viên'}
+                {staffRole === 'ADMIN' ? 'Quản Trị Viên' : 'Giảng Viên'}
               </span>
 
               {/* Chỉ hiện trạng thái phiên học khi là Giảng viên */}
@@ -2213,30 +2045,36 @@ export default function FacultyDashboard({
                   <span className={`w-2 h-2 rounded-full ${
                     !isCreated ? 'bg-slate-400' : isSessionOpen ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'
                   }`} />
-                  {!isCreated ? 'Danh mục lớp học phần' : isSessionOpen ? `Đang điểm danh: ${sessionConfig.courseCode}` : 'Đã tạm khóa QR'}
+                  {!isCreated
+                    ? courses.length === 0
+                      ? 'Chưa tạo lớp học phần'
+                      : `Đang quản lý ${courses.length} lớp học phần`
+                    : isSessionOpen
+                    ? `Đang chiếu QR: ${sessionConfig.courseCode} (Buổi ${sessionConfig.sessionNumber || 1})`
+                    : 'Đã tạm khóa QR'}
                 </span>
               )}
             </div>
 
-            <p className="text-sm text-slate-300 mt-1 mb-0">
-              <strong className="text-white font-semibold">{facultyUser?.fullName}</strong> (<span className="text-cyan-300">{facultyUser?.email}</span>)
+            <p className="text-xs text-slate-300 mt-1 mb-0">
+              <strong className="text-white font-semibold">{facultyUser?.fullName}</strong> (<span className="text-[#4FF0D6]">{facultyUser?.email}</span>)
               {staffRole === 'FACULTY' && isCreated && (
-                <> • Học phần: <strong className="text-white font-semibold">{sessionConfig.courseCode}</strong> • Phòng: <strong className="text-cyan-300 font-semibold">{sessionConfig.room}</strong></>
+                <> • Học phần: <strong className="text-white font-semibold">{sessionConfig.courseCode}</strong> • Phòng: <strong className="text-[#4FF0D6] font-semibold">{sessionConfig.room}</strong></>
               )}
             </p>
           </div>
         </div>
 
         {/* ==================== CỤM TAB ĐIỀU HƯỚNG VIÊN THUỐC (PILL TABS) ==================== */}
-        {/* 1. Tab dành riêng cho GIẢNG VIÊN (Chỉ hiện khi đang mở buổi điểm danh) */}
+        {/* 1. Tab dành riêng cho GIẢNG VIÊN (Chỉ hiện khi đã tạo lớp & đang mở buổi điểm danh) */}
         {staffRole === 'FACULTY' && isCreated && (
-          <nav className="flex items-center bg-[#040814] p-1.5 rounded-full border border-slate-800 gap-1.5">
+          <nav className="flex items-center bg-[#040814] p-1.5 rounded-full border border-cyan-500/25 gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab('STAGE')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'STAGE'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
@@ -2245,9 +2083,9 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('RADAR')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'RADAR'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
@@ -2256,7 +2094,7 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('IDS')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'IDS'
                   ? 'bg-rose-500 text-white shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
@@ -2274,13 +2112,13 @@ export default function FacultyDashboard({
 
         {/* 2. Tab dành riêng cho QUẢN TRỊ VIÊN TỐI CAO (ADMIN) */}
         {staffRole === 'ADMIN' && (
-          <nav className="flex items-center bg-[#040814] p-1.5 rounded-full border border-slate-800 gap-1.5">
+          <nav className="flex items-center bg-[#040814] p-1.5 rounded-full border border-cyan-500/25 gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_ISSUANCE')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_ISSUANCE' || activeTab === 'ADMIN'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
@@ -2289,7 +2127,7 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_REVOCATION')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_REVOCATION'
                   ? 'bg-rose-500 text-white shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
@@ -2300,9 +2138,9 @@ export default function FacultyDashboard({
             <button
               type="button"
               onClick={() => setActiveTab('ADMIN_AUDIT')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'ADMIN_AUDIT'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
+                  ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
@@ -2311,47 +2149,21 @@ export default function FacultyDashboard({
           </nav>
         )}
 
-        {/* 3. Tab dành riêng cho THANH TRA KHẢO THÍ (AUDITOR) */}
-        {staffRole === 'AUDITOR' && (
-          <nav className="flex items-center bg-[#040814] p-1.5 rounded-full border border-slate-800 gap-1.5">
-            <button
-              type="button"
-              onClick={() => setActiveTab('IDS')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
-                activeTab === 'IDS'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              Thanh Tra Điểm Danh Hộ (IDS)
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('RADAR')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
-                activeTab === 'RADAR'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              Bản Đồ Tọa Độ ({attendees.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('ADMIN_AUDIT')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
-                activeTab === 'ADMIN_AUDIT'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md'
-                  : 'bg-transparent text-slate-300 hover:text-white'
-              }`}
-            >
-              Nhật Ký An Ninh
-            </button>
-          </nav>
-        )}
-
         {/* Cụm nút tác vụ bên phải */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Nút chuyển nhanh giữa Giảng Viên và Quản Trị Viên */}
+          <button
+            type="button"
+            onClick={() =>
+              handleQuickSwitchAccount(
+                staffRole === 'ADMIN' ? 'giangvien@uth.edu.vn' : 'admin@uth.edu.vn'
+              )
+            }
+            className="px-3.5 py-2 rounded-full text-xs font-semibold border border-cyan-500/30 bg-[#0C1D33] text-cyan-200 hover:border-[#4FF0D6] hover:text-white cursor-pointer transition-all"
+          >
+            {staffRole === 'ADMIN' ? '⇄ Chuyển Sang Giảng Viên' : '⇄ Chuyển Sang Quản Trị'}
+          </button>
+
           {staffRole === 'FACULTY' && isCreated && (
             <>
               <button
@@ -2359,7 +2171,7 @@ export default function FacultyDashboard({
                 onClick={handleToggleSessionState}
                 className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all border cursor-pointer ${
                   isSessionOpen
-                    ? 'border-rose-500/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25'
+                    ? 'border-amber-500/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25'
                     : 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
                 }`}
               >
@@ -2370,15 +2182,15 @@ export default function FacultyDashboard({
                 type="button"
                 onClick={handleFinishAndSaveSession}
                 className="px-3.5 py-2 rounded-full text-xs font-semibold border border-slate-700 bg-[#040814] text-slate-200 hover:text-white cursor-pointer"
-                title="Tạm lưu buổi học hiện tại và quay về Trang Chi Tiết Lớp Học"
+                title="Đóng màn chiếu QR hiện tại và quay về Danh Mục / Chi Tiết Lớp Học"
               >
-                Về Chi Tiết Lớp
+                Đóng QR &amp; Về Lớp Học
               </button>
 
               <button
                 type="button"
                 onClick={() => handleFinalizeSession()}
-                className="px-4 py-2 rounded-full text-xs font-bold border border-emerald-400/50 bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-lg cursor-pointer transition-all"
+                className="px-4 py-2 rounded-full text-xs font-bold border border-emerald-400/50 bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] shadow-lg cursor-pointer transition-all"
                 title="Đóng kết nối WebSocket, băm danh sách sinh viên có mặt thành Session Hash (Merkle Leaf), ký số Giảng viên và khóa sổ bất biến"
               >
                 Kết Thúc &amp; Chốt Sổ Buổi Học
@@ -2396,24 +2208,24 @@ export default function FacultyDashboard({
         </div>
       </header>
 
-      {/* ==================== BODY THEO ĐÚNG VAI TRÒ (FACULTY vs ADMIN vs AUDITOR) ==================== */}
+      {/* ==================== BODY THEO ĐÚNG VAI TRÒ (FACULTY vs ADMIN) ==================== */}
       {staffRole === 'FACULTY' && !isCreated ? (
-        /* ==================== MÀN HÌNH CHÍNH GIẢNG VIÊN: QUẢN LÝ DANH MỤC LỚP HỌC PHẦN (COURSE HUB - RỘNG CÂN XỨNG) ==================== */
+        /* ==================== MÀN HÌNH CHÍNH GIẢNG VIÊN: QUẢN LÝ DANH MỤC LỚP HỌC PHẦN (COURSE HUB) ==================== */
         <main className="flex-1 w-full max-w-[1540px] mx-auto p-6 lg:p-8 flex flex-col gap-6">
           
           {/* 3 Thẻ Tóm Tắt Quy Mô Học Kỳ */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="hero-navy-card p-5 rounded-2xl bg-[#081226] border border-cyan-500/35 flex items-center justify-between">
+            <div className="hero-navy-card p-5 rounded-[24px] bg-gradient-to-br from-[#0C1D33] to-[#060E1C] border border-[#22D3EE]/35 flex items-center justify-between shadow-lg">
               <div>
                 <span className="text-xs font-medium text-slate-300 block">Tổng Lớp Học Phần Đang Phụ Trách</span>
                 <span className="text-2xl font-bold text-white mt-1 block font-mono">{courses.length} lớp</span>
               </div>
-              <span className="px-3 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold">
+              <span className="px-3 py-1 rounded-xl bg-[#22D3EE]/15 border border-[#4FF0D6]/35 text-[#4FF0D6] text-xs font-semibold">
                 Học kỳ II • 2025-2026
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#081226] border border-slate-800 flex items-center justify-between">
+            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-800 flex items-center justify-between shadow-lg">
               <div>
                 <span className="text-xs font-medium text-slate-300 block">Tổng Số Buổi Đã Điểm Danh</span>
                 <span className="text-2xl font-bold text-emerald-400 mt-1 block font-mono">
@@ -2421,14 +2233,14 @@ export default function FacultyDashboard({
                 </span>
               </div>
               <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                Lưu trữ liên tục 15 tuần
+                {courses.length === 0 ? 'Chưa khởi tạo' : 'Đồng bộ thời gian thực'}
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#081226] border border-slate-800 flex items-center justify-between">
+            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-800 flex items-center justify-between shadow-lg">
               <div>
                 <span className="text-xs font-medium text-slate-300 block">Tổng Quy Mô Sinh Viên Theo Học</span>
-                <span className="text-2xl font-bold text-cyan-300 mt-1 block font-mono">
+                <span className="text-2xl font-bold text-[#4FF0D6] mt-1 block font-mono">
                   {courses.reduce((sum, c) => sum + (Number(c.totalStudents) || 0), 0)} sinh viên
                 </span>
               </div>
@@ -2438,7 +2250,7 @@ export default function FacultyDashboard({
                   setHistoryCourseId(null);
                   setShowCreateCourseForm((prev) => !prev);
                 }}
-                className="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-md transition-all"
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_24px_rgba(34,211,238,0.28)] transition-all"
               >
                 {showCreateCourseForm ? 'Đóng Khung Tạo Lớp' : '+ Tạo Lớp Học Phần Mới'}
               </button>
@@ -2447,26 +2259,35 @@ export default function FacultyDashboard({
 
           {/* ==================== KHUNG TẠO LỚP HỌC PHẦN MỚI (MỞ RỘNG TOÀN CHIỀU NGANG CÂN XỨNG) ==================== */}
           {showCreateCourseForm && (
-            <section className="w-full p-7 rounded-3xl bg-[#081226] border border-cyan-500/40 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+            <section className="w-full p-7 rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#081226] border border-[#22D3EE]/45 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
                 <div>
-                  <h2 className="text-lg font-bold text-white m-0">
-                    Tạo Lớp Học Phần Mới
+                  <h2 className="text-lg font-extrabold text-white m-0">
+                    Khởi Tạo Lớp Học Phần Mới
                   </h2>
                   <p className="text-xs text-slate-300 mt-1 mb-0">
-                    Thiết lập thông tin lớp học phần 1 lần duy nhất vào đầu kỳ để tái sử dụng xuyên suốt 15 tuần giảng dạy
+                    Sau khi tạo lớp học phần, bạn có thể phát Mã QR Điểm Danh lên màn chiếu hoặc xóa lớp bất kỳ lúc nào
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateCourseForm(false)}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
-                >
-                  Hủy
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleQuickFillCoursePreset}
+                    className="px-3.5 py-2 rounded-xl bg-[#22D3EE]/15 border border-[#4FF0D6]/40 text-[#4FF0D6] hover:bg-[#22D3EE]/25 text-xs font-bold cursor-pointer transition-all"
+                  >
+                    ⚡ Điền Nhanh Mẫu (IT402.N01 - Phòng A2-301)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateCourseForm(false)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
+                  >
+                    Đóng
+                  </button>
+                </div>
               </div>
 
-              <form onSubmit={handleCreateNewCourse} className="space-y-5">
+              <form onSubmit={(e) => handleCreateNewCourse(e, false)} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div>
                     <label className="text-xs font-semibold text-slate-200 block mb-1.5">
@@ -2475,10 +2296,10 @@ export default function FacultyDashboard({
                     <input
                       type="text"
                       required
-                      placeholder="VD: IT402.N02"
+                      placeholder="VD: IT402.N01"
                       value={newCourseForm.courseCode}
                       onChange={(e) => setNewCourseForm({ ...newCourseForm, courseCode: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-[#4FF0D6] focus:border-[#4FF0D6] outline-none"
                     />
                   </div>
 
@@ -2492,7 +2313,7 @@ export default function FacultyDashboard({
                       placeholder="VD: An toàn Mạng máy tính & Ứng dụng"
                       value={newCourseForm.courseName}
                       onChange={(e) => setNewCourseForm({ ...newCourseForm, courseName: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm text-white focus:border-cyan-400 outline-none"
+                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm text-white focus:border-[#4FF0D6] outline-none"
                     />
                   </div>
                 </div>
@@ -2508,7 +2329,7 @@ export default function FacultyDashboard({
                       placeholder="VD: A2-301"
                       value={newCourseForm.defaultRoom}
                       onChange={(e) => setNewCourseForm({ ...newCourseForm, defaultRoom: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-[#4FF0D6] focus:border-[#4FF0D6] outline-none"
                     />
                   </div>
 
@@ -2522,7 +2343,7 @@ export default function FacultyDashboard({
                       max={500}
                       value={newCourseForm.totalStudents}
                       onChange={(e) => setNewCourseForm({ ...newCourseForm, totalStudents: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-white focus:border-cyan-400 outline-none"
+                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-white focus:border-[#4FF0D6] outline-none"
                     />
                   </div>
 
@@ -2536,7 +2357,7 @@ export default function FacultyDashboard({
                       max={50000}
                       value={newCourseForm.defaultRadius}
                       onChange={(e) => setNewCourseForm({ ...newCourseForm, defaultRadius: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-cyan-300 focus:border-cyan-400 outline-none"
+                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm font-mono text-[#4FF0D6] focus:border-[#4FF0D6] outline-none"
                     />
                   </div>
 
@@ -2549,13 +2370,13 @@ export default function FacultyDashboard({
                       placeholder="VD: Thứ 2 • Ca 3 (13:30 - 16:00)"
                       value={newCourseForm.schedule}
                       onChange={(e) => setNewCourseForm({ ...newCourseForm, schedule: e.target.value })}
-                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm text-white focus:border-cyan-400 outline-none"
+                      className="w-full p-3 rounded-xl bg-[#040814] border border-slate-700 text-sm text-white focus:border-[#4FF0D6] outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center pt-1">
-                  <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setNewCourseForm({ ...newCourseForm, defaultNetworkMode: 'CAMPUS_WIFI' })}
@@ -2583,12 +2404,19 @@ export default function FacultyDashboard({
                     </button>
                   </div>
 
-                  <div className="lg:col-span-4 flex justify-end gap-3">
+                  <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="submit"
-                      className="w-full py-4 px-6 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-sm cursor-pointer border-none shadow-lg"
+                      className="w-full py-4 px-4 rounded-2xl bg-[#040814] hover:bg-slate-900 border border-[#22D3EE]/50 text-[#4FF0D6] font-bold text-xs cursor-pointer transition-all"
                     >
-                      Lưu Lớp Học Phần Vào Danh Mục
+                      Lưu Vào Danh Mục Lớp
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleCreateNewCourse(e, true)}
+                      className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_28px_rgba(34,211,238,0.3)] transition-all"
+                    >
+                      Tạo Lớp &amp; Phát Mã QR Ngay →
                     </button>
                   </div>
                 </div>
@@ -2610,7 +2438,6 @@ export default function FacultyDashboard({
                   : DEFAULT_ENROLLED_ROSTER;
 
               const studentSummaryMap = new Map();
-              // Khởi tạo danh sách từ Sổ biên chế gốc (enrolledStudents) để hiển thị đầy đủ cả sinh viên vắng
               enrolledRoster.forEach((st) => {
                 studentSummaryMap.set(st.studentId, {
                   studentId: st.studentId,
@@ -2640,8 +2467,8 @@ export default function FacultyDashboard({
                   : sessionList.find((s) => s.sessionId === selectedHistorySessionId);
 
               return (
-                <section className="w-full p-7 rounded-3xl bg-[#081226] border border-cyan-500/35 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
-                  {/* KHU VỰC TRÊN: THÔNG TIN LỚP HỌC PHẦN + NÚT THÊM BUỔI HỌC MỚI (SMART INHERITANCE) + XUẤT SỔ ĐIỂM TOÀN KỲ */}
+                <section className="w-full p-7 rounded-[26px] bg-[#081226] border border-cyan-500/35 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+                  {/* KHU VỰC TRÊN: THÔNG TIN LỚP HỌC PHẦN + NÚT PHÁT QR BUỔI MỚI + XÓA LỚP */}
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
                     <div>
                       <div className="flex flex-wrap items-center gap-2.5">
@@ -2670,20 +2497,27 @@ export default function FacultyDashboard({
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
                       <button
                         type="button"
                         onClick={() => handleExportSemesterCSV(targetCourse)}
                         className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer transition-all"
                       >
-                        Xuất Báo Cáo Chuyên Cần Toàn Kỳ (.CSV / Excel)
+                        Xuất Sổ Điểm Toàn Kỳ (.CSV)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCourseToDelete(targetCourse)}
+                        className="px-4 py-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-semibold text-xs cursor-pointer transition-all"
+                      >
+                        Xóa Lớp Học Phần
                       </button>
                       <button
                         type="button"
                         onClick={() => handleCreateNewSession(targetCourse)}
-                        className="px-5 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg transition-all"
+                        className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-lg transition-all"
                       >
-                        + Thêm Buổi Học Mới (Buổi thứ {nextSessionIndex})
+                        + Phát Mã QR Điểm Danh (Buổi thứ {nextSessionIndex})
                       </button>
                     </div>
                   </div>
@@ -2850,10 +2684,19 @@ export default function FacultyDashboard({
                                     onClick={() => handleReopenExistingSession(targetCourse, ses)}
                                     className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold cursor-pointer transition-all"
                                   >
-                                    Mở Màn Chiếu QR
+                                    Chiếu Lại Mã QR
                                   </button>
                                 </>
                               )}
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSession(targetCourse, ses)}
+                                className="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs font-semibold cursor-pointer transition-all"
+                                title="Xóa buổi điểm danh này"
+                              >
+                                Xóa Buổi
+                              </button>
                             </div>
                           </div>
                         );
@@ -2866,10 +2709,10 @@ export default function FacultyDashboard({
                         className="w-full p-4 rounded-2xl border border-dashed border-cyan-500/45 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-300 font-bold text-xs cursor-pointer transition-all flex flex-wrap items-center justify-between gap-2"
                       >
                         <span>
-                          + Bấm tạo buổi học mới tại đây (Buổi thứ {nextSessionIndex} — Tự động kế thừa tâm GPS, bán kính R = {targetCourse.defaultRadius}m, mạng {targetCourse.defaultNetworkMode} &amp; danh sách SV gốc)
+                          + Bấm phát Mã QR buổi điểm danh mới tại đây (Buổi thứ {nextSessionIndex} — Tự động kế thừa tâm GPS, bán kính R = {targetCourse.defaultRadius}m, mạng {targetCourse.defaultNetworkMode} &amp; danh sách SV gốc)
                         </span>
-                        <span className="px-3 py-1 rounded-lg bg-cyan-400 text-slate-950 font-bold">
-                          1-Click Chiếu QR Ngay →
+                        <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] font-extrabold">
+                          Phát Mã QR Ngay →
                         </span>
                       </button>
                     </div>
@@ -3035,130 +2878,179 @@ export default function FacultyDashboard({
               );
             })()
           ) : (
-            /* ==================== MÀN HÌNH 1: DANH SÁCH LỚP HỌC PHẦN (COURSE HUB — CHỌN LỚP ĐỂ MỞ CHI TIẾT BÊN TRONG) ==================== */
+            /* ==================== MÀN HÌNH 1: DANH SÁCH LỚP HỌC PHẦN (COURSE HUB — CHƯA CÓ LỚP HOẶC DANH SÁCH LỚP ĐÃ TẠO) ==================== */
             <section className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-bold text-white m-0">
+                  <h2 className="text-lg font-extrabold text-white m-0">
                     Danh Sách Lớp Học Phần (Course Hub)
                   </h2>
                   <p className="text-xs text-slate-300 mt-0.5 mb-0">
-                    Chọn một lớp học phần để vào Trang Chi Tiết Lớp, quản lý các buổi học con (Buổi 1, Buổi 2,...) và thêm buổi điểm danh mới
+                    {courses.length === 0
+                      ? 'Chưa có lớp học phần nào. Hãy khởi tạo lớp học phần mới để mở tính năng Phát Mã QR Điểm Danh & Quản Lý Xóa Lớp.'
+                      : 'Chọn Phát Mã QR Điểm Danh ngay trên thẻ lớp học, vào Chi Tiết Lớp hoặc Xóa Lớp khi kết thúc môn học'}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {courses.map((course) => {
-                  const cid = course.courseId || course.id;
-                  const sessionList = Array.isArray(course.sessions) ? course.sessions : [];
-                  const completedSessions = sessionList.length;
-                  const totalStudentsCount = Number(course.totalStudents) || 50;
+              {courses.length === 0 ? (
+                /* KHUNG TRẠNG THÁI RỖNG NÂNG CẤP (CHƯA TẠO LỚP NÀO -> CHƯA HIỆN QUÉT MÃ / XÓA) */
+                <div className="w-full p-10 sm:p-14 rounded-[28px] bg-gradient-to-b from-[#0C1D33] via-[#081428] to-[#060E1C] border border-dashed border-[#22D3EE]/40 shadow-[0_24px_60px_rgba(0,0,0,0.55)] flex flex-col items-center justify-center text-center gap-5">
+                  <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#4FF0D6]/20 to-[#22D3EE]/10 border border-[#4FF0D6]/45 flex items-center justify-center shadow-[0_0_35px_rgba(79,240,214,0.2)]">
+                    <svg className="w-10 h-10 text-[#4FF0D6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
 
-                  return (
-                    <div
-                      key={cid}
+                  <div className="max-w-xl space-y-2">
+                    <span className="px-3 py-1 rounded-full bg-[#22D3EE]/15 border border-[#4FF0D6]/35 text-[#4FF0D6] text-[11px] font-bold uppercase tracking-wider">
+                      Trạng Thái Chờ Khởi Tạo Lớp Học
+                    </span>
+                    <h3 className="text-xl font-extrabold text-white m-0 pt-1">
+                      Chưa Có Lớp Học Phần Nào Được Tạo
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed m-0">
+                      Hiện tại hệ thống chưa mở phiên điểm danh nào. Khi Giảng viên <strong className="text-[#4FF0D6]">Tạo Lớp Học Phần</strong> mới, hệ thống mới kích hoạt <strong className="text-white">Màn Chiếu Mã QR Điểm Danh</strong>, đồng bộ nút <strong className="text-white">Quét Mã QR</strong> xuống ví sinh viên và hiển thị tùy chọn <strong className="text-rose-300">Xóa Lớp / Xóa Buổi</strong>.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    <button
+                      type="button"
                       onClick={() => {
-                        setHistoryCourseId(cid);
-                        setSelectedHistorySessionId('ALL');
+                        handleQuickFillCoursePreset();
+                        setShowCreateCourseForm(true);
                       }}
-                      className="p-6 rounded-3xl bg-[#081226] border border-slate-800 hover:border-cyan-400/60 shadow-2xl flex flex-col justify-between gap-5 transition-all cursor-pointer"
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs sm:text-sm cursor-pointer border-none shadow-[0_12px_30px_rgba(34,211,238,0.32)] transition-all"
                     >
-                      <div className="space-y-4">
-                        {/* Hàng trên cùng: Mã lớp + Phòng học */}
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="px-3 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/35 font-mono text-xs font-bold text-cyan-300">
-                            {course.courseCode}
-                          </span>
-                          <span className="px-3 py-1 rounded-xl bg-[#040814] border border-slate-700 text-xs font-semibold text-white">
-                            Phòng {course.defaultRoom}
-                          </span>
-                        </div>
+                      + Tạo Lớp Học Phần Đầu Tiên
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {courses.map((course) => {
+                    const cid = course.courseId || course.id;
+                    const sessionList = Array.isArray(course.sessions) ? course.sessions : [];
+                    const completedSessions = sessionList.length;
+                    const nextSessionNum = completedSessions + 1;
+                    const totalStudentsCount = Number(course.totalStudents) || 50;
 
-                        {/* Tên môn học & Lịch học */}
-                        <div>
-                          <h3 className="text-base font-bold text-white m-0 leading-snug">
-                            {course.courseName}
-                          </h3>
-                          <p className="text-xs text-slate-300 mt-1.5 mb-0">
-                            {course.schedule}
-                          </p>
-                        </div>
-
-                        {/* Bảng thông số 3 ô cân đối */}
-                        <div className="grid grid-cols-3 gap-2.5 p-3.5 rounded-2xl bg-[#040814] border border-slate-800/90 text-center">
-                          <div>
-                            <span className="text-xs text-slate-400 block">Sĩ số lớp</span>
-                            <strong className="text-sm font-bold text-white font-mono mt-0.5 block">
-                              {totalStudentsCount} SV
-                            </strong>
-                          </div>
-                          <div className="border-x border-slate-800">
-                            <span className="text-xs text-slate-400 block">Số buổi đã dạy</span>
-                            <strong className="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">
-                              {completedSessions} buổi
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-xs text-slate-400 block">Cấu hình</span>
-                            <strong className="text-xs font-semibold text-cyan-300 mt-1 block">
-                              R ≤ {course.defaultRadius}m • {course.defaultNetworkMode === 'CAMPUS_WIFI' ? 'Wi-Fi' : '4G/5G'}
-                            </strong>
-                          </div>
-                        </div>
-
-                        {/* Cây phân cấp thu gọn các buổi học bên trong lớp */}
-                        <div className="p-3.5 rounded-2xl bg-[#040814]/90 border border-slate-800/80 space-y-1.5">
-                          <div className="text-xs font-semibold text-slate-300 mb-1">
-                            Các buổi điểm danh trong lớp:
-                          </div>
-                          {sessionList.length === 0 ? (
-                            <div className="text-xs text-slate-400">
-                              Chưa có buổi học nào — Bấm vào lớp để thêm Buổi 1
-                            </div>
-                          ) : (
-                            sessionList.slice(-2).map((s) => (
-                              <div key={s.sessionId} className="flex items-center justify-between text-xs text-slate-300">
-                                <span className="font-mono text-cyan-300">
-                                  • Buổi {s.sessionIndex || s.sessionNumber} ({s.date || s.sessionDate})
-                                </span>
-                                <span className="text-emerald-400 font-semibold">
-                                  Đã xong ({s.attendees?.length || 0}/{totalStudentsCount} SV)
-                                </span>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Cụm nút hành động: Mở Chi Tiết Lớp Học (Màn hình 2) hoặc Xóa Lớp */}
+                    return (
                       <div
-                        className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-800/80"
-                        onClick={(e) => e.stopPropagation()}
+                        key={cid}
+                        onClick={() => {
+                          setHistoryCourseId(cid);
+                          setSelectedHistorySessionId('ALL');
+                        }}
+                        className="p-6 rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#081226] border border-cyan-500/30 hover:border-[#4FF0D6]/70 shadow-2xl flex flex-col justify-between gap-5 transition-all cursor-pointer"
                       >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setHistoryCourseId(cid);
-                            setSelectedHistorySessionId('ALL');
-                          }}
-                          className="col-span-3 py-3 px-4 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-md transition-all"
-                        >
-                          Mở Chi Tiết Lớp Học ({completedSessions} buổi) →
-                        </button>
+                        <div className="space-y-4">
+                          {/* Hàng trên cùng: Mã lớp + Phòng học */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="px-3 py-1 rounded-xl bg-[#22D3EE]/15 border border-[#4FF0D6]/40 font-mono text-xs font-bold text-[#4FF0D6]">
+                              {course.courseCode}
+                            </span>
+                            <span className="px-3 py-1 rounded-xl bg-[#040814] border border-slate-700 text-xs font-semibold text-white">
+                              Phòng {course.defaultRoom}
+                            </span>
+                          </div>
 
-                        <button
-                          type="button"
-                          onClick={() => setCourseToDelete(course)}
-                          className="col-span-1 py-3 px-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold text-xs cursor-pointer transition-all"
+                          {/* Tên môn học & Lịch học */}
+                          <div>
+                            <h3 className="text-base font-extrabold text-white m-0 leading-snug">
+                              {course.courseName}
+                            </h3>
+                            <p className="text-xs text-slate-300 mt-1.5 mb-0">
+                              {course.schedule}
+                            </p>
+                          </div>
+
+                          {/* Bảng thông số 3 ô cân đối */}
+                          <div className="grid grid-cols-3 gap-2.5 p-3.5 rounded-2xl bg-[#040814] border border-slate-800/90 text-center">
+                            <div>
+                              <span className="text-xs text-slate-400 block">Sĩ số lớp</span>
+                              <strong className="text-sm font-bold text-white font-mono mt-0.5 block">
+                                {totalStudentsCount} SV
+                              </strong>
+                            </div>
+                            <div className="border-x border-slate-800">
+                              <span className="text-xs text-slate-400 block">Số buổi đã mở</span>
+                              <strong className="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">
+                                {completedSessions} buổi
+                              </strong>
+                            </div>
+                            <div>
+                              <span className="text-xs text-slate-400 block">Cấu hình</span>
+                              <strong className="text-xs font-semibold text-[#4FF0D6] mt-1 block">
+                                R ≤ {course.defaultRadius}m • {course.defaultNetworkMode === 'CAMPUS_WIFI' ? 'Wi-Fi' : '4G/5G'}
+                              </strong>
+                            </div>
+                          </div>
+
+                          {/* Cây phân cấp thu gọn các buổi học bên trong lớp */}
+                          <div className="p-3.5 rounded-2xl bg-[#040814]/90 border border-slate-800/80 space-y-1.5">
+                            <div className="text-xs font-semibold text-slate-300 mb-1">
+                              Các buổi điểm danh trong lớp:
+                            </div>
+                            {sessionList.length === 0 ? (
+                              <div className="text-xs text-slate-400">
+                                Chưa mở buổi điểm danh nào — Bấm Phát Mã QR bên dưới để mở Buổi 1
+                              </div>
+                            ) : (
+                              sessionList.slice(-2).map((s) => (
+                                <div key={s.sessionId} className="flex items-center justify-between text-xs text-slate-300">
+                                  <span className="font-mono text-[#4FF0D6]">
+                                    • Buổi {s.sessionIndex || s.sessionNumber} ({s.date || s.sessionDate})
+                                  </span>
+                                  <span className="text-emerald-400 font-semibold">
+                                    {s.attendees?.length || 0}/{totalStudentsCount} SV
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Cụm nút hành động khi đã tạo lớp: Phát Mã QR Điểm Danh, Chi Tiết Sổ Điểm & Xóa Lớp */}
+                        <div
+                          className="space-y-2 pt-2 border-t border-slate-800/80"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          Xóa Lớp
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCreateNewSession(course)}
+                            className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_8px_22px_rgba(34,211,238,0.28)] transition-all flex items-center justify-center gap-2"
+                          >
+                            <span>⚡ Phát Mã QR Điểm Danh (Buổi {nextSessionNum})</span>
+                          </button>
+
+                          <div className="grid grid-cols-3 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setHistoryCourseId(cid);
+                                setSelectedHistorySessionId('ALL');
+                              }}
+                              className="col-span-2 py-2.5 px-3 rounded-xl bg-[#040814] hover:bg-slate-900 border border-cyan-500/35 text-cyan-200 font-semibold text-xs cursor-pointer transition-all"
+                            >
+                              Chi Tiết &amp; Sổ Điểm ({completedSessions} buổi)
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setCourseToDelete(course)}
+                              className="col-span-1 py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 font-bold text-xs cursor-pointer transition-all"
+                            >
+                              Xóa Lớp
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           )}
 
@@ -3371,7 +3263,7 @@ export default function FacultyDashboard({
           )}
         </div>
       ) : (
-        /* ==================== GIAO DIỆN GIẢNG VIÊN (SAU KHI ĐÃ TẠO LỚP) & THANH TRA KHẢO THÍ ==================== */
+        /* ==================== GIAO DIỆN GIẢNG VIÊN (SAU KHI ĐÃ TẠO LỚP & PHÁT MÃ QR) ==================== */
         <div className="flex-1 flex flex-col p-5 gap-5 max-w-[1600px] w-full mx-auto">
           
           {/* ==================== THANH ĐIỀU KHIỂN NHANH 4 Ô (QUICK CONTROL & KPI BAR) ==================== */}
@@ -3406,7 +3298,7 @@ export default function FacultyDashboard({
                 </div>
                 <div className="w-full h-2 rounded-full bg-slate-950/80 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-teal-400 to-blue-500 transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-[#4FF0D6] via-[#22D3EE] to-blue-500 transition-all duration-500"
                     style={{ width: `${validRatioPercent}%` }}
                   />
                 </div>
@@ -3428,9 +3320,8 @@ export default function FacultyDashboard({
               <div className="grid grid-cols-2 bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
                 <button
                   type="button"
-                  disabled={staffRole === 'AUDITOR'}
                   onClick={() => handleSwitchLiveNetworkMode('CAMPUS_WIFI')}
-                  className={`py-2 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-none disabled:opacity-60 ${
+                  className={`py-2 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-none ${
                     sessionConfig.networkMode === 'CAMPUS_WIFI'
                       ? 'bg-amber-500 text-slate-950 shadow-sm'
                       : 'bg-transparent text-slate-300 hover:text-white'
@@ -3440,9 +3331,8 @@ export default function FacultyDashboard({
                 </button>
                 <button
                   type="button"
-                  disabled={staffRole === 'AUDITOR'}
                   onClick={() => handleSwitchLiveNetworkMode('CELLULAR_ANY')}
-                  className={`py-2 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-none disabled:opacity-60 ${
+                  className={`py-2 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-none ${
                     sessionConfig.networkMode !== 'CAMPUS_WIFI'
                       ? 'bg-emerald-400 text-slate-950 shadow-sm'
                       : 'bg-transparent text-slate-300 hover:text-white'
@@ -3459,24 +3349,21 @@ export default function FacultyDashboard({
                 <span className="text-xs font-semibold text-slate-300">
                   Bán Kính Phòng: <strong className="text-cyan-300 font-mono">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
                 </span>
-                {staffRole === 'FACULTY' && (
-                  <button
-                    type="button"
-                    onClick={handleSyncLaptopGpsCenter}
-                    className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 cursor-pointer"
-                  >
-                    Lấy Tâm GPS Laptop
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleSyncLaptopGpsCenter}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold hover:bg-cyan-500/25 cursor-pointer"
+                >
+                  Lấy Tâm GPS Laptop
+                </button>
               </div>
               <div className="flex items-center gap-1.5">
                 {[15, 35, 100, 500, 5000].map((rVal) => (
                   <button
                     key={rVal}
                     type="button"
-                    disabled={staffRole === 'AUDITOR'}
                     onClick={() => handleUpdateLiveRadius(rVal)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-none disabled:opacity-60 ${
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border-none ${
                       Number(sessionConfig.maxRadiusMeters) === rVal
                         ? 'bg-cyan-400 text-slate-950 shadow-sm'
                         : 'bg-[#040814] text-slate-300 hover:text-white'
@@ -3489,109 +3376,54 @@ export default function FacultyDashboard({
                   type="number"
                   min={1}
                   max={50000}
-                  disabled={staffRole === 'AUDITOR'}
                   value={sessionConfig.maxRadiusMeters}
                   onChange={(e) => handleUpdateLiveRadius(e.target.value)}
-                  className="w-16 py-1.5 px-2 rounded-lg bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-300 text-center outline-none focus:border-cyan-400 disabled:opacity-60"
+                  className="w-16 py-1.5 px-2 rounded-lg bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-300 text-center outline-none focus:border-cyan-400"
                 />
               </div>
             </div>
 
-            {/* Ô 4: Hậu kiểm Face ID (Spot-Check) */}
+            {/* Ô 4: Hậu kiểm Face ID (Spot-Check 60s) */}
             <div className="p-4 rounded-2xl bg-[#081226] border border-amber-500/30 flex flex-col justify-between gap-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-amber-300">
-                  {staffRole === 'AUDITOR' ? 'Yêu Cầu Hậu Kiểm' : 'Hậu Kiểm Face ID (60s)'}
+                  Hậu Kiểm Face ID (60s)
                 </span>
                 {spotCheckState.active ? (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-mono font-bold text-xs animate-pulse">
                     Còn {spotCheckState.countdown}s
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-300">
-                    {staffRole === 'AUDITOR' ? 'Phối hợp giảng viên' : 'Sẵn sàng'}
-                  </span>
+                  <span className="text-xs text-slate-300">Sẵn sàng</span>
                 )}
               </div>
-              {staffRole === 'AUDITOR' ? (
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleAuditorSendInspectionRequest(false)}
-                    className="py-2 px-2.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all border-none cursor-pointer"
-                  >
-                    Gửi Yêu Cầu Cho GV
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAuditorSendInspectionRequest(true)}
-                    className="py-2 px-2.5 rounded-xl text-xs font-semibold border border-rose-500/50 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-all cursor-pointer"
-                  >
-                    Ép Khẩn Cấp (Override)
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    disabled={spotCheckState.active}
-                    onClick={() => handleTriggerSpotCheck('ALL')}
-                    className="py-2 px-2.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all disabled:opacity-50 border-none cursor-pointer"
-                  >
-                    Kiểm Tra Cả Lớp
-                  </button>
-                  <button
-                    type="button"
-                    disabled={spotCheckState.active}
-                    onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
-                    className="py-2 px-2.5 rounded-xl text-xs font-semibold border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all disabled:opacity-50 cursor-pointer"
-                  >
-                    Nhóm Rủi Ro (≥30đ)
-                  </button>
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  disabled={spotCheckState.active}
+                  onClick={() => handleTriggerSpotCheck('ALL')}
+                  className="py-2 px-2.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all disabled:opacity-50 border-none cursor-pointer"
+                >
+                  Kiểm Tra Cả Lớp
+                </button>
+                <button
+                  type="button"
+                  disabled={spotCheckState.active}
+                  onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
+                  className="py-2 px-2.5 rounded-xl text-xs font-semibold border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  Nhóm Rủi Ro (≥30đ)
+                </button>
+              </div>
             </div>
           </section>
 
-          {/* Banner nhận Yêu Cầu Hậu Kiểm từ Thanh tra hiển thị trên màn hình Giảng viên */}
-          {staffRole === 'FACULTY' && auditorInspectionRequest && (
-            <div className="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-400 text-amber-100 flex flex-wrap items-center justify-between gap-3 shadow-lg">
-              <div>
-                <div className="text-xs font-bold text-amber-300 flex items-center gap-2">
-                  <span>YÊU CẦU HẬU KIỂM TỪ BAN THANH TRA ({auditorInspectionRequest.auditorEmail})</span>
-                  <span className="px-2 py-0.5 rounded bg-amber-400/20 text-xs font-mono">
-                    Lúc {auditorInspectionRequest.requestedAt}
-                  </span>
-                </div>
-                <p className="text-xs text-white mt-1 mb-0">
-                  Lý do: <strong>{auditorInspectionRequest.reason}</strong>
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
-                  className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs cursor-pointer border-none"
-                >
-                  Đồng Ý &amp; Phát Lệnh Spot-Check 60s
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuditorInspectionRequest(null)}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
-                >
-                  Hoãn Sau Khi Giảng Xong
-                </button>
-              </div>
-            </div>
-          )}
-
-          {auditorStatusMsg && (
+          {statusBannerMsg && (
             <div className="p-3 rounded-2xl bg-cyan-500/15 border border-cyan-500/40 text-cyan-200 flex items-center justify-between text-xs font-semibold">
-              <span>{auditorStatusMsg}</span>
+              <span>{statusBannerMsg}</span>
               <button
                 type="button"
-                onClick={() => setAuditorStatusMsg('')}
+                onClick={() => setStatusBannerMsg('')}
                 className="text-slate-400 hover:text-white bg-transparent border-none cursor-pointer text-xs"
               >
                 ✕
@@ -3644,6 +3476,23 @@ export default function FacultyDashboard({
                         className="px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none transition-all"
                       >
                         Phóng To QR Toàn Màn Chiếu
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const activeCourse = courses.find((c) => (c.courseId || c.id) === activeCourseId);
+                          const currentSes = activeCourse?.sessions?.find((s) => s.sessionId === sessionId) || { sessionId };
+                          if (activeCourse) {
+                            handleDeleteSession(activeCourse, currentSes);
+                          } else {
+                            setIsCreated(false);
+                            setIsSessionOpen(false);
+                          }
+                        }}
+                        className="px-3.5 py-2.5 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs cursor-pointer transition-all"
+                      >
+                        Xóa Phiên QR Này
                       </button>
 
                       <button
@@ -3953,51 +3802,30 @@ export default function FacultyDashboard({
                     </div>
                   </div>
 
-                  {/* Khung Phối hợp Quyền hạn Hậu kiểm giữa Thanh tra (AUDITOR) và Giảng viên (FACULTY) */}
+                  {/* Khung Phát lệnh Hậu kiểm chọn lọc của Giảng viên */}
                   <div className="p-4 rounded-2xl bg-[#040814] border border-amber-500/30 flex flex-wrap items-center justify-between gap-3">
                     <div className="text-xs">
                       <div className="font-bold text-amber-300">
-                        {staffRole === 'AUDITOR'
-                          ? 'Phối Hợp Thanh Tra — Giảng Viên'
-                          : 'Phát Lệnh Hậu Kiểm Chọn Lọc Theo Điểm Rủi Ro'}
+                        Phát Lệnh Hậu Kiểm Chọn Lọc Theo Điểm Rủi Ro
                       </div>
                     </div>
 
-                    {staffRole === 'AUDITOR' ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleAuditorSendInspectionRequest(false)}
-                          className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs border-none cursor-pointer"
-                        >
-                          Gửi Yêu Cầu Hậu Kiểm Cho GV
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAuditorSendInspectionRequest(true)}
-                          className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs cursor-pointer"
-                        >
-                          Ép Hậu Kiểm Khẩn Cấp (Override)
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
-                          className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs border-none cursor-pointer"
-                        >
-                          Hậu Kiểm Nhóm Rủi Ro (≥ 30đ)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleTriggerSpotCheck('ALL')}
-                          className="px-3.5 py-2 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-300 font-semibold text-xs cursor-pointer"
-                        >
-                          Hậu Kiểm Toàn Lớp
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleTriggerSpotCheck('RISK_TARGETED')}
+                        className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs border-none cursor-pointer"
+                      >
+                        Hậu Kiểm Nhóm Rủi Ro (≥ 30đ)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTriggerSpotCheck('ALL')}
+                        className="px-3.5 py-2 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-300 font-semibold text-xs cursor-pointer"
+                      >
+                        Hậu Kiểm Toàn Lớp
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-3 overflow-y-auto max-h-[420px] pr-1">
@@ -4088,32 +3916,6 @@ export default function FacultyDashboard({
                         })}
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB NHẬT KÝ AN NINH CHO THANH TRA KHẢO THÍ (AUDITOR) */}
-              {activeTab === 'ADMIN_AUDIT' && (
-                <div className="flex-1 min-h-[480px] rounded-3xl bg-[#081226] border border-amber-500/30 p-6 flex flex-col gap-4 shadow-2xl overflow-y-auto">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div>
-                      <h3 className="text-base font-bold text-amber-300 m-0">Nhật Ký Thanh Tra An Ninh Hệ Thống</h3>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={fetchAdminAuditLogs}
-                      className="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold cursor-pointer"
-                    >
-                      Làm Mới
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {auditLogs.map((log) => (
-                      <div key={log.id} className="p-3 rounded-xl bg-[#040814] border border-slate-800 flex justify-between text-xs">
-                        <span><code className="text-slate-400">[{log.time}]</code> <strong className="text-emerald-300">{log.action}</strong>: {log.detail}</span>
-                        <span className="text-cyan-400 font-semibold ml-2">{log.result}</span>
-                      </div>
-                    ))}
                   </div>
                 </div>
               )}

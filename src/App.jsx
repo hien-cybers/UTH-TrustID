@@ -48,18 +48,18 @@ export default function App() {
     applyRootTheme(true);
   }, []);
 
-  // Trạng thái Lớp Học Phần & Buổi Điểm Danh đang mở từ Web Portal Giảng viên (Đồng bộ thời gian thực)
+  // Trạng thái Lớp Học Phần & Buổi Điểm Danh đang mở từ Web Portal Giảng viên (Mặc định isOpen: false khi chưa tạo lớp)
   const [activeCourseSession, setActiveCourseSession] = useState({
-    isOpen: true,
-    sessionId: 'SES_A2301',
-    classId: 'CLS_IT402_N01',
-    courseCode: 'IT402.N01',
-    courseName: 'An toàn Mạng máy tính & Ứng dụng',
-    room: 'A2-301',
-    sessionNumber: 3,
+    isOpen: false,
+    sessionId: '',
+    classId: '',
+    courseCode: '',
+    courseName: '',
+    room: '',
+    sessionNumber: 1,
     radius: 35,
     networkMode: 'CELLULAR_ANY',
-    nonce: 'NONCE_LIVE'
+    nonce: ''
   });
 
   // Danh mục Lớp học phần phân cấp 1 - N (1 Lớp học -> Nhiều Buổi học con) đồng bộ từ Backend
@@ -208,7 +208,7 @@ export default function App() {
       smartFetch('/api/session/active')
         .then((r) => r.json())
         .then((d) => {
-          if (d?.success && d?.session) {
+          if (d?.success && d?.active && d?.session && d.session.isOpen !== false) {
             const s = d.session;
             setActiveCourseSession({
               isOpen: s.isOpen !== false && s.status !== 'CLOSED' && s.status !== 'FINALIZED',
@@ -244,10 +244,12 @@ export default function App() {
                 })
               );
             }
-            // Kích hoạt ngay nếu có lệnh Tái điểm danh (Spot-Check) đang hiệu lực từ Giảng viên / Thanh tra
+            // Kích hoạt ngay nếu có lệnh Tái điểm danh (Spot-Check) đang hiệu lực từ Giảng viên
             if (s.activeSpotCheck) {
               activateSpotCheckIfEligible(s.activeSpotCheck);
             }
+          } else {
+            setActiveCourseSession((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
           }
         })
         .catch(() => {});
@@ -328,6 +330,13 @@ export default function App() {
           }));
         }
       });
+
+      const handleRemoteSessionClosed = () => {
+        setActiveCourseSession((prev) => ({ ...prev, isOpen: false }));
+      };
+      socket.on('session-closed', handleRemoteSessionClosed);
+      socket.on('session-terminated', handleRemoteSessionClosed);
+      socket.on('session-finalized', handleRemoteSessionClosed);
 
       const handleStudentCheckedIn = (e) => {
         if (e?.detail?.sessionId) {

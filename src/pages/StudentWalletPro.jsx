@@ -494,148 +494,77 @@ export default function StudentWalletPro({
             />
           )}
 
-          {/* THẺ LỚP HỌC ĐANG MỞ ĐIỂM DANH (GỘP CHUẨN GỌN GÀNG, MÀU MINT-CYAN MỀM MẠI) */}
+          {/* THẺ LỚP HỌC ĐANG MỞ ĐIỂM DANH (CHỈ HIỆN NÚT QUÉT KHI GIẢNG VIÊN ĐÃ TẠO LỚP & PHÁT MÃ QR) */}
           {walletSubTab === 'CARD' && (
-            <div className="p-4 rounded-[26px] bg-gradient-to-b from-[#0C1E35] to-[#071122] border border-teal-400/25 space-y-3 shadow-lg shadow-slate-950/60">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full bg-[#4FF0D6]/10 border border-[#4FF0D6]/30 text-[#64F5DF] text-[10px] font-mono font-bold">
-                  {activeCourseSession?.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {activeCourseSession?.sessionNumber || 3}
-                </span>
-                <span className="text-[10px] font-mono text-[#64F5DF] flex items-center gap-1.5 font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#4FF0D6] animate-ping" />
-                  Đang mở nhận diện
-                </span>
-              </div>
+            activeCourseSession?.isOpen ? (
+              <div className="p-4 rounded-[26px] bg-gradient-to-b from-[#0C1E35] to-[#071122] border border-teal-400/25 space-y-3 shadow-lg shadow-slate-950/60">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-[#4FF0D6]/10 border border-[#4FF0D6]/30 text-[#64F5DF] text-[10px] font-mono font-bold">
+                    {activeCourseSession?.courseCode || 'IT402.N01'} • BUỔI HỌC THỨ {activeCourseSession?.sessionNumber || 1}
+                  </span>
+                  <span className="text-[10px] font-mono text-[#64F5DF] flex items-center gap-1.5 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#4FF0D6] animate-ping" />
+                    Đang mở nhận diện
+                  </span>
+                </div>
 
-              <div>
-                <h3 className="text-sm font-bold text-white tracking-wide m-0">
-                  {activeCourseSession?.courseName || 'An toàn Mạng máy tính & Ứng dụng'}
-                </h3>
-                <p className="text-[10.5px] font-mono text-slate-400 mt-0.5 mb-0">
-                  Phòng <strong className="text-white">{activeCourseSession?.room || 'A2-301'}</strong> • <span className="text-[#64F5DF]">R ≤ {activeCourseSession?.radius || 35}m</span> • Chế độ: <span className="text-slate-200">{activeCourseSession?.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G'}</span>
-                </p>
-              </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-wide m-0">
+                    {activeCourseSession?.courseName || 'Lớp học phần đang mở'}
+                  </h3>
+                  <p className="text-[10.5px] font-mono text-slate-400 mt-0.5 mb-0">
+                    Phòng <strong className="text-white">{activeCourseSession?.room || 'A2-301'}</strong> • <span className="text-[#64F5DF]">R ≤ {activeCourseSession?.radius || 35}m</span> • Chế độ: <span className="text-slate-200">{activeCourseSession?.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G'}</span>
+                  </p>
+                </div>
 
-              {/* NÚT QUÉT DUY NHẤT TO, ĐẸP, ĐẶT NGAY DƯỚI THẺ */}
-              {spotCheckState?.isActive ? (
-                <button
-                  type="button"
-                  onClick={() => onTriggerSpotCheckFaceID && onTriggerSpotCheckFaceID()}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs tracking-wider shadow-[0_6px_20px_rgba(245,158,11,0.3)] transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
-                >
-                  XÁC THỰC LẠI FACE ID ({spotCheckState.countdown}s)
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => navigate('/scan')}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 active:scale-[0.98] text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_22px_rgba(79,240,214,0.28)] transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                  </svg>
-                  QUÉT QR ĐIỂM DANH BUỔI {activeCourseSession?.sessionNumber || 3}
-                </button>
-              )}
-            </div>
+                {/* NÚT QUÉT DUY NHẤT TO, ĐẸP, ĐẶT NGAY DƯỚI THẺ */}
+                {spotCheckState?.isActive ? (
+                  <button
+                    type="button"
+                    onClick={() => onTriggerSpotCheckFaceID && onTriggerSpotCheckFaceID()}
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs tracking-wider shadow-[0_6px_20px_rgba(245,158,11,0.3)] transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                  >
+                    XÁC THỰC LẠI FACE ID ({spotCheckState.countdown}s)
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/scan')}
+                    className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 active:scale-[0.98] text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_22px_rgba(79,240,214,0.28)] transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    QUÉT QR ĐIỂM DANH BUỔI {activeCourseSession?.sessionNumber || 1}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-[26px] bg-gradient-to-b from-[#0C1E35]/80 to-[#071122] border border-white/10 space-y-2 shadow-lg shadow-slate-950/60">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[10px] font-mono font-bold">
+                    TRẠNG THÁI LỚP HỌC
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-slate-500" />
+                    Chưa mở phiên QR
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-wide m-0">
+                    Chưa có lớp học nào đang mở điểm danh
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-1 mb-0 leading-relaxed">
+                    Khi giảng viên tạo lớp học phần và bật phát mã QR trên Web Portal, thẻ lớp học và nút Quét QR sẽ tự động xuất hiện tại đây.
+                  </p>
+                </div>
+              </div>
+            )
           )}
 
           {/* 4. CƠ CHẾ CHO PHÉP SINH VIÊN "XEM LỊCH SỬ ĐIỂM DANH CÁ NHÂN" & BIÊN LAI CHỮ KÝ EIP-191 TRÊN APP */}
           {(() => {
-            const fallbackCourses = [
-              {
-                courseId: 'CLS_IT402_N01',
-                courseCode: 'IT402.N01',
-                courseName: 'An toàn Mạng máy tính & Ứng dụng',
-                defaultRoom: 'A2-301',
-                defaultRadius: 35,
-                schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
-                sessions: [
-                  {
-                    sessionId: 'SES_IT402_B01',
-                    sessionIndex: 1,
-                    date: '2026-09-15',
-                    isFinalized: true,
-                    sessionHash: '0x9f84b2c71e09a43d5c621b8e74031a92d8f4c6e1b2a093847561029384756102',
-                    attendees: [
-                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '13:31:15', distance: 3, status: 'VERIFIED', signatureHash: '0x8a91f3c2d401e8b7a1290c4f8e21309a7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b21' },
-                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '13:32:10', distance: 3, status: 'VERIFIED', signatureHash: '0x7c82e1d4a502f9b8c2310d5e9f32410b8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c32' },
-                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '13:33:45', distance: 5, status: 'VERIFIED', signatureHash: '0x5d61c9b8e304a7f2d1420e6f1a43521c9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d43' }
-                    ]
-                  },
-                  {
-                    sessionId: 'SES_IT402_B02',
-                    sessionIndex: 2,
-                    date: '2026-09-22',
-                    isFinalized: true,
-                    sessionHash: '0x3e71c8a94d02f65b1a839c7e42019b84f1d2e3c4b5a697887766554433221100',
-                    attendees: [
-                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '13:30:40', distance: 4, status: 'VERIFIED', signatureHash: '0x9b12e4f7a803c6d5b4750b9c4d76854f2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a76' },
-                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '13:31:04', distance: 4, status: 'VERIFIED', signatureHash: '0x4f63d8a1c209e5b7d8120c3f6e87965a3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b87' }
-                    ]
-                  },
-                  {
-                    sessionId: 'SES_IT402_B03',
-                    sessionIndex: 3,
-                    date: '2026-11-08',
-                    isFinalized: true,
-                    sessionHash: '0x7a42d9e15c08b34f2e918d6a53027c95e2f3a4b5c6d7e8f90123456789abcdef',
-                    attendees: [
-                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '13:29:50', distance: 2, status: 'VERIFIED', signatureHash: '0x6c95d0f4a208c7e9f0340e5b8a09187c5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d09' },
-                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '13:30:18', distance: 2, status: 'VERIFIED', signatureHash: '0x5e74b1d3c902a8f6e1450f6c9b10298d6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e10' },
-                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '13:32:05', distance: 4, status: 'VERIFIED', signatureHash: '0x8d16f2a5b403c9e7d2560a7d0c21309e7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f21' },
-                      { studentId: '2251120003', name: 'Lê Hoàng Quân', checkInTime: '13:41:30', distance: 48, status: 'EXCEPTION', signatureHash: '0x3c91a4e7d605b2f8c3670b8e1d32410f8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a32' }
-                    ]
-                  }
-                ]
-              },
-              {
-                courseId: 'CLS_IT308_M11',
-                courseCode: 'IT308.M11',
-                courseName: 'Mật mã học & Ứng dụng Blockchain',
-                defaultRoom: 'B1-204',
-                defaultRadius: 35,
-                schedule: 'Thứ 5 • Ca 1 (07:30 - 10:00)',
-                sessions: [
-                  {
-                    sessionId: 'SES_IT308_B01',
-                    sessionIndex: 1,
-                    date: '2026-09-18',
-                    isFinalized: true,
-                    sessionHash: '0x5c83e1f26a09d45b3f029e7b64138d06f3a4b5c6d7e8f90123456789abcdef01',
-                    attendees: [
-                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '07:32:10', distance: 5, status: 'VERIFIED', signatureHash: '0x4b38f4c7d605e2a0f5890d0a3f54632b0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c54' },
-                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '07:33:15', distance: 8, status: 'VERIFIED', signatureHash: '0x7d49a5d8e706f3b1a6900e1b4a65743c1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d65' },
-                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '07:35:02', distance: 10, status: 'VERIFIED', signatureHash: '0x2f50b6e9f807a4c2b7010f2c5b76854d2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e76' }
-                    ]
-                  }
-                ]
-              },
-              {
-                courseId: 'CLS_IT415_P02',
-                courseCode: 'IT415.P02',
-                courseName: 'Bảo mật Web & Hệ thống Phân tán',
-                defaultRoom: 'A3-402',
-                defaultRadius: 50,
-                schedule: 'Thứ 6 • Ca 2 (09:30 - 12:00)',
-                sessions: [
-                  {
-                    sessionId: 'SES_IT415_B01',
-                    sessionIndex: 1,
-                    date: '2026-09-25',
-                    isFinalized: true,
-                    sessionHash: '0x2d94f0a37b10e56c4a130f8c75249e17a4b5c6d7e8f90123456789abcdef0123',
-                    attendees: [
-                      { studentId: '2251120000', name: 'Nguyễn Đức Hiển', checkInTime: '09:31:45', distance: 8, status: 'VERIFIED', signatureHash: '0x1c72d8a1b009c6e4d9230b4e7d98076f4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a98' },
-                      { studentId: '2251120001', name: 'Nguyễn Văn An', checkInTime: '09:32:11', distance: 9, status: 'VERIFIED', signatureHash: '0x6a83e9b2c10ad7f5ea340c5f8ea9187a5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b09' },
-                      { studentId: '2251120002', name: 'Trần Thị Mai', checkInTime: '09:34:05', distance: 12, status: 'VERIFIED', signatureHash: '0x3d94f0c3d20be8a6fb450d6a9fb0298b6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c10' }
-                    ]
-                  }
-                ]
-              }
-            ];
-            const displayCourses =
-              Array.isArray(coursesCatalog) && coursesCatalog.length > 0 ? coursesCatalog : fallbackCourses;
+            const displayCourses = Array.isArray(coursesCatalog) ? coursesCatalog : [];
             const holderMssv = credential?.studentId || '2251120000';
             const myMssv = previewStudentMssv || holderMssv;
 
@@ -660,9 +589,9 @@ export default function StudentWalletPro({
                   {/* Bộ chọn nhanh MSSV kiểu Pill hiện đại */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     {[
-                      { id: holderMssv, label: `${holderMssv} (100%)` },
-                      { id: '2251120002', label: '2251120002 (66.7%)' },
-                      { id: '2251120003', label: '2251120003 (33.3%)' }
+                      { id: holderMssv, label: `${holderMssv} (Ví của tôi)` },
+                      { id: '2251120001', label: '2251120001' },
+                      { id: '2251120002', label: '2251120002' }
                     ].map((item) => {
                       const active = myMssv === item.id;
                       return (
@@ -685,7 +614,17 @@ export default function StudentWalletPro({
 
                 {/* 2. Danh Sách Các Học Phần Bo Góc Mềm Mại Kèm Thanh Tiến Độ */}
                 <div className="space-y-3">
-                  {displayCourses.map((course) => {
+                  {displayCourses.length === 0 ? (
+                    <div className="p-5 rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-white/10 text-center space-y-2 shadow-lg">
+                      <p className="text-xs font-extrabold text-white m-0">
+                        Chưa có lớp học phần nào được khởi tạo
+                      </p>
+                      <p className="text-[11px] text-slate-400 m-0 leading-relaxed">
+                        Khi giảng viên tạo lớp học phần mới và mở các buổi điểm danh trên Web Portal, lịch sử chuyên cần và biên lai chữ ký số EIP-191 sẽ tự động đồng bộ tại đây.
+                      </p>
+                    </div>
+                  ) : (
+                    displayCourses.map((course) => {
                     const cid = course.courseId || course.id;
                     const sesList = Array.isArray(course.sessions) ? course.sessions : [];
                     const isExpanded = expandedCourseId === cid;
@@ -886,7 +825,8 @@ export default function StudentWalletPro({
                         )}
                       </div>
                     );
-                  })}
+                  })
+                  )}
                 </div>
               </div>
             ) : null;
