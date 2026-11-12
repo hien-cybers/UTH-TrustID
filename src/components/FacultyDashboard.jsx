@@ -3792,100 +3792,161 @@ export default function FacultyDashboard({
                     </div>
                   )}
 
-                  {/* Khu vực trung tâm: Cột Trái (QR 360px) + Cột Phải (Thông số bảo mật phiên) */}
+                  {/* Khu vực trung tâm: Màn Chiếu Mã QR "Cinema Split-Stage" (Cột Trái QR + Vòng Đếm Ngược 35s | Cột Phải Live Check-in Toast & Bảo Mật) */}
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center my-auto">
                     
                     {/* Khung QR Điểm Danh Cỡ Lớn (7 cột) — Cinema Split-Stage với Vòng Tròn Đếm Ngược 35s */}
                     <div className="xl:col-span-7 flex flex-col items-center">
-                      <div
-                        onClick={() => setIsProjectorFullscreen(true)}
-                        title="Nhấp vào mã QR để phóng to toàn màn chiếu (500x500px)"
-                        className="relative p-6 bg-white rounded-[32px] shadow-[0_0_65px_rgba(0,242,254,0.32)] border-4 border-cyan-400 flex flex-col items-center cursor-pointer hover:scale-[1.01] transition-transform"
-                      >
-                        {/* Vòng tròn SVG Countdown 35s chạy quanh tâm QR */}
-                        <div className="relative w-[364px] h-[364px] max-w-[75vw] max-h-[75vw] bg-white rounded-2xl flex items-center justify-center p-2.5">
-                          <svg
-                            className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
-                            viewBox="0 0 364 364"
-                          >
-                            <rect
-                              x="4"
-                              y="4"
-                              width="356"
-                              height="356"
-                              rx="22"
-                              fill="none"
-                              stroke="rgba(226, 232, 240, 0.9)"
-                              strokeWidth="5"
-                            />
-                            <rect
-                              x="4"
-                              y="4"
-                              width="356"
-                              height="356"
-                              rx="22"
-                              fill="none"
-                              stroke="#06B6D4"
-                              strokeWidth="5"
-                              strokeDasharray={1400}
-                              strokeDashoffset={1400 - (timerProgress / ROTATE_INTERVAL) * 1400}
-                              strokeLinecap="round"
-                              style={{ transition: 'stroke-dashoffset 0.95s linear' }}
-                            />
-                          </svg>
-                          <QRCodeCanvas
-                            value={qrPayloadString}
-                            size={336}
-                            level="M"
-                            includeMargin={false}
-                            style={{ width: '100%', height: '100%', maxWidth: '336px', maxHeight: '336px' }}
-                          />
-                        </div>
-                        <div className="mt-2.5 flex items-center gap-2 text-center">
-                          <span className="px-2.5 py-0.5 rounded-full bg-slate-900 text-cyan-300 font-mono text-xs font-bold">
-                            {timerProgress}s
-                          </span>
-                          <p className="text-sm font-mono font-bold text-slate-950 tracking-wider m-0">{currentNonce}</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const ringColor =
+                          timerProgress <= 5
+                            ? '#F43F5E'
+                            : timerProgress <= 10
+                            ? '#F59E0B'
+                            : '#06B6D4';
+                        const glowShadow =
+                          timerProgress <= 5
+                            ? '0 0 70px rgba(244,63,94,0.38)'
+                            : timerProgress <= 10
+                            ? '0 0 70px rgba(245,158,11,0.35)'
+                            : '0 0 70px rgba(0,242,254,0.34)';
 
-                      {/* Thanh tiến trình xoay Nonce 35s + Live Check-in Toast */}
-                      <div className="w-[364px] max-w-full mt-3.5 space-y-2.5">
+                        return (
+                          <div
+                            onClick={() => setIsProjectorFullscreen(true)}
+                            title="Nhấp vào mã QR để phóng to toàn màn chiếu Hội trường (500x500px)"
+                            style={{ boxShadow: glowShadow }}
+                            className="relative p-6 bg-white rounded-[34px] border-4 border-cyan-400 flex flex-col items-center cursor-pointer hover:scale-[1.01] transition-all"
+                          >
+                            {/* 4 Góc Định Vị Máy Chiếu Cinema */}
+                            <span className="absolute top-3 left-3 w-4 h-4 border-t-[3px] border-l-[3px] border-cyan-500 rounded-tl-md pointer-events-none" />
+                            <span className="absolute top-3 right-3 w-4 h-4 border-t-[3px] border-r-[3px] border-cyan-500 rounded-tr-md pointer-events-none" />
+                            <span className="absolute bottom-12 left-3 w-4 h-4 border-b-[3px] border-l-[3px] border-cyan-500 rounded-bl-md pointer-events-none" />
+                            <span className="absolute bottom-12 right-3 w-4 h-4 border-b-[3px] border-r-[3px] border-cyan-500 rounded-br-md pointer-events-none" />
+
+                            {/* Vòng tròn SVG Countdown 35s chạy quanh tâm QR */}
+                            <div className="relative w-[364px] h-[364px] max-w-[75vw] max-h-[75vw] bg-white rounded-2xl flex items-center justify-center p-3">
+                              <svg
+                                className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
+                                viewBox="0 0 364 364"
+                              >
+                                <rect
+                                  x="5"
+                                  y="5"
+                                  width="354"
+                                  height="354"
+                                  rx="24"
+                                  fill="none"
+                                  stroke="rgba(226, 232, 240, 0.95)"
+                                  strokeWidth="6"
+                                />
+                                <rect
+                                  x="5"
+                                  y="5"
+                                  width="354"
+                                  height="354"
+                                  rx="24"
+                                  fill="none"
+                                  stroke={ringColor}
+                                  strokeWidth="6"
+                                  strokeDasharray={1390}
+                                  strokeDashoffset={1390 - (timerProgress / ROTATE_INTERVAL) * 1390}
+                                  strokeLinecap="round"
+                                  style={{ transition: 'stroke-dashoffset 0.95s linear, stroke 0.3s ease' }}
+                                />
+                              </svg>
+                              <QRCodeCanvas
+                                value={qrPayloadString}
+                                size={334}
+                                level="M"
+                                includeMargin={false}
+                                style={{ width: '100%', height: '100%', maxWidth: '334px', maxHeight: '334px' }}
+                              />
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-2.5 text-center">
+                              <span
+                                className="px-3 py-0.5 rounded-full text-white font-mono text-xs font-extrabold shadow-sm"
+                                style={{ backgroundColor: ringColor }}
+                              >
+                                ⏱ {timerProgress}s
+                              </span>
+                              <p className="text-sm font-mono font-extrabold text-slate-950 tracking-wider m-0">
+                                {currentNonce}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Thanh tiến trình xoay Nonce 35s */}
+                      <div className="w-[364px] max-w-full mt-3.5 space-y-1.5">
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-300 font-medium">Làm mới mã QR động sau:</span>
+                          <span className="text-slate-300 font-medium">Chu kỳ xoay Nonce chống chụp lén:</span>
                           <span className="text-cyan-400 font-mono font-bold">{timerProgress}s / {ROTATE_INTERVAL}s</span>
                         </div>
                         <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
-                            className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-1000 ease-linear"
+                            className="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 transition-all duration-1000 ease-linear"
                             style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
                           />
                         </div>
-
-                        {/* Live Check-in Feed Card ngay dưới chân QR */}
-                        {attendees.length > 0 && (
-                          <div className="p-3 rounded-2xl bg-emerald-500/12 border border-emerald-400/40 flex items-center justify-between gap-3 animate-[fadeIn_0.25s_ease-out]">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] shrink-0" />
-                              <div className="truncate">
-                                <div className="text-xs font-bold text-white truncate">
-                                  {maskStudentName(attendees[0].name)} ({maskStudentId(attendees[0].studentId)})
-                                </div>
-                                <div className="text-[11px] text-emerald-300 font-mono">
-                                  Vừa quét QR hợp lệ • Cách tâm {stageSafeMode ? '≤ R' : `${attendees[0].distance}m`}
-                                </div>
-                              </div>
-                            </div>
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-400/20 text-emerald-200 font-mono text-xs font-bold shrink-0">
-                              #{attendees.length}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </div>
 
-                    {/* Bảng Trạng Thái Bảo Mật & Chuyển Bản Đồ (5 cột) */}
-                    <div className="xl:col-span-5 flex flex-col gap-3">
+                    {/* Cột Phải (5 cột): Live Check-in Toast Stream + Thông Số Bảo Mật Phiên */}
+                    <div className="xl:col-span-5 flex flex-col gap-3.5">
+                      {/* Hộp Live Check-in Toast (Trượt mượt từ phải sang khi có sinh viên vừa quét mã) */}
+                      <div className="p-4 rounded-2xl bg-[#040814] border border-emerald-500/35 space-y-2.5 shadow-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                            <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                              Live Check-in Toast ({attendees.length} SV)
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-mono text-slate-400">
+                            Thời gian thực
+                          </span>
+                        </div>
+
+                        {attendees.length === 0 ? (
+                          <div className="p-3.5 rounded-xl bg-slate-950/90 border border-dashed border-slate-800 text-center text-xs text-slate-400">
+                            Đang chờ sinh viên đầu tiên quét mã QR trên màn chiếu...
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {attendees.slice(0, 2).map((st, idx) => (
+                              <div
+                                key={`${st.studentId}-${idx}`}
+                                className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 transition-all animate-[fadeIn_0.25s_ease-out] ${
+                                  idx === 0
+                                    ? 'bg-emerald-500/15 border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                                    : 'bg-slate-950/90 border-slate-800/90 opacity-85'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-400/20 border border-emerald-400/40 text-emerald-300 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                                    #{attendees.length - idx}
+                                  </div>
+                                  <div className="truncate">
+                                    <div className="text-xs font-bold text-white truncate">
+                                      {maskStudentName(st.name)}
+                                    </div>
+                                    <div className="text-[11px] font-mono text-emerald-300 truncate">
+                                      MSSV: {maskStudentId(st.studentId)} • {stageSafeMode ? 'Trong vùng R' : `${st.distance}m`}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span className="px-2 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-mono text-[10px] font-extrabold shrink-0">
+                                  HỢP LỆ
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
                       <div className="p-4 rounded-2xl bg-[#040814] border border-slate-800/90 space-y-3">
                         <div className="text-xs font-bold text-cyan-300">
                           Thông Số Bảo Mật Phiên Điểm Danh
@@ -3947,15 +4008,20 @@ export default function FacultyDashboard({
                 </div>
               )}
 
-              {/* CHẾ ĐỘ TOÀN MÀN CHIẾU SIÊU LỚN (500x500px PROJECTOR OVERLAY) */}
+              {/* CHẾ ĐỘ TOÀN MÀN CHIẾU HỘI TRƯỜNG "CINEMA SPLIT-STAGE" SIÊU LỚN (500x500px PROJECTOR OVERLAY) */}
               {isProjectorFullscreen && isCreated && (
-                <div className="fixed inset-0 z-50 bg-[#040814]/98 backdrop-blur-xl flex flex-col items-center justify-center p-6">
-                  <div className="w-full max-w-5xl flex flex-wrap items-center justify-between gap-4 mb-5 pb-4 border-b border-cyan-500/20">
+                <div className="fixed inset-0 z-50 bg-[#030712]/98 backdrop-blur-2xl flex flex-col items-center justify-center p-6 overflow-y-auto">
+                  <div className="w-full max-w-6xl flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-cyan-500/25">
                     <div>
-                      <span className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-bold">
-                        CHẾ ĐỘ MÁY CHIẾU HỘI TRƯỜNG (500x500PX)
-                      </span>
-                      <h2 className="text-2xl font-bold text-white mt-2 mb-0">
+                      <div className="flex items-center gap-2.5">
+                        <span className="px-3.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-extrabold tracking-wide">
+                          CINEMA SPLIT-STAGE PROJECTOR (500x500PX)
+                        </span>
+                        <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs font-mono font-bold">
+                          Chu kỳ Nonce {ROTATE_INTERVAL}s
+                        </span>
+                      </div>
+                      <h2 className="text-2xl font-extrabold text-white mt-2 mb-0">
                         {sessionConfig.courseCode} — {sessionConfig.courseName} (Phòng {sessionConfig.room})
                       </h2>
                     </div>
@@ -3972,8 +4038,8 @@ export default function FacultyDashboard({
                       >
                         {stageSafeMode ? 'Đang Ẩn Danh MSSV/Tên' : 'Bật Ẩn Danh Màn Chiếu'}
                       </button>
-                      <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-bold">
-                        Sĩ số đã điểm danh: {attendees.length} SV
+                      <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-sm font-extrabold">
+                        Đã điểm danh: {attendees.length} SV
                       </div>
                       <button
                         type="button"
@@ -3985,59 +4051,137 @@ export default function FacultyDashboard({
                     </div>
                   </div>
 
-                  <div className="flex flex-col lg:flex-row items-center justify-center gap-8 w-full max-w-5xl">
-                    <div className="p-7 bg-white rounded-[32px] shadow-[0_0_90px_rgba(0,242,254,0.4)] border-4 border-cyan-400 flex flex-col items-center">
-                      <div className="w-[480px] h-[480px] max-w-[82vw] max-h-[60vh] bg-white rounded-2xl flex items-center justify-center p-2 relative">
-                        <QRCodeCanvas
-                          value={qrPayloadString}
-                          size={460}
-                          level="M"
-                          includeMargin={false}
-                          style={{ width: '100%', height: '100%', maxWidth: '460px', maxHeight: '460px' }}
-                        />
-                      </div>
-                      <p className="text-base font-mono font-bold text-slate-950 tracking-widest mt-3 mb-0">
-                        {currentNonce}
-                      </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-8 w-full max-w-6xl">
+                    {/* Cột Trái Cinema Stage (7 cột): Khung QR 500x500px + Vòng Tròn Đếm Ngược SVG */}
+                    <div className="lg:col-span-7 flex flex-col items-center">
+                      {(() => {
+                        const hallRingColor =
+                          timerProgress <= 5
+                            ? '#F43F5E'
+                            : timerProgress <= 10
+                            ? '#F59E0B'
+                            : '#06B6D4';
+                        return (
+                          <div className="relative p-7 bg-white rounded-[38px] shadow-[0_0_100px_rgba(0,242,254,0.42)] border-4 border-cyan-400 flex flex-col items-center">
+                            <div className="relative w-[488px] h-[488px] max-w-[82vw] max-h-[62vh] bg-white rounded-3xl flex items-center justify-center p-3.5">
+                              <svg
+                                className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
+                                viewBox="0 0 488 488"
+                              >
+                                <rect
+                                  x="6"
+                                  y="6"
+                                  width="476"
+                                  height="476"
+                                  rx="28"
+                                  fill="none"
+                                  stroke="rgba(226, 232, 240, 0.95)"
+                                  strokeWidth="7"
+                                />
+                                <rect
+                                  x="6"
+                                  y="6"
+                                  width="476"
+                                  height="476"
+                                  rx="28"
+                                  fill="none"
+                                  stroke={hallRingColor}
+                                  strokeWidth="7"
+                                  strokeDasharray={1870}
+                                  strokeDashoffset={1870 - (timerProgress / ROTATE_INTERVAL) * 1870}
+                                  strokeLinecap="round"
+                                  style={{ transition: 'stroke-dashoffset 0.95s linear, stroke 0.3s ease' }}
+                                />
+                              </svg>
+                              <QRCodeCanvas
+                                value={qrPayloadString}
+                                size={452}
+                                level="M"
+                                includeMargin={false}
+                                style={{ width: '100%', height: '100%', maxWidth: '452px', maxHeight: '452px' }}
+                              />
+                            </div>
+                            <div className="flex items-center gap-3 mt-3">
+                              <span
+                                className="px-3.5 py-1 rounded-full text-white font-mono text-sm font-extrabold"
+                                style={{ backgroundColor: hallRingColor }}
+                              >
+                                ⏱ {timerProgress}s
+                              </span>
+                              <p className="text-base font-mono font-extrabold text-slate-950 tracking-widest m-0">
+                                {currentNonce}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
-                    <div className="w-full lg:w-80 space-y-4">
-                      <div className="p-5 rounded-3xl bg-[#081226] border border-cyan-500/30 space-y-3">
+                    {/* Cột Phải Cinema Stage (5 cột): Đồng hồ Nonce lớn + Luồng Live Check-in Toast Hội trường */}
+                    <div className="lg:col-span-5 flex flex-col gap-4 w-full">
+                      <div className="p-5 rounded-3xl bg-[#081226] border border-cyan-500/35 space-y-3 shadow-xl">
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-slate-300 font-medium">Làm mới mã QR sau:</span>
-                          <span className="text-2xl font-mono font-bold text-cyan-400">{timerProgress}s</span>
+                          <span className="text-slate-300 font-semibold">Đếm ngược xoay mã QR:</span>
+                          <span className="text-3xl font-mono font-extrabold text-cyan-400">{timerProgress}s</span>
                         </div>
                         <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
-                            className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-1000 ease-linear"
+                            className="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 transition-all duration-1000 ease-linear"
                             style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
                           />
                         </div>
-                        <p className="text-xs text-slate-300 m-0">
-                          Bán kính Geofencing: <strong className="text-cyan-300 font-mono">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
-                        </p>
-                        <p className="text-xs text-slate-300 m-0">
-                          Chế độ mạng: <strong className="text-emerald-400">{sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G Tự Do'}</strong>
-                        </p>
+                        <div className="grid grid-cols-2 gap-2.5 pt-1 text-xs">
+                          <div className="p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-slate-300">
+                            Bán kính GPS: <strong className="text-cyan-300 font-mono">R ≤ {sessionConfig.maxRadiusMeters}m</strong>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-slate-300">
+                            Mạng: <strong className="text-emerald-400">{sessionConfig.networkMode === 'CAMPUS_WIFI' ? 'Wi-Fi Trường' : '4G/5G Tự Do'}</strong>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="p-5 rounded-3xl bg-[#081226] border border-slate-800 space-y-2.5 max-h-64 overflow-y-auto">
-                        <p className="text-xs font-bold text-cyan-400 m-0">
-                          Sinh viên vừa điểm danh ({attendees.length})
-                        </p>
-                        {attendees.slice(0, 5).map((st) => (
-                          <div key={st.studentId} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
-                            <div>
-                              <p className="font-semibold text-white m-0">{maskStudentName(st.name)}</p>
-                              <p className="text-xs font-mono text-slate-400 m-0">
-                                MSSV: {maskStudentId(st.studentId)} • {stageSafeMode ? 'Trong vùng' : `${st.distance}m`}
-                              </p>
-                            </div>
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xs font-semibold">
-                              Hợp lệ
-                            </span>
+                      <div className="p-5 rounded-3xl bg-[#081226] border border-emerald-500/35 space-y-3 max-h-80 overflow-y-auto shadow-xl">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                            <p className="text-xs font-extrabold text-emerald-300 uppercase tracking-wider m-0">
+                              Live Check-in Toast ({attendees.length} SV)
+                            </p>
                           </div>
-                        ))}
+                          <span className="text-xs font-mono text-cyan-300">EIP-191 + Merkle OK</span>
+                        </div>
+
+                        {attendees.length === 0 ? (
+                          <div className="p-6 rounded-2xl bg-[#040814] border border-dashed border-slate-800 text-center text-xs text-slate-400">
+                            Hãy đưa camera Ví Sinh viên UTH hướng về phía màn chiếu để điểm danh...
+                          </div>
+                        ) : (
+                          attendees.slice(0, 6).map((st, idx) => (
+                            <div
+                              key={st.studentId}
+                              className={`p-3 rounded-2xl border flex items-center justify-between text-xs transition-all animate-[fadeIn_0.25s_ease-out] ${
+                                idx === 0
+                                  ? 'bg-emerald-500/15 border-emerald-400/60 shadow-[0_0_24px_rgba(16,185,129,0.2)]'
+                                  : 'bg-[#040814] border-slate-800'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="w-8 h-8 rounded-xl bg-emerald-400/20 border border-emerald-400/40 text-emerald-300 font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                                  #{attendees.length - idx}
+                                </span>
+                                <div className="truncate">
+                                  <p className="font-bold text-white m-0 truncate">{maskStudentName(st.name)}</p>
+                                  <p className="text-xs font-mono text-slate-400 m-0 truncate">
+                                    MSSV: {maskStudentId(st.studentId)} • {stageSafeMode ? 'Trong vùng R' : `${st.distance}m`}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="px-2.5 py-1 rounded-lg bg-emerald-400 text-slate-950 font-mono text-xs font-extrabold shrink-0">
+                                Hợp lệ
+                              </span>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
