@@ -2215,33 +2215,33 @@ export default function FacultyDashboard({
           
           {/* 3 Thẻ Tóm Tắt Quy Mô Học Kỳ */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="hero-navy-card p-5 rounded-[24px] bg-gradient-to-br from-[#0C1D33] to-[#060E1C] border border-[#22D3EE]/35 flex items-center justify-between shadow-lg">
+            <div className="hero-navy-card p-5 rounded-[24px] bg-gradient-to-br from-[#1B3B68] to-[#102544] border border-sky-400/35 flex items-center justify-between shadow-lg">
               <div>
-                <span className="text-xs font-medium text-slate-300 block">Tổng Lớp Học Phần Đang Phụ Trách</span>
+                <span className="text-xs font-medium text-slate-300 block">Lớp Học Phần Phụ Trách</span>
                 <span className="text-2xl font-bold text-white mt-1 block font-mono">{courses.length} lớp</span>
               </div>
-              <span className="px-3 py-1 rounded-xl bg-[#22D3EE]/15 border border-[#4FF0D6]/35 text-[#4FF0D6] text-xs font-semibold">
-                Học kỳ II • 2025-2026
+              <span className="px-3 py-1 rounded-xl bg-sky-400/15 border border-sky-300/35 text-sky-200 text-xs font-semibold">
+                HK II • 2025-2026
               </span>
             </div>
 
-            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-800 flex items-center justify-between shadow-lg">
+            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-700/60 flex items-center justify-between shadow-lg">
               <div>
-                <span className="text-xs font-medium text-slate-300 block">Tổng Số Buổi Đã Điểm Danh</span>
+                <span className="text-xs font-medium text-slate-300 block">Buổi Đã Điểm Danh</span>
                 <span className="text-2xl font-bold text-emerald-400 mt-1 block font-mono">
                   {courses.reduce((sum, c) => sum + (c.sessions?.length || 0), 0)} buổi
                 </span>
               </div>
               <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                {courses.length === 0 ? 'Chưa khởi tạo' : 'Đồng bộ thời gian thực'}
+                {courses.length === 0 ? 'Chưa mở' : 'Đang hoạt động'}
               </span>
             </div>
 
-            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-800 flex items-center justify-between shadow-lg">
+            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-700/60 flex items-center justify-between shadow-lg">
               <div>
-                <span className="text-xs font-medium text-slate-300 block">Tổng Quy Mô Sinh Viên Theo Học</span>
-                <span className="text-2xl font-bold text-[#4FF0D6] mt-1 block font-mono">
-                  {courses.reduce((sum, c) => sum + (Number(c.totalStudents) || 0), 0)} sinh viên
+                <span className="text-xs font-medium text-slate-300 block">Tổng Sinh Viên</span>
+                <span className="text-2xl font-bold text-sky-300 mt-1 block font-mono">
+                  {courses.reduce((sum, c) => sum + (Number(c.totalStudents) || 0), 0)} SV
                 </span>
               </div>
               <button
@@ -2250,32 +2250,27 @@ export default function FacultyDashboard({
                   setHistoryCourseId(null);
                   setShowCreateCourseForm((prev) => !prev);
                 }}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_24px_rgba(34,211,238,0.28)] transition-all"
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_24px_rgba(56,189,248,0.28)] transition-all"
               >
-                {showCreateCourseForm ? 'Đóng Khung Tạo Lớp' : '+ Tạo Lớp Học Phần Mới'}
+                {showCreateCourseForm ? 'Đóng' : '+ Tạo Lớp Học Phần'}
               </button>
             </div>
           </section>
 
-          {/* ==================== KHUNG TẠO LỚP HỌC PHẦN MỚI (MỞ RỘNG TOÀN CHIỀU NGANG CÂN XỨNG) ==================== */}
+          {/* ==================== KHUNG TẠO LỚP HỌC PHẦN MỚI ==================== */}
           {showCreateCourseForm && (
-            <section className="w-full p-7 rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#081226] border border-[#22D3EE]/45 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                <div>
-                  <h2 className="text-lg font-extrabold text-white m-0">
-                    Khởi Tạo Lớp Học Phần Mới
-                  </h2>
-                  <p className="text-xs text-slate-300 mt-1 mb-0">
-                    Sau khi tạo lớp học phần, bạn có thể phát Mã QR Điểm Danh lên màn chiếu hoặc xóa lớp bất kỳ lúc nào
-                  </p>
-                </div>
+            <section className="w-full p-7 rounded-[26px] bg-gradient-to-b from-[#17345C] to-[#0F2442] border border-sky-400/40 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/60 pb-4">
+                <h2 className="text-lg font-extrabold text-white m-0">
+                  Khởi Tạo Lớp Học Phần Mới
+                </h2>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleQuickFillCoursePreset}
-                    className="px-3.5 py-2 rounded-xl bg-[#22D3EE]/15 border border-[#4FF0D6]/40 text-[#4FF0D6] hover:bg-[#22D3EE]/25 text-xs font-bold cursor-pointer transition-all"
+                    className="px-3.5 py-2 rounded-xl bg-sky-400/15 border border-sky-300/40 text-sky-200 hover:bg-sky-400/25 text-xs font-bold cursor-pointer transition-all"
                   >
-                    ⚡ Điền Nhanh Mẫu (IT402.N01 - Phòng A2-301)
+                    ⚡ Điền Nhanh Mẫu
                   </button>
                   <button
                     type="button"
@@ -2383,11 +2378,10 @@ export default function FacultyDashboard({
                       className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                         newCourseForm.defaultNetworkMode === 'CAMPUS_WIFI'
                           ? 'border-amber-400 bg-amber-500/10 text-amber-300'
-                          : 'border-slate-800 bg-[#040814] text-slate-300 hover:border-slate-700'
+                          : 'border-slate-700/70 bg-[#040814] text-slate-300 hover:border-slate-600'
                       }`}
                     >
-                      <p className="text-xs font-bold m-0">Chế độ mạng 1: Ràng buộc Wi-Fi Giảng Đường</p>
-                      <p className="text-xs text-slate-400 mt-1 mb-0">Bắt buộc kết nối mạng nội bộ phòng học</p>
+                      <p className="text-xs font-bold m-0">Wi-Fi Giảng Đường</p>
                     </button>
 
                     <button
@@ -2396,11 +2390,10 @@ export default function FacultyDashboard({
                       className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                         newCourseForm.defaultNetworkMode === 'CELLULAR_ANY'
                           ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300'
-                          : 'border-slate-800 bg-[#040814] text-slate-300 hover:border-slate-700'
+                          : 'border-slate-700/70 bg-[#040814] text-slate-300 hover:border-slate-600'
                       }`}
                     >
-                      <p className="text-xs font-bold m-0">Chế độ mạng 2: Cho phép Mạng 4G/5G</p>
-                      <p className="text-xs text-slate-400 mt-1 mb-0">Kết hợp đối soát tọa độ GPS bán kính phòng học</p>
+                      <p className="text-xs font-bold m-0">Mạng 4G / 5G + GPS</p>
                     </button>
                   </div>
 
@@ -2493,7 +2486,7 @@ export default function FacultyDashboard({
                         {targetCourse.courseCode} — {targetCourse.courseName}
                       </h2>
                       <p className="text-xs text-slate-300 mt-1 mb-0">
-                        Sĩ số biên chế: <strong className="text-white">{totalClassStudents} sinh viên</strong> • Đã tổ chức: <strong className="text-emerald-400">{sessionList.length} buổi học</strong> • Tự động kế thừa cấu hình cho buổi tiếp theo (Smart Inheritance)
+                        Sĩ số: <strong className="text-white">{totalClassStudents} SV</strong> • Đã mở: <strong className="text-emerald-400">{sessionList.length} buổi</strong>
                       </p>
                     </div>
 
@@ -2503,77 +2496,42 @@ export default function FacultyDashboard({
                         onClick={() => handleExportSemesterCSV(targetCourse)}
                         className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer transition-all"
                       >
-                        Xuất Sổ Điểm Toàn Kỳ (.CSV)
+                        Xuất Sổ Điểm (.CSV)
                       </button>
                       <button
                         type="button"
                         onClick={() => setCourseToDelete(targetCourse)}
                         className="px-4 py-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-semibold text-xs cursor-pointer transition-all"
                       >
-                        Xóa Lớp Học Phần
+                        Xóa Lớp
                       </button>
                       <button
                         type="button"
                         onClick={() => handleCreateNewSession(targetCourse)}
-                        className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-lg transition-all"
+                        className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-lg transition-all"
                       >
-                        + Phát Mã QR Điểm Danh (Buổi thứ {nextSessionIndex})
+                        + Phát Mã QR (Buổi {nextSessionIndex})
                       </button>
                     </div>
                   </div>
 
-                  {/* THÔNG BÁO BIÊN LAI CHỐT SỔ BẤT BIẾN (TAMPER-PROOF SESSION FINALIZATION) */}
+                  {/* THÔNG BÁO ĐÃ CHỐT SỔ BUỔI HỌC (ĐÃ BỎ CHI TIẾT MÃ BĂM DÀI DÒNG) */}
                   {finalizedBannerNotice && (
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/45 text-emerald-100 space-y-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-bold text-xs">
-                            ĐÃ CHỐT SỔ BẤT BIẾN (TAMPER-PROOF ROOT)
-                          </span>
-                          <span className="text-xs font-bold text-white">
-                            {finalizedBannerNotice.courseCode} • Buổi {finalizedBannerNotice.sessionNumber} ({finalizedBannerNotice.sessionId})
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setFinalizedBannerNotice(null)}
-                          className="text-xs text-slate-300 hover:text-white bg-transparent border-none cursor-pointer"
-                        >
-                          Đóng
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-200 m-0">
-                        Kết nối WebSocket của buổi học đã đóng vĩnh viễn. Toàn bộ <strong>{finalizedBannerNotice.attendeeCount} sinh viên</strong> có mặt đã được băm thành Merkle Leaf và ký điện tử bởi khóa Giảng viên. Không ai có thể chỉnh sửa danh sách mà không làm hỏng mã băm.
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 font-mono text-xs">
-                        <div className="p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-cyan-300 truncate">
-                          Session Hash (Merkle Leaf): {finalizedBannerNotice.sessionHash}
-                        </div>
-                        <div className="p-2.5 rounded-xl bg-[#040814] border border-slate-800 text-emerald-300 truncate">
-                          Chữ ký số Giảng viên: {finalizedBannerNotice.facultySignature}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* KẾT QUẢ KIỂM TRA TOÀN VẸN MÃ BĂM BUỔI HỌC */}
-                  {hashVerifyResult && (
-                    <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/45 text-cyan-100 flex flex-wrap items-center justify-between gap-3">
-                      <div className="space-y-1">
-                        <div className="text-xs font-bold text-cyan-300">
-                          ĐỐI SOÁT TOÀN VẸN MÃ BĂM BUỔI HỌC ({hashVerifyResult.sessionId})
-                        </div>
-                        <div className="text-xs text-white">{hashVerifyResult.message}</div>
-                        <div className="text-xs font-mono text-emerald-300">
-                          Session Hash: {hashVerifyResult.sessionHash} • Chữ ký GV: {String(hashVerifyResult.facultySignature || '').slice(0, 34)}...
-                        </div>
+                    <div className="p-3.5 rounded-2xl bg-emerald-500/12 border border-emerald-400/40 text-emerald-100 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="px-2.5 py-0.5 rounded-md bg-emerald-400 text-slate-950 font-bold text-xs">
+                          ĐÃ CHỐT SỔ BUỔI HỌC
+                        </span>
+                        <span className="text-xs font-semibold text-white">
+                          {finalizedBannerNotice.courseCode} • Buổi {finalizedBannerNotice.sessionNumber} ({finalizedBannerNotice.attendeeCount} sinh viên có mặt)
+                        </span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setHashVerifyResult(null)}
-                        className="px-3 py-1.5 rounded-xl bg-[#040814] border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
+                        onClick={() => setFinalizedBannerNotice(null)}
+                        className="text-xs text-slate-300 hover:text-white bg-transparent border-none cursor-pointer"
                       >
-                        Đóng
+                        ✕
                       </button>
                     </div>
                   )}
@@ -2633,7 +2591,7 @@ export default function FacultyDashboard({
                               <defs>
                                 <linearGradient id="classDonutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                   <stop offset="0%" stopColor="#4FF0D6" />
-                                  <stop offset="100%" stopColor="#22D3EE" />
+                                  <stop offset="100%" stopColor="#38BDF8" />
                                 </linearGradient>
                               </defs>
                             </svg>
@@ -2647,45 +2605,42 @@ export default function FacultyDashboard({
 
                           <div className="space-y-1">
                             <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">
-                              PHÂN TÍCH CHUYÊN CẦN TOÀN KỲ
+                              THỐNG KÊ CHUYÊN CẦN
                             </span>
                             <h3 className="text-sm font-bold text-white m-0">
-                              Tỷ lệ hiện diện trung bình: {totalSessionsCount > 0 ? `${avgClassRate}%` : 'Chưa mở buổi học'}
+                              Hiện diện trung bình: {totalSessionsCount > 0 ? `${avgClassRate}%` : 'Chưa mở buổi học'}
                             </h3>
-                            <p className="text-xs text-slate-400 m-0">
-                              Chuẩn dự thi học phần UTH: Tham gia tối thiểu <strong>≥ 80%</strong> số buổi điểm danh định danh.
-                            </p>
                           </div>
                         </div>
 
                         <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="p-3.5 rounded-xl bg-[#081226] border border-emerald-500/30">
-                            <div className="text-xs text-slate-400">Đủ điều kiện dự thi (≥ 80%)</div>
+                            <div className="text-xs text-slate-400">Đủ điều kiện (≥ 80%)</div>
                             <div className="text-xl font-extrabold font-mono text-emerald-300 mt-1">
                               {totalSessionsCount > 0 ? `${qualifiedCount}/${summaryRows.length} SV` : `${summaryRows.length} SV`}
                             </div>
                             <div className="text-[11px] text-emerald-400/90 mt-0.5">
-                              {totalSessionsCount > 0 ? `Chiếm ${qualifiedRatio}% quân số lớp` : 'Sẵn sàng điểm danh buổi 1'}
+                              {totalSessionsCount > 0 ? `${qualifiedRatio}% sĩ số lớp` : 'Sẵn sàng'}
                             </div>
                           </div>
 
                           <div className="p-3.5 rounded-xl bg-[#081226] border border-amber-500/30">
-                            <div className="text-xs text-slate-400">Cảnh báo học vụ (&lt; 80%)</div>
+                            <div className="text-xs text-slate-400">Cảnh báo (&lt; 80%)</div>
                             <div className="text-xl font-extrabold font-mono text-amber-300 mt-1">
                               {totalSessionsCount > 0 ? `${warningCount} SV` : '0 SV'}
                             </div>
                             <div className="text-[11px] text-amber-400/90 mt-0.5">
-                              {warningCount > 0 ? 'Cần nhắc nhở chuyên cần' : 'Không có sinh viên vi phạm'}
+                              {warningCount > 0 ? 'Vắng quá quy định' : 'Không có'}
                             </div>
                           </div>
 
                           <div className="p-3.5 rounded-xl bg-[#081226] border border-cyan-500/30">
-                            <div className="text-xs text-slate-400">Buổi đã khóa sổ Merkle</div>
+                            <div className="text-xs text-slate-400">Buổi đã chốt sổ</div>
                             <div className="text-xl font-extrabold font-mono text-cyan-300 mt-1">
                               {sessionList.filter((s) => s.isFinalized || s.status === 'FINALIZED').length}/{totalSessionsCount} buổi
                             </div>
                             <div className="text-[11px] text-cyan-400/90 mt-0.5">
-                              Chữ ký số Giảng viên bất biến
+                              Đã lưu sổ điểm
                             </div>
                           </div>
                         </div>
@@ -2693,16 +2648,11 @@ export default function FacultyDashboard({
                     );
                   })()}
 
-                  {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC CON BÊN TRONG LỚP (HIERARCHICAL CLASS SESSIONS) */}
+                  {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC TRONG LỚP (ĐÃ LOẠI BỎ KIỂM TRA MÃ BĂM & GHI CHÚ THỪA) */}
                   <div className="space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-sm font-bold text-white m-0">
-                        Danh Sách Các Buổi Học Trong Lớp ({sessionList.length} buổi)
-                      </h3>
-                      <span className="text-xs text-slate-400">
-                        Mỗi buổi học sau khi kết thúc được khóa sổ bằng chữ ký số Giảng viên và mã băm bất biến (Merkle Leaf)
-                      </span>
-                    </div>
+                    <h3 className="text-sm font-bold text-white m-0">
+                      Các Buổi Học Đã Mở ({sessionList.length} buổi)
+                    </h3>
 
                     <div className="grid grid-cols-1 gap-3">
                       {sessionList.map((ses) => {
@@ -2712,17 +2662,14 @@ export default function FacultyDashboard({
                         const ratePercent = Math.min(100, Math.round((presentCount / enrolledRoster.length) * 100));
                         const isSelected = selectedHistorySessionId === ses.sessionId;
                         const isLocked = Boolean(ses.isFinalized || ses.status === 'FINALIZED');
-                        const shortHash = ses.sessionHash
-                          ? `${ses.sessionHash.slice(0, 12)}...${ses.sessionHash.slice(-8)}`
-                          : 'Chưa chốt sổ';
 
                         return (
                           <div
                             key={ses.sessionId}
                             className={`p-4 rounded-2xl border transition-all flex flex-wrap items-center justify-between gap-4 ${
                               isSelected
-                                ? 'bg-[#0D2B52]/75 border-cyan-400 shadow-lg'
-                                : 'bg-[#040814] border-slate-800 hover:border-cyan-500/40'
+                                ? 'bg-[#1D3E6E]/85 border-cyan-400 shadow-lg'
+                                : 'bg-[#040814] border-slate-700/70 hover:border-cyan-400/45'
                             }`}
                           >
                             <div className="flex flex-wrap items-center gap-3.5">
@@ -2732,24 +2679,20 @@ export default function FacultyDashboard({
                               <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="text-sm font-bold text-white">
-                                    {presentCount}/{enrolledRoster.length} SV biên chế có mặt
+                                    {presentCount}/{enrolledRoster.length} SV có mặt
                                   </span>
                                   <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
-                                    Tỷ lệ {ratePercent}%
+                                    {ratePercent}%
                                   </span>
                                   {isLocked ? (
                                     <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-xs font-semibold">
-                                      Đã Chốt Sổ Bất Biến
+                                      Đã Chốt Sổ
                                     </span>
                                   ) : (
                                     <span className="px-2.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs font-semibold">
-                                      Đang Mở / Chưa Khóa Sổ
+                                      Đang Mở
                                     </span>
                                   )}
-                                </div>
-                                <div className="text-xs text-slate-400 mt-1 font-mono flex flex-wrap items-center gap-3">
-                                  <span>Mã phiên: {ses.sessionId} • Phòng {targetCourse.defaultRoom}</span>
-                                  <span className="text-cyan-300/90">Session Hash: {shortHash}</span>
                                 </div>
                               </div>
                             </div>
@@ -2763,43 +2706,35 @@ export default function FacultyDashboard({
                                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
                                   isSelected
                                     ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
-                                    : 'bg-[#081226] text-cyan-300 border-cyan-500/30 hover:border-cyan-400'
+                                    : 'bg-[#081226] text-cyan-200 border-cyan-500/30 hover:border-cyan-400'
                                 }`}
                               >
-                                {isSelected ? 'Đang xem chi tiết' : 'Xem chi tiết'}
+                                {isSelected ? 'Đang xem' : 'Chi tiết'}
                               </button>
 
                               <button
                                 type="button"
                                 onClick={() => handleExportSingleSessionCSV(targetCourse, ses)}
-                                className="px-3.5 py-2 rounded-xl bg-[#081226] hover:bg-slate-900 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
+                                className="px-3.5 py-2 rounded-xl bg-[#081226] hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
                               >
-                                Xuất CSV Buổi {sIdx}
+                                Xuất CSV
                               </button>
 
-                              {isLocked ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleVerifySessionIntegrity(targetCourse, ses)}
-                                  className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold cursor-pointer transition-all"
-                                >
-                                  Kiểm Tra Toàn Vẹn Mã Băm
-                                </button>
-                              ) : (
+                              {!isLocked && (
                                 <>
                                   <button
                                     type="button"
                                     onClick={() => handleFinalizeSession(targetCourse, ses)}
                                     className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-200 text-xs font-bold cursor-pointer transition-all"
                                   >
-                                    Kết Thúc &amp; Chốt Sổ
+                                    Chốt Sổ
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleReopenExistingSession(targetCourse, ses)}
                                     className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold cursor-pointer transition-all"
                                   >
-                                    Chiếu Lại Mã QR
+                                    Chiếu Lại QR
                                   </button>
                                 </>
                               )}
@@ -2808,7 +2743,6 @@ export default function FacultyDashboard({
                                 type="button"
                                 onClick={() => handleDeleteSession(targetCourse, ses)}
                                 className="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs font-semibold cursor-pointer transition-all"
-                                title="Xóa buổi điểm danh này"
                               >
                                 Xóa Buổi
                               </button>
@@ -2817,24 +2751,21 @@ export default function FacultyDashboard({
                         );
                       })}
 
-                      {/* Hàng nút Tạo Buổi Mới (Smart Inheritance 1-Click) nằm trực tiếp cuối danh sách buổi học của lớp */}
                       <button
                         type="button"
                         onClick={() => handleCreateNewSession(targetCourse)}
-                        className="w-full p-4 rounded-2xl border border-dashed border-cyan-500/45 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-300 font-bold text-xs cursor-pointer transition-all flex flex-wrap items-center justify-between gap-2"
+                        className="w-full p-4 rounded-2xl border border-dashed border-cyan-400/45 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-200 font-bold text-xs cursor-pointer transition-all flex flex-wrap items-center justify-between gap-2"
                       >
-                        <span>
-                          + Bấm phát Mã QR buổi điểm danh mới tại đây (Buổi thứ {nextSessionIndex} — Tự động kế thừa tâm GPS, bán kính R = {targetCourse.defaultRadius}m, mạng {targetCourse.defaultNetworkMode} &amp; danh sách SV gốc)
-                        </span>
-                        <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] font-extrabold">
-                          Phát Mã QR Ngay →
+                        <span>+ Mở Buổi Điểm Danh Tiếp Theo (Buổi {nextSessionIndex})</span>
+                        <span className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] text-[#03141A] font-extrabold">
+                          Phát Mã QR →
                         </span>
                       </button>
                     </div>
                   </div>
 
-                  {/* KHU VỰC DƯỚI: SỔ ĐIỂM TỔNG HỢP CHUYÊN CẦN LŨY KẾ (CUMULATIVE ATTENDANCE MATRIX) */}
-                  <div className="space-y-3 pt-2 border-t border-slate-800">
+                  {/* KHU VỰC DƯỚI: SỔ ĐIỂM TỔNG HỢP CHUYÊN CẦN LŨY KẾ */}
+                  <div className="space-y-3 pt-2 border-t border-slate-700/60">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <button
@@ -2843,20 +2774,17 @@ export default function FacultyDashboard({
                           className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition-all ${
                             selectedHistorySessionId === 'ALL'
                               ? 'bg-cyan-400 text-slate-950 border-cyan-300 font-bold'
-                              : 'bg-[#040814] text-slate-300 border-slate-800 hover:text-white'
+                              : 'bg-[#040814] text-slate-300 border-slate-700 hover:text-white'
                           }`}
                         >
-                          Sổ Điểm Tổng Hợp Chuyên Cần Lũy Kế (Toàn Kỳ)
+                          Sổ Điểm Chuyên Cần Toàn Kỳ
                         </button>
                         {selectedSessionObj && (
                           <span className="px-3.5 py-2 rounded-xl bg-[#040814] border border-cyan-500/40 text-cyan-300 text-xs font-semibold">
-                            Đang xem chi tiết: Buổi {selectedSessionObj.sessionIndex || selectedSessionObj.sessionNumber} ({selectedSessionObj.date || selectedSessionObj.sessionDate})
+                            Buổi {selectedSessionObj.sessionIndex || selectedSessionObj.sessionNumber} ({selectedSessionObj.date || selectedSessionObj.sessionDate})
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-slate-400">
-                        Hệ thống tự động bôi đỏ sinh viên vắng quá quy chế học vụ (&lt; 80%) để cảnh báo cấm thi
-                      </span>
                     </div>
 
                     {selectedHistorySessionId === 'ALL' ? (
@@ -2958,31 +2886,23 @@ export default function FacultyDashboard({
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <div className="p-3.5 rounded-2xl bg-[#040814] border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+                        <div className="p-3.5 rounded-2xl bg-[#040814] border border-slate-700/70 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
                           <div>
-                            Chi tiết <strong>Buổi {selectedSessionObj?.sessionIndex || selectedSessionObj?.sessionNumber}</strong> • Ngày: <strong>{selectedSessionObj?.date || selectedSessionObj?.sessionDate}</strong> • Mã phiên: <code className="text-cyan-300">{selectedSessionObj?.sessionId}</code>
-                          </div>
-                          <div className="font-mono text-emerald-300">
-                            Session Hash: {selectedSessionObj?.sessionHash ? `${selectedSessionObj.sessionHash.slice(0, 18)}...` : 'Chưa khóa sổ'}
+                            Chi tiết <strong>Buổi {selectedSessionObj?.sessionIndex || selectedSessionObj?.sessionNumber}</strong> • Ngày: <strong>{selectedSessionObj?.date || selectedSessionObj?.sessionDate}</strong>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                           {(selectedSessionObj?.attendees || []).map((st) => (
-                            <div key={st.studentId} className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex flex-col justify-between gap-2">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-sm font-semibold text-white m-0">{st.name}</p>
-                                  <p className="text-xs font-mono text-cyan-300 mt-0.5 mb-0">
-                                    {st.studentId} • Lúc {st.checkInTime}
-                                  </p>
-                                </div>
-                                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                                  Cách tâm {st.distance}m
-                                </span>
+                            <div key={st.studentId} className="p-4 rounded-2xl bg-[#040814] border border-slate-700/70 flex items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-white m-0">{st.name}</p>
+                                <p className="text-xs font-mono text-cyan-300 mt-0.5 mb-0">
+                                  {st.studentId} • {st.checkInTime}
+                                </p>
                               </div>
-                              <div className="pt-2 border-t border-slate-800/80 text-[11px] font-mono text-slate-400 truncate">
-                                Biên lai EIP-191: <span className="text-cyan-300">{st.signatureHash || '0x8a91f3c2d401e8b7...'}</span>
-                              </div>
+                              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                                {st.distance}m
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -2993,50 +2913,40 @@ export default function FacultyDashboard({
               );
             })()
           ) : (
-            /* ==================== MÀN HÌNH 1: DANH SÁCH LỚP HỌC PHẦN (COURSE HUB — CHƯA CÓ LỚP HOẶC DANH SÁCH LỚP ĐÃ TẠO) ==================== */
+            /* ==================== MÀN HÌNH 1: DANH SÁCH LỚP HỌC PHẦN ==================== */
             <section className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-extrabold text-white m-0">
-                    Danh Sách Lớp Học Phần (Course Hub)
-                  </h2>
-                  <p className="text-xs text-slate-300 mt-0.5 mb-0">
-                    {courses.length === 0
-                      ? 'Chưa có lớp học phần nào. Hãy khởi tạo lớp học phần mới để mở tính năng Phát Mã QR Điểm Danh & Quản Lý Xóa Lớp.'
-                      : 'Chọn Phát Mã QR Điểm Danh ngay trên thẻ lớp học, vào Chi Tiết Lớp hoặc Xóa Lớp khi kết thúc môn học'}
-                  </p>
-                </div>
+                <h2 className="text-lg font-extrabold text-white m-0">
+                  Danh Sách Lớp Học Phần
+                </h2>
               </div>
 
               {courses.length === 0 ? (
-                /* KHUNG TRẠNG THÁI RỖNG NÂNG CẤP (CHƯA TẠO LỚP NÀO -> CHƯA HIỆN QUÉT MÃ / XÓA) */
-                <div className="w-full p-10 sm:p-14 rounded-[28px] bg-gradient-to-b from-[#0C1D33] via-[#081428] to-[#060E1C] border border-dashed border-[#22D3EE]/40 shadow-[0_24px_60px_rgba(0,0,0,0.55)] flex flex-col items-center justify-center text-center gap-5">
-                  <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#4FF0D6]/20 to-[#22D3EE]/10 border border-[#4FF0D6]/45 flex items-center justify-center shadow-[0_0_35px_rgba(79,240,214,0.2)]">
-                    <svg className="w-10 h-10 text-[#4FF0D6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                /* KHUNG TRẠNG THÁI RỖNG SANG TRỌNG, GỌN GÀNG */
+                <div className="w-full p-10 sm:p-14 rounded-[28px] bg-gradient-to-b from-[#17345C] via-[#112849] to-[#0B1C36] border border-dashed border-sky-400/40 shadow-[0_20px_50px_rgba(0,0,0,0.45)] flex flex-col items-center justify-center text-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4FF0D6]/20 to-[#38BDF8]/15 border border-[#4FF0D6]/45 flex items-center justify-center shadow-[0_0_30px_rgba(79,240,214,0.2)]">
+                    <svg className="w-8 h-8 text-[#4FF0D6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                   </div>
 
-                  <div className="max-w-xl space-y-2">
-                    <span className="px-3 py-1 rounded-full bg-[#22D3EE]/15 border border-[#4FF0D6]/35 text-[#4FF0D6] text-[11px] font-bold uppercase tracking-wider">
-                      Trạng Thái Chờ Khởi Tạo Lớp Học
-                    </span>
-                    <h3 className="text-xl font-extrabold text-white m-0 pt-1">
-                      Chưa Có Lớp Học Phần Nào Được Tạo
+                  <div className="max-w-md space-y-1">
+                    <h3 className="text-xl font-extrabold text-white m-0">
+                      Chưa Có Lớp Học Phần
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed m-0">
-                      Hiện tại hệ thống chưa mở phiên điểm danh nào. Khi Giảng viên <strong className="text-[#4FF0D6]">Tạo Lớp Học Phần</strong> mới, hệ thống mới kích hoạt <strong className="text-white">Màn Chiếu Mã QR Điểm Danh</strong>, đồng bộ nút <strong className="text-white">Quét Mã QR</strong> xuống ví sinh viên và hiển thị tùy chọn <strong className="text-rose-300">Xóa Lớp / Xóa Buổi</strong>.
+                    <p className="text-xs text-slate-300 m-0">
+                      Khởi tạo lớp học phần để bắt đầu phát mã QR điểm danh.
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <div className="pt-1">
                     <button
                       type="button"
                       onClick={() => {
                         handleQuickFillCoursePreset();
                         setShowCreateCourseForm(true);
                       }}
-                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs sm:text-sm cursor-pointer border-none shadow-[0_12px_30px_rgba(34,211,238,0.32)] transition-all"
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs sm:text-sm cursor-pointer border-none shadow-[0_12px_28px_rgba(56,189,248,0.3)] transition-all"
                     >
                       + Tạo Lớp Học Phần Đầu Tiên
                     </button>
@@ -3058,7 +2968,7 @@ export default function FacultyDashboard({
                           setHistoryCourseId(cid);
                           setSelectedHistorySessionId('ALL');
                         }}
-                        className="p-6 rounded-[26px] bg-gradient-to-b from-[#0C1D33] to-[#081226] border border-cyan-500/30 hover:border-[#4FF0D6]/70 shadow-2xl flex flex-col justify-between gap-5 transition-all cursor-pointer"
+                        className="p-6 rounded-[26px] bg-gradient-to-b from-[#17345C] to-[#0F2442] border border-sky-400/30 hover:border-[#4FF0D6]/70 shadow-xl flex flex-col justify-between gap-5 transition-all cursor-pointer"
                       >
                         <div className="space-y-4">
                           {/* Hàng trên cùng: Mã lớp + Phòng học */}
@@ -3716,26 +3626,10 @@ export default function FacultyDashboard({
                         onClick={() => handleFinalizeSession()}
                         className="px-4 py-2.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg transition-all"
                       >
-                        Kết Thúc &amp; Chốt Sổ Buổi Học
+                        Chốt Sổ Buổi Học
                       </button>
                     </div>
                   </div>
-
-                  {/* Thông báo Smart Inheritance (Kế thừa tự động cấu hình từ buổi học trước đó chỉ với 1 click) */}
-                  {smartInheritanceNotice && (
-                    <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/35 text-cyan-100 flex flex-wrap items-center justify-between gap-3">
-                      <div className="text-xs leading-relaxed">
-                        <strong className="text-cyan-300">Kế Thừa Thông Minh (Smart Inheritance):</strong> Đã tự động nạp cấu hình từ <strong>{smartInheritanceNotice.inheritedFrom}</strong> — Tâm GPS <code className="text-white">({smartInheritanceNotice.coords?.lat}, {smartInheritanceNotice.coords?.lon})</code> • Bán kính <strong className="text-emerald-300">R = {smartInheritanceNotice.radius}m</strong> • Mạng <strong className="text-cyan-300">{smartInheritanceNotice.networkMode}</strong> • Sổ biên chế gốc <strong className="text-white">{smartInheritanceNotice.totalClassStudents} SV</strong>.
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setSmartInheritanceNotice(null)}
-                        className="text-xs text-slate-400 hover:text-white bg-transparent border-none cursor-pointer"
-                      >
-                        Đóng
-                      </button>
-                    </div>
-                  )}
 
                   {/* Thông báo sự kiện thời gian thực */}
                   {networkBlockNotice && (

@@ -458,51 +458,52 @@ button, input, select {
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
 }
 
-/* ==================== GIAO DIỆN DASHBOARD DARK NEON CHUẨN MẪU (NỀN XANH ĐÊM VỰC THẲM + VIỀN PHÁT SÁNG CYAN + PHÔNG CHỮ DỄ ĐỌC) ==================== */
+/* ==================== GIAO DIỆN WEB PORTAL SANG TRỌNG (ROYAL SAPPHIRE & PLATINUM GLASS) ==================== */
 .ocean-palette-theme,
 .theme-fintech-dark {
-  background: radial-gradient(circle at 18% 15%, rgba(14, 116, 144, 0.34), transparent 45%),
-              radial-gradient(circle at 82% 85%, rgba(10, 65, 116, 0.48), transparent 50%),
-              linear-gradient(160deg, #041529 0%, #020c18 100%) !important;
+  background: radial-gradient(circle at 15% 12%, rgba(56, 189, 248, 0.22), transparent 48%),
+              radial-gradient(circle at 85% 88%, rgba(45, 212, 191, 0.16), transparent 52%),
+              linear-gradient(155deg, #0F2547 0%, #0A1931 55%, #071326 100%) !important;
   color: #F8FAFC !important;
   font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .theme-fintech-dark .dashboard-outer-shell {
-  background: linear-gradient(165deg, rgba(7, 25, 46, 0.95) 0%, rgba(4, 16, 31, 0.98) 100%);
-  border: 1.5px solid rgba(56, 189, 248, 0.38);
-  box-shadow: 0 0 65px -8px rgba(0, 210, 255, 0.25), 0 30px 70px -15px rgba(0, 0, 0, 0.85);
+  background: linear-gradient(165deg, rgba(19, 42, 78, 0.94) 0%, rgba(12, 29, 56, 0.97) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 24px 60px -12px rgba(2, 8, 23, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .theme-fintech-dark header {
-  background: rgba(6, 22, 41, 0.92) !important;
-  border-bottom: 1px solid rgba(73, 118, 159, 0.34) !important;
+  background: rgba(15, 34, 64, 0.92) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22) !important;
 }
 
 .theme-fintech-dark .bg-\[\#081226\] {
-  background: linear-gradient(155deg, rgba(13, 39, 70, 0.9) 0%, rgba(7, 23, 43, 0.96) 100%) !important;
-  border: 1px solid rgba(78, 142, 162, 0.35) !important;
-  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.14), 0 16px 38px -10px rgba(1, 8, 20, 0.78) !important;
+  background: linear-gradient(155deg, rgba(24, 52, 94, 0.88) 0%, rgba(16, 37, 70, 0.94) 100%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 14px 32px -10px rgba(3, 10, 24, 0.55) !important;
 }
 
 .theme-fintech-dark .hero-navy-card {
-  background: linear-gradient(145deg, #0D2B52 0%, #071933 100%) !important;
-  border: 1px solid rgba(56, 189, 248, 0.45) !important;
-  box-shadow: inset 0 1px 0 rgba(189, 216, 233, 0.18), 0 16px 36px -10px rgba(0, 210, 255, 0.18) !important;
+  background: linear-gradient(145deg, #1E3E6D 0%, #142C52 100%) !important;
+  border: 1px solid rgba(125, 211, 252, 0.38) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 14px 30px -10px rgba(14, 165, 233, 0.2) !important;
 }
 
 .theme-fintech-dark .bg-\[\#040814\],
 .theme-fintech-dark .bg-\[\#040814\]\/80,
+.theme-fintech-dark .bg-\[\#040814\]\/90,
 .theme-fintech-dark .bg-slate-950,
 .theme-fintech-dark .bg-slate-950\/90 {
-  background: rgba(4, 15, 30, 0.88) !important;
-  border-color: rgba(73, 118, 159, 0.4) !important;
+  background: rgba(11, 26, 50, 0.78) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
 }
 
 .theme-fintech-dark .bg-cyan-400 {
-  background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 55%, #2563eb 100%) !important;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.32) !important;
 }
 
 /* Cân chỉnh kích thước chữ & độ tương phản để mọi giảng viên, cán bộ đều nhìn rõ và êm mắt */

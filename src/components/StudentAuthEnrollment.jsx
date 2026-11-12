@@ -27,7 +27,7 @@ const getSafeSavedProfile = () => {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') return parsed;
     }
-  } catch {}
+  } catch { }
   return { name: 'NGUYỄN ĐỨC HIỂN', fullName: 'Nguyễn Đức Hiển', studentId: '2251120000', major: 'An toàn Thông tin' };
 };
 
@@ -93,7 +93,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         setErrorMsg(data?.error || 'MSSV không tồn tại trong danh sách đào tạo của Admin!');
         return;
       }
-    } catch {}
+    } catch { }
 
     // Fallback đối soát cục bộ nếu mất kết nối tạm thời
     setTimeout(() => {
@@ -136,7 +136,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         setStep(3);
         return;
       }
-    } catch {}
+    } catch { }
 
     setTimeout(() => {
       if (cleanOtp === (studentClaim?.mockOtp || '889901') || cleanOtp === '123456') {
@@ -179,7 +179,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         walletAddress = initRes.address;
       }
       deviceId = initRes?.deviceId || '';
-    } catch {}
+    } catch { }
 
     // Đồng bộ khóa công khai & Merkle Proof lên Backend
     try {
@@ -199,12 +199,12 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         merkleRoot = regData.merkleRoot;
         merkleProof = regData.merkleProof || merkleProof;
       }
-    } catch {}
+    } catch { }
 
     if (useBiometric) {
       try {
         await registerBiometric(sId);
-      } catch {}
+      } catch { }
     }
 
     const vcRecord = {
@@ -260,7 +260,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     if (vcRecord.privateKey) {
       try {
         setActiveWallet(new ethers.Wallet(vcRecord.privateKey));
-      } catch {}
+      } catch { }
     }
 
     triggerScanSuccessFeedback();
@@ -328,7 +328,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     return (
       <div className="fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans">
         <div className="w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] text-center space-y-5 animate-fade-scale">
-          
+
           <div className="space-y-2">
             <div className="w-16 h-16 rounded-[22px] bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_24px_rgba(79,240,214,0.25)]">
               <Lock size={28} />
@@ -431,7 +431,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     // =========================================================================
     <div className="fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans">
       <div className="w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] space-y-4 animate-fade-scale">
-        
+
         {/* HEADER */}
         <div className="text-center space-y-1">
           <div className="w-12 h-12 rounded-2xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_20px_rgba(79,240,214,0.25)]">
@@ -455,13 +455,12 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
             ].map((s) => (
               <div
                 key={s.idx}
-                className={`py-1 px-2 rounded-full text-center font-mono text-[9.5px] font-bold border ${
-                  step === s.idx
+                className={`py-1 px-2 rounded-full text-center font-mono text-[9.5px] font-bold border ${step === s.idx
                     ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF]'
                     : step > s.idx
-                    ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
-                    : 'bg-[#050A14] border-white/10 text-slate-500'
-                }`}
+                      ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+                      : 'bg-[#050A14] border-white/10 text-slate-500'
+                  }`}
               >
                 {s.label}
               </div>
@@ -506,11 +505,10 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                     setMssv(id);
                     setErrorMsg('');
                   }}
-                  className={`px-2.5 py-1 rounded-full font-mono text-[10px] border cursor-pointer transition-all ${
-                    mssv === id
+                  className={`px-2.5 py-1 rounded-full font-mono text-[10px] border cursor-pointer transition-all ${mssv === id
                       ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF] font-bold'
                       : 'bg-[#050A14] border-white/10 text-slate-400'
-                  }`}
+                    }`}
                 >
                   {id}
                 </button>
