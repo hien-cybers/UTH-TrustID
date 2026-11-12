@@ -342,48 +342,29 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     const savedProfile = getSafeSavedProfile();
 
     return (
-      <div
-        className="student-auth-overlay fixed inset-0 z-[99998] backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300"
-        style={{
-          background: isDark
-            ? 'linear-gradient(180deg, #5483B3 0%, #052659 46%, #021024 100%)'
-            : 'linear-gradient(180deg, #C1E8FF 0%, #7DA0CA 42%, #5483B3 78%, #052659 100%)'
-        }}
-      >
-        <div
-          className="student-auth-card relative w-full max-w-sm p-6 rounded-[32px] border text-center space-y-5 animate-spring-pop"
-          style={{
-            background: isDark
-              ? 'linear-gradient(165deg, rgba(5, 38, 89, 0.96) 0%, rgba(2, 16, 36, 0.98) 100%)'
-              : 'linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(193, 232, 255, 0.9) 100%)',
-            borderColor: 'rgba(193, 232, 255, 0.48)',
-            boxShadow: '0 24px 60px rgba(2, 16, 36, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35)'
-          }}
-        >
+      <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
+        <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] text-center space-y-5 animate-spring-pop">
           <button
             type="button"
             onClick={handleSwitchTheme}
             title={isDark ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
-            className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#5483B3]/25 border border-[#C1E8FF]/45 text-[#C1E8FF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
+            className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
           >
             {isDark ? <Sun size={13} /> : <Moon size={13} />}
             <span>{isDark ? 'Sáng' : 'Tối'}</span>
           </button>
 
           <div className="space-y-2 pt-1">
-            <div
-              className="w-16 h-16 rounded-[22px] mx-auto flex items-center justify-center text-[#021024] shadow-[0_8px_24px_rgba(193,232,255,0.3)]"
-              style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 100%)' }}
-            >
+            <div className="w-16 h-16 rounded-[22px] bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_24px_rgba(79,240,214,0.25)]">
               <Lock size={28} />
             </div>
             <h2 className="text-base font-extrabold text-white tracking-tight m-0">
               XÁC THỰC MỞ KHÓA VÍ
             </h2>
             <p className="text-xs text-slate-300 m-0">
-              Xin chào, <strong className="text-[#C1E8FF]">{savedProfile.name || 'NGUYỄN ĐỨC HIỂN'}</strong>
+              Xin chào, <strong className="text-[#64F5DF]">{savedProfile.name || 'NGUYỄN ĐỨC HIỂN'}</strong>
             </p>
-            <span className="inline-block px-3 py-0.5 rounded-full bg-[#021024]/50 border border-[#7DA0CA]/35 font-mono text-[10.5px] text-[#C1E8FF]">
+            <span className="inline-block px-3 py-0.5 rounded-full bg-white/5 border border-white/10 font-mono text-[10.5px] text-slate-400">
               MSSV: {savedProfile.studentId || '2251120000'} • FIDO2 Ready
             </span>
           </div>
@@ -400,8 +381,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 type="button"
                 onClick={handleBiometricUnlock}
                 disabled={loading}
-                style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 55%, #5483B3 100%)' }}
-                className="login-btn-shimmer w-full py-3.5 rounded-2xl hover:opacity-95 text-[#021024] font-extrabold text-xs tracking-wide shadow-[0_10px_26px_rgba(84,131,179,0.4)] active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                className="login-btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-slate-950 font-extrabold text-xs tracking-wide shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
               >
                 <Fingerprint size={17} />
                 <span>{loading ? 'Đang Quét Face ID...' : 'Mở Khóa Bằng Face ID / Vân Tay'}</span>
@@ -413,7 +393,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                   setUnlockMode('PIN');
                   setErrorMsg('');
                 }}
-                className="text-xs text-slate-300 hover:text-[#C1E8FF] underline font-semibold bg-transparent border-none cursor-pointer block mx-auto"
+                className="text-xs text-slate-300 hover:text-[#64F5DF] underline font-semibold bg-transparent border-none cursor-pointer block mx-auto"
               >
                 Mở khóa bằng Mã PIN 6 số
               </button>
@@ -431,15 +411,14 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                   value={unlockPin}
                   onChange={(e) => setUnlockPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="••••••"
-                  className="w-full text-center tracking-[0.5em] p-3 rounded-2xl bg-[#021024] border border-[#7DA0CA]/45 text-base font-mono text-[#C1E8FF] outline-none focus:border-[#C1E8FF]"
+                  className="w-full text-center tracking-[0.5em] p-3 rounded-2xl bg-[#050A14] border border-teal-400/35 text-base font-mono text-[#64F5DF] outline-none focus:border-[#4FF0D6]"
                   autoFocus
                 />
               </div>
 
               <button
                 type="submit"
-                style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 55%, #5483B3 100%)' }}
-                className="login-btn-shimmer w-full py-3.5 rounded-2xl text-[#021024] font-extrabold text-xs tracking-wide shadow-[0_10px_26px_rgba(84,131,179,0.4)] active:scale-95 transition-all border-none cursor-pointer"
+                className="login-btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 font-extrabold text-xs tracking-wide shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all border-none cursor-pointer"
               >
                 Xác Nhận Mã PIN
               </button>
@@ -458,11 +437,11 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
           )}
 
           {/* Nút chuyển nhanh về Giai đoạn 1 (Kích hoạt OTP lần đầu) */}
-          <div className="pt-3 border-t border-[#7DA0CA]/25">
+          <div className="pt-3 border-t border-white/10">
             <button
               type="button"
               onClick={handleResetToStage1}
-              className="text-[11px] font-semibold text-slate-400 hover:text-[#C1E8FF] bg-transparent border-none cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
+              className="text-[11px] font-semibold text-slate-400 hover:text-[#64F5DF] bg-transparent border-none cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
             >
               <RefreshCw size={11} />
               <span>Đổi MSSV / Kích hoạt ví lần đầu qua Gmail OTP</span>
@@ -475,29 +454,13 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     // =========================================================================
     // GIAO DIỆN 2: KÍCH HOẠT LẦN ĐẦU (STAGE 1: MSSV -> GMAIL OTP -> HIỆN THÔNG TIN -> MÃ PIN & FACE ID)
     // =========================================================================
-    <div
-      className="student-auth-overlay fixed inset-0 z-[99998] backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300"
-      style={{
-        background: isDark
-          ? 'linear-gradient(180deg, #5483B3 0%, #052659 46%, #021024 100%)'
-          : 'linear-gradient(180deg, #C1E8FF 0%, #7DA0CA 42%, #5483B3 78%, #052659 100%)'
-      }}
-    >
-      <div
-        className="student-auth-card relative w-full max-w-sm p-6 rounded-[32px] border space-y-4 animate-spring-pop"
-        style={{
-          background: isDark
-            ? 'linear-gradient(165deg, rgba(5, 38, 89, 0.96) 0%, rgba(2, 16, 36, 0.98) 100%)'
-            : 'linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(193, 232, 255, 0.9) 100%)',
-          borderColor: 'rgba(193, 232, 255, 0.48)',
-          boxShadow: '0 24px 60px rgba(2, 16, 36, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35)'
-        }}
-      >
+    <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
+      <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] space-y-4 animate-spring-pop">
         <button
           type="button"
           onClick={handleSwitchTheme}
           title={isDark ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
-          className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#5483B3]/25 border border-[#C1E8FF]/45 text-[#C1E8FF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
+          className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
         >
           {isDark ? <Sun size={13} /> : <Moon size={13} />}
           <span>{isDark ? 'Sáng' : 'Tối'}</span>
@@ -505,16 +468,13 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
 
         {/* HEADER */}
         <div className="text-center space-y-1 pt-1">
-          <div
-            className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center text-[#021024] shadow-[0_8px_20px_rgba(193,232,255,0.28)]"
-            style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 100%)' }}
-          >
+          <div className="w-12 h-12 rounded-2xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_20px_rgba(79,240,214,0.25)]">
             <ShieldCheck size={24} />
           </div>
           <h2 className="text-base font-extrabold text-white tracking-tight m-0 pt-1">
             KÍCH HOẠT VÍ SỐ LẦN ĐẦU
           </h2>
-          <p className="text-[11px] font-semibold text-[#C1E8FF] m-0">
+          <p className="text-[11px] font-semibold text-[#64F5DF] m-0">
             Liên kết danh tính từ Gmail trường (@ut.edu.vn)
           </p>
         </div>
@@ -529,11 +489,11 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
             ].map((s) => (
               <div
                 key={s.idx}
-                className={`py-1.5 px-2 rounded-full text-center font-semibold text-[10px] border ${step === s.idx
-                    ? 'bg-[#C1E8FF] border-[#C1E8FF] text-[#021024] font-extrabold'
+                className={`py-1 px-2 rounded-full text-center font-mono text-[9.5px] font-bold border ${step === s.idx
+                    ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF]'
                     : step > s.idx
-                      ? 'bg-[#5483B3]/35 border-[#7DA0CA] text-[#C1E8FF]'
-                      : 'bg-[#021024] border-[#5483B3]/35 text-[#7DA0CA]'
+                      ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+                      : 'bg-[#050A14] border-white/10 text-slate-500'
                   }`}
               >
                 {s.label}
@@ -552,7 +512,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         {step === 1 && (
           <form onSubmit={handleSendOtp} className="space-y-3.5">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">
+              <label className="text-xs font-mono text-slate-300 block mb-1">
                 Mã Số Sinh Viên (MSSV)
               </label>
               <input
@@ -560,12 +520,12 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 value={mssv}
                 onChange={(e) => setMssv(e.target.value)}
                 placeholder="2251120000"
-                className="w-full p-3 rounded-2xl bg-[#021024] border border-[#7DA0CA]/40 text-xs font-mono text-[#C1E8FF] outline-none focus:border-[#C1E8FF]"
+                className="w-full p-3 rounded-2xl bg-[#050A14] border border-white/15 text-xs font-mono text-[#64F5DF] outline-none focus:border-[#4FF0D6]"
                 required
               />
-              <p className="text-[10.5px] text-slate-400 mt-1.5 m-0">
+              <p className="text-[10px] text-slate-400 mt-1.5 m-0">
                 Hệ thống sẽ gửi mã OTP 6 số về hòm thư{' '}
-                <strong className="text-[#C1E8FF]">{mssv || 'mssv'}@ut.edu.vn</strong>
+                <strong className="text-[#64F5DF]">{mssv || 'mssv'}@ut.edu.vn</strong>
               </p>
             </div>
 
@@ -580,8 +540,8 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                     setErrorMsg('');
                   }}
                   className={`px-2.5 py-1 rounded-full font-mono text-[10px] border cursor-pointer transition-all ${mssv === id
-                      ? 'bg-[#C1E8FF] border-[#C1E8FF] text-[#021024] font-bold'
-                      : 'bg-[#021024] border-[#5483B3]/35 text-[#7DA0CA]'
+                      ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF] font-bold'
+                      : 'bg-[#050A14] border-white/10 text-slate-400'
                     }`}
                 >
                   {id}
@@ -592,8 +552,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
             <button
               type="submit"
               disabled={loading}
-              style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 55%, #5483B3 100%)' }}
-              className="login-btn-shimmer w-full py-3.5 rounded-2xl active:scale-95 text-[#021024] font-extrabold text-xs tracking-wide shadow-[0_10px_26px_rgba(84,131,179,0.38)] transition-all border-none cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] active:scale-95 text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_24px_rgba(79,240,214,0.25)] transition-all border-none cursor-pointer flex items-center justify-center gap-2"
             >
               <Mail size={15} />
               <span>{loading ? 'Đang Kiểm Tra CSDL Đào Tạo...' : 'Gửi Mã Xác Nhận Về Gmail'}</span>
@@ -604,13 +563,13 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         {/* BƯỚC 2: NHẬP OTP TỪ GMAIL */}
         {step === 2 && (
           <form onSubmit={handleVerifyOtp} className="space-y-3.5">
-            <div className="p-3 rounded-2xl bg-[#021024] border border-[#7DA0CA]/35 text-[11px] text-slate-300">
+            <div className="p-3 rounded-2xl bg-[#050A14] border border-teal-400/25 text-[11px] font-mono text-slate-300">
               Đã gửi mã xác nhận 6 số đến:{' '}
-              <span className="text-[#C1E8FF] font-mono font-bold">{studentClaim?.email}</span>
+              <span className="text-[#64F5DF] font-bold">{studentClaim?.email}</span>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">
+              <label className="text-xs font-mono text-slate-300 block mb-1">
                 Nhập Mã Xác Nhận OTP (6 Số)
               </label>
               <input
@@ -620,18 +579,18 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="889901"
-                className="w-full text-center tracking-[0.35em] p-3 rounded-2xl bg-[#021024] border border-[#7DA0CA]/40 text-sm font-mono text-white outline-none focus:border-[#C1E8FF]"
+                className="w-full text-center tracking-[0.35em] p-3 rounded-2xl bg-[#050A14] border border-white/15 text-sm font-mono text-white outline-none focus:border-[#4FF0D6]"
                 autoFocus
                 required
               />
               <div className="flex items-center justify-between mt-1.5">
-                <span className="text-[10.5px] text-slate-400">
-                  Mã OTP từ email: <strong className="text-[#C1E8FF] font-mono">889901</strong>
+                <span className="text-[10px] text-slate-400">
+                  Mã OTP từ email: <strong className="text-[#64F5DF]">889901</strong>
                 </span>
                 <button
                   type="button"
                   onClick={() => setOtp('889901')}
-                  className="px-2.5 py-0.5 rounded-full bg-[#5483B3]/25 border border-[#C1E8FF]/40 text-[#C1E8FF] text-[10px] font-mono font-bold cursor-pointer"
+                  className="px-2.5 py-0.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[10px] font-mono font-bold cursor-pointer"
                 >
                   Điền nhanh 889901
                 </button>
@@ -645,15 +604,14 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                   setStep(1);
                   setErrorMsg('');
                 }}
-                className="px-3.5 py-3 rounded-2xl bg-[#021024] border border-[#5483B3]/35 text-slate-300 text-xs font-bold cursor-pointer"
+                className="px-3.5 py-3 rounded-2xl bg-[#050A14] border border-white/10 text-slate-300 text-xs font-bold cursor-pointer"
               >
                 Quay lại
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 55%, #5483B3 100%)' }}
-                className="login-btn-shimmer flex-1 py-3 rounded-2xl active:scale-95 text-[#021024] font-extrabold text-xs tracking-wide shadow-[0_10px_26px_rgba(84,131,179,0.38)] transition-all border-none cursor-pointer"
+                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] active:scale-95 text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_24px_rgba(79,240,214,0.25)] transition-all border-none cursor-pointer"
               >
                 {loading ? 'Đang Xác Thực OTP...' : 'Xác Nhận & Xem Hồ Sơ'}
               </button>
@@ -665,22 +623,22 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         {step === 3 && (
           <div className="space-y-3.5">
             {/* THẺ THÔNG TIN ĐỐI SOÁT */}
-            <div className="p-3.5 rounded-2xl bg-[#021024] border border-[#7DA0CA]/40 space-y-1.5 text-xs">
-              <div className="flex justify-between items-center border-b border-[#5483B3]/30 pb-2">
+            <div className="p-3.5 rounded-2xl bg-[#050A14] border border-[#4FF0D6]/35 space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between items-center border-b border-white/10 pb-2">
                 <span className="text-slate-400">Trạng thái:</span>
-                <span className="text-[#C1E8FF] font-bold">Khớp CSDL Đào Tạo ✓</span>
+                <span className="text-[#64F5DF] font-bold">Khớp CSDL Đào Tạo ✓</span>
               </div>
               <p className="text-white font-extrabold text-sm pt-1 m-0">{studentClaim?.name}</p>
-              <p className="text-[#C1E8FF] font-mono text-[11px] m-0">MSSV: {studentClaim?.studentId}</p>
-              <p className="text-slate-300 text-[11px] m-0">
+              <p className="text-[#64F5DF] text-[11px] m-0">MSSV: {studentClaim?.studentId}</p>
+              <p className="text-slate-300 text-[10.5px] m-0">
                 Ngành: {studentClaim?.major} • {studentClaim?.faculty}
               </p>
-              <p className="text-slate-400 font-mono text-[10.5px] truncate m-0">Email: {studentClaim?.email}</p>
+              <p className="text-slate-400 text-[10px] truncate m-0">Email: {studentClaim?.email}</p>
             </div>
 
             {/* THIẾT LẬP MÃ PIN */}
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">
+              <label className="text-xs font-mono text-slate-300 block mb-1">
                 Thiết Lập Mã PIN Mở Khóa (6 Số)
               </label>
               <input
@@ -690,8 +648,11 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 value={setupPin}
                 onChange={(e) => setSetupPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="Ví dụ: 123456"
-                className="w-full text-center tracking-[0.4em] p-2.5 rounded-2xl bg-[#021024] border border-[#7DA0CA]/40 text-sm font-mono text-[#C1E8FF] outline-none focus:border-[#C1E8FF]"
+                className="w-full text-center tracking-[0.4em] p-2.5 rounded-2xl bg-[#050A14] border border-white/15 text-sm font-mono text-[#64F5DF] outline-none focus:border-[#4FF0D6]"
               />
+              <p className="text-[10px] text-slate-400 mt-1 m-0">
+                Dùng để bọc khóa AES-GCM &amp; mở khóa khi camera không nhận Face ID.
+              </p>
             </div>
 
             <div className="pt-1 space-y-2">
@@ -699,8 +660,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 type="button"
                 onClick={() => handleCompleteEnrollment(true)}
                 disabled={loading}
-                style={{ background: 'linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 55%, #5483B3 100%)' }}
-                className="login-btn-shimmer w-full py-3.5 rounded-2xl hover:opacity-95 text-[#021024] font-extrabold text-xs tracking-wide shadow-[0_10px_26px_rgba(84,131,179,0.38)] active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
               >
                 <Fingerprint size={16} />
                 <span>{loading ? 'Đang Sinh Khóa secp256k1...' : 'Bật Face ID & Hoàn Tất Kích Hoạt'}</span>
@@ -710,7 +670,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 type="button"
                 onClick={() => handleCompleteEnrollment(false)}
                 disabled={loading}
-                className="w-full py-2.5 rounded-2xl bg-[#021024] border border-[#5483B3]/35 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"
+                className="w-full py-2.5 rounded-2xl bg-[#050A14] border border-white/10 text-slate-300 hover:text-white text-[11px] font-mono transition-all cursor-pointer"
               >
                 Chỉ Dùng Mã PIN (Không Bật Face ID)
               </button>
