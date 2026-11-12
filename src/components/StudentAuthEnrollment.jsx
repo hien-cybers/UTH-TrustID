@@ -344,16 +344,6 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     return (
       <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
         <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] text-center space-y-5 animate-spring-pop">
-          <button
-            type="button"
-            onClick={handleSwitchTheme}
-            title={isDark ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
-            className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
-          >
-            {isDark ? <Sun size={13} /> : <Moon size={13} />}
-            <span>{isDark ? 'Sáng' : 'Tối'}</span>
-          </button>
-
           <div className="space-y-2 pt-1">
             <div className="w-16 h-16 rounded-[22px] bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_24px_rgba(79,240,214,0.25)]">
               <Lock size={28} />
@@ -456,16 +446,6 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     // =========================================================================
     <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
       <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] space-y-4 animate-spring-pop">
-        <button
-          type="button"
-          onClick={handleSwitchTheme}
-          title={isDark ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
-          className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
-        >
-          {isDark ? <Sun size={13} /> : <Moon size={13} />}
-          <span>{isDark ? 'Sáng' : 'Tối'}</span>
-        </button>
-
         {/* HEADER */}
         <div className="text-center space-y-1 pt-1">
           <div className="w-12 h-12 rounded-2xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_20px_rgba(79,240,214,0.25)]">

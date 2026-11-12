@@ -628,26 +628,6 @@ export default function App() {
               <LiveClock />
 
               <button
-                type="button"
-                onClick={handleToggleTheme}
-                title={isDarkMode ? 'Chuyển sang Giao diện Sáng (Light Mode)' : 'Chuyển sang Giao diện Tối (Dark Mode)'}
-                className="theme-toggle-pill btn-press bg-[#4FF0D6]/12 border border-[#4FF0D6]/35 text-[#64F5DF]"
-                style={{
-                  padding: '5px 8px',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  fontSize: '10px',
-                  fontWeight: 700
-                }}
-              >
-                {isDarkMode ? <Sun size={12.5} /> : <Moon size={12.5} />}
-              </button>
-
-              <button
                 onClick={handleLockSession}
                 title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
                 className="btn-press bg-[#4FF0D6]/10 border border-[#4FF0D6]/30 text-[#64F5DF]"

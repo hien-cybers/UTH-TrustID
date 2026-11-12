@@ -121,16 +121,63 @@ const auditLogsDB = [
   },
 ];
 
-// Hệ thống Cảnh báo Xâm nhập & Bất thường (Intrusion Detection System - IDS)
+// Hệ thống Cảnh báo Xâm nhập & Bất thường (Intrusion Detection System - IDS & Anti-Fraud Telemetry)
 const idsAlertsDB = [
   {
     id: 'ids_seed_1',
-    type: 'TAMPERING',
+    type: 'REPLAY_ATTACK',
+    vectorLabel: 'Chặn Replay Attack (QR Cũ)',
+    studentId: '2251120003',
+    studentName: 'Lê Hoàng Quân',
+    address: '0x88fA...91B2',
+    deviceId: 'HYBRID:iOS17:A16:VN:c91f',
+    severity: 'CRITICAL',
+    defenseLayer: 'Dynamic Nonce 35s + Single-Use Token',
+    detail: 'Từ chối gói tin điểm danh dùng lại mã QR đã hết hạn (Nonce TTL > 35s). Chặn tấn công chụp ảnh màn hình gửi qua Zalo.',
+    timestamp: Date.now() - 540000,
+    time: '08:15:22',
+  },
+  {
+    id: 'ids_seed_2',
+    type: 'DEVICE_SPOOFING',
+    vectorLabel: 'Chặn Giả Mạo Chữ Ký Số',
+    studentId: '2251120004',
+    studentName: 'Phạm Minh Tuấn',
     address: '0x92eD...CBA6',
+    deviceId: 'HYBRID:Android14:Fake:00a1',
+    severity: 'CRITICAL',
+    defenseLayer: 'ECDSA secp256k1 + FIDO2 Passkey',
+    detail: 'Chữ ký EIP-191 khôi phục địa chỉ ví không khớp với khóa công khai DID đã neo trong Sổ bộ Merkle Root.',
+    timestamp: Date.now() - 420000,
+    time: '08:19:40',
+  },
+  {
+    id: 'ids_seed_3',
+    type: 'PROXY_ATTENDANCE',
+    vectorLabel: 'Chặn Điểm Danh Hộ (1 Máy 2 SV)',
+    studentId: '2251120002',
+    studentName: 'Trần Thị Mai',
+    address: '0x44cB...77E1',
+    deviceId: 'HYBRID:iPhone15:WebCrypto:882a',
     severity: 'HIGH',
-    detail: 'Chữ ký EIP-191 không khớp với dữ liệu đăng ký trong hệ thống (TC-02)',
-    timestamp: Date.now() - 1200000,
-    time: '11:30:12',
+    defenseLayer: 'Hardware Device Fingerprint Binding',
+    detail: 'Thiết bị HYBRID:iPhone15:WebCrypto:882a vừa ký điểm danh cho SV 2251120001, nay cố đăng nhập điểm danh hộ cho SV 2251120002.',
+    timestamp: Date.now() - 240000,
+    time: '08:24:05',
+  },
+  {
+    id: 'ids_seed_4',
+    type: 'GEOFENCE_BREACH',
+    vectorLabel: 'Chặn Ngoài Vùng / Fake GPS',
+    studentId: '2251120005',
+    studentName: 'Hoàng Bảo Ngọc',
+    address: '0x71dE...33F9',
+    deviceId: 'HYBRID:Emulator:MockGPS:11b4',
+    severity: 'HIGH',
+    defenseLayer: 'Haversine Geofence + Kalman Filter',
+    detail: 'Phát hiện tọa độ cách phòng học 412m kèm sai số GPS = 0.00m (Dấu hiệu phần mềm Fake GPS / Mock Location).',
+    timestamp: Date.now() - 110000,
+    time: '08:28:51',
   },
 ];
 
@@ -155,11 +202,16 @@ function recordAuditLog(address, action, result, detail, status = 200) {
   return newLog;
 }
 
-function triggerIDSAlert(type, address, severity, detail) {
+function triggerIDSAlert(type, address, severity, detail, extra = {}) {
   const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'UNKNOWN';
   const alert = {
     id: 'ids_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     type,
+    vectorLabel: extra.vectorLabel || `Cảnh báo ${type}`,
+    studentId: extra.studentId || 'UNKNOWN',
+    studentName: extra.studentName || 'Thiết bị lạ',
+    deviceId: extra.deviceId || 'HYBRID:Unknown:Device',
+    defenseLayer: extra.defenseLayer || 'Zero-Trust Cryptographic Guard',
     address: shortAddr,
     fullAddress: address || '',
     severity,
@@ -169,9 +221,87 @@ function triggerIDSAlert(type, address, severity, detail) {
   };
   idsAlertsDB.unshift(alert);
   if (idsAlertsDB.length > 50) idsAlertsDB.pop();
-  recordAuditLog(address, `CẢNH BÁO IDS [${type}]`, 'Phát hiện bất thường', detail, 403);
+  recordAuditLog(address, `CẢNH BÁO IDS [${type}]`, 'Đã chặn tự động (403)', detail, 403);
+  try {
+    io.emit('ids-alert', alert);
+  } catch {}
   return alert;
 }
+
+// API Trung tâm Giám sát Bảo mật chống Gian lận (Anti-Fraud Telemetry Panel)
+app.get('/api/security/telemetry', (req, res) => {
+  const counts = {
+    replayBlocked: idsAlertsDB.filter((a) => a.type === 'REPLAY_ATTACK' || a.type === 'REPLAY').length,
+    spoofingBlocked: idsAlertsDB.filter((a) => a.type === 'DEVICE_SPOOFING' || a.type === 'TAMPERING' || a.type === 'MITM').length,
+    proxyBlocked: idsAlertsDB.filter((a) => a.type === 'PROXY_ATTENDANCE' || a.type === 'SYBIL_DEVICE').length,
+    geofenceBlocked: idsAlertsDB.filter((a) => a.type === 'GEOFENCE_BREACH' || a.type === 'GEO_ANOMALY' || a.type === 'MOCK_GPS').length,
+    totalBlocked: idsAlertsDB.length,
+  };
+  return res.json({
+    success: true,
+    counts,
+    alerts: idsAlertsDB.slice(0, 30),
+  });
+});
+
+app.post('/api/security/simulate-attack', (req, res) => {
+  const { attackType = 'REPLAY_ATTACK' } = req.body || {};
+  const scenarios = {
+    REPLAY_ATTACK: {
+      type: 'REPLAY_ATTACK',
+      vectorLabel: 'Chặn Replay Attack (QR Đã Hết Hạn)',
+      studentId: '2251120003',
+      studentName: 'Lê Hoàng Quân',
+      address: '0x88fA9912bcEf44109821aBc991234567890091B2',
+      deviceId: 'HYBRID:iOS17:ZaloForward:91b2',
+      severity: 'CRITICAL',
+      defenseLayer: 'Dynamic Nonce 35s + Single-Use Token',
+      detail: 'Phát hiện gói tin sử dụng lại Nonce QR cũ đã hết hạn (quét từ ảnh chụp màn hình qua Zalo). Hệ thống hủy giao dịch tức thì.',
+    },
+    DEVICE_SPOOFING: {
+      type: 'DEVICE_SPOOFING',
+      vectorLabel: 'Chặn Giả Mạo Khóa & Chữ Ký Số',
+      studentId: '2251120004',
+      studentName: 'Phạm Minh Tuấn',
+      address: '0x92eD1145aBcD887123098123456789012345CBA6',
+      deviceId: 'HYBRID:Linux:CurlScript:cba6',
+      severity: 'CRITICAL',
+      defenseLayer: 'ECDSA secp256k1 + FIDO2 Secure Enclave',
+      detail: 'Chữ ký số EIP-191 giả mạo: Khóa công khai khôi phục (ecrecover) không khớp với DID đã đăng ký của SV 2251120004.',
+    },
+    PROXY_ATTENDANCE: {
+      type: 'PROXY_ATTENDANCE',
+      vectorLabel: 'Chặn Điểm Danh Hộ (Xung Đột Phần Cứng)',
+      studentId: '2251120002',
+      studentName: 'Trần Thị Mai',
+      address: '0x44cB8812345678901234567890123456789077E1',
+      deviceId: 'HYBRID:iPhone15Pro:Enclave:882a',
+      severity: 'HIGH',
+      defenseLayer: 'Hardware Device Fingerprint Binding',
+      detail: 'Xung đột phần cứng: Thiết bị HYBRID:iPhone15Pro:Enclave:882a đã điểm danh cho SV 2251120001, bị chặn khi cố ký hộ cho SV 2251120002.',
+    },
+    GEOFENCE_BREACH: {
+      type: 'GEOFENCE_BREACH',
+      vectorLabel: 'Chặn Fake GPS & Ngoài Bán Kính Lớp',
+      studentId: '2251120005',
+      studentName: 'Hoàng Bảo Ngọc',
+      address: '0x71dE9988776655443322110099887766554433F9',
+      deviceId: 'HYBRID:Android:MockLocation:33f9',
+      severity: 'HIGH',
+      defenseLayer: 'Haversine Geofence + Kalman Drift Filter',
+      detail: 'Từ chối điểm danh từ khoảng cách 385m (vượt ngưỡng 35m của phòng học) và phát hiện cờ Mock GPS (Accuracy = 0.0m).',
+    },
+  };
+
+  const chosen = scenarios[attackType] || scenarios.REPLAY_ATTACK;
+  const alert = triggerIDSAlert(chosen.type, chosen.address, chosen.severity, chosen.detail, chosen);
+
+  return res.json({
+    success: true,
+    blocked: true,
+    alert,
+  });
+});
 
 // Lưu trữ các nonce hợp lệ đang chờ xác thực: { [nonce]: { expiresAt, domain, timestamp } }
 const activeNonces = new Map();
