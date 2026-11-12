@@ -4,45 +4,51 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Bảng phối màu Ocean Ice 7 sắc độ (#001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) */
-  --ocean-abyss: #001D39;
-  --ocean-royal: #0A4174;
-  --ocean-steel: #49769F;
-  --ocean-teal: #4E8EA2;
-  --ocean-mist: #6EA2B3;
-  --ocean-sky: #7BBDE8;
-  --ocean-frost: #BDD8E9;
+  /* Bảng phối màu 5 tầng chuẩn mẫu (#021024, #052659, #5483B3, #7DA0CA, #C1E8FF) */
+  --palette-abyss: #021024;
+  --palette-navy: #052659;
+  --palette-steel: #5483B3;
+  --palette-sky: #7DA0CA;
+  --palette-ice: #C1E8FF;
 
-  --bg-main: #001D39;
-  --bg-dark: #001D39;
-  --bg-pure: #00152B;
-  --admin-bg: #001D39;
-  --bg-card: rgba(10, 65, 116, 0.58);
-  --card-bg: #072E54;
-  --card-charcoal: #052647;
-  --bg-input: #00172E;
-  --border-color: rgba(123, 189, 232, 0.22);
-  --border-hover: rgba(123, 189, 232, 0.55);
-  --border-subtle: #0A4174;
-  --border: #49769F;
-  --primary: #7BBDE8;
-  --cyan-accent: #7BBDE8;
-  --primary-glow: rgba(123, 189, 232, 0.32);
-  --accent-purple: #49769F;
+  --ocean-abyss: #021024;
+  --ocean-royal: #052659;
+  --ocean-steel: #5483B3;
+  --ocean-teal: #5483B3;
+  --ocean-mist: #7DA0CA;
+  --ocean-sky: #C1E8FF;
+  --ocean-frost: #C1E8FF;
+
+  --bg-main: #021024;
+  --bg-dark: #021024;
+  --bg-pure: #021024;
+  --admin-bg: #021024;
+  --bg-card: rgba(5, 38, 89, 0.78);
+  --card-bg: #052659;
+  --card-charcoal: #021024;
+  --bg-input: #021024;
+  --border-color: rgba(125, 160, 202, 0.32);
+  --border-hover: rgba(193, 232, 255, 0.65);
+  --border-subtle: #052659;
+  --border: #5483B3;
+  --primary: #C1E8FF;
+  --cyan-accent: #C1E8FF;
+  --primary-glow: rgba(193, 232, 255, 0.35);
+  --accent-purple: #5483B3;
   --accent-rose: #f43f5e;
-  --accent-emerald: #4E8EA2;
-  --green-active: #7BBDE8;
+  --accent-emerald: #7DA0CA;
+  --green-active: #C1E8FF;
   --red-revoked: #ff5252;
   --yellow-warn: #fbbf24;
   --text-main: #F4F9FD;
   --text-primary: #F4F9FD;
   --text-white: #ffffff;
-  --text-muted: #BDD8E9;
-  --text-secondary: #7BBDE8;
+  --text-muted: #7DA0CA;
+  --text-secondary: #C1E8FF;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --btn-bg: #0A4174;
-  --btn-border: #49769F;
+  --btn-bg: #052659;
+  --btn-border: #5483B3;
 }
 
 /* Tối ưu hóa Phông chữ Tiếng Việt hiện đại, sắc nét (Be Vietnam Pro + Plus Jakarta Sans) */
@@ -464,37 +470,60 @@ button, input, select {
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
 }
 
-/* ==================== GIAO DIỆN WEB PORTAL SANG TRỌNG (ROYAL SAPPHIRE & PLATINUM GLASS) ==================== */
+/* ==================== GIAO DIỆN PHỐI MÀU 5 TẦNG CHUẨN MẪU (#021024 • #052659 • #5483B3 • #7DA0CA • #C1E8FF) ==================== */
+html[data-theme="dark"] body,
+body {
+  background: linear-gradient(180deg, #5483B3 0%, #052659 48%, #021024 100%) !important;
+  color: #F4F9FD !important;
+}
+
+.mobile-app-root {
+  background: linear-gradient(180deg, #052659 0%, #021024 100%) !important;
+  border-color: rgba(125, 160, 202, 0.35) !important;
+  box-shadow: 0 28px 68px rgba(2, 16, 36, 0.85), 0 0 0 1px rgba(193, 232, 255, 0.22) !important;
+}
+
+.mobile-app-root > header {
+  background: rgba(2, 16, 36, 0.92) !important;
+  border-bottom: 1px solid rgba(125, 160, 202, 0.3) !important;
+}
+
+.mobile-scroll-body {
+  background: linear-gradient(180deg, #052659 0%, #021024 65%, #021024 100%) !important;
+}
+
 .ocean-palette-theme,
 .theme-fintech-dark {
-  background: radial-gradient(circle at 15% 12%, rgba(56, 189, 248, 0.22), transparent 48%),
-              radial-gradient(circle at 85% 88%, rgba(45, 212, 191, 0.16), transparent 52%),
-              linear-gradient(155deg, #0F2547 0%, #0A1931 55%, #071326 100%) !important;
+  background: radial-gradient(circle at 18% 10%, rgba(193, 232, 255, 0.2), transparent 45%),
+              radial-gradient(circle at 82% 88%, rgba(84, 131, 179, 0.28), transparent 52%),
+              linear-gradient(180deg, #5483B3 0%, #052659 42%, #021024 100%) !important;
   color: #F8FAFC !important;
-  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .theme-fintech-dark .dashboard-outer-shell {
-  background: linear-gradient(165deg, rgba(19, 42, 78, 0.94) 0%, rgba(12, 29, 56, 0.97) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  box-shadow: 0 24px 60px -12px rgba(2, 8, 23, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  background: linear-gradient(168deg, rgba(5, 38, 89, 0.94) 0%, rgba(2, 16, 36, 0.97) 100%);
+  border: 1.5px solid rgba(125, 160, 202, 0.42);
+  box-shadow: 0 26px 65px -12px rgba(2, 16, 36, 0.85), inset 0 1px 0 rgba(193, 232, 255, 0.24);
 }
 
 .theme-fintech-dark header {
-  background: rgba(15, 34, 64, 0.92) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: rgba(2, 16, 36, 0.9) !important;
+  border-bottom: 1px solid rgba(125, 160, 202, 0.32) !important;
 }
 
-.theme-fintech-dark .bg-\[\#081226\] {
-  background: linear-gradient(155deg, rgba(24, 52, 94, 0.88) 0%, rgba(16, 37, 70, 0.94) 100%) !important;
-  border: 1px solid rgba(148, 163, 184, 0.25) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 14px 32px -10px rgba(3, 10, 24, 0.55) !important;
+.theme-fintech-dark .bg-\[\#081226\],
+.theme-fintech-dark .from-\[\#17345C\],
+.theme-fintech-dark .from-\[\#0C1D33\] {
+  background: linear-gradient(155deg, rgba(5, 38, 89, 0.92) 0%, rgba(2, 16, 36, 0.96) 100%) !important;
+  border: 1px solid rgba(125, 160, 202, 0.36) !important;
+  box-shadow: inset 0 1px 0 rgba(193, 232, 255, 0.18), 0 16px 36px -10px rgba(2, 16, 36, 0.72) !important;
 }
 
 .theme-fintech-dark .hero-navy-card {
-  background: linear-gradient(145deg, #1E3E6D 0%, #142C52 100%) !important;
-  border: 1px solid rgba(125, 211, 252, 0.38) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 14px 30px -10px rgba(14, 165, 233, 0.2) !important;
+  background: linear-gradient(145deg, #5483B3 0%, #052659 100%) !important;
+  border: 1px solid rgba(193, 232, 255, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(193, 232, 255, 0.32), 0 16px 34px -10px rgba(2, 16, 36, 0.6) !important;
 }
 
 .theme-fintech-dark .bg-\[\#040814\],
@@ -502,14 +531,14 @@ button, input, select {
 .theme-fintech-dark .bg-\[\#040814\]\/90,
 .theme-fintech-dark .bg-slate-950,
 .theme-fintech-dark .bg-slate-950\/90 {
-  background: rgba(11, 26, 50, 0.78) !important;
-  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: rgba(2, 16, 36, 0.85) !important;
+  border-color: rgba(84, 131, 179, 0.42) !important;
 }
 
 .theme-fintech-dark .bg-cyan-400 {
-  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
-  color: #ffffff !important;
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.32) !important;
+  background: linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 100%) !important;
+  color: #021024 !important;
+  box-shadow: 0 6px 20px rgba(193, 232, 255, 0.3) !important;
 }
 
 /* Cân chỉnh kích thước chữ & độ tương phản để mọi giảng viên, cán bộ đều nhìn rõ và êm mắt */
@@ -601,156 +630,160 @@ button, input, select {
   transform: scale(0.95);
 }
 
-/* ==================== CHẾ ĐỘ SÁNG (LIGHT MODE — PEARL SAPPHIRE & CRYSTAL GLASS) CHO CẢ MOBILE APP & WEB PORTAL ==================== */
+/* ==================== CHẾ ĐỘ SÁNG (LIGHT MODE — THEO ĐÚNG DẢI GRADIENT #C1E8FF -> #7DA0CA -> #5483B3 -> #052659 -> #021024) ==================== */
 html[data-theme="light"] body {
-  background: linear-gradient(145deg, #EEF5FC 0%, #E2EBF8 100%) !important;
-  color: #0F172A !important;
+  background: linear-gradient(180deg, #C1E8FF 0%, #7DA0CA 45%, #5483B3 78%, #052659 100%) !important;
+  color: #021024 !important;
 }
 
 /* 1. Light Mode cho Khung Ứng Dụng Sinh Viên (Mobile App Port 5173) */
 html[data-theme="light"] .mobile-app-root {
-  background: #F4F8FD !important;
-  color: #0F172A !important;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(148, 163, 184, 0.35) !important;
+  background: linear-gradient(180deg, #E8F6FF 0%, #C1E8FF 100%) !important;
+  color: #021024 !important;
+  box-shadow: 0 24px 60px rgba(2, 16, 36, 0.28), 0 0 0 1.5px rgba(255, 255, 255, 0.75) !important;
 }
 
 html[data-theme="light"] .mobile-app-root > header {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-bottom: 1px solid rgba(14, 165, 233, 0.22) !important;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-bottom: 1px solid rgba(84, 131, 179, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(5, 38, 89, 0.08) !important;
 }
 
 html[data-theme="light"] .mobile-app-root > header .text-white {
-  color: #0F172A !important;
+  color: #021024 !important;
 }
 
-html[data-theme="light"] .mobile-app-root > header .text-\[\#64F5DF\] {
-  color: #0284C7 !important;
+html[data-theme="light"] .mobile-app-root > header .text-\[\#64F5DF\],
+html[data-theme="light"] .mobile-app-root > header .text-\[\#C1E8FF\] {
+  color: #052659 !important;
 }
 
 html[data-theme="light"] .mobile-app-root > header .text-slate-400 {
-  color: #475569 !important;
+  color: #5483B3 !important;
 }
 
 html[data-theme="light"] .mobile-scroll-body {
-  background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%) !important;
-  color: #0F172A !important;
+  background: linear-gradient(180deg, #F2FAFF 0%, #C1E8FF 58%, #7DA0CA 100%) !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .mobile-scroll-body .from-\[\#0C1E35\],
 html[data-theme="light"] .mobile-scroll-body .from-\[\#0C1E35\]\/80,
 html[data-theme="light"] .mobile-scroll-body .from-\[\#0C1D33\],
-html[data-theme="light"] .mobile-scroll-body .from-\[\#0F293A\] {
-  background: linear-gradient(145deg, #FFFFFF 0%, #F1F7FE 100%) !important;
-  border-color: rgba(14, 165, 233, 0.28) !important;
-  box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.08) !important;
-  color: #0F172A !important;
+html[data-theme="light"] .mobile-scroll-body .from-\[\#0F293A\],
+html[data-theme="light"] .mobile-scroll-body .from-\[\#052659\] {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94) 0%, rgba(193, 232, 255, 0.75) 100%) !important;
+  border-color: rgba(84, 131, 179, 0.4) !important;
+  box-shadow: 0 12px 30px -8px rgba(5, 38, 89, 0.14), inset 0 1px 0 #FFFFFF !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .mobile-scroll-body .bg-\[\#050A14\],
 html[data-theme="light"] .mobile-scroll-body .bg-\[\#040814\],
+html[data-theme="light"] .mobile-scroll-body .bg-\[\#021024\],
 html[data-theme="light"] .mobile-scroll-body .bg-slate-950 {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
-  color: #0F172A !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(125, 160, 202, 0.55) !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .mobile-scroll-body h2,
 html[data-theme="light"] .mobile-scroll-body h3,
 html[data-theme="light"] .mobile-scroll-body h4,
 html[data-theme="light"] .mobile-scroll-body .text-white {
-  color: #0F172A !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .mobile-scroll-body .text-slate-300,
 html[data-theme="light"] .mobile-scroll-body .text-slate-400 {
-  color: #475569 !important;
+  color: #052659 !important;
 }
 
-html[data-theme="light"] .mobile-scroll-body .text-\[\#64F5DF\] {
-  color: #0284C7 !important;
+html[data-theme="light"] .mobile-scroll-body .text-\[\#64F5DF\],
+html[data-theme="light"] .mobile-scroll-body .text-\[\#C1E8FF\] {
+  color: #052659 !important;
 }
 
 html[data-theme="light"] .bottom-nav {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border: 1px solid rgba(14, 165, 233, 0.28) !important;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14), inset 0 1px 0 #FFFFFF !important;
+  background: rgba(2, 16, 36, 0.92) !important;
+  border: 1px solid rgba(193, 232, 255, 0.45) !important;
+  box-shadow: 0 16px 36px rgba(2, 16, 36, 0.35), inset 0 1px 0 rgba(193, 232, 255, 0.25) !important;
 }
 
 html[data-theme="light"] .bottom-nav .tab-item {
-  color: #64748B !important;
+  color: #7DA0CA !important;
 }
 
 html[data-theme="light"] .bottom-nav .tab-active {
-  color: #0284C7 !important;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(56, 189, 248, 0.08) 100%) !important;
-  border-color: rgba(14, 165, 233, 0.35) !important;
+  color: #C1E8FF !important;
+  background: linear-gradient(135deg, #052659 0%, #5483B3 100%) !important;
+  border-color: rgba(193, 232, 255, 0.55) !important;
 }
 
 /* 2. Light Mode cho Màn hình Kích Hoạt & Mở Khóa Ví Sinh Viên (StudentAuthEnrollment) */
 html[data-theme="light"] .student-auth-overlay {
-  background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.18), transparent 48%),
-              linear-gradient(145deg, #EFF6FF 0%, #E2E8F0 100%) !important;
+  background: linear-gradient(180deg, #C1E8FF 0%, #7DA0CA 38%, #5483B3 72%, #052659 92%, #021024 100%) !important;
 }
 
 html[data-theme="light"] .student-auth-card {
-  background: linear-gradient(165deg, #FFFFFF 0%, #F8FAFC 100%) !important;
-  border: 1px solid rgba(14, 165, 233, 0.32) !important;
-  box-shadow: 0 22px 50px -12px rgba(15, 23, 42, 0.15) !important;
-  color: #0F172A !important;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(193, 232, 255, 0.88) 100%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 26px 58px -12px rgba(2, 16, 36, 0.42) !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .student-auth-card h2,
 html[data-theme="light"] .student-auth-card h3,
 html[data-theme="light"] .student-auth-card .text-white {
-  color: #0F172A !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .student-auth-card .text-slate-300,
 html[data-theme="light"] .student-auth-card .text-slate-400 {
-  color: #475569 !important;
+  color: #052659 !important;
 }
 
-html[data-theme="light"] .student-auth-card .text-\[\#64F5DF\] {
-  color: #0284C7 !important;
+html[data-theme="light"] .student-auth-card .text-\[\#64F5DF\],
+html[data-theme="light"] .student-auth-card .text-\[\#C1E8FF\] {
+  color: #052659 !important;
 }
 
-html[data-theme="light"] .student-auth-card .bg-\[\#050A14\] {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
-  color: #0F172A !important;
+html[data-theme="light"] .student-auth-card .bg-\[\#050A14\],
+html[data-theme="light"] .student-auth-card .bg-\[\#021024\] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: #7DA0CA !important;
+  color: #021024 !important;
 }
 
 /* 3. Light Mode cho Web Portal Giảng Viên & Admin (Port 5174) */
 html[data-theme="light"] .theme-fintech-dark {
-  background: radial-gradient(circle at 15% 12%, rgba(56, 189, 248, 0.15), transparent 45%),
-              linear-gradient(155deg, #F1F5F9 0%, #E2E8F0 100%) !important;
-  color: #0F172A !important;
+  background: linear-gradient(180deg, #C1E8FF 0%, #7DA0CA 48%, #5483B3 82%, #052659 100%) !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .dashboard-outer-shell {
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
-  border: 1px solid rgba(148, 163, 184, 0.45) !important;
-  box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.12) !important;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.94) 0%, rgba(193, 232, 255, 0.82) 100%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 28px 65px -12px rgba(2, 16, 36, 0.35) !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark header {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-bottom: 1px solid rgba(203, 213, 225, 0.85) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom: 1px solid rgba(125, 160, 202, 0.45) !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .bg-\[\#081226\],
 html[data-theme="light"] .theme-fintech-dark .from-\[\#17345C\],
 html[data-theme="light"] .theme-fintech-dark .from-\[\#0C1D33\] {
-  background: linear-gradient(155deg, #FFFFFF 0%, #F8FAFC 100%) !important;
-  border: 1px solid rgba(203, 213, 225, 0.9) !important;
-  box-shadow: 0 10px 26px -8px rgba(15, 23, 42, 0.07) !important;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.95) 0%, rgba(232, 246, 255, 0.92) 100%) !important;
+  border: 1px solid rgba(125, 160, 202, 0.5) !important;
+  box-shadow: 0 12px 28px -8px rgba(5, 38, 89, 0.1) !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .hero-navy-card {
-  background: linear-gradient(145deg, #EFF6FF 0%, #E0F2FE 100%) !important;
-  border: 1px solid rgba(56, 189, 248, 0.5) !important;
-  box-shadow: 0 10px 24px -8px rgba(14, 165, 233, 0.12) !important;
+  background: linear-gradient(145deg, #C1E8FF 0%, #7DA0CA 100%) !important;
+  border: 1px solid rgba(84, 131, 179, 0.55) !important;
+  box-shadow: 0 12px 26px -8px rgba(5, 38, 89, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .bg-\[\#040814\],
@@ -758,21 +791,21 @@ html[data-theme="light"] .theme-fintech-dark .bg-\[\#040814\]\/80,
 html[data-theme="light"] .theme-fintech-dark .bg-\[\#040814\]\/90,
 html[data-theme="light"] .theme-fintech-dark .bg-slate-950,
 html[data-theme="light"] .theme-fintech-dark .bg-slate-950\/90 {
-  background: #F1F5F9 !important;
-  border-color: #CBD5E1 !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(125, 160, 202, 0.55) !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark h1,
 html[data-theme="light"] .theme-fintech-dark h2,
 html[data-theme="light"] .theme-fintech-dark h3,
 html[data-theme="light"] .theme-fintech-dark .text-white {
-  color: #0F172A !important;
+  color: #021024 !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .text-slate-200,
 html[data-theme="light"] .theme-fintech-dark .text-slate-300,
 html[data-theme="light"] .theme-fintech-dark .text-slate-400 {
-  color: #334155 !important;
+  color: #052659 !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .text-cyan-200,
@@ -780,7 +813,7 @@ html[data-theme="light"] .theme-fintech-dark .text-cyan-300,
 html[data-theme="light"] .theme-fintech-dark .text-sky-200,
 html[data-theme="light"] .theme-fintech-dark .text-sky-300,
 html[data-theme="light"] .theme-fintech-dark .text-\[\#4FF0D6\] {
-  color: #0369A1 !important;
+  color: #052659 !important;
 }
 
 html[data-theme="light"] .theme-fintech-dark .text-emerald-300,
