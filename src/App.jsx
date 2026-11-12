@@ -24,10 +24,11 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink, Sun, Moon } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => getInitialThemeIsDark());
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
   // Trạng thái xác thực phiên 2 giai đoạn (Stage 1: Gmail OTP Claim -> Stage 2: Daily FaceID/PIN)
@@ -44,9 +45,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    getInitialThemeIsDark();
-    applyRootTheme(true);
+    const handleThemeSync = (e) => {
+      if (typeof e?.detail?.isDark === 'boolean') {
+        setIsDarkMode(e.detail.isDark);
+      }
+    };
+    window.addEventListener('uth-theme-changed', handleThemeSync);
+    return () => window.removeEventListener('uth-theme-changed', handleThemeSync);
   }, []);
+
+  const handleToggleTheme = () => {
+    const next = applyRootTheme(!isDarkMode);
+    setIsDarkMode(next);
+  };
 
   // Trạng thái Lớp Học Phần & Buổi Điểm Danh đang mở từ Web Portal Giảng viên (Mặc định isOpen: false khi chưa tạo lớp)
   const [activeCourseSession, setActiveCourseSession] = useState({
@@ -612,9 +623,29 @@ export default function App() {
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực độc lập (<LiveClock />) + Khóa phiên + Huy hiệu Holder FIDO2 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            {/* Đồng hồ thời gian thực (<LiveClock />) + Nút Chuyển Sáng/Tối + Khóa phiên + Huy hiệu Holder FIDO2 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
               <LiveClock />
+
+              <button
+                type="button"
+                onClick={handleToggleTheme}
+                title={isDarkMode ? 'Chuyển sang Giao diện Sáng (Light Mode)' : 'Chuyển sang Giao diện Tối (Dark Mode)'}
+                className="theme-toggle-pill btn-press bg-[#4FF0D6]/12 border border-[#4FF0D6]/35 text-[#64F5DF]"
+                style={{
+                  padding: '5px 8px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  fontSize: '10px',
+                  fontWeight: 700
+                }}
+              >
+                {isDarkMode ? <Sun size={12.5} /> : <Moon size={12.5} />}
+              </button>
 
               <button
                 onClick={handleLockSession}
@@ -700,7 +731,7 @@ export default function App() {
               path="/student"
               element={
                 <StudentWalletPro
-                  isDarkMode={true}
+                  isDarkMode={isDarkMode}
                   initialTab="CARD"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}
@@ -713,7 +744,7 @@ export default function App() {
               path="/wallet"
               element={
                 <StudentWalletPro
-                  isDarkMode={true}
+                  isDarkMode={isDarkMode}
                   initialTab="CARD"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}
@@ -726,7 +757,7 @@ export default function App() {
               path="/history"
               element={
                 <StudentWalletPro
-                  isDarkMode={true}
+                  isDarkMode={isDarkMode}
                   initialTab="HISTORY"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}

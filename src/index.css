@@ -1,5 +1,5 @@
-/* src/index.css - UTH-TrustID Dark Neon Design System & Universal Vietnamese Typography */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* src/index.css - UTH-TrustID Design System (Light/Dark Mode, Universal Vietnamese Typography & Micro-Animations) */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -45,23 +45,29 @@
   --btn-border: #49769F;
 }
 
-/* Tối ưu hóa Phông chữ Tiếng Việt dễ đọc, rõ nét cho mọi lứa tuổi (Giảng viên, Quản trị viên & Sinh viên) */
+/* Tối ưu hóa Phông chữ Tiếng Việt hiện đại, sắc nét (Be Vietnam Pro + Plus Jakarta Sans) */
 html, body {
   height: 100%;
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 15px;
-  line-height: 1.55;
-  letter-spacing: normal;
+  line-height: 1.58;
+  letter-spacing: -0.005em;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
   box-sizing: border-box;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.018em;
 }
 
 #root {
@@ -533,4 +539,263 @@ button, input, select {
 .theme-fintech-dark .text-lg {
   font-size: 18.5px !important;
   line-height: 1.45 !important;
+}
+
+/* ==================== HIỆU ỨNG CHUYỂN ĐỘNG MƯỢT MÀ (SMOOTH MICRO-INTERACTIONS & EFFECTS) ==================== */
+@keyframes springPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatAmbientSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulseSoftGlow {
+  0%, 100% {
+    box-shadow: 0 10px 26px -6px rgba(56, 189, 248, 0.22);
+  }
+  50% {
+    box-shadow: 0 14px 34px -4px rgba(79, 240, 214, 0.36);
+  }
+}
+
+.animate-spring-pop {
+  animation: springPopIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+.theme-toggle-pill {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-toggle-pill:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.theme-toggle-pill:active {
+  transform: scale(0.95);
+}
+
+/* ==================== CHẾ ĐỘ SÁNG (LIGHT MODE — PEARL SAPPHIRE & CRYSTAL GLASS) CHO CẢ MOBILE APP & WEB PORTAL ==================== */
+html[data-theme="light"] body {
+  background: linear-gradient(145deg, #EEF5FC 0%, #E2EBF8 100%) !important;
+  color: #0F172A !important;
+}
+
+/* 1. Light Mode cho Khung Ứng Dụng Sinh Viên (Mobile App Port 5173) */
+html[data-theme="light"] .mobile-app-root {
+  background: #F4F8FD !important;
+  color: #0F172A !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(148, 163, 184, 0.35) !important;
+}
+
+html[data-theme="light"] .mobile-app-root > header {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.22) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme="light"] .mobile-app-root > header .text-white {
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .mobile-app-root > header .text-\[\#64F5DF\] {
+  color: #0284C7 !important;
+}
+
+html[data-theme="light"] .mobile-app-root > header .text-slate-400 {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .mobile-scroll-body {
+  background: linear-gradient(180deg, #F8FAFC 0%, #EFF6FF 100%) !important;
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .mobile-scroll-body .from-\[\#0C1E35\],
+html[data-theme="light"] .mobile-scroll-body .from-\[\#0C1E35\]\/80,
+html[data-theme="light"] .mobile-scroll-body .from-\[\#0C1D33\],
+html[data-theme="light"] .mobile-scroll-body .from-\[\#0F293A\] {
+  background: linear-gradient(145deg, #FFFFFF 0%, #F1F7FE 100%) !important;
+  border-color: rgba(14, 165, 233, 0.28) !important;
+  box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.08) !important;
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .mobile-scroll-body .bg-\[\#050A14\],
+html[data-theme="light"] .mobile-scroll-body .bg-\[\#040814\],
+html[data-theme="light"] .mobile-scroll-body .bg-slate-950 {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .mobile-scroll-body h2,
+html[data-theme="light"] .mobile-scroll-body h3,
+html[data-theme="light"] .mobile-scroll-body h4,
+html[data-theme="light"] .mobile-scroll-body .text-white {
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .mobile-scroll-body .text-slate-300,
+html[data-theme="light"] .mobile-scroll-body .text-slate-400 {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .mobile-scroll-body .text-\[\#64F5DF\] {
+  color: #0284C7 !important;
+}
+
+html[data-theme="light"] .bottom-nav {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(14, 165, 233, 0.28) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14), inset 0 1px 0 #FFFFFF !important;
+}
+
+html[data-theme="light"] .bottom-nav .tab-item {
+  color: #64748B !important;
+}
+
+html[data-theme="light"] .bottom-nav .tab-active {
+  color: #0284C7 !important;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(56, 189, 248, 0.08) 100%) !important;
+  border-color: rgba(14, 165, 233, 0.35) !important;
+}
+
+/* 2. Light Mode cho Màn hình Kích Hoạt & Mở Khóa Ví Sinh Viên (StudentAuthEnrollment) */
+html[data-theme="light"] .student-auth-overlay {
+  background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.18), transparent 48%),
+              linear-gradient(145deg, #EFF6FF 0%, #E2E8F0 100%) !important;
+}
+
+html[data-theme="light"] .student-auth-card {
+  background: linear-gradient(165deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+  border: 1px solid rgba(14, 165, 233, 0.32) !important;
+  box-shadow: 0 22px 50px -12px rgba(15, 23, 42, 0.15) !important;
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .student-auth-card h2,
+html[data-theme="light"] .student-auth-card h3,
+html[data-theme="light"] .student-auth-card .text-white {
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .student-auth-card .text-slate-300,
+html[data-theme="light"] .student-auth-card .text-slate-400 {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .student-auth-card .text-\[\#64F5DF\] {
+  color: #0284C7 !important;
+}
+
+html[data-theme="light"] .student-auth-card .bg-\[\#050A14\] {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+/* 3. Light Mode cho Web Portal Giảng Viên & Admin (Port 5174) */
+html[data-theme="light"] .theme-fintech-dark {
+  background: radial-gradient(circle at 15% 12%, rgba(56, 189, 248, 0.15), transparent 45%),
+              linear-gradient(155deg, #F1F5F9 0%, #E2E8F0 100%) !important;
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .dashboard-outer-shell {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.45) !important;
+  box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.85) !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .bg-\[\#081226\],
+html[data-theme="light"] .theme-fintech-dark .from-\[\#17345C\],
+html[data-theme="light"] .theme-fintech-dark .from-\[\#0C1D33\] {
+  background: linear-gradient(155deg, #FFFFFF 0%, #F8FAFC 100%) !important;
+  border: 1px solid rgba(203, 213, 225, 0.9) !important;
+  box-shadow: 0 10px 26px -8px rgba(15, 23, 42, 0.07) !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .hero-navy-card {
+  background: linear-gradient(145deg, #EFF6FF 0%, #E0F2FE 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.5) !important;
+  box-shadow: 0 10px 24px -8px rgba(14, 165, 233, 0.12) !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .bg-\[\#040814\],
+html[data-theme="light"] .theme-fintech-dark .bg-\[\#040814\]\/80,
+html[data-theme="light"] .theme-fintech-dark .bg-\[\#040814\]\/90,
+html[data-theme="light"] .theme-fintech-dark .bg-slate-950,
+html[data-theme="light"] .theme-fintech-dark .bg-slate-950\/90 {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark h1,
+html[data-theme="light"] .theme-fintech-dark h2,
+html[data-theme="light"] .theme-fintech-dark h3,
+html[data-theme="light"] .theme-fintech-dark .text-white {
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .text-slate-200,
+html[data-theme="light"] .theme-fintech-dark .text-slate-300,
+html[data-theme="light"] .theme-fintech-dark .text-slate-400 {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .text-cyan-200,
+html[data-theme="light"] .theme-fintech-dark .text-cyan-300,
+html[data-theme="light"] .theme-fintech-dark .text-sky-200,
+html[data-theme="light"] .theme-fintech-dark .text-sky-300,
+html[data-theme="light"] .theme-fintech-dark .text-\[\#4FF0D6\] {
+  color: #0369A1 !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .text-emerald-300,
+html[data-theme="light"] .theme-fintech-dark .text-emerald-400 {
+  color: #047857 !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .text-amber-200,
+html[data-theme="light"] .theme-fintech-dark .text-amber-300,
+html[data-theme="light"] .theme-fintech-dark .text-amber-400 {
+  color: #B45309 !important;
+}
+
+html[data-theme="light"] .theme-fintech-dark .text-rose-200,
+html[data-theme="light"] .theme-fintech-dark .text-rose-300,
+html[data-theme="light"] .theme-fintech-dark .text-rose-400 {
+  color: #BE123C !important;
 }

@@ -5,11 +5,26 @@ import { io } from 'socket.io-client';
 import { getSocketUrl, smartFetch, retargetSocket, SERVER_URL } from '../utils/backendUrl';
 import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
+import { toggleTheme, getInitialThemeIsDark } from '../utils/theme';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
 
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
 }) {
+  const [isDarkTheme, setIsDarkTheme] = useState(() => getInitialThemeIsDark());
+
+  useEffect(() => {
+    const handleThemeSync = (e) => {
+      if (typeof e?.detail?.isDark === 'boolean') setIsDarkTheme(e.detail.isDark);
+    };
+    window.addEventListener('uth-theme-changed', handleThemeSync);
+    return () => window.removeEventListener('uth-theme-changed', handleThemeSync);
+  }, []);
+
+  const handleTogglePortalTheme = () => {
+    const next = toggleTheme(!isDarkTheme);
+    setIsDarkTheme(next);
+  };
   // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên & Admin)
   const [token, setToken] = useState(() => localStorage.getItem('faculty_token') || null);
   const [facultyUser, setFacultyUser] = useState(() => {
@@ -2151,6 +2166,16 @@ export default function FacultyDashboard({
 
         {/* Cụm nút tác vụ bên phải */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Nút chuyển Chế độ Sáng / Tối */}
+          <button
+            type="button"
+            onClick={handleTogglePortalTheme}
+            title={isDarkTheme ? 'Chuyển sang Chế độ Sáng (Light Mode)' : 'Chuyển sang Chế độ Tối (Dark Mode)'}
+            className="theme-toggle-pill px-3.5 py-2 rounded-full text-xs font-bold border border-sky-400/35 bg-[#0C1D33] text-sky-200 hover:border-[#4FF0D6] cursor-pointer transition-all flex items-center gap-1.5"
+          >
+            <span>{isDarkTheme ? '☀️ Chế Độ Sáng' : '🌙 Chế Độ Tối'}</span>
+          </button>
+
           {/* Nút chuyển nhanh giữa Giảng Viên và Quản Trị Viên */}
           <button
             type="button"

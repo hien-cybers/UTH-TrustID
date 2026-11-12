@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ethers } from 'ethers';
-import { ShieldCheck, Lock, Fingerprint, KeyRound, Mail, CheckCircle2, RefreshCw } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, KeyRound, Mail, CheckCircle2, RefreshCw, Sun, Moon } from 'lucide-react';
 import { smartFetch } from '../utils/backendUrl';
 import { setItem, removeItem } from '../utils/db';
 import { initializeRandomIdentity } from '../utils/identityManager';
 import { registerBiometric } from '../utils/webauthnHelper';
 import { setActiveWallet } from '../utils/sessionKeyVault';
 import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
+import { toggleTheme, getInitialThemeIsDark } from '../utils/theme';
 import FaceIDModal from './FaceIDModal';
 
 const ADMIN_ROSTER_FALLBACK = {
@@ -32,6 +33,21 @@ const getSafeSavedProfile = () => {
 };
 
 export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = false }) {
+  const [isDark, setIsDark] = useState(() => getInitialThemeIsDark());
+
+  useEffect(() => {
+    const handleSync = (e) => {
+      if (typeof e?.detail?.isDark === 'boolean') setIsDark(e.detail.isDark);
+    };
+    window.addEventListener('uth-theme-changed', handleSync);
+    return () => window.removeEventListener('uth-theme-changed', handleSync);
+  }, []);
+
+  const handleSwitchTheme = () => {
+    const next = toggleTheme(!isDark);
+    setIsDark(next);
+  };
+
   // Trạng thái đã kích hoạt trước đó hay chưa
   const [isEnrolled, setIsEnrolled] = useState(() => {
     if (forceEnroll) return false;
@@ -326,20 +342,29 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     const savedProfile = getSafeSavedProfile();
 
     return (
-      <div className="fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans">
-        <div className="w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] text-center space-y-5 animate-fade-scale">
+      <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
+        <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] text-center space-y-5 animate-spring-pop">
+          <button
+            type="button"
+            onClick={handleSwitchTheme}
+            title={isDark ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
+            className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
+          >
+            {isDark ? <Sun size={13} /> : <Moon size={13} />}
+            <span>{isDark ? 'Sáng' : 'Tối'}</span>
+          </button>
 
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1">
             <div className="w-16 h-16 rounded-[22px] bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_24px_rgba(79,240,214,0.25)]">
               <Lock size={28} />
             </div>
-            <h2 className="text-base font-black text-white tracking-wide m-0">
+            <h2 className="text-base font-extrabold text-white tracking-tight m-0">
               XÁC THỰC MỞ KHÓA VÍ
             </h2>
             <p className="text-xs text-slate-300 m-0">
               Xin chào, <strong className="text-[#64F5DF]">{savedProfile.name || 'NGUYỄN ĐỨC HIỂN'}</strong>
             </p>
-            <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 font-mono text-[10px] text-slate-400">
+            <span className="inline-block px-3 py-0.5 rounded-full bg-white/5 border border-white/10 font-mono text-[10.5px] text-slate-400">
               MSSV: {savedProfile.studentId || '2251120000'} • FIDO2 Ready
             </span>
           </div>
@@ -356,7 +381,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                 type="button"
                 onClick={handleBiometricUnlock}
                 disabled={loading}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
+                className="login-btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-slate-950 font-extrabold text-xs tracking-wide shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all flex items-center justify-center gap-2 border-none cursor-pointer"
               >
                 <Fingerprint size={17} />
                 <span>{loading ? 'Đang Quét Face ID...' : 'Mở Khóa Bằng Face ID / Vân Tay'}</span>
@@ -368,15 +393,15 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                   setUnlockMode('PIN');
                   setErrorMsg('');
                 }}
-                className="text-xs text-slate-300 hover:text-[#64F5DF] underline font-mono bg-transparent border-none cursor-pointer block mx-auto"
+                className="text-xs text-slate-300 hover:text-[#64F5DF] underline font-semibold bg-transparent border-none cursor-pointer block mx-auto"
               >
-                Camera hỏng? Mở khóa bằng Mã PIN 6 số
+                Mở khóa bằng Mã PIN 6 số
               </button>
             </div>
           ) : (
             <form onSubmit={handlePinUnlock} className="space-y-3.5">
               <div>
-                <label className="text-xs font-mono text-slate-300 block mb-1.5">
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
                   Nhập Mã PIN Cá Nhân (6 Số)
                 </label>
                 <input
@@ -393,7 +418,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 font-black text-xs tracking-wider shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all border-none cursor-pointer"
+                className="login-btn-shimmer w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-slate-950 font-extrabold text-xs tracking-wide shadow-[0_8px_24px_rgba(79,240,214,0.28)] active:scale-95 transition-all border-none cursor-pointer"
               >
                 Xác Nhận Mã PIN
               </button>
@@ -404,19 +429,19 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                   setUnlockMode('BIOMETRIC');
                   setErrorMsg('');
                 }}
-                className="text-xs text-slate-400 hover:text-white underline font-mono bg-transparent border-none cursor-pointer block mx-auto"
+                className="text-xs text-slate-400 hover:text-white underline font-semibold bg-transparent border-none cursor-pointer block mx-auto"
               >
                 Quay lại xác thực Face ID
               </button>
             </form>
           )}
 
-          {/* Nút chuyển nhanh về Giai đoạn 1 (Kích hoạt OTP lần đầu) để phục vụ demo/thực nghiệm */}
+          {/* Nút chuyển nhanh về Giai đoạn 1 (Kích hoạt OTP lần đầu) */}
           <div className="pt-3 border-t border-white/10">
             <button
               type="button"
               onClick={handleResetToStage1}
-              className="text-[10.5px] font-mono text-slate-400 hover:text-[#64F5DF] bg-transparent border-none cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
+              className="text-[11px] font-semibold text-slate-400 hover:text-[#64F5DF] bg-transparent border-none cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
             >
               <RefreshCw size={11} />
               <span>Đổi MSSV / Kích hoạt ví lần đầu qua Gmail OTP</span>
@@ -429,19 +454,28 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     // =========================================================================
     // GIAO DIỆN 2: KÍCH HOẠT LẦN ĐẦU (STAGE 1: MSSV -> GMAIL OTP -> HIỆN THÔNG TIN -> MÃ PIN & FACE ID)
     // =========================================================================
-    <div className="fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans">
-      <div className="w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] space-y-4 animate-fade-scale">
+    <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
+      <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] space-y-4 animate-spring-pop">
+        <button
+          type="button"
+          onClick={handleSwitchTheme}
+          title={isDark ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
+          className="theme-toggle-pill absolute top-4 right-4 px-2.5 py-1.5 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
+        >
+          {isDark ? <Sun size={13} /> : <Moon size={13} />}
+          <span>{isDark ? 'Sáng' : 'Tối'}</span>
+        </button>
 
         {/* HEADER */}
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-1 pt-1">
           <div className="w-12 h-12 rounded-2xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_20px_rgba(79,240,214,0.25)]">
             <ShieldCheck size={24} />
           </div>
-          <h2 className="text-base font-black text-white tracking-wide m-0 pt-1">
+          <h2 className="text-base font-extrabold text-white tracking-tight m-0 pt-1">
             KÍCH HOẠT VÍ SỐ LẦN ĐẦU
           </h2>
-          <p className="text-[10px] font-mono text-[#64F5DF] m-0">
-            LIÊN KẾT DANH TÍNH TỪ GMAIL TRƯỜNG (@UT.EDU.VN)
+          <p className="text-[11px] font-semibold text-[#64F5DF] m-0">
+            Liên kết danh tính từ Gmail trường (@ut.edu.vn)
           </p>
         </div>
 
