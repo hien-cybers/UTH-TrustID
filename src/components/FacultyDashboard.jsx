@@ -2578,6 +2578,121 @@ export default function FacultyDashboard({
                     </div>
                   )}
 
+                  {/* BIỂU ĐỒ TRÒN CHUYÊN CẦN (SVG DONUT CHART) & THỐNG KÊ ĐỦ ĐIỀU KIỆN DỰ THI */}
+                  {(() => {
+                    const totalSessionsCount = sessionList.length;
+                    let qualifiedCount = 0;
+                    let warningCount = 0;
+                    let totalAttendanceSum = 0;
+
+                    summaryRows.forEach((row) => {
+                      const attendedCount = Object.keys(row.sessionsAttended || {}).length;
+                      const pct = totalSessionsCount > 0
+                        ? Math.round((attendedCount / totalSessionsCount) * 100)
+                        : 100;
+                      totalAttendanceSum += pct;
+                      if (pct >= 80) qualifiedCount += 1;
+                      else warningCount += 1;
+                    });
+
+                    const avgClassRate = summaryRows.length > 0
+                      ? Math.round(totalAttendanceSum / summaryRows.length)
+                      : 100;
+                    const qualifiedRatio = summaryRows.length > 0
+                      ? Math.round((qualifiedCount / summaryRows.length) * 100)
+                      : 100;
+                    const radius = 38;
+                    const circumference = 2 * Math.PI * radius;
+                    const strokeDashoffset = circumference - (avgClassRate / 100) * circumference;
+
+                    return (
+                      <div className="p-5 rounded-2xl bg-[#040814] border border-cyan-500/25 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                        <div className="lg:col-span-5 flex items-center gap-4">
+                          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                              <circle
+                                cx="48"
+                                cy="48"
+                                r={radius}
+                                fill="transparent"
+                                stroke="rgba(30, 41, 59, 0.9)"
+                                strokeWidth="8"
+                              />
+                              <circle
+                                cx="48"
+                                cy="48"
+                                r={radius}
+                                fill="transparent"
+                                stroke="url(#classDonutGradient)"
+                                strokeWidth="8"
+                                strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                              />
+                              <defs>
+                                <linearGradient id="classDonutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor="#4FF0D6" />
+                                  <stop offset="100%" stopColor="#22D3EE" />
+                                </linearGradient>
+                              </defs>
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                              <span className="text-lg font-extrabold font-mono text-cyan-300 leading-none">
+                                {totalSessionsCount > 0 ? `${avgClassRate}%` : '—'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 mt-0.5">Chuyên cần</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">
+                              PHÂN TÍCH CHUYÊN CẦN TOÀN KỲ
+                            </span>
+                            <h3 className="text-sm font-bold text-white m-0">
+                              Tỷ lệ hiện diện trung bình: {totalSessionsCount > 0 ? `${avgClassRate}%` : 'Chưa mở buổi học'}
+                            </h3>
+                            <p className="text-xs text-slate-400 m-0">
+                              Chuẩn dự thi học phần UTH: Tham gia tối thiểu <strong>≥ 80%</strong> số buổi điểm danh định danh.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="p-3.5 rounded-xl bg-[#081226] border border-emerald-500/30">
+                            <div className="text-xs text-slate-400">Đủ điều kiện dự thi (≥ 80%)</div>
+                            <div className="text-xl font-extrabold font-mono text-emerald-300 mt-1">
+                              {totalSessionsCount > 0 ? `${qualifiedCount}/${summaryRows.length} SV` : `${summaryRows.length} SV`}
+                            </div>
+                            <div className="text-[11px] text-emerald-400/90 mt-0.5">
+                              {totalSessionsCount > 0 ? `Chiếm ${qualifiedRatio}% quân số lớp` : 'Sẵn sàng điểm danh buổi 1'}
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-[#081226] border border-amber-500/30">
+                            <div className="text-xs text-slate-400">Cảnh báo học vụ (&lt; 80%)</div>
+                            <div className="text-xl font-extrabold font-mono text-amber-300 mt-1">
+                              {totalSessionsCount > 0 ? `${warningCount} SV` : '0 SV'}
+                            </div>
+                            <div className="text-[11px] text-amber-400/90 mt-0.5">
+                              {warningCount > 0 ? 'Cần nhắc nhở chuyên cần' : 'Không có sinh viên vi phạm'}
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-[#081226] border border-cyan-500/30">
+                            <div className="text-xs text-slate-400">Buổi đã khóa sổ Merkle</div>
+                            <div className="text-xl font-extrabold font-mono text-cyan-300 mt-1">
+                              {sessionList.filter((s) => s.isFinalized || s.status === 'FINALIZED').length}/{totalSessionsCount} buổi
+                            </div>
+                            <div className="text-[11px] text-cyan-400/90 mt-0.5">
+                              Chữ ký số Giảng viên bất biến
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC CON BÊN TRONG LỚP (HIERARCHICAL CLASS SESSIONS) */}
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -3170,6 +3285,107 @@ export default function FacultyDashboard({
                   </button>
                 </div>
               </div>
+
+              {/* SƠ ĐỒ TRỰC QUAN CÂY NHỊ PHÂN MERKLE TREE 3 TẦNG (ON-CHAIN MERKLE PROOF TOPOLOGY) */}
+              {(() => {
+                let parsedBatch = [];
+                try {
+                  const arr = JSON.parse(batchJson);
+                  if (Array.isArray(arr)) parsedBatch = arr.slice(0, 4);
+                } catch {
+                  parsedBatch = [];
+                }
+                const sampleLeaves = parsedBatch.length >= 2
+                  ? parsedBatch
+                  : [
+                      { studentId: '0123456789', fullName: 'Nguyễn Văn An' },
+                      { studentId: '2251120001', fullName: 'Trần Thị Bích Ngọc' },
+                      { studentId: '2251120002', fullName: 'Lê Hoàng Nam' },
+                      { studentId: '2251120003', fullName: 'Phạm Minh Tuấn' }
+                    ];
+                while (sampleLeaves.length < 4) {
+                  sampleLeaves.push({
+                    studentId: `225112000${sampleLeaves.length + 1}`,
+                    fullName: `Sinh viên #${sampleLeaves.length + 1}`
+                  });
+                }
+
+                const rootDisplay = adminStats.merkleRoot || '0x8f9c2d1e4a7b...';
+
+                return (
+                  <div className="p-5 rounded-2xl bg-[#040814] border border-emerald-500/25 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold">
+                          TRỰC QUAN HÓA CẤU TRÚC CÂY MERKLE 3 TẦNG
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          Minh họa đường dẫn xác thực $O(\log N)$ từ Lá Sinh Viên lên On-Chain Root
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono text-cyan-300">
+                        Keccak256 Sorted Pairs
+                      </span>
+                    </div>
+
+                    {/* Tầng 1: On-Chain Merkle Root */}
+                    <div className="flex flex-col items-center">
+                      <div className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.2)] text-center max-w-md w-full">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                          Tầng 1 • On-Chain Merkle Root (Smart Contract)
+                        </div>
+                        <div className="text-xs font-mono font-bold text-white truncate mt-0.5">
+                          {rootDisplay}
+                        </div>
+                      </div>
+
+                      {/* Nhánh nối Tầng 1 -> Tầng 2 */}
+                      <div className="w-1/2 h-4 border-t-2 border-l-2 border-r-2 border-emerald-500/40 rounded-t-lg mt-1" />
+                    </div>
+
+                    {/* Tầng 2: Nút Trung Gian (Intermediate Hashes) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3 rounded-xl bg-[#081226] border border-cyan-500/35 text-center">
+                        <div className="text-[10px] font-bold text-cyan-300 uppercase">
+                          Tầng 2 • Nút Nhánh Trái H₁₂ = Keccak256(L₁ ‖ L₂)
+                        </div>
+                        <div className="text-xs font-mono text-slate-300 mt-1">
+                          0x4a7e91c0...b82d19f4
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#081226] border border-cyan-500/35 text-center">
+                        <div className="text-[10px] font-bold text-cyan-300 uppercase">
+                          Tầng 2 • Nút Nhánh Phải H₃₄ = Keccak256(L₃ ‖ L₄)
+                        </div>
+                        <div className="text-xs font-mono text-slate-300 mt-1">
+                          0x9c3b60e2...71fa08d1
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tầng 3: 4 Nút Lá Sinh Viên (Leaf Nodes) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                      {sampleLeaves.slice(0, 4).map((st, idx) => (
+                        <div
+                          key={st.studentId || idx}
+                          className="p-3 rounded-xl bg-[#081226]/90 border border-slate-800 hover:border-emerald-400/50 transition-all"
+                        >
+                          <div className="flex items-center justify-between text-[10px] font-mono text-emerald-300">
+                            <span>Lá L{idx + 1}</span>
+                            <span>H(SV_{idx + 1})</span>
+                          </div>
+                          <div className="text-xs font-bold text-white truncate mt-1">
+                            {st.fullName || st.name}
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-400">
+                            MSSV: {st.studentId}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -3579,32 +3795,65 @@ export default function FacultyDashboard({
                   {/* Khu vực trung tâm: Cột Trái (QR 360px) + Cột Phải (Thông số bảo mật phiên) */}
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center my-auto">
                     
-                    {/* Khung QR Điểm Danh Cỡ Lớn (7 cột) */}
+                    {/* Khung QR Điểm Danh Cỡ Lớn (7 cột) — Cinema Split-Stage với Vòng Tròn Đếm Ngược 35s */}
                     <div className="xl:col-span-7 flex flex-col items-center">
                       <div
                         onClick={() => setIsProjectorFullscreen(true)}
                         title="Nhấp vào mã QR để phóng to toàn màn chiếu (500x500px)"
-                        className="p-5 bg-white rounded-[28px] shadow-[0_0_60px_rgba(0,242,254,0.28)] border-4 border-cyan-400 flex flex-col items-center cursor-pointer hover:scale-[1.01] transition-transform"
+                        className="relative p-6 bg-white rounded-[32px] shadow-[0_0_65px_rgba(0,242,254,0.32)] border-4 border-cyan-400 flex flex-col items-center cursor-pointer hover:scale-[1.01] transition-transform"
                       >
-                        <div className="w-[360px] h-[360px] max-w-[75vw] max-h-[75vw] bg-white rounded-2xl flex items-center justify-center relative overflow-hidden p-1.5">
+                        {/* Vòng tròn SVG Countdown 35s chạy quanh tâm QR */}
+                        <div className="relative w-[364px] h-[364px] max-w-[75vw] max-h-[75vw] bg-white rounded-2xl flex items-center justify-center p-2.5">
+                          <svg
+                            className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none"
+                            viewBox="0 0 364 364"
+                          >
+                            <rect
+                              x="4"
+                              y="4"
+                              width="356"
+                              height="356"
+                              rx="22"
+                              fill="none"
+                              stroke="rgba(226, 232, 240, 0.9)"
+                              strokeWidth="5"
+                            />
+                            <rect
+                              x="4"
+                              y="4"
+                              width="356"
+                              height="356"
+                              rx="22"
+                              fill="none"
+                              stroke="#06B6D4"
+                              strokeWidth="5"
+                              strokeDasharray={1400}
+                              strokeDashoffset={1400 - (timerProgress / ROTATE_INTERVAL) * 1400}
+                              strokeLinecap="round"
+                              style={{ transition: 'stroke-dashoffset 0.95s linear' }}
+                            />
+                          </svg>
                           <QRCodeCanvas
                             value={qrPayloadString}
-                            size={348}
+                            size={336}
                             level="M"
                             includeMargin={false}
-                            style={{ width: '100%', height: '100%', maxWidth: '348px', maxHeight: '348px' }}
+                            style={{ width: '100%', height: '100%', maxWidth: '336px', maxHeight: '336px' }}
                           />
                         </div>
-                        <div className="mt-2.5 text-center">
+                        <div className="mt-2.5 flex items-center gap-2 text-center">
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-900 text-cyan-300 font-mono text-xs font-bold">
+                            {timerProgress}s
+                          </span>
                           <p className="text-sm font-mono font-bold text-slate-950 tracking-wider m-0">{currentNonce}</p>
                         </div>
                       </div>
 
-                      {/* Thanh tiến trình xoay Nonce 35s */}
-                      <div className="w-[360px] max-w-full mt-3.5 space-y-1.5">
+                      {/* Thanh tiến trình xoay Nonce 35s + Live Check-in Toast */}
+                      <div className="w-[364px] max-w-full mt-3.5 space-y-2.5">
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-300 font-medium">Làm mới mã QR sau:</span>
-                          <span className="text-cyan-400 font-mono font-bold">{timerProgress}s</span>
+                          <span className="text-slate-300 font-medium">Làm mới mã QR động sau:</span>
+                          <span className="text-cyan-400 font-mono font-bold">{timerProgress}s / {ROTATE_INTERVAL}s</span>
                         </div>
                         <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
@@ -3612,6 +3861,26 @@ export default function FacultyDashboard({
                             style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
                           />
                         </div>
+
+                        {/* Live Check-in Feed Card ngay dưới chân QR */}
+                        {attendees.length > 0 && (
+                          <div className="p-3 rounded-2xl bg-emerald-500/12 border border-emerald-400/40 flex items-center justify-between gap-3 animate-[fadeIn_0.25s_ease-out]">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] shrink-0" />
+                              <div className="truncate">
+                                <div className="text-xs font-bold text-white truncate">
+                                  {maskStudentName(attendees[0].name)} ({maskStudentId(attendees[0].studentId)})
+                                </div>
+                                <div className="text-[11px] text-emerald-300 font-mono">
+                                  Vừa quét QR hợp lệ • Cách tâm {stageSafeMode ? '≤ R' : `${attendees[0].distance}m`}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-400/20 text-emerald-200 font-mono text-xs font-bold shrink-0">
+                              #{attendees.length}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

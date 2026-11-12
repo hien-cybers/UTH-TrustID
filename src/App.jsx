@@ -762,7 +762,10 @@ export default function App() {
         </main>
 
         {/* Thanh Điều Hướng Dưới Cùng Dành Riêng Cho Sinh Viên (Holder Node) */}
-        <MobileNavigation activeCourseSession={activeCourseSession} />
+        <MobileNavigation
+          activeCourseSession={activeCourseSession}
+          spotCheckState={spotCheckState}
+        />
 
       </div>
 
