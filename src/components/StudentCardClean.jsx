@@ -1,7 +1,7 @@
 // src/components/StudentCardClean.jsx - Thẻ Sinh Viên Số UTH 2 Mặt Lật 3D (Interactive 3D Flip Digital ID & W3C Verifiable Credential)
 import React, { useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { RotateCw, ShieldCheck, KeyRound, CheckCircle2, Copy } from 'lucide-react';
+import { ShieldCheck, KeyRound, CheckCircle2, Copy } from 'lucide-react';
 
 export default function StudentCardClean({
   student = {
@@ -84,12 +84,10 @@ export default function StudentCardClean({
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#4FF0D6]/15 text-[#64F5DF] border border-[#4FF0D6]/35 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#64F5DF] animate-pulse" />
-                {student.status || "ACTIVE"}
-              </span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#4FF0D6]/15 text-[#64F5DF] border border-[#4FF0D6]/35 flex items-center gap-1.5 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#64F5DF] animate-pulse" />
+              {student.status || "ACTIVE"}
+            </span>
           </div>
 
           {/* Nội dung: Ảnh thẻ và thông tin cá nhân */}
@@ -141,7 +139,7 @@ export default function StudentCardClean({
           </div>
 
           {/* Footer Thẻ Mặt Trước */}
-          <div className="relative z-10 pt-3 border-t border-white/10 flex items-center justify-between gap-2 text-xs font-mono">
+          <div className="relative z-10 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono">
             <button
               type="button"
               onClick={handleCopy}
@@ -154,22 +152,9 @@ export default function StudentCardClean({
               </span>
             </button>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-[10.5px]">
-                Hạn: <strong className="text-white">{student.validUntil || "2027"}</strong>
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsFlipped(true);
-                }}
-                className="px-2.5 py-1 rounded-full bg-[#4FF0D6]/15 hover:bg-[#4FF0D6]/25 border border-[#4FF0D6]/40 text-[#64F5DF] text-[10px] font-sans font-bold flex items-center gap-1 cursor-pointer transition-all"
-              >
-                <RotateCw size={11} />
-                <span>Lật mặt sau</span>
-              </button>
-            </div>
+            <span className="text-slate-400 text-[11px]">
+              Hạn: <strong className="text-white">{student.validUntil || "2027"}</strong>
+            </span>
           </div>
         </div>
 
@@ -184,7 +169,7 @@ export default function StudentCardClean({
               <ShieldCheck size={16} className="text-[#64F5DF] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-[11px] font-extrabold uppercase tracking-wider text-white m-0 truncate">
-                  CHỨNG THỰC ĐỊNH DANH SỐ • MẶT SAU
+                  CHỨNG THỰC ĐỊNH DANH SỐ W3C
                 </p>
                 <p className="text-[9px] font-mono text-[#64F5DF] m-0 truncate">
                   ISSUER: did:web:uth.edu.vn (Root Authority)
@@ -192,17 +177,9 @@ export default function StudentCardClean({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsFlipped(false);
-              }}
-              className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white text-[10px] font-sans font-bold flex items-center gap-1 cursor-pointer flex-shrink-0"
-            >
-              <RotateCw size={11} />
-              <span>Mặt trước</span>
-            </button>
+            <span className="px-2.5 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-[#4FF0D6]/15 text-[#64F5DF] border border-[#4FF0D6]/35 flex-shrink-0">
+              VERIFIED
+            </span>
           </div>
 
           {/* Nội dung Mặt Sau: QR Định danh + Thông số Mật mã */}
