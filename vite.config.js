@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig({
+  cacheDir: 'node_modules/.vite-student',
   plugins: [
     react(),
     tailwindcss(),

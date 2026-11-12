@@ -6,6 +6,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 // Cấu hình Vite Độc Lập cho Web Portal Giảng Viên & Quản Trị Viên (Chạy trên Port 5174)
 export default defineConfig({
   root: import.meta.dirname,
+  cacheDir: 'node_modules/.vite-portal',
   build: {
     outDir: 'dist-portal',
     rollupOptions: {
