@@ -32,13 +32,26 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Không bao giờ chặn request của Cổng Web Giảng Viên & Admin (Port 5174)
-  if (self.location.port === '5174' || event.request.url.includes(':5174') || event.request.url.includes('portal.html')) {
+  // Không bao giờ chặn request của Vite Dev Server, API, Socket.IO hoặc Cổng Web Giảng Viên & Admin (Port 5174)
+  const url = event.request.url || '';
+  if (
+    self.location.port === '5174' ||
+    url.includes(':5174') ||
+    url.includes('portal.html') ||
+    url.includes('/src/') ||
+    url.includes('/@') ||
+    url.includes('/node_modules/') ||
+    url.includes('/api/') ||
+    url.includes('/socket.io/')
+  ) {
     return;
   }
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(async () => {
+      const cached = await caches.match(event.request);
+      return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
+    })
   );
 });
 

@@ -19,6 +19,36 @@ export default defineConfig({
     {
       name: 'faculty-portal-spa-fallback',
       configureServer(server) {
+        if (server.httpServer) {
+          const [tlsListener] = server.httpServer.listeners('connection');
+          if (tlsListener) {
+            server.httpServer.removeListener('connection', tlsListener);
+            server.httpServer.on('connection', (socket) => {
+              const onReadable = () => {
+                const chunk = socket.read(1);
+                if (chunk === null) return;
+                socket.removeListener('readable', onReadable);
+                socket.unshift(chunk);
+                if (chunk[0] === 0x16) {
+                  tlsListener.call(server.httpServer, socket);
+                } else {
+                  socket.once('data', (raw) => {
+                    const reqStr = raw.toString('utf8');
+                    const firstLine = reqStr.split('\r\n')[0] || '';
+                    const reqPath = firstLine.split(' ')[1] || '/portal.html';
+                    const hostMatch = reqStr.match(/Host:\s*([^\r\n]+)/i);
+                    const host = hostMatch ? hostMatch[1].trim() : 'localhost:5174';
+                    const location = `https://${host}${reqPath}`;
+                    socket.end(
+                      `HTTP/1.1 302 Found\r\nLocation: ${location}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n`
+                    );
+                  });
+                }
+              };
+              socket.on('readable', onReadable);
+            });
+          }
+        }
         server.middlewares.use((req, _res, next) => {
           if (
             req.url &&

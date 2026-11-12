@@ -88,20 +88,25 @@ export default function StudentWalletPro({
       // 1. Ưu tiên đọc từ két IndexedDB an toàn (UTHTRUSTID_DB / identity_vault)
       const savedVC = await getItem('uth_student_vc');
       if (savedVC) {
-        // Tự động đồng bộ nếu thẻ cũ dùng địa chỉ ví mẫu không khớp khóa ký
+        // Tự động đồng bộ nếu thẻ cũ thiếu merkleRoot hoặc dùng địa chỉ ví mẫu không khớp khóa ký
         if (
+          !savedVC.merkleRoot ||
+          !savedVC.address ||
           savedVC.address?.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d' ||
           savedVC.merkleRoot?.startsWith('0x78ab3199')
         ) {
           const migratedVC = {
             ...savedVC,
+            studentId: savedVC.studentId || '2251120000',
+            fullName: savedVC.fullName || 'Nguyễn Đức Hiển',
+            major: savedVC.major || 'An toàn Thông tin',
             address:
-              savedVC.address?.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+              !savedVC.address || savedVC.address?.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
                 ? DEFAULT_DEMO_ADDR
                 : savedVC.address,
             privateKey: savedVC.privateKey || DEFAULT_DEMO_PRIV,
-            merkleRoot: DEFAULT_MERKLE_ROOT,
-            merkleProof: DEFAULT_MERKLE_PROOF
+            merkleRoot: savedVC.merkleRoot && !savedVC.merkleRoot.startsWith('0x78ab3199') ? savedVC.merkleRoot : DEFAULT_MERKLE_ROOT,
+            merkleProof: Array.isArray(savedVC.merkleProof) && savedVC.merkleProof.length > 0 ? savedVC.merkleProof : DEFAULT_MERKLE_PROOF
           };
           setCredential(migratedVC);
           try { setActiveWallet(new ethers.Wallet(migratedVC.privateKey)); } catch {}
@@ -939,7 +944,7 @@ export default function StudentWalletPro({
               {/* Footer Merkle Root & Gỡ thẻ */}
               <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
                 <span className="text-[9.5px] text-[#64F5DF] font-mono truncate">
-                  Merkle Root: {credential.merkleRoot.slice(0, 22)}...
+                  Merkle Root: {(credential?.merkleRoot || '0x3b06a0bf378a29b4ffaa94ff397a421cb25df46676cec28ee971ecc33f4dfaf2').slice(0, 22)}...
                 </span>
                 <button
                   type="button"

@@ -16,8 +16,24 @@
 
     <!-- Màu thanh trạng thái cho Android -->
     <meta name="theme-color" content="#070b14" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) {
+            regs[i].unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(keys) {
+          for (var j = 0; j < keys.length; j++) {
+            caches.delete(keys[j]);
+          }
+        });
+      }
+    </script>
   </head>
-  <body>
+  <body class="bg-[#040914] text-slate-100 m-0 p-0">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

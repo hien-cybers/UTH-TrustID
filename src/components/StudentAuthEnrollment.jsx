@@ -20,6 +20,17 @@ const ADMIN_ROSTER_FALLBACK = {
   '2251120005': { name: 'HOÀNG BẢO NGỌC', fullName: 'Hoàng Bảo Ngọc', major: 'An toàn Thông tin', faculty: 'Công nghệ Thông tin' }
 };
 
+const getSafeSavedProfile = () => {
+  try {
+    const raw = localStorage.getItem('trustid_profile');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch {}
+  return { name: 'NGUYỄN ĐỨC HIỂN', fullName: 'Nguyễn Đức Hiển', studentId: '2251120000', major: 'An toàn Thông tin' };
+};
+
 export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = false }) {
   // Trạng thái đã kích hoạt trước đó hay chưa
   const [isEnrolled, setIsEnrolled] = useState(() => {
@@ -290,7 +301,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
     e.preventDefault();
     const savedPin = localStorage.getItem('trustid_pin') || '123456';
     if (unlockPin.trim() === savedPin || unlockPin.trim() === '123456') {
-      const savedProfile = JSON.parse(localStorage.getItem('trustid_profile') || '{"name":"NGUYỄN ĐỨC HIỂN","studentId":"2251120000"}');
+      const savedProfile = getSafeSavedProfile();
       triggerScanSuccessFeedback();
       if (onAuthSuccess) onAuthSuccess(savedProfile);
     } else {
@@ -312,10 +323,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
   // GIAO DIỆN 1: MỞ KHÓA HÀNG NGÀY KHI ĐÃ KÍCH HOẠT (STAGE 2)
   // =========================================================================
   const content = isEnrolled ? (() => {
-    const savedProfile = JSON.parse(
-      localStorage.getItem('trustid_profile') ||
-      '{"name":"NGUYỄN ĐỨC HIỂN","studentId":"2251120000","major":"An toàn Thông tin"}'
-    );
+    const savedProfile = getSafeSavedProfile();
 
     return (
       <div className="fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans">
@@ -659,7 +667,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
 
   return (
     <>
-      {typeof document !== 'undefined' ? createPortal(content, document.body) : content}
+      {content}
 
       <FaceIDModal
         isOpen={showFaceModal}
@@ -668,10 +676,7 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
           if (faceModalMode === 'ENROLL') {
             executeEnrollment(true);
           } else {
-            const savedProfile = JSON.parse(
-              localStorage.getItem('trustid_profile') ||
-              '{"name":"NGUYỄN ĐỨC HIỂN","studentId":"2251120000"}'
-            );
+            const savedProfile = getSafeSavedProfile();
             if (onAuthSuccess) onAuthSuccess(savedProfile);
           }
         }}
@@ -687,12 +692,12 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
         studentName={
           faceModalMode === 'ENROLL'
             ? studentClaim?.fullName || 'Nguyễn Đức Hiển'
-            : JSON.parse(localStorage.getItem('trustid_profile') || '{}')?.fullName || 'Nguyễn Đức Hiển'
+            : getSafeSavedProfile()?.fullName || 'Nguyễn Đức Hiển'
         }
         studentId={
           faceModalMode === 'ENROLL'
             ? studentClaim?.studentId || '2251120000'
-            : JSON.parse(localStorage.getItem('trustid_profile') || '{}')?.studentId || '2251120000'
+            : getSafeSavedProfile()?.studentId || '2251120000'
         }
         reason={
           faceModalMode === 'ENROLL'
