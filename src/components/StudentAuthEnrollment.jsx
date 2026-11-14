@@ -328,6 +328,10 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
       <div className="student-auth-overlay fixed inset-0 z-[99998] bg-[#040914]/95 backdrop-blur-xl flex items-center justify-center p-5 select-none font-sans transition-colors duration-300">
         <div className="student-auth-card relative w-full max-w-sm p-6 rounded-[28px] bg-gradient-to-b from-[#0C1D33] to-[#060E1C] border border-teal-400/35 shadow-[0_18px_50px_rgba(79,240,214,0.16)] text-center space-y-5 animate-spring-pop">
           <div className="space-y-2 pt-1">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#4FF0D6]/10 border border-[#4FF0D6]/30 text-[10px] font-mono font-bold tracking-wider text-[#64F5DF]">
+              <ShieldCheck size={12} />
+              UTH-TRUSTID • VÍ ĐỊNH DANH W3C DID
+            </span>
             <div className="w-16 h-16 rounded-[22px] bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 mx-auto flex items-center justify-center text-[#64F5DF] shadow-[0_0_24px_rgba(79,240,214,0.25)]">
               <Lock size={28} />
             </div>
@@ -337,9 +341,20 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
             <p className="text-xs text-slate-300 m-0">
               Xin chào, <strong className="text-[#64F5DF]">{savedProfile.name || 'NGUYỄN ĐỨC HIỂN'}</strong>
             </p>
-            <span className="inline-block px-3 py-0.5 rounded-full bg-white/5 border border-white/10 font-mono text-[10.5px] text-slate-400">
-              MSSV: {savedProfile.studentId || '2251120000'} • FIDO2 Ready
-            </span>
+            <div className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 font-mono text-[10.5px] text-slate-300">
+              MSSV: <strong className="text-white">{savedProfile.studentId || '2251120000'}</strong> • {savedProfile.major || 'An toàn Thông tin'}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+              {['ECDSA secp256k1', 'FIDO2 Passkey', 'Merkle Proof'].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 rounded-md bg-[#050A14] border border-teal-400/25 font-mono text-[9.5px] font-semibold text-teal-300"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
 
           {errorMsg && (
@@ -387,6 +402,18 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
                   className="w-full text-center tracking-[0.5em] p-3 rounded-2xl bg-[#050A14] border border-teal-400/35 text-base font-mono text-[#64F5DF] outline-none focus:border-[#4FF0D6]"
                   autoFocus
                 />
+                <div className="flex justify-center mt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUnlockPin('123456');
+                      setErrorMsg('');
+                    }}
+                    className="px-3 py-1 rounded-full bg-[#4FF0D6]/12 hover:bg-[#4FF0D6]/20 border border-[#4FF0D6]/35 text-[#64F5DF] text-[10.5px] font-mono font-bold cursor-pointer transition-all"
+                  >
+                    Điền nhanh PIN mặc định (123456)
+                  </button>
+                </div>
               </div>
 
               <button
@@ -492,24 +519,29 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
               </p>
             </div>
 
-            {/* Gợi ý chọn nhanh MSSV trong danh sách đào tạo */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {['2251120000', '2251120001', '2251120002', '2251120005'].map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    setMssv(id);
-                    setErrorMsg('');
-                  }}
-                  className={`px-2.5 py-1 rounded-full font-mono text-[10px] border cursor-pointer transition-all ${mssv === id
-                      ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF] font-bold'
-                      : 'bg-[#050A14] border-white/10 text-slate-400'
-                    }`}
-                >
-                  {id}
-                </button>
-              ))}
+            {/* Gợi ý chọn nhanh toàn bộ 6 sinh viên mẫu trong danh sách đào tạo */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-semibold text-slate-400 block">
+                Chọn nhanh sinh viên mẫu trong CSDL đào tạo:
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {Object.entries(ADMIN_ROSTER_FALLBACK).map(([id, info]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setMssv(id);
+                      setErrorMsg('');
+                    }}
+                    className={`px-2.5 py-1.5 rounded-xl font-mono text-[10px] border cursor-pointer transition-all text-left truncate ${mssv === id
+                        ? 'bg-[#4FF0D6]/20 border-[#4FF0D6] text-[#64F5DF] font-bold'
+                        : 'bg-[#050A14] border-white/10 text-slate-300 hover:border-white/25'
+                      }`}
+                  >
+                    {id} — {info.fullName}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button

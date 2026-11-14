@@ -177,6 +177,10 @@ export default function FacultyDashboard({
   const [activeTab, setActiveTab] = useState(
     resolvedInitialRole === 'ADMIN' ? 'ADMIN_ISSUANCE' : 'STAGE'
   );
+  const [loginPortalTab, setLoginPortalTab] = useState(
+    resolvedInitialRole === 'ADMIN' ? 'ADMIN' : 'FACULTY'
+  ); // 'FACULTY' | 'ADMIN' | 'QR_WEB3'
+  const [qrChallengeNonce, setQrChallengeNonce] = useState('UTH_CHALLENGE_9X8F2A');
   
   // Đồng hồ thời gian thực trên Executive Topbar
   const [liveClock, setLiveClock] = useState(() => new Date());
@@ -2180,31 +2184,8 @@ export default function FacultyDashboard({
     setAuthError('');
   };
 
-  // ==================== CỔNG ĐĂNG NHẬP NGHỆ THUẬT (PHỐI MÀU OCEAN ICE: #001D39, #0A4174, #49769F, #4E8EA2, #6EA2B3, #7BBDE8, #BDD8E9) ====================
+  // ==================== CỔNG LANDING & ĐĂNG NHẬP EXECUTIVE (DARK ROYAL SAPPHIRE & OBSIDIAN) ====================
   if (!token) {
-    const FIREFLIES = [
-      { id: 1, top: '22%', left: '68%', size: 5, delay: '0s', dur: '5.5s', color: '#7BBDE8' },
-      { id: 2, top: '34%', left: '42%', size: 6, delay: '1.1s', dur: '6.2s', color: '#fde047' },
-      { id: 3, top: '46%', left: '28%', size: 5, delay: '0.4s', dur: '4.8s', color: '#BDD8E9' },
-      { id: 4, top: '54%', left: '52%', size: 7, delay: '1.8s', dur: '6.8s', color: '#7BBDE8' },
-      { id: 5, top: '64%', left: '36%', size: 5, delay: '2.3s', dur: '5.1s', color: '#4E8EA2' },
-      { id: 6, top: '72%', left: '64%', size: 6, delay: '0.9s', dur: '5.9s', color: '#BDD8E9' },
-      { id: 7, top: '16%', left: '48%', size: 4, delay: '1.5s', dur: '4.5s', color: '#ffffff' },
-      { id: 8, top: '28%', left: '82%', size: 4, delay: '2.7s', dur: '5.3s', color: '#7BBDE8' },
-      { id: 9, top: '58%', left: '76%', size: 5, delay: '0.6s', dur: '6.4s', color: '#BDD8E9' },
-      { id: 10, top: '82%', left: '48%', size: 6, delay: '1.9s', dur: '5.7s', color: '#7BBDE8' }
-    ];
-
-    const PALETTE_SWATCHES = [
-      '#001D39',
-      '#0A4174',
-      '#49769F',
-      '#4E8EA2',
-      '#6EA2B3',
-      '#7BBDE8',
-      '#BDD8E9'
-    ];
-
     const handleCardMouseMove = (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const nx = (e.clientX - rect.left) / rect.width - 0.5;
@@ -2216,294 +2197,472 @@ export default function FacultyDashboard({
       setLoginParallax({ x: 0, y: 0 });
     };
 
+    const handleSelectLoginTab = (tabId) => {
+      setLoginPortalTab(tabId);
+      setAuthError('');
+      if (tabId === 'FACULTY') {
+        setLoginForm((prev) => ({ ...prev, email: 'giangvien@uth.edu.vn' }));
+      } else if (tabId === 'ADMIN') {
+        setLoginForm((prev) => ({ ...prev, email: 'admin@uth.edu.vn' }));
+      }
+    };
+
     return (
       <div
         onMouseMove={handleCardMouseMove}
         onMouseLeave={handleCardMouseLeave}
-        className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden select-none"
-        style={{
-          background:
-            'linear-gradient(180deg, #BDD8E9 0%, #7BBDE8 24%, #6EA2B3 44%, #4E8EA2 60%, #49769F 74%, #0A4174 88%, #001D39 100%)'
-        }}
+        className="theme-fintech-dark faculty-ambient-glow min-h-screen w-full flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative overflow-hidden select-none"
       >
-        {/* Quầng bóng đổ sâu màu Xanh Đại Dương (#001D39 & #0A4174) phía dưới Card */}
+        {/* Quầng sáng nền di chuyển nhẹ theo con trỏ */}
         <div
-          className="pointer-events-none absolute w-[84%] max-w-[920px] h-[540px] rounded-[44px] blur-3xl opacity-80 transition-transform duration-500"
+          className="pointer-events-none absolute -top-24 left-1/4 w-[520px] h-[520px] rounded-full blur-3xl opacity-35 transition-transform duration-500"
           style={{
-            background:
-              'radial-gradient(circle at 50% 85%, rgba(0, 29, 57, 0.88), rgba(10, 65, 116, 0.6), transparent 74%)',
-            transform: `translate3d(${loginParallax.x * 0.5}px, ${30 + loginParallax.y * 0.5}px, 0)`
+            background: 'radial-gradient(circle, rgba(79, 240, 214, 0.25), rgba(56, 189, 248, 0.14), transparent 72%)',
+            transform: `translate3d(${loginParallax.x * 0.7}px, ${loginParallax.y * 0.7}px, 0)`
+          }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 right-1/5 w-[560px] h-[560px] rounded-full blur-3xl opacity-40 transition-transform duration-500"
+          style={{
+            background: 'radial-gradient(circle, rgba(14, 165, 233, 0.24), rgba(15, 37, 71, 0.55), transparent 72%)',
+            transform: `translate3d(${-loginParallax.x * 0.5}px, ${-loginParallax.y * 0.5}px, 0)`
           }}
         />
 
-        {/* ==================== KHUNG CARD ĐĂNG NHẬP 2 CỘT (50% ARTWORK OCEAN / 50% FORM BĂNG TUYẾT #F7FBFE) ==================== */}
-        <div className="animate-login-card relative z-10 w-full max-w-[960px] min-h-[590px] rounded-[26px] bg-[#F9FCFF] border border-[#BDD8E9]/70 shadow-[0_36px_90px_-12px_rgba(0,29,57,0.72)] overflow-hidden grid grid-cols-1 md:grid-cols-12">
-          
-          {/* ==================== CỘT TRÁI (6 CỘT): TRANH ĐÊM HÒA QUYỆN TÔNG XANH ĐẠI DƯƠNG (#001D39 -> #7BBDE8) ==================== */}
-          <div className="md:col-span-6 relative min-h-[300px] md:min-h-[590px] bg-[#001D39] overflow-hidden flex items-center justify-center">
-            
-            {/* Lớp Tranh Nền chuyển động Parallax + Ken Burns nhẹ nhàng */}
-            <img
-              src="/login-art.jpg"
-              alt="Welcome Artwork"
-              className="animate-art-breathe absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out pointer-events-none"
-              style={{
-                transform: `scale(1.05) translate3d(${-loginParallax.x}px, ${-loginParallax.y}px, 0)`
-              }}
-            />
-
-            {/* Lớp phủ hòa sắc nhẹ (Color Grading Overlay) theo bảng màu #001D39 - #0A4174 - #4E8EA2 - #7BBDE8 */}
-            <div
-              className="pointer-events-none absolute inset-0 mix-blend-soft-light opacity-55"
-              style={{
-                background:
-                  'linear-gradient(160deg, rgba(0,29,57,0.75) 0%, rgba(10,65,116,0.5) 45%, rgba(78,142,162,0.4) 78%, rgba(123,189,232,0.45) 100%)'
-              }}
-            />
-
-            {/* Hiệu ứng Quầng Sáng Ấm Áp lan tỏa từ mái nhà vàng */}
-            <div
-              className="animate-pavilion-glow pointer-events-none absolute rounded-full blur-2xl"
-              style={{
-                top: '36%',
-                left: '30%',
-                width: '140px',
-                height: '100px',
-                background:
-                  'radial-gradient(circle, rgba(253, 224, 71, 0.62) 0%, rgba(123, 189, 232, 0.35) 58%, transparent 78%)',
-                transform: `translate3d(${-loginParallax.x * 1.1}px, ${-loginParallax.y * 1.1}px, 0)`
-              }}
-            />
-
-            {/* Hiệu ứng Đom Đóm & Sao Đêm Lấp Lánh Bay Lên (#7BBDE8 & #BDD8E9) */}
-            {FIREFLIES.map((f) => (
-              <span
-                key={f.id}
-                className="pointer-events-none absolute rounded-full"
-                style={{
-                  top: f.top,
-                  left: f.left,
-                  width: `${f.size}px`,
-                  height: `${f.size}px`,
-                  backgroundColor: f.color,
-                  boxShadow: `0 0 12px 3px ${f.color}`,
-                  animation: `fireflyDrift ${f.dur} ease-in-out ${f.delay} infinite`
-                }}
-              />
-            ))}
-
-            {/* Huy hiệu UTH-TrustID + Thanh 7 chấm màu Ocean Ice ở góc dưới bên trái */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2 pointer-events-none">
-              <span className="px-3 py-1 rounded-full bg-[#001D39]/85 backdrop-blur-md border border-[#BDD8E9]/30 text-[10.5px] font-semibold tracking-wider text-[#BDD8E9] shadow-sm">
-                UTH-TRUSTID • ZERO-TRUST PORTAL
-              </span>
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#001D39]/80 backdrop-blur-md border border-[#BDD8E9]/25">
-                {PALETTE_SWATCHES.map((hex) => (
-                  <span
-                    key={hex}
-                    className="w-2.5 h-2.5 rounded-full border border-white/30"
-                    style={{ backgroundColor: hex }}
-                  />
-                ))}
+        <div className="relative z-10 w-full max-w-[1440px] mx-auto flex-1 flex flex-col justify-between gap-6">
+          {/* ==================== THANH TOPBAR LANDING PORTAL ==================== */}
+          <header className="faculty-glass-card rounded-2xl border border-cyan-500/25 px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4FF0D6] to-[#38BDF8] text-[#03141A] flex items-center justify-center shadow-[0_0_24px_rgba(79,240,214,0.3)] shrink-0">
+                <QrCode size={18} />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-extrabold tracking-wide text-white">
+                  UTH-TRUSTID • CỔNG ĐỊNH DANH &amp; ĐIỂM DANH SỐ ZERO-TRUST
+                </div>
+                <div className="text-[11px] font-medium text-cyan-300">
+                  Trường Đại học Giao thông Vận tải TP.HCM (UTH)
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* ==================== CỘT PHẢI (6 CỘT): BIỂU MẪU LOGIN TỐI GIẢN PHỐI MÀU #001D39 -> #7BBDE8 ==================== */}
-          <div
-            className="md:col-span-6 px-8 sm:px-14 py-10 flex flex-col justify-between relative"
-            style={{
-              background:
-                'linear-gradient(180deg, #FFFFFF 0%, #F7FBFE 65%, #EBF4FA 100%)'
-            }}
-          >
-            {/* Khoảng đệm phía trên để căn giữa Form giống mẫu */}
-            <div className="hidden md:block" />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/12 border border-emerald-400/35 text-emerald-300 text-[11px] font-mono font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <Wifi size={13} />
+                Node &amp; Smart Contract: Online
+              </span>
+              <span className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#040814]/85 border border-cyan-500/30 text-cyan-200 text-[11px] font-mono font-semibold">
+                <Lock size={13} className="text-cyan-400" />
+                Keccak256 • secp256k1
+              </span>
+              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#040814]/85 border border-slate-700/90 text-slate-200 text-[11px] font-mono font-semibold">
+                <Clock size={13} className="text-cyan-400" />
+                {liveClock.toLocaleTimeString('vi-VN', { hour12: false })}
+              </span>
 
-            {/* Khối trung tâm: Tiêu đề Login + 2 ô Underline Input + Nút Login Gradient (#001D39 -> #0A4174 -> #49769F) */}
-            <div className="w-full max-w-[330px] mx-auto my-auto">
-              <h1 className="text-[32px] font-extrabold text-[#001D39] text-center tracking-tight mb-10">
-                Login
-              </h1>
+              <button
+                type="button"
+                onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
+                className="faculty-pill-btn px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-md inline-flex items-center gap-1.5"
+              >
+                <BookOpen size={13} />
+                Vào Nhanh Giảng Viên
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
+                className="faculty-pill-btn px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/45 text-emerald-200 font-bold text-xs cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <ShieldAlert size={13} />
+                Vào Nhanh Quản Trị
+              </button>
+            </div>
+          </header>
 
-              {/* Thông báo lỗi nếu nhập sai tài khoản hoặc mật khẩu */}
-              {authError && (
-                <div className="mb-6 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-start gap-2 animate-[fadeIn_0.25s_ease-out]">
-                  <span>⚠️</span>
-                  <span>{authError}</span>
+          {/* ==================== NỘI DUNG CHÍNH: SPLIT LANDING HERO (7 CỘT) + LOGIN CARD (5 CỘT) ==================== */}
+          <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch flex-1">
+            {/* CỘT TRÁI (7 CỘT): HERO SHOWCASE + BENTO CÔNG NGHỆ + QUY TRÌNH 3 BƯỚC */}
+            <div className="lg:col-span-7 flex flex-col justify-between gap-5">
+              <div className="faculty-glass-card rounded-[28px] border border-cyan-500/25 p-6 sm:p-8 flex-1 flex flex-col justify-between gap-6">
+                <div className="space-y-3.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-[11px] font-bold tracking-wider text-cyan-300">
+                    <Sparkles size={13} />
+                    KIẾN TRÚC W3C DID &amp; MERKLE TREE THẾ HỆ MỚI
+                  </span>
+
+                  <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight m-0 bg-gradient-to-r from-white via-[#BDD8E9] to-[#4FF0D6] bg-clip-text text-transparent">
+                    Hệ Sinh Thái Điểm Danh Đa Nhân Tố &amp; Định Danh Tự Chủ UTH-TrustID
+                  </h1>
+
+                  <p className="text-sm text-slate-300 leading-relaxed m-0 max-w-2xl">
+                    Giải pháp xác thực giảng đường không mật khẩu kết hợp chứng chỉ W3C Verifiable Credentials, chữ ký số ECDSA từ khóa phần cứng FIDO2, mã QR Nonce xoay vòng chống chụp màn hình và hàng rào địa lý Haversine lọc nhiễu Kalman.
+                  </p>
                 </div>
-              )}
 
-              {/* Thông báo hỗ trợ khi bấm Forgot password? hoặc Sign up */}
-              {loginHelperNotice && !authError && (
-                <div className="mb-6 p-3 rounded-xl bg-[#BDD8E9]/40 border border-[#7BBDE8] text-[#001D39] text-xs leading-relaxed flex items-start justify-between gap-2 animate-[fadeIn_0.25s_ease-out]">
-                  <span>{loginHelperNotice}</span>
-                  <button
-                    type="button"
-                    onClick={() => setLoginHelperNotice('')}
-                    className="text-[#0A4174] hover:text-[#001D39] bg-transparent border-none cursor-pointer text-xs font-bold"
-                  >
-                    ✕
-                  </button>
+                {/* 4 Thẻ Bento Công Nghệ Cốt Lõi */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {[
+                    {
+                      icon: <Layers size={16} />,
+                      accent: 'text-emerald-300 bg-emerald-500/15 border-emerald-400/35',
+                      title: 'Cấp Phát Lô Thẻ Merkle O(log N)',
+                      desc: 'Băm Keccak256 hàng loạt danh sách sinh viên, chứng minh ngoại tuyến không cần tài khoản tập trung và thu hồi khóa tức thì O(1).'
+                    },
+                    {
+                      icon: <Lock size={16} />,
+                      accent: 'text-cyan-300 bg-cyan-500/15 border-cyan-400/35',
+                      title: 'Chữ Ký Số ECDSA & Khóa FIDO2',
+                      desc: 'Khóa riêng tư lưu cục bộ kèm sinh trắc học thiết bị, ký thông điệp EIP-191 xác minh danh tính 1-1 chống điểm danh hộ.'
+                    },
+                    {
+                      icon: <QrCode size={16} />,
+                      accent: 'text-sky-300 bg-sky-500/15 border-sky-400/35',
+                      title: 'QR Nonce Xoay Vòng Chống Chụp Lén',
+                      desc: 'Tự động đổi mã Challenge theo chu kỳ 15s–60s kèm Token dùng một lần, chặn đứng ảnh chụp QR gửi qua Zalo hoặc mạng xã hội.'
+                    },
+                    {
+                      icon: <MapPin size={16} />,
+                      accent: 'text-amber-300 bg-amber-500/15 border-amber-400/35',
+                      title: 'Định Vị Haversine & Lọc Nhiễu Kalman',
+                      desc: 'Đo khoảng cách thực tế tại tâm lớp học trên bản đồ vệ tinh và phát hiện bất thường Mock GPS theo thời gian thực.'
+                    }
+                  ].map((card) => (
+                    <div
+                      key={card.title}
+                      className="faculty-kpi-card p-4 rounded-2xl bg-[#040814]/80 border border-slate-800/90 space-y-2"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${card.accent}`}>
+                          {card.icon}
+                        </span>
+                        <h3 className="text-xs sm:text-sm font-extrabold text-white m-0">
+                          {card.title}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed m-0">
+                        {card.desc}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
 
-              <form onSubmit={handleLogin} className="space-y-8">
-                
-                {/* Ô nhập Email (Underline Input + Thanh gạch chân chuyển sắc #001D39 -> #0A4174 -> #4E8EA2 -> #7BBDE8) */}
-                <div className="relative pt-2">
-                  <label
-                    className={`block transition-all duration-300 pointer-events-none ${
-                      focusedField === 'email' || loginForm.email
-                        ? 'text-[11px] font-bold text-[#0A4174] -translate-y-1'
-                        : 'text-[14px] font-medium text-[#49769F] translate-y-4'
-                    }`}
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="username"
-                    value={loginForm.email}
-                    onFocus={() => setFocusedField('email')}
-                    onBlur={() => setFocusedField(null)}
-                    onChange={(e) => {
-                      setLoginForm({ ...loginForm, email: e.target.value });
-                      if (authError) setAuthError('');
-                    }}
-                    className="w-full pt-1 pb-2.5 bg-transparent border-0 border-b border-[#6EA2B3]/65 text-[14.5px] text-[#001D39] font-semibold outline-none transition-colors"
-                    required
-                  />
-                  {/* Thanh gạch chân động (Animated Expanding Ocean Gradient Underline) */}
-                  <span
-                    className={`pointer-events-none absolute bottom-0 left-0 h-[2.5px] transition-all duration-300 ease-out ${
-                      focusedField === 'email' ? 'w-full' : 'w-0'
-                    }`}
+              {/* Dải Quy Trình Xác Thực 3 Bước (Cho Hội Đồng NCKH) */}
+              <div className="faculty-glass-card rounded-[24px] border border-slate-800/90 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-300">
+                    Quy Trình Xác Thực 3 Bước Khép Kín
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    Zero-Trust Academic Pipeline
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    {
+                      step: '01',
+                      title: 'Cấp Phát Gốc (Admin)',
+                      desc: 'Băm danh sách sinh viên thành cây Merkle, cấp chứng chỉ W3C VC và quản trị thu hồi khóa O(1).',
+                      badge: 'text-emerald-300 border-emerald-500/35 bg-emerald-500/10'
+                    },
+                    {
+                      step: '02',
+                      title: 'Kích Hoạt Ví (Sinh Viên)',
+                      desc: 'Xác thực OTP qua Gmail @ut.edu.vn, khởi tạo khóa phần cứng FIDO2 & Sinh trắc học.',
+                      badge: 'text-cyan-300 border-cyan-500/35 bg-cyan-500/10'
+                    },
+                    {
+                      step: '03',
+                      title: 'Điểm Danh Lớp (Giảng Viên)',
+                      desc: 'Chiếu QR Nonce động, kiểm chứng chữ ký số ecrecover + GPS thực tế và chốt sổ điểm.',
+                      badge: 'text-sky-300 border-sky-500/35 bg-sky-500/10'
+                    }
+                  ].map((wf) => (
+                    <div
+                      key={wf.step}
+                      className="p-3.5 rounded-2xl bg-[#040814]/85 border border-slate-800 space-y-1.5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-md border font-mono text-[10px] font-extrabold ${wf.badge}`}>
+                          BƯỚC {wf.step}
+                        </span>
+                        <span className="text-xs font-bold text-white">{wf.title}</span>
+                      </div>
+                      <p className="text-[11.5px] text-slate-300 leading-relaxed m-0">
+                        {wf.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* CỘT PHẢI (5 CỘT): EXECUTIVE LOGIN CARD VỚI 3 CHẾ ĐỘ ĐĂNG NHẬP */}
+            <div className="lg:col-span-5 flex flex-col">
+              <div className="faculty-glass-card rounded-[28px] border border-cyan-500/30 shadow-2xl overflow-hidden flex-1 flex flex-col">
+                {/* Banner Nghệ Thuật Đầu Card */}
+                <div className="relative h-40 overflow-hidden bg-[#001D39] shrink-0">
+                  <img
+                    src="/login-art.jpg"
+                    alt="UTH-TrustID Portal"
+                    className="w-full h-full object-cover opacity-75 transition-transform duration-300 ease-out pointer-events-none"
                     style={{
-                      background: 'linear-gradient(90deg, #001D39 0%, #0A4174 35%, #4E8EA2 70%, #7BBDE8 100%)'
+                      transform: `scale(1.06) translate3d(${-loginParallax.x * 0.8}px, ${-loginParallax.y * 0.8}px, 0)`
                     }}
                   />
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        'linear-gradient(180deg, rgba(4, 8, 20, 0.22) 0%, rgba(7, 19, 38, 0.96) 100%)'
+                    }}
+                  />
+                  <div className="absolute bottom-3.5 left-5 right-5 flex flex-col gap-1">
+                    <span className="inline-flex items-center gap-1.5 w-fit px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/45 text-[10px] font-mono font-bold tracking-wider text-cyan-200">
+                      <Lock size={11} />
+                      SSO &amp; WEB3 AUTHENTICATION GATEWAY
+                    </span>
+                    <h2 className="text-lg font-extrabold text-white m-0">
+                      Cổng Xác Thực Nhân Sự &amp; Quản Trị
+                    </h2>
+                  </div>
                 </div>
 
-                {/* Ô nhập Password + Nút "Forgot password?" nằm bên phải ngay trên đường kẻ giống hệt ảnh mẫu */}
-                <div className="relative pt-2">
-                  <div className="flex items-baseline justify-between">
-                    <label
-                      className={`block transition-all duration-300 pointer-events-none ${
-                        focusedField === 'password' || loginForm.password
-                          ? 'text-[11px] font-bold text-[#0A4174] -translate-y-1'
-                          : 'text-[14px] font-medium text-[#49769F] translate-y-4'
-                      }`}
-                    >
-                      Password
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLoginHelperNotice(
-                          '🔑 Mật khẩu SSO mặc định cho Giảng viên (giangvien@uth.edu.vn) và Quản trị viên (admin@uth.edu.vn) là: Admin@2026'
-                        )
-                      }
-                      className="text-[11.5px] font-bold text-[#0A4174] hover:text-[#4E8EA2] bg-transparent border-none cursor-pointer p-0 transition-colors z-10"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
+                {/* Nội dung Biểu mẫu / QR */}
+                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between gap-5">
+                  <div className="space-y-4">
+                    {/* Thanh chuyển 3 Tab vai trò / phương thức */}
+                    <div className="grid grid-cols-3 bg-[#040814] p-1 rounded-2xl border border-slate-800 gap-1">
+                      {[
+                        { id: 'FACULTY', label: 'Giảng Viên', icon: <BookOpen size={13} /> },
+                        { id: 'ADMIN', label: 'Quản Trị Viên', icon: <ShieldAlert size={13} /> },
+                        { id: 'QR_WEB3', label: 'QR Không MK', icon: <QrCode size={13} /> }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => handleSelectLoginTab(tab.id)}
+                          className={`py-2 px-2 rounded-xl text-[11.5px] font-bold cursor-pointer border-none transition-all inline-flex items-center justify-center gap-1.5 ${
+                            loginPortalTab === tab.id
+                              ? 'bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] text-[#03141A] shadow-md'
+                              : 'bg-transparent text-slate-300 hover:text-white hover:bg-slate-800/60'
+                          }`}
+                        >
+                          {tab.icon}
+                          <span>{tab.label}</span>
+                        </button>
+                      ))}
+                    </div>
 
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      value={loginForm.password}
-                      onFocus={() => setFocusedField('password')}
-                      onBlur={() => setFocusedField(null)}
-                      onChange={(e) => {
-                        setLoginForm({ ...loginForm, password: e.target.value });
-                        if (authError) setAuthError('');
-                      }}
-                      className="w-full pt-1 pb-2.5 pr-10 bg-transparent border-0 border-b border-[#6EA2B3]/65 text-[14.5px] text-[#001D39] font-semibold outline-none transition-colors"
-                      required
-                    />
-                    {loginForm.password && (
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-0 bottom-2 text-[11px] font-bold text-[#49769F] hover:text-[#001D39] bg-transparent border-none cursor-pointer"
-                        title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                      >
-                        {showPassword ? 'Hide' : 'Show'}
-                      </button>
+                    {loginPortalTab !== 'QR_WEB3' ? (
+                      <div className="space-y-4">
+                        {/* Banner mô tả phân hệ đang chọn */}
+                        <div
+                          className={`p-3 rounded-xl border text-xs leading-relaxed ${
+                            loginPortalTab === 'ADMIN'
+                              ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-200'
+                              : 'bg-cyan-500/10 border-cyan-500/35 text-cyan-200'
+                          }`}
+                        >
+                          {loginPortalTab === 'ADMIN'
+                            ? '🛡️ Cổng Quản Trị Tối Cao: Cấp phát lô thẻ Merkle VC, thu hồi khóa O(1) và giám sát chống gian lận SOC.'
+                            : '🎓 Cổng Giảng Viên: Quản lý danh mục lớp học phần, phát mã QR Nonce xoay vòng và xuất sổ điểm chuyên cần.'}
+                        </div>
+
+                        {authError && (
+                          <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-start gap-2 animate-[fadeIn_0.25s_ease-out]">
+                            <ShieldAlert size={15} className="shrink-0 mt-0.5 text-rose-400" />
+                            <span>{authError}</span>
+                          </div>
+                        )}
+
+                        {loginHelperNotice && !authError && (
+                          <div className="p-3 rounded-xl bg-cyan-500/12 border border-cyan-400/35 text-cyan-100 text-xs leading-relaxed flex items-start justify-between gap-2 animate-[fadeIn_0.25s_ease-out]">
+                            <span>{loginHelperNotice}</span>
+                            <button
+                              type="button"
+                              onClick={() => setLoginHelperNotice('')}
+                              className="text-cyan-300 hover:text-white bg-transparent border-none cursor-pointer p-0 shrink-0"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        )}
+
+                        <form onSubmit={handleLogin} className="space-y-4">
+                          <div>
+                            <label className="text-xs font-bold text-slate-300 block mb-1.5">
+                              Email công vụ (@uth.edu.vn)
+                            </label>
+                            <input
+                              type="text"
+                              autoComplete="username"
+                              value={loginForm.email}
+                              placeholder={
+                                loginPortalTab === 'ADMIN'
+                                  ? 'admin@uth.edu.vn'
+                                  : 'giangvien@uth.edu.vn'
+                              }
+                              onFocus={() => setFocusedField('email')}
+                              onBlur={() => setFocusedField(null)}
+                              onChange={(e) => {
+                                setLoginForm({ ...loginForm, email: e.target.value });
+                                if (authError) setAuthError('');
+                              }}
+                              className={`w-full py-3 px-4 rounded-xl bg-[#040814] border text-sm text-white placeholder-slate-500 outline-none transition-all ${
+                                focusedField === 'email'
+                                  ? 'border-cyan-400 shadow-[0_0_0_3px_rgba(34,211,238,0.15)]'
+                                  : 'border-slate-700/80'
+                              }`}
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <label className="text-xs font-bold text-slate-300">
+                                Mật khẩu xác thực SSO
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setLoginHelperNotice(
+                                    '🔑 Tài khoản Demo mặc định — Giảng viên: giangvien@uth.edu.vn | Quản trị: admin@uth.edu.vn | Mật khẩu: Admin@2026'
+                                  )
+                                }
+                                className="text-[11px] font-semibold text-cyan-300 hover:text-cyan-200 bg-transparent border-none cursor-pointer p-0"
+                              >
+                                Gợi ý tài khoản Demo
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type={showPassword ? 'text' : 'password'}
+                                autoComplete="current-password"
+                                value={loginForm.password}
+                                placeholder="Nhập mật khẩu xác thực..."
+                                onFocus={() => setFocusedField('password')}
+                                onBlur={() => setFocusedField(null)}
+                                onChange={(e) => {
+                                  setLoginForm({ ...loginForm, password: e.target.value });
+                                  if (authError) setAuthError('');
+                                }}
+                                className={`w-full py-3 pl-4 pr-14 rounded-xl bg-[#040814] border text-sm text-white placeholder-slate-500 outline-none transition-all ${
+                                  focusedField === 'password'
+                                    ? 'border-cyan-400 shadow-[0_0_0_3px_rgba(34,211,238,0.15)]'
+                                    : 'border-slate-700/80'
+                                }`}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-cyan-300 hover:text-white bg-transparent border-none cursor-pointer"
+                              >
+                                {showPassword ? 'Ẩn' : 'Hiện'}
+                              </button>
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={loginLoading}
+                            className="login-btn-shimmer w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-[#4FF0D6] via-[#38BDF8] to-[#22D3EE] text-[#03141A] font-extrabold text-sm tracking-wide shadow-[0_12px_30px_-6px_rgba(56,189,248,0.45)] hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer border-none"
+                          >
+                            {loginLoading ? 'Đang xác thực chữ ký SSO...' : 'Đăng Nhập Hệ Thống'}
+                          </button>
+                        </form>
+                      </div>
+                    ) : (
+                      /* Tab 3: Đăng nhập QR Web3 Không Mật Khẩu */
+                      <div className="flex flex-col items-center text-center space-y-4 py-1">
+                        <p className="text-xs text-slate-300 m-0 leading-relaxed">
+                          Quét mã Challenge bằng ứng dụng <strong className="text-cyan-300">Ví UTH-TrustID</strong> để ký EIP-191 và đăng nhập không cần mật khẩu.
+                        </p>
+
+                        <div className="p-3.5 rounded-3xl bg-white shadow-[0_0_40px_rgba(79,240,214,0.28)] border-2 border-cyan-400">
+                          <QRCodeCanvas
+                            value={JSON.stringify({
+                              action: 'uth_portal_sso',
+                              nonce: qrChallengeNonce,
+                              domain: 'uth.edu.vn'
+                            })}
+                            size={172}
+                            level="M"
+                            includeMargin={false}
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <span className="px-2.5 py-1 rounded-lg bg-[#040814] border border-slate-800 text-[11px] font-mono text-cyan-300">
+                            {qrChallengeNonce}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setQrChallengeNonce(
+                                `UTH_CHALLENGE_${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+                              )
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 text-[11px] font-bold cursor-pointer"
+                          >
+                            <RefreshCw size={12} />
+                            Đổi Mã Challenge
+                          </button>
+                        </div>
+
+                        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
+                            className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] text-[#03141A] text-xs font-extrabold cursor-pointer border-none"
+                          >
+                            Ký Ví Demo: Giảng Viên
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
+                            className="py-2.5 px-3 rounded-xl bg-emerald-400/20 hover:bg-emerald-400/30 border border-emerald-400/45 text-emerald-200 text-xs font-bold cursor-pointer"
+                          >
+                            Ký Ví Demo: Quản Trị
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  {/* Thanh gạch chân động (Animated Expanding Ocean Gradient Underline) */}
-                  <span
-                    className={`pointer-events-none absolute bottom-0 left-0 h-[2.5px] transition-all duration-300 ease-out ${
-                      focusedField === 'password' ? 'w-full' : 'w-0'
-                    }`}
-                    style={{
-                      background: 'linear-gradient(90deg, #001D39 0%, #0A4174 35%, #4E8EA2 70%, #7BBDE8 100%)'
-                    }}
-                  />
-                </div>
-
-                {/* Nút Login Phối màu #001D39 -> #0A4174 -> #49769F kèm Hiệu ứng Ánh sáng lướt */}
-                <div className="pt-3">
-                  <button
-                    type="submit"
-                    disabled={loginLoading}
-                    style={{
-                      background: 'linear-gradient(135deg, #001D39 0%, #0A4174 58%, #49769F 100%)'
-                    }}
-                    className="login-btn-shimmer w-full py-3.5 px-6 rounded-[14px] text-white font-bold text-[15px] tracking-wide shadow-[0_14px_30px_-6px_rgba(0,29,57,0.55)] hover:shadow-[0_18px_36px_-6px_rgba(10,65,116,0.7)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer border border-[#7BBDE8]/35"
-                  >
-                    {loginLoading ? 'Signing in...' : 'Login'}
-                  </button>
-                </div>
-              </form>
-
-              {/* Cụm chọn nhanh vai trò Giảng Viên / Quản Trị Viên 1 chạm */}
-              <div className="mt-5 pt-4 border-t border-[#BDD8E9]/70">
-                <p className="text-[11px] font-bold text-[#49769F] text-center uppercase tracking-wider mb-2.5">
-                  Truy Cập Nhanh (Demo 1-Chạm)
-                </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
-                    className="py-2.5 px-3 rounded-xl bg-[#001D39]/8 hover:bg-[#001D39]/15 border border-[#0A4174]/25 text-[#001D39] text-xs font-bold cursor-pointer transition-all"
-                  >
-                    👨‍🏫 Cổng Giảng Viên
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
-                    className="py-2.5 px-3 rounded-xl bg-[#0A4174]/10 hover:bg-[#0A4174]/20 border border-[#0A4174]/25 text-[#0A4174] text-xs font-bold cursor-pointer transition-all"
-                  >
-                    🛡️ Cổng Quản Trị
-                  </button>
+                  {/* Truy cập nhanh Demo 1-chạm ở chân card */}
+                  <div className="pt-4 border-t border-slate-800/90 space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-slate-400 uppercase tracking-wider">
+                        Truy Cập Nhanh (Demo 1-Chạm)
+                      </span>
+                      <span className="text-slate-400">SSO Đào Tạo UTH</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleQuickSwitchAccount('giangvien@uth.edu.vn')}
+                        className="py-2.5 px-3 rounded-xl bg-[#040814] hover:bg-[#0D1E38] border border-cyan-500/35 text-cyan-200 text-xs font-bold cursor-pointer transition-all inline-flex items-center justify-center gap-1.5"
+                      >
+                        <BookOpen size={13} />
+                        Cổng Giảng Viên
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickSwitchAccount('admin@uth.edu.vn')}
+                        className="py-2.5 px-3 rounded-xl bg-[#040814] hover:bg-[#0D1E38] border border-emerald-500/35 text-emerald-200 text-xs font-bold cursor-pointer transition-all inline-flex items-center justify-center gap-1.5"
+                      >
+                        <ShieldAlert size={13} />
+                        Cổng Quản Trị
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Chân Form: "Don't have an account? Sign up" phối màu #49769F & #001D39 */}
-            <div className="text-center pt-4">
-              <p className="text-[12.5px] font-medium text-[#49769F] m-0">
-                Don&apos;t have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLoginHelperNotice(
-                      '🏛️ Tài khoản Giảng viên (giangvien@uth.edu.vn) và Quản trị viên (admin@uth.edu.vn) được cấp tập trung qua Phòng Đào tạo & CNTT.'
-                    )
-                  }
-                  className="font-extrabold text-[#001D39] hover:text-[#0A4174] hover:underline bg-transparent border-none cursor-pointer p-0 transition-colors"
-                >
-                  Sign up
-                </button>
-              </p>
-            </div>
-          </div>
+          </main>
         </div>
       </div>
     );
