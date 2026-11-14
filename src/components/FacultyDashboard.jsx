@@ -234,6 +234,49 @@ export default function FacultyDashboard({
   useEffect(() => {
     rotateIntervalRef.current = rotateInterval;
   }, [rotateInterval]);
+
+  // Âm báo thời gian thực trên Màn Chiếu & Bộ lọc bản đồ Radar GPS
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const soundEnabledRef = useRef(true);
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+  const [radarFilter, setRadarFilter] = useState('ALL'); // 'ALL' | 'VALID' | 'OUTSIDE'
+
+  const playStageSound = (type = 'SUCCESS') => {
+    if (!soundEnabledRef.current) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+      if (type === 'SUCCESS') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.09);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.23);
+      } else {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(220, now + 0.12);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.29);
+      }
+      setTimeout(() => {
+        ctx.close().catch(() => {});
+      }, 350);
+    } catch {}
+  };
+
   const [currentNonce, setCurrentNonce] = useState('NONCE_STAGE_8X9K');
   const [timerProgress, setTimerProgress] = useState(35);
   const socketRef = useRef(null);
@@ -272,6 +315,25 @@ export default function FacultyDashboard({
   const [revokeAddressInput, setRevokeAddressInput] = useState('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
   const [adminStatusMsg, setAdminStatusMsg] = useState('');
   const [auditLogs, setAuditLogs] = useState([]);
+  const [issuanceMode, setIssuanceMode] = useState('VISUAL'); // 'VISUAL' | 'JSON'
+  const [newBatchStudent, setNewBatchStudent] = useState({
+    studentId: '',
+    fullName: '',
+    major: 'An toàn Thông tin',
+    address: ''
+  });
+  const [selectedMerkleLeafIdx, setSelectedMerkleLeafIdx] = useState(0);
+  const [revokedKeysList, setRevokedKeysList] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('uth_revoked_keys') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [deviceSearchQuery, setDeviceSearchQuery] = useState('');
+  const [deviceStatusFilter, setDeviceStatusFilter] = useState('ALL'); // 'ALL' | 'ACTIVE' | 'REVOKED'
+  const [adminAlertFilter, setAdminAlertFilter] = useState('ALL');
+  const [auditSearchQuery, setAuditSearchQuery] = useState('');
   const [securityAlerts, setSecurityAlerts] = useState([
     {
       id: 'ids_seed_1',
@@ -462,6 +524,7 @@ export default function FacultyDashboard({
         network: mapped.network,
         time: mapped.checkInTime
       });
+      playStageSound('SUCCESS');
     };
 
     socket.on('new-attendee', upsertAttendee);
@@ -542,6 +605,7 @@ export default function FacultyDashboard({
         setStatusBannerMsg(
           `🛡️ HỆ THỐNG ĐÃ CHẶN TỰ ĐỘNG [${alert.vectorLabel || alert.type}]: ${alert.detail}`
         );
+        playStageSound('ALERT');
       }
     });
 
@@ -550,6 +614,7 @@ export default function FacultyDashboard({
         setStatusBannerMsg(
           `CẢNH BÁO GIAN LẬN: Thiết bị ${alert.deviceId} đã điểm danh cho ${alert.firstStudent}, nay cố điểm danh hộ cho ${alert.attemptedStudent}!`
         );
+        playStageSound('ALERT');
       }
     });
 
@@ -871,8 +936,38 @@ export default function FacultyDashboard({
       );
     }
 
+    playStageSound('SUCCESS');
     setManualForm((prev) => ({ ...prev, studentId: '', name: '' }));
   };
+
+  const instantRotateRef = useRef(null);
+  useEffect(() => {
+    instantRotateRef.current = handleInstantRotateNonce;
+  });
+
+  // Phím tắt điều khiển nhanh trên Màn Chiếu QR: [F] Toàn màn hình, [R] Đổi mã QR, [M] Điểm danh thủ công
+  useEffect(() => {
+    if (staffRole !== 'FACULTY' || !isCreated || activeTab !== 'STAGE') return undefined;
+    const handleStageKeyDown = (e) => {
+      const tag = String(e.target?.tagName || '').toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) {
+        return;
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        setIsProjectorFullscreen((prev) => !prev);
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        instantRotateRef.current?.();
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        setManualCheckInContext(null);
+        setShowManualCheckInModal((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleStageKeyDown);
+    return () => window.removeEventListener('keydown', handleStageKeyDown);
+  }, [staffRole, isCreated, activeTab]);
 
   // Xóa vĩnh viễn Lớp học phần (kèm đóng phiên QR nếu lớp đang mở)
   const handleConfirmDeleteCourse = () => {
@@ -1676,6 +1771,68 @@ export default function FacultyDashboard({
     link.click();
   };
 
+  // Trình quản lý danh sách cấp phát VC trực quan (Visual <-> JSON)
+  const PRESET_BATCH_WALLETS = [
+    '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+    '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+    '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+    '0x90F79bf6EB2c4f870365E785982E1f101E93b906',
+    '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65',
+    '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc'
+  ];
+
+  const handleAddStudentToBatch = (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    const sid = newBatchStudent.studentId.trim();
+    const fullName = newBatchStudent.fullName.trim();
+    if (!sid || !fullName) return;
+    let currentArr = [];
+    try {
+      const parsed = JSON.parse(batchJson);
+      if (Array.isArray(parsed)) currentArr = parsed;
+    } catch {
+      currentArr = [];
+    }
+    const autoAddr =
+      newBatchStudent.address.trim() ||
+      `0x${sid.padEnd(40, '0').slice(0, 40)}`;
+    const nextEntry = {
+      studentId: sid,
+      fullName,
+      major: newBatchStudent.major.trim() || 'An toàn Thông tin',
+      address: autoAddr
+    };
+    const exists = currentArr.some((item) => String(item.studentId) === sid);
+    const nextArr = exists
+      ? currentArr.map((item) => (String(item.studentId) === sid ? nextEntry : item))
+      : [...currentArr, nextEntry];
+    setBatchJson(JSON.stringify(nextArr, null, 2));
+    setNewBatchStudent({ studentId: '', fullName: '', major: 'An toàn Thông tin', address: '' });
+    setAdminStatusMsg(`✓ Đã thêm SV ${fullName} (${sid}) vào danh sách chờ cấp phát VC.`);
+  };
+
+  const handleRemoveStudentFromBatch = (targetStudentId) => {
+    try {
+      const parsed = JSON.parse(batchJson);
+      if (!Array.isArray(parsed)) return;
+      const nextArr = parsed.filter((item) => String(item.studentId) !== String(targetStudentId));
+      setBatchJson(JSON.stringify(nextArr, null, 2));
+      setAdminStatusMsg(`Đã xóa MSSV ${targetStudentId} khỏi lô cấp phát.`);
+    } catch {}
+  };
+
+  const handleLoadPresetBatch = () => {
+    const presetArr = DEFAULT_ENROLLED_ROSTER.map((st, idx) => ({
+      studentId: st.studentId,
+      fullName: st.name,
+      major: st.major || 'An toàn Thông tin',
+      address: PRESET_BATCH_WALLETS[idx] || `0x${st.studentId.padEnd(40, '0').slice(0, 40)}`
+    }));
+    setBatchJson(JSON.stringify(presetArr, null, 2));
+    setSelectedMerkleLeafIdx(0);
+    setAdminStatusMsg(`✓ Đã nạp danh sách mẫu ${presetArr.length} sinh viên chuẩn UTH.`);
+  };
+
   // Chức năng Quản trị viên Root Admin: Phát hành lô Merkle Root & Thu hồi khóa
   const handleAdminIssueMerkleBatch = async () => {
     try {
@@ -1731,6 +1888,7 @@ export default function FacultyDashboard({
         setStatusBannerMsg(
           `🛡️ ĐÃ CHẶN TẤN CÔNG GIẢ LẬP [${data.alert.vectorLabel}]: ${data.alert.detail}`
         );
+        playStageSound('ALERT');
         setSimulatingAttack(false);
         return;
       }
@@ -1791,6 +1949,7 @@ export default function FacultyDashboard({
     };
     setSecurityAlerts((prev) => [newAlert, ...prev.slice(0, 49)]);
     setStatusBannerMsg(`🛡️ ĐÃ CHẶN TẤN CÔNG GIẢ LẬP [${newAlert.vectorLabel}]: ${newAlert.detail}`);
+    playStageSound('ALERT');
     setSimulatingAttack(false);
   };
 
@@ -1802,6 +1961,9 @@ export default function FacultyDashboard({
       if (data?.success) {
         if (Array.isArray(data.auditLogs)) {
           setAuditLogs(data.auditLogs);
+        }
+        if (Array.isArray(data.revokedAddresses)) {
+          setRevokedKeysList(data.revokedAddresses);
         }
         setAdminStats((prev) => ({
           ...prev,
@@ -1819,15 +1981,18 @@ export default function FacultyDashboard({
     }
   }, [activeTab, staffRole]);
 
-  const handleAdminRevokeWallet = async () => {
-    if (!revokeAddressInput.trim()) return;
-    const addr = revokeAddressInput.trim();
+  const handleAdminRevokeWallet = async (addrOverride) => {
+    const rawAddr = typeof addrOverride === 'string' ? addrOverride : revokeAddressInput;
+    const addr = String(rawAddr || '').trim();
+    if (!addr) return;
+    setRevokeAddressInput(addr);
     try {
       const currentRevoked = JSON.parse(localStorage.getItem('uth_revoked_keys') || '[]');
-      if (!currentRevoked.includes(addr)) {
+      if (!currentRevoked.some((k) => k.toLowerCase() === addr.toLowerCase())) {
         currentRevoked.push(addr);
         localStorage.setItem('uth_revoked_keys', JSON.stringify(currentRevoked));
       }
+      setRevokedKeysList(currentRevoked);
       const targets = addr.toLowerCase() === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' || addr.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
         ? ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x1D9b6938A3f073e3426052C7016155D85040Ed1D']
         : [addr];
@@ -1845,21 +2010,24 @@ export default function FacultyDashboard({
         activeDID: Math.max(0, prev.activeDID - 1),
         revokedDID: prev.revokedDID + 1
       }));
-      setAdminStatusMsg(`🚫 Đã thực thi revokeKey(${addr.slice(0, 10)}...)! Thiết bị iOS giữ khóa này sẽ bị chặn điểm danh ngay lập tức.`);
+      setAdminStatusMsg(`🚫 Đã thực thi revokeKey(${addr.slice(0, 10)}...)! Thiết bị giữ khóa này sẽ bị chặn điểm danh ngay lập tức.`);
       fetchAdminAuditLogs();
     } catch (err) {
       setAdminStatusMsg(`❌ Lỗi thu hồi: ${err.message}`);
     }
   };
 
-  const handleAdminUnrevokeWallet = async () => {
-    if (!revokeAddressInput.trim()) return;
-    const addr = revokeAddressInput.trim();
+  const handleAdminUnrevokeWallet = async (addrOverride) => {
+    const rawAddr = typeof addrOverride === 'string' ? addrOverride : revokeAddressInput;
+    const addr = String(rawAddr || '').trim();
+    if (!addr) return;
+    setRevokeAddressInput(addr);
     try {
       const currentRevoked = JSON.parse(localStorage.getItem('uth_revoked_keys') || '[]').filter(
         (k) => k.toLowerCase() !== addr.toLowerCase()
       );
       localStorage.setItem('uth_revoked_keys', JSON.stringify(currentRevoked));
+      setRevokedKeysList(currentRevoked);
 
       const targets = addr.toLowerCase() === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266' || addr.toLowerCase() === '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
         ? ['0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', '0x1D9b6938A3f073e3426052C7016155D85040Ed1D']
@@ -1878,11 +2046,41 @@ export default function FacultyDashboard({
         activeDID: prev.activeDID + 1,
         revokedDID: Math.max(0, prev.revokedDID - 1)
       }));
-      setAdminStatusMsg(`🔓 Đã khôi phục trạng thái Hợp lệ (Active) cho ví ${addr.slice(0, 10)}...! Thiết bị iOS có thể điểm danh trở lại.`);
+      setAdminStatusMsg(`🔓 Đã khôi phục trạng thái Hợp lệ (Active) cho ví ${addr.slice(0, 10)}...! Thiết bị có thể điểm danh trở lại.`);
       fetchAdminAuditLogs();
     } catch (err) {
       setAdminStatusMsg(`❌ Lỗi khôi phục: ${err.message}`);
     }
+  };
+
+  const handleExportAuditLogsCSV = () => {
+    const headers = ['Thời gian', 'Phân loại', 'Hành động / Vector', 'Chi tiết', 'Kết quả / Mức độ'];
+    const alertRows = securityAlerts.map((a) => [
+      a.time || '',
+      'ANTI_FRAUD_IDS',
+      a.vectorLabel || a.type || '',
+      `${a.studentName || ''} (${a.studentId || 'UNKNOWN'}) - ${a.detail || ''}`,
+      a.severity || 'BLOCKED_403'
+    ]);
+    const auditRows = auditLogs.map((l) => [
+      l.time || '',
+      'SYSTEM_AUDIT',
+      l.action || '',
+      l.detail || '',
+      l.result || ''
+    ]);
+    const escapeCsv = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    const csvContent =
+      '\uFEFF' +
+      [headers, ...alertRows, ...auditRows]
+        .map((r) => r.map(escapeCsv).join(','))
+        .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'BaoCao_KiemToan_AnNinh_UTH.csv';
+    link.click();
+    setAdminStatusMsg('✓ Đã xuất báo cáo kiểm toán & nhật ký chống gian lận (.CSV).');
   };
 
   const deviceCounts = attendees.reduce((acc, cur) => {
@@ -2966,86 +3164,211 @@ export default function FacultyDashboard({
                     const radius = 38;
                     const circumference = 2 * Math.PI * radius;
                     const strokeDashoffset = circumference - (avgClassRate / 100) * circumference;
+                    const atRiskStudents = summaryRows
+                      .map((row) => {
+                        const attendedCount = Object.keys(row.sessionsAttended || {}).length;
+                        const pct = totalSessionsCount > 0 ? Math.round((attendedCount / totalSessionsCount) * 100) : 100;
+                        const absentCount = Math.max(0, totalSessionsCount - attendedCount);
+                        return { ...row, pct, absentCount };
+                      })
+                      .filter((r) => totalSessionsCount > 0 && r.pct < 80)
+                      .sort((a, b) => a.pct - b.pct);
 
                     return (
-                      <div className="p-5 rounded-2xl bg-[#040814] border border-cyan-500/25 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-                        <div className="lg:col-span-5 flex items-center gap-4">
-                          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-                            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-                              <circle
-                                cx="48"
-                                cy="48"
-                                r={radius}
-                                fill="transparent"
-                                stroke="rgba(30, 41, 59, 0.9)"
-                                strokeWidth="8"
-                              />
-                              <circle
-                                cx="48"
-                                cy="48"
-                                r={radius}
-                                fill="transparent"
-                                stroke="url(#classDonutGradient)"
-                                strokeWidth="8"
-                                strokeLinecap="round"
-                                strokeDasharray={circumference}
-                                strokeDashoffset={strokeDashoffset}
-                                style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                              />
-                              <defs>
-                                <linearGradient id="classDonutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                  <stop offset="0%" stopColor="#4FF0D6" />
-                                  <stop offset="100%" stopColor="#38BDF8" />
-                                </linearGradient>
-                              </defs>
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                              <span className="text-lg font-extrabold font-mono text-cyan-300 leading-none">
-                                {totalSessionsCount > 0 ? `${avgClassRate}%` : '—'}
+                      <div className="space-y-4">
+                        <div className="p-5 rounded-2xl bg-[#040814] border border-cyan-500/25 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                          <div className="lg:col-span-5 flex items-center gap-4">
+                            <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                              <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                                <circle
+                                  cx="48"
+                                  cy="48"
+                                  r={radius}
+                                  fill="transparent"
+                                  stroke="rgba(30, 41, 59, 0.9)"
+                                  strokeWidth="8"
+                                />
+                                <circle
+                                  cx="48"
+                                  cy="48"
+                                  r={radius}
+                                  fill="transparent"
+                                  stroke="url(#classDonutGradient)"
+                                  strokeWidth="8"
+                                  strokeLinecap="round"
+                                  strokeDasharray={circumference}
+                                  strokeDashoffset={strokeDashoffset}
+                                  style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                                />
+                                <defs>
+                                  <linearGradient id="classDonutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#4FF0D6" />
+                                    <stop offset="100%" stopColor="#38BDF8" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <span className="text-lg font-extrabold font-mono text-cyan-300 leading-none">
+                                  {totalSessionsCount > 0 ? `${avgClassRate}%` : '—'}
+                                </span>
+                                <span className="text-[10px] text-slate-400 mt-0.5">Chuyên cần</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">
+                                THỐNG KÊ CHUYÊN CẦN
                               </span>
-                              <span className="text-[10px] text-slate-400 mt-0.5">Chuyên cần</span>
+                              <h3 className="text-sm font-bold text-white m-0">
+                                Hiện diện trung bình: {totalSessionsCount > 0 ? `${avgClassRate}%` : 'Chưa mở buổi học'}
+                              </h3>
                             </div>
                           </div>
 
-                          <div className="space-y-1">
-                            <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">
-                              THỐNG KÊ CHUYÊN CẦN
-                            </span>
-                            <h3 className="text-sm font-bold text-white m-0">
-                              Hiện diện trung bình: {totalSessionsCount > 0 ? `${avgClassRate}%` : 'Chưa mở buổi học'}
-                            </h3>
+                          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="p-3.5 rounded-xl bg-[#081226] border border-emerald-500/30">
+                              <div className="text-xs text-slate-400">Đủ điều kiện (≥ 80%)</div>
+                              <div className="text-xl font-extrabold font-mono text-emerald-300 mt-1">
+                                {totalSessionsCount > 0 ? `${qualifiedCount}/${summaryRows.length} SV` : `${summaryRows.length} SV`}
+                              </div>
+                              <div className="text-[11px] text-emerald-400/90 mt-0.5">
+                                {totalSessionsCount > 0 ? `${qualifiedRatio}% sĩ số lớp` : 'Sẵn sàng'}
+                              </div>
+                            </div>
+
+                            <div className="p-3.5 rounded-xl bg-[#081226] border border-amber-500/30">
+                              <div className="text-xs text-slate-400">Cảnh báo (&lt; 80%)</div>
+                              <div className="text-xl font-extrabold font-mono text-amber-300 mt-1">
+                                {totalSessionsCount > 0 ? `${warningCount} SV` : '0 SV'}
+                              </div>
+                              <div className="text-[11px] text-amber-400/90 mt-0.5">
+                                {warningCount > 0 ? 'Vắng quá quy định' : 'Không có'}
+                              </div>
+                            </div>
+
+                            <div className="p-3.5 rounded-xl bg-[#081226] border border-cyan-500/30">
+                              <div className="text-xs text-slate-400">Buổi đã chốt sổ</div>
+                              <div className="text-xl font-extrabold font-mono text-cyan-300 mt-1">
+                                {sessionList.filter((s) => s.isFinalized || s.status === 'FINALIZED').length}/{totalSessionsCount} buổi
+                              </div>
+                              <div className="text-[11px] text-cyan-400/90 mt-0.5">
+                                Đã lưu sổ điểm
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="p-3.5 rounded-xl bg-[#081226] border border-emerald-500/30">
-                            <div className="text-xs text-slate-400">Đủ điều kiện (≥ 80%)</div>
-                            <div className="text-xl font-extrabold font-mono text-emerald-300 mt-1">
-                              {totalSessionsCount > 0 ? `${qualifiedCount}/${summaryRows.length} SV` : `${summaryRows.length} SV`}
+                        {/* BIỂU ĐỒ XU HƯỚNG CHUYÊN CẦN QUA CÁC BUỔI & CẢNH BÁO SỚM NGUY CƠ CẤM THI */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                          <div className="lg:col-span-7 p-4 rounded-2xl bg-[#040814] border border-slate-800 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-xs font-bold text-cyan-300 inline-flex items-center gap-1.5">
+                                <Layers size={14} />
+                                Xu Hướng Hiện Diện Qua Từng Buổi Học
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                Bấm vào thanh buổi học để lọc danh sách bên dưới
+                              </span>
                             </div>
-                            <div className="text-[11px] text-emerald-400/90 mt-0.5">
-                              {totalSessionsCount > 0 ? `${qualifiedRatio}% sĩ số lớp` : 'Sẵn sàng'}
-                            </div>
+
+                            {sessionList.length === 0 ? (
+                              <div className="p-4 rounded-xl bg-[#081226]/70 border border-dashed border-slate-800 text-center text-xs text-slate-400">
+                                Chưa có buổi học nào được mở để vẽ biểu đồ xu hướng.
+                              </div>
+                            ) : (
+                              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                                {sessionList.map((ses) => {
+                                  const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
+                                  const sDate = ses.date || ses.sessionDate || '';
+                                  const presentCount = ses.attendees?.length || 0;
+                                  const ratePercent = enrolledRoster.length > 0
+                                    ? Math.min(100, Math.round((presentCount / enrolledRoster.length) * 100))
+                                    : 0;
+                                  const barColor =
+                                    ratePercent >= 80
+                                      ? 'from-emerald-400 to-cyan-400'
+                                      : ratePercent >= 60
+                                      ? 'from-amber-400 to-yellow-300'
+                                      : 'from-rose-500 to-orange-400';
+                                  const isActiveSessionBar = selectedHistorySessionId === ses.sessionId;
+                                  return (
+                                    <button
+                                      key={`trend-${ses.sessionId}`}
+                                      type="button"
+                                      onClick={() => setSelectedHistorySessionId(ses.sessionId)}
+                                      className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer ${
+                                        isActiveSessionBar
+                                          ? 'bg-[#0C213D] border-cyan-400/70'
+                                          : 'bg-[#081226]/80 border-slate-800/90 hover:border-cyan-500/40'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between text-[11px] mb-1.5">
+                                        <span className="font-bold text-white">
+                                          Buổi {sIdx} {sDate ? `(${sDate})` : ''}
+                                        </span>
+                                        <span className="font-mono text-cyan-300 font-bold">
+                                          {presentCount}/{enrolledRoster.length} SV ({ratePercent}%)
+                                        </span>
+                                      </div>
+                                      <div className="w-full h-2 rounded-full bg-slate-950 overflow-hidden">
+                                        <div
+                                          className={`h-full bg-gradient-to-r ${barColor} transition-all duration-500`}
+                                          style={{ width: `${ratePercent}%` }}
+                                        />
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
 
-                          <div className="p-3.5 rounded-xl bg-[#081226] border border-amber-500/30">
-                            <div className="text-xs text-slate-400">Cảnh báo (&lt; 80%)</div>
-                            <div className="text-xl font-extrabold font-mono text-amber-300 mt-1">
-                              {totalSessionsCount > 0 ? `${warningCount} SV` : '0 SV'}
+                          <div className="lg:col-span-5 p-4 rounded-2xl bg-[#040814] border border-amber-500/25 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-xs font-bold text-amber-300 inline-flex items-center gap-1.5">
+                                <ShieldAlert size={14} />
+                                Sinh Viên Nguy Cơ Cấm Thi (&lt; 80%)
+                              </span>
+                              {atRiskStudents.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setHistoryEligibilityFilter('WARNING')}
+                                  className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 text-amber-200 text-[11px] font-bold cursor-pointer transition-all"
+                                >
+                                  Lọc Xem Nhóm Cảnh Báo ({atRiskStudents.length})
+                                </button>
+                              )}
                             </div>
-                            <div className="text-[11px] text-amber-400/90 mt-0.5">
-                              {warningCount > 0 ? 'Vắng quá quy định' : 'Không có'}
-                            </div>
-                          </div>
 
-                          <div className="p-3.5 rounded-xl bg-[#081226] border border-cyan-500/30">
-                            <div className="text-xs text-slate-400">Buổi đã chốt sổ</div>
-                            <div className="text-xl font-extrabold font-mono text-cyan-300 mt-1">
-                              {sessionList.filter((s) => s.isFinalized || s.status === 'FINALIZED').length}/{totalSessionsCount} buổi
-                            </div>
-                            <div className="text-[11px] text-cyan-400/90 mt-0.5">
-                              Đã lưu sổ điểm
-                            </div>
+                            {atRiskStudents.length === 0 ? (
+                              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 flex items-center gap-2">
+                                <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                                <span>
+                                  {totalSessionsCount === 0
+                                    ? 'Chưa ghi nhận sinh viên vắng vượt ngưỡng.'
+                                    : 'Tất cả sinh viên đang đạt tỷ lệ chuyên cần ≥ 80%.'}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                                {atRiskStudents.slice(0, 4).map((st) => (
+                                  <div
+                                    key={`risk-${st.studentId}`}
+                                    className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-xs"
+                                  >
+                                    <div className="min-w-0">
+                                      <div className="font-bold text-white truncate">{st.name}</div>
+                                      <div className="text-[11px] font-mono text-slate-300">
+                                        {st.studentId} • Vắng {st.absentCount}/{totalSessionsCount} buổi
+                                      </div>
+                                    </div>
+                                    <span className="px-2 py-0.5 rounded-md bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono font-bold text-[11px] shrink-0">
+                                      {st.pct}%
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -3624,444 +3947,890 @@ export default function FacultyDashboard({
       ) : staffRole === 'ADMIN' ? (
         /* ==================== GIAO DIỆN DÀNH RIÊNG CHO QUẢN TRỊ VIÊN TỐI CAO (ROOT ADMIN PORTAL) ==================== */
         <div className="flex-1 flex flex-col p-6 gap-5 max-w-[1540px] w-full mx-auto">
-          {/* 3 Thẻ Thống Kê Toàn Trường Của Admin */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="hero-navy-card p-5 rounded-2xl bg-[#081226] border border-cyan-500/30 flex items-center justify-between">
+          {/* 4 Thẻ Thống Kê Bento Grid Toàn Trường Của Admin */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="faculty-kpi-card p-5 rounded-2xl border border-cyan-500/30 flex items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-semibold text-slate-300 block">Tổng Định Danh Sinh Viên (W3C DID)</span>
-                <span className="text-2xl font-bold text-white mt-1 block font-mono">{adminStats.totalDID}</span>
+                <span className="text-2xl font-extrabold text-white mt-1 block font-mono">{adminStats.totalDID}</span>
+                <span className="text-[11px] text-cyan-300 mt-0.5 block">Toàn trường UTH</span>
               </div>
-              <span className="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold">
-                Toàn Trường
-              </span>
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-300 shrink-0">
+                <Users size={18} />
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#081226] border border-emerald-500/30 flex items-center justify-between">
+            <div className="faculty-kpi-card p-5 rounded-2xl border border-emerald-500/30 flex items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-semibold text-slate-300 block">Chứng Chỉ Đang Hoạt Động (Active VC)</span>
-                <span className="text-2xl font-bold text-emerald-400 mt-1 block font-mono">{adminStats.activeDID}</span>
+                <span className="text-2xl font-extrabold text-emerald-400 mt-1 block font-mono">{adminStats.activeDID}</span>
+                <span className="text-[11px] text-emerald-300 mt-0.5 block">Hợp lệ điểm danh</span>
               </div>
-              <span className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                Hợp Lệ Điểm Danh
-              </span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shrink-0">
+                <CheckCircle2 size={18} />
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#081226] border border-rose-500/30 flex items-center justify-between">
+            <div className="faculty-kpi-card p-5 rounded-2xl border border-rose-500/30 flex items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-semibold text-slate-300 block">Thiết Bị Đã Bị Thu Hồi Khóa (Revoked)</span>
-                <span className="text-2xl font-bold text-rose-400 mt-1 block font-mono">{adminStats.revokedDID}</span>
+                <span className="text-2xl font-extrabold text-rose-400 mt-1 block font-mono">{adminStats.revokedDID}</span>
+                <span className="text-[11px] text-rose-300 mt-0.5 block">Chặn tức thì O(1)</span>
               </div>
-              <span className="px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold">
-                Chặn Tức Thì
-              </span>
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-400/30 flex items-center justify-center text-rose-300 shrink-0">
+                <Lock size={18} />
+              </div>
+            </div>
+
+            <div className="faculty-kpi-card p-5 rounded-2xl border border-amber-500/30 flex items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-semibold text-slate-300 block">Tấn Công Đã Chặn (SOC IDS)</span>
+                <span className="text-2xl font-extrabold text-amber-300 mt-1 block font-mono">{securityAlerts.length}</span>
+                <span className="text-[11px] text-amber-200 mt-0.5 block">Phòng vệ 4 lớp 403</span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-300 shrink-0">
+                <ShieldAlert size={18} />
+              </div>
             </div>
           </section>
 
           {adminStatusMsg && (
-            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-xs font-semibold text-emerald-300">
-              {adminStatusMsg}
+            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-xs font-semibold text-emerald-200 flex items-center justify-between gap-2">
+              <span>{adminStatusMsg}</span>
+              <button
+                type="button"
+                onClick={() => setAdminStatusMsg('')}
+                className="text-slate-300 hover:text-white bg-transparent border-none cursor-pointer"
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
 
-          {/* Phân hệ 1 của Admin: Phát hành lô thẻ VC & Merkle Root */}
-          {(activeTab === 'ADMIN_ISSUANCE' || activeTab === 'ADMIN') && (
-            <div className="p-7 rounded-3xl bg-[#081226] border border-emerald-500/30 shadow-2xl space-y-5">
-              <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-bold text-emerald-300 m-0">
-                    Phát Hành Lô Thẻ Định Danh Sinh Viên (Merkle Batch Issuance)
-                  </h2>
-                </div>
-                <div className="px-3 py-1.5 rounded-xl bg-[#040814] border border-slate-800 text-xs">
-                  Merkle Root hiện tại: <code className="text-amber-300 font-mono">{adminStats.merkleRoot.slice(0, 26)}...</code>
-                </div>
-              </div>
+          {/* Phân hệ 1 của Admin: Phát hành lô thẻ VC & Cây Merkle Tương tác */}
+          {(activeTab === 'ADMIN_ISSUANCE' || activeTab === 'ADMIN') && (() => {
+            let parsedBatchAll = [];
+            try {
+              const arr = JSON.parse(batchJson);
+              if (Array.isArray(arr)) parsedBatchAll = arr;
+            } catch {
+              parsedBatchAll = [];
+            }
+            const sampleLeaves = parsedBatchAll.length >= 2
+              ? parsedBatchAll.slice(0, 4)
+              : [
+                  { studentId: '2251120000', fullName: 'Nguyễn Đức Hiển' },
+                  { studentId: '2251120001', fullName: 'Nguyễn Văn An' },
+                  { studentId: '2251120002', fullName: 'Trần Thị Mai' },
+                  { studentId: '2251120003', fullName: 'Lê Hoàng Quân' }
+                ];
+            while (sampleLeaves.length < 4) {
+              sampleLeaves.push({
+                studentId: `225112000${sampleLeaves.length + 1}`,
+                fullName: `Sinh viên #${sampleLeaves.length + 1}`
+              });
+            }
+            const activeLeafIdx = Math.min(3, Math.max(0, selectedMerkleLeafIdx));
+            const siblingLeafIdx = activeLeafIdx ^ 1;
+            const isLeftBranchActive = activeLeafIdx < 2;
+            const rootDisplay = adminStats.merkleRoot || '0x8f9c2d1e4a7b...';
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-8 space-y-3">
-                  <label className="text-xs font-semibold text-slate-300 block">
-                    Danh sách sinh viên cấp phát chứng chỉ W3C VC (JSON):
-                  </label>
-                  <textarea
-                    value={batchJson}
-                    onChange={(e) => setBatchJson(e.target.value)}
-                    rows={9}
-                    className="w-full p-4 rounded-2xl bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-200 focus:border-emerald-400 outline-none resize-none"
-                  />
-                </div>
-
-                <div className="lg:col-span-4 flex flex-col justify-between p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-4">
-                  <div className="space-y-2.5">
-                    <h3 className="text-sm font-bold text-white m-0">Cấp phát hàng loạt O(log N)</h3>
-                    <p className="text-xs text-slate-300 m-0 leading-relaxed">
-                      Băm danh sách sinh viên thành cây Merkle và neo Root Hash lên Smart Contract để xác thực ngoại tuyến không cần tài khoản tập trung.
+            return (
+              <div className="faculty-glass-card p-7 rounded-3xl border border-emerald-500/30 shadow-2xl space-y-5">
+                <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-extrabold text-emerald-300 m-0 inline-flex items-center gap-2">
+                      <Layers size={18} />
+                      Phát Hành Lô Thẻ Định Danh Sinh Viên (Merkle Batch Issuance)
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1 mb-0">
+                      Quản lý trực quan theo bảng hoặc JSON, bấm vào lá cây Merkle để kiểm chứng đường dẫn Proof O(log N).
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAdminIssueMerkleBatch}
-                    className="w-full py-3.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg"
-                  >
-                    Băm Keccak256 &amp; Neo Merkle Root
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setIssuanceMode('VISUAL')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer border-none transition-all ${
+                          issuanceMode === 'VISUAL' ? 'bg-emerald-400 text-slate-950' : 'bg-transparent text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        Bảng Trực Quan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIssuanceMode('JSON')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer border-none transition-all ${
+                          issuanceMode === 'JSON' ? 'bg-cyan-400 text-slate-950' : 'bg-transparent text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        Mã Nguồn JSON
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleLoadPresetBatch}
+                      className="faculty-pill-btn px-3 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <Sparkles size={13} />
+                      Nạp Danh Sách Mẫu (6 SV)
+                    </button>
+
+                    <div className="px-3 py-1.5 rounded-xl bg-[#040814] border border-slate-800 text-xs">
+                      Merkle Root: <code className="text-amber-300 font-mono">{rootDisplay.slice(0, 20)}...</code>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* SƠ ĐỒ TRỰC QUAN CÂY NHỊ PHÂN MERKLE TREE 3 TẦNG (ON-CHAIN MERKLE PROOF TOPOLOGY) */}
-              {(() => {
-                let parsedBatch = [];
-                try {
-                  const arr = JSON.parse(batchJson);
-                  if (Array.isArray(arr)) parsedBatch = arr.slice(0, 4);
-                } catch {
-                  parsedBatch = [];
-                }
-                const sampleLeaves = parsedBatch.length >= 2
-                  ? parsedBatch
-                  : [
-                      { studentId: '0123456789', fullName: 'Nguyễn Văn An' },
-                      { studentId: '2251120001', fullName: 'Trần Thị Bích Ngọc' },
-                      { studentId: '2251120002', fullName: 'Lê Hoàng Nam' },
-                      { studentId: '2251120003', fullName: 'Phạm Minh Tuấn' }
-                    ];
-                while (sampleLeaves.length < 4) {
-                  sampleLeaves.push({
-                    studentId: `225112000${sampleLeaves.length + 1}`,
-                    fullName: `Sinh viên #${sampleLeaves.length + 1}`
-                  });
-                }
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  <div className="lg:col-span-8 space-y-3">
+                    {issuanceMode === 'VISUAL' ? (
+                      <div className="space-y-3">
+                        {/* Form thêm nhanh sinh viên vào lô */}
+                        <form
+                          onSubmit={handleAddStudentToBatch}
+                          className="p-3.5 rounded-2xl bg-[#040814]/90 border border-slate-800 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center"
+                        >
+                          <input
+                            type="text"
+                            required
+                            value={newBatchStudent.studentId}
+                            onChange={(e) => setNewBatchStudent((p) => ({ ...p, studentId: e.target.value }))}
+                            placeholder="MSSV"
+                            className="sm:col-span-2 py-2 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white font-mono outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            type="text"
+                            required
+                            value={newBatchStudent.fullName}
+                            onChange={(e) => setNewBatchStudent((p) => ({ ...p, fullName: e.target.value }))}
+                            placeholder="Họ và tên sinh viên"
+                            className="sm:col-span-3 py-2 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            type="text"
+                            value={newBatchStudent.major}
+                            onChange={(e) => setNewBatchStudent((p) => ({ ...p, major: e.target.value }))}
+                            placeholder="Chuyên ngành"
+                            className="sm:col-span-3 py-2 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white outline-none focus:border-emerald-400"
+                          />
+                          <input
+                            type="text"
+                            value={newBatchStudent.address}
+                            onChange={(e) => setNewBatchStudent((p) => ({ ...p, address: e.target.value }))}
+                            placeholder="Ví 0x... (tự tạo nếu trống)"
+                            className="sm:col-span-2 py-2 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-cyan-200 font-mono outline-none focus:border-emerald-400"
+                          />
+                          <button
+                            type="submit"
+                            className="sm:col-span-2 py-2 px-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs cursor-pointer border-none inline-flex items-center justify-center gap-1"
+                          >
+                            <Plus size={13} />
+                            Thêm SV
+                          </button>
+                        </form>
 
-                const rootDisplay = adminStats.merkleRoot || '0x8f9c2d1e4a7b...';
+                        {/* Bảng danh sách sinh viên chuẩn bị băm Merkle */}
+                        <div className="rounded-2xl bg-[#040814] border border-slate-800 overflow-hidden">
+                          <div className="px-4 py-2.5 bg-[#071326]/90 border-b border-slate-800 flex items-center justify-between text-xs">
+                            <span className="font-bold text-slate-200">
+                              Danh sách chờ cấp phát ({parsedBatchAll.length} sinh viên)
+                            </span>
+                            <span className="text-[11px] font-mono text-emerald-300">
+                              Keccak256 Sorted Pairs
+                            </span>
+                          </div>
+                          <div className="max-h-56 overflow-y-auto divide-y divide-slate-800/80">
+                            {parsedBatchAll.length === 0 ? (
+                              <p className="text-xs text-slate-400 text-center py-6 m-0">
+                                Chưa có sinh viên nào trong lô. Hãy bấm &ldquo;Nạp Danh Sách Mẫu&rdquo; hoặc thêm trực tiếp ở trên.
+                              </p>
+                            ) : (
+                              parsedBatchAll.map((st, idx) => (
+                                <div
+                                  key={`${st.studentId}-${idx}`}
+                                  className="px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs hover:bg-[#081226]/70"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <span className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                                      {idx + 1}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <div className="font-bold text-white truncate">
+                                        {st.fullName || st.name} <span className="font-mono text-cyan-300 ml-1">({st.studentId})</span>
+                                      </div>
+                                      <div className="text-[11px] text-slate-400 truncate">
+                                        {st.major || 'An toàn Thông tin'} • <code className="text-slate-300">{st.address}</code>
+                                      </div>
+                                    </div>
+                                  </div>
 
-                return (
-                  <div className="p-5 rounded-2xl bg-[#040814] border border-emerald-500/25 space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold">
-                          TRỰC QUAN HÓA CẤU TRÚC CÂY MERKLE 3 TẦNG
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          Minh họa đường dẫn xác thực $O(\log N)$ từ Lá Sinh Viên lên On-Chain Root
-                        </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveStudentFromBatch(st.studentId)}
+                                    className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-[11px] font-semibold cursor-pointer inline-flex items-center gap-1 shrink-0"
+                                  >
+                                    <Trash2 size={12} />
+                                    Xóa
+                                  </button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-xs font-mono text-cyan-300">
-                        Keccak256 Sorted Pairs
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-slate-300 block">
+                          Danh sách sinh viên cấp phát chứng chỉ W3C VC (JSON):
+                        </label>
+                        <textarea
+                          value={batchJson}
+                          onChange={(e) => setBatchJson(e.target.value)}
+                          rows={9}
+                          className="w-full p-4 rounded-2xl bg-[#040814] border border-slate-800 text-xs font-mono text-cyan-200 focus:border-emerald-400 outline-none resize-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="lg:col-span-4 flex flex-col justify-between p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-4">
+                    <div className="space-y-2.5">
+                      <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-300 inline-block">
+                        SMART CONTRACT ANCHORING
+                      </span>
+                      <h3 className="text-sm font-bold text-white m-0">Cấp phát hàng loạt O(log N)</h3>
+                      <p className="text-xs text-slate-300 m-0 leading-relaxed">
+                        Băm danh sách {parsedBatchAll.length} sinh viên thành cây Merkle và neo Root Hash lên Smart Contract để xác thực ngoại tuyến không cần tài khoản tập trung.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAdminIssueMerkleBatch}
+                      className="faculty-pill-btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:opacity-95 text-slate-950 font-extrabold text-xs cursor-pointer border-none shadow-lg"
+                    >
+                      Băm Keccak256 &amp; Neo Merkle Root ({parsedBatchAll.length} SV)
+                    </button>
+                  </div>
+                </div>
+
+                {/* SƠ ĐỒ TRỰC QUAN CÂY NHỊ PHÂN MERKLE TREE 3 TẦNG TƯƠNG TÁC (CLICK VÀO LÁ ĐỂ XEM PROOF PATH) */}
+                <div className="p-5 rounded-2xl bg-[#040814] border border-emerald-500/25 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 text-[11px] font-bold">
+                        CÂY MERKLE TƯƠNG TÁC 3 TẦNG
+                      </span>
+                      <span className="text-xs text-slate-300">
+                        Đang kiểm chứng Proof cho: <strong className="text-emerald-300">{sampleLeaves[activeLeafIdx]?.fullName || sampleLeaves[activeLeafIdx]?.name}</strong> (Lá L{activeLeafIdx + 1} → {isLeftBranchActive ? 'H₁₂' : 'H₃₄'} → Root)
                       </span>
                     </div>
+                    <span className="text-xs font-mono text-cyan-300">
+                      Bấm vào từng Lá L1–L4 để soi Proof
+                    </span>
+                  </div>
 
-                    {/* Tầng 1: On-Chain Merkle Root */}
-                    <div className="flex flex-col items-center">
-                      <div className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.2)] text-center max-w-md w-full">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                          Tầng 1 • On-Chain Merkle Root (Smart Contract)
-                        </div>
-                        <div className="text-xs font-mono font-bold text-white truncate mt-0.5">
-                          {rootDisplay}
-                        </div>
+                  {/* Tầng 1: On-Chain Merkle Root */}
+                  <div className="flex flex-col items-center">
+                    <div className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-400/70 shadow-[0_0_25px_rgba(16,185,129,0.25)] text-center max-w-md w-full">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                        Tầng 1 • On-Chain Merkle Root (Smart Contract Verified)
                       </div>
-
-                      {/* Nhánh nối Tầng 1 -> Tầng 2 */}
-                      <div className="w-1/2 h-4 border-t-2 border-l-2 border-r-2 border-emerald-500/40 rounded-t-lg mt-1" />
-                    </div>
-
-                    {/* Tầng 2: Nút Trung Gian (Intermediate Hashes) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-3 rounded-xl bg-[#081226] border border-cyan-500/35 text-center">
-                        <div className="text-[10px] font-bold text-cyan-300 uppercase">
-                          Tầng 2 • Nút Nhánh Trái H₁₂ = Keccak256(L₁ ‖ L₂)
-                        </div>
-                        <div className="text-xs font-mono text-slate-300 mt-1">
-                          0x4a7e91c0...b82d19f4
-                        </div>
-                      </div>
-                      <div className="p-3 rounded-xl bg-[#081226] border border-cyan-500/35 text-center">
-                        <div className="text-[10px] font-bold text-cyan-300 uppercase">
-                          Tầng 2 • Nút Nhánh Phải H₃₄ = Keccak256(L₃ ‖ L₄)
-                        </div>
-                        <div className="text-xs font-mono text-slate-300 mt-1">
-                          0x9c3b60e2...71fa08d1
-                        </div>
+                      <div className="text-xs font-mono font-bold text-white truncate mt-0.5">
+                        {rootDisplay}
                       </div>
                     </div>
 
-                    {/* Tầng 3: 4 Nút Lá Sinh Viên (Leaf Nodes) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-                      {sampleLeaves.slice(0, 4).map((st, idx) => (
-                        <div
+                    <div className="w-1/2 h-4 border-t-2 border-l-2 border-r-2 border-emerald-500/45 rounded-t-lg mt-1" />
+                  </div>
+
+                  {/* Tầng 2: Nút Trung Gian (Sáng theo nhánh đang kiểm chứng) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                      className={`p-3 rounded-xl border text-center transition-all ${
+                        isLeftBranchActive
+                          ? 'bg-[#0C213D] border-emerald-400/70 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                          : 'bg-[#081226]/70 border-cyan-500/30 opacity-80'
+                      }`}
+                    >
+                      <div className="text-[10px] font-bold text-cyan-300 uppercase">
+                        Tầng 2 • Nút Nhánh Trái H₁₂ = Keccak256(L₁ ‖ L₂) {isLeftBranchActive ? '• [ACTIVE PATH]' : '• [SIBLING HASH]'}
+                      </div>
+                      <div className="text-xs font-mono text-slate-200 mt-1">
+                        0x4a7e91c0...b82d19f4
+                      </div>
+                    </div>
+                    <div
+                      className={`p-3 rounded-xl border text-center transition-all ${
+                        !isLeftBranchActive
+                          ? 'bg-[#0C213D] border-emerald-400/70 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                          : 'bg-[#081226]/70 border-cyan-500/30 opacity-80'
+                      }`}
+                    >
+                      <div className="text-[10px] font-bold text-cyan-300 uppercase">
+                        Tầng 2 • Nút Nhánh Phải H₃₄ = Keccak256(L₃ ‖ L₄) {!isLeftBranchActive ? '• [ACTIVE PATH]' : '• [SIBLING HASH]'}
+                      </div>
+                      <div className="text-xs font-mono text-slate-200 mt-1">
+                        0x9c3b60e2...71fa08d1
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tầng 3: 4 Nút Lá Sinh Viên (Clickable) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                    {sampleLeaves.slice(0, 4).map((st, idx) => {
+                      const isTarget = activeLeafIdx === idx;
+                      const isSibling = siblingLeafIdx === idx;
+                      return (
+                        <button
                           key={st.studentId || idx}
-                          className="p-3 rounded-xl bg-[#081226]/90 border border-slate-800 hover:border-emerald-400/50 transition-all"
+                          type="button"
+                          onClick={() => setSelectedMerkleLeafIdx(idx)}
+                          className={`text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                            isTarget
+                              ? 'bg-emerald-500/15 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                              : isSibling
+                              ? 'bg-cyan-500/10 border-cyan-400/60'
+                              : 'bg-[#081226]/75 border-slate-800 opacity-70 hover:opacity-100'
+                          }`}
                         >
-                          <div className="flex items-center justify-between text-[10px] font-mono text-emerald-300">
-                            <span>Lá L{idx + 1}</span>
-                            <span>H(SV_{idx + 1})</span>
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <span className={isTarget ? 'text-emerald-300 font-bold' : isSibling ? 'text-cyan-300 font-bold' : 'text-slate-400'}>
+                              Lá L{idx + 1}
+                            </span>
+                            {isTarget ? (
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-extrabold">TARGET</span>
+                            ) : isSibling ? (
+                              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/50 text-cyan-200 font-bold">SIBLING</span>
+                            ) : (
+                              <span className="text-slate-500">H(SV_{idx + 1})</span>
+                            )}
                           </div>
                           <div className="text-xs font-bold text-white truncate mt-1">
                             {st.fullName || st.name}
                           </div>
-                          <div className="text-[11px] font-mono text-slate-400">
+                          <div className="text-[11px] font-mono text-slate-300">
                             MSSV: {st.studentId}
                           </div>
-                        </div>
-                      ))}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Phân hệ 2 của Admin: Thu hồi & Khôi phục khóa thiết bị độc lập + Danh bạ 1 chạm */}
+          {activeTab === 'ADMIN_REVOCATION' && (() => {
+            const directoryMap = new Map();
+            DEFAULT_ENROLLED_ROSTER.forEach((st, idx) => {
+              const addr = PRESET_BATCH_WALLETS[idx] || `0x${st.studentId.padEnd(40, '0').slice(0, 40)}`;
+              directoryMap.set(String(st.studentId), {
+                studentId: st.studentId,
+                fullName: st.name,
+                major: st.major || 'An toàn Thông tin',
+                address: addr
+              });
+            });
+            try {
+              const parsed = JSON.parse(batchJson);
+              if (Array.isArray(parsed)) {
+                parsed.forEach((st) => {
+                  if (st?.studentId) {
+                    directoryMap.set(String(st.studentId), {
+                      studentId: String(st.studentId),
+                      fullName: st.fullName || st.name || `SV ${st.studentId}`,
+                      major: st.major || 'An toàn Thông tin',
+                      address: st.address || `0x${String(st.studentId).padEnd(40, '0').slice(0, 40)}`
+                    });
+                  }
+                });
+              }
+            } catch {}
+
+            const isAddressRevoked = (address) => {
+              const lower = String(address || '').toLowerCase();
+              const alias = lower === '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'
+                ? '0x1d9b6938a3f073e3426052c7016155d85040ed1d'
+                : '';
+              return revokedKeysList.some((k) => {
+                const kl = String(k || '').toLowerCase();
+                return kl === lower || (alias && kl === alias);
+              });
+            };
+
+            const directoryList = Array.from(directoryMap.values()).filter((item) => {
+              const q = deviceSearchQuery.trim().toLowerCase();
+              const matchesSearch =
+                !q ||
+                item.studentId.toLowerCase().includes(q) ||
+                item.fullName.toLowerCase().includes(q) ||
+                item.address.toLowerCase().includes(q);
+              if (!matchesSearch) return false;
+              const revoked = isAddressRevoked(item.address);
+              if (deviceStatusFilter === 'ACTIVE') return !revoked;
+              if (deviceStatusFilter === 'REVOKED') return revoked;
+              return true;
+            });
+
+            return (
+              <div className="faculty-glass-card p-7 rounded-3xl border border-rose-500/30 shadow-2xl space-y-6">
+                <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-extrabold text-rose-300 m-0 inline-flex items-center gap-2">
+                      <Lock size={18} />
+                      Thu Hồi &amp; Khôi Phục Khóa Thiết Bị Độc Lập (O(1))
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1 mb-0">
+                      Vô hiệu hóa thiết bị báo mất tức thì theo địa chỉ ví hoặc thao tác 1 chạm trên danh bạ sinh viên.
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/35 text-rose-300 text-xs font-mono font-bold">
+                    Đã thu hồi: {revokedKeysList.length} khóa
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                  <div className="lg:col-span-8 space-y-4">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                        Địa chỉ Ví mật mã học gắn với thiết bị cần thu hồi / khôi phục:
+                      </label>
+                      <input
+                        value={revokeAddressInput}
+                        onChange={(e) => setRevokeAddressInput(e.target.value)}
+                        className="w-full p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-rose-300 focus:border-rose-400 outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleAdminRevokeWallet()}
+                        className="faculty-pill-btn py-3.5 px-4 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs cursor-pointer border-none shadow-lg inline-flex items-center justify-center gap-1.5"
+                      >
+                        <Lock size={14} />
+                        Thu Hồi Khóa Thiết Bị (revokeKey)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAdminUnrevokeWallet()}
+                        className="faculty-pill-btn py-3.5 px-4 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs cursor-pointer inline-flex items-center justify-center gap-1.5"
+                      >
+                        <Unlock size={14} />
+                        Khôi Phục Khóa Thiết Bị (unrevokeKey)
+                      </button>
                     </div>
                   </div>
-                );
-              })()}
-            </div>
-          )}
 
-          {/* Phân hệ 2 của Admin: Thu hồi & Khôi phục khóa thiết bị độc lập */}
-          {activeTab === 'ADMIN_REVOCATION' && (
-            <div className="p-7 rounded-3xl bg-[#081226] border border-rose-500/30 shadow-2xl space-y-5">
-              <div className="border-b border-slate-800 pb-4">
-                <h2 className="text-lg font-bold text-rose-300 m-0">
-                  Thu Hồi &amp; Khôi Phục Khóa Thiết Bị Độc Lập (O(1))
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                <div className="lg:col-span-8 space-y-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                      Địa chỉ Ví mật mã học gắn với thiết bị cần thu hồi / khôi phục:
-                    </label>
-                    <input
-                      value={revokeAddressInput}
-                      onChange={(e) => setRevokeAddressInput(e.target.value)}
-                      className="w-full p-3.5 rounded-xl bg-[#040814] border border-slate-800 text-xs font-mono text-rose-300 focus:border-rose-400 outline-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={handleAdminRevokeWallet}
-                      className="py-3.5 px-4 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs cursor-pointer border-none shadow-lg"
-                    >
-                      Thu Hồi Khóa Thiết Bị (revokeKey)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAdminUnrevokeWallet}
-                      className="py-3.5 px-4 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs cursor-pointer"
-                    >
-                      Khôi Phục Khóa Thiết Bị (unrevokeKey)
-                    </button>
+                  <div className="lg:col-span-4 p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-2 text-xs text-slate-300 leading-relaxed">
+                    <div className="font-bold text-white">Thu Hồi Khóa Độc Lập O(1)</div>
+                    <p className="m-0">
+                      Vô hiệu hóa tức thì thiết bị báo mất thông qua bảng băm <code>isRevoked[address]</code> mà không làm thay đổi Merkle Root của các sinh viên khác.
+                    </p>
                   </div>
                 </div>
 
-                <div className="lg:col-span-4 p-5 rounded-2xl bg-[#040814] border border-slate-800 space-y-2 text-xs text-slate-300 leading-relaxed">
-                  <div className="font-bold text-white">Thu Hồi Khóa Độc Lập O(1)</div>
-                  <p className="m-0">
-                    Vô hiệu hóa tức thì thiết bị báo mất thông qua bảng băm <code>isRevoked[address]</code> mà không làm thay đổi Merkle Root của các sinh viên khác.
-                  </p>
+                {/* Danh bạ thiết bị sinh viên 1 chạm */}
+                <div className="rounded-2xl bg-[#040814] border border-slate-800 p-4 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-slate-200 inline-flex items-center gap-1.5">
+                      <Users size={14} className="text-cyan-400" />
+                      Danh Bạ Thiết Bị Sinh Viên Đã Cấp Phát ({directoryList.length})
+                    </span>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="relative">
+                        <Search size={13} className="text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={deviceSearchQuery}
+                          onChange={(e) => setDeviceSearchQuery(e.target.value)}
+                          placeholder="Tìm MSSV, họ tên hoặc ví 0x..."
+                          className="pl-8 pr-3 py-1.5 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white placeholder-slate-400 outline-none focus:border-cyan-400 w-56"
+                        />
+                      </div>
+
+                      <div className="inline-flex items-center bg-[#071326] p-1 rounded-xl border border-slate-800 gap-1">
+                        {[
+                          { id: 'ALL', label: 'Tất cả' },
+                          { id: 'ACTIVE', label: 'Hoạt động' },
+                          { id: 'REVOKED', label: 'Đã thu hồi' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setDeviceStatusFilter(tab.id)}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer border-none transition-all ${
+                              deviceStatusFilter === tab.id
+                                ? 'bg-cyan-400 text-slate-950'
+                                : 'bg-transparent text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {directoryList.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-6 m-0">
+                        Không tìm thấy thiết bị phù hợp với bộ lọc.
+                      </p>
+                    ) : (
+                      directoryList.map((item) => {
+                        const revoked = isAddressRevoked(item.address);
+                        return (
+                          <div
+                            key={item.studentId}
+                            className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs transition-all ${
+                              revoked
+                                ? 'bg-rose-500/10 border-rose-500/35'
+                                : 'bg-[#081226]/85 border-slate-800 hover:border-cyan-500/40'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-bold text-white">{item.fullName}</span>
+                                <span className="font-mono text-cyan-300">({item.studentId})</span>
+                                <span className="text-[11px] text-slate-400">• {item.major}</span>
+                              </div>
+                              <div className="text-[11px] font-mono text-slate-300 truncate mt-0.5">
+                                {item.address}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold border ${
+                                  revoked
+                                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                                    : 'bg-emerald-500/15 border-emerald-500/35 text-emerald-300'
+                                }`}
+                              >
+                                {revoked ? 'ĐÃ THU HỒI' : 'ĐANG HOẠT ĐỘNG'}
+                              </span>
+
+                              {revoked ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdminUnrevokeWallet(item.address)}
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-[11px] cursor-pointer border-none inline-flex items-center gap-1"
+                                >
+                                  <Unlock size={12} />
+                                  Khôi Phục Khóa
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdminRevokeWallet(item.address)}
+                                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/45 text-rose-200 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1"
+                                >
+                                  <Lock size={12} />
+                                  Thu Hồi Khóa
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Phân hệ 3 của Admin: Trung Tâm Giám Sát Chống Gian Lận (Anti-Fraud Telemetry) & Sổ Cái Kiểm Toán */}
-          {activeTab === 'ADMIN_AUDIT' && (
-            <div className="space-y-6">
-              {/* Khối 1: Trung tâm Giám sát Bảo mật chống Gian lận (Anti-Fraud Telemetry Panel) */}
-              <div className="p-7 rounded-3xl bg-[#081226] border border-rose-500/35 shadow-2xl space-y-5">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping" />
-                      <h2 className="text-lg font-extrabold text-white m-0">
-                        🛡️ Trung Tâm Giám Sát Bảo Mật Chống Gian Lận (Anti-Fraud Telemetry)
+          {activeTab === 'ADMIN_AUDIT' && (() => {
+            const matchAlertFilter = (alert) => {
+              if (adminAlertFilter === 'ALL') return true;
+              const t = String(alert.type || '');
+              if (adminAlertFilter === 'REPLAY_ATTACK') return t === 'REPLAY_ATTACK' || t === 'REPLAY';
+              if (adminAlertFilter === 'DEVICE_SPOOFING') return t === 'DEVICE_SPOOFING' || t === 'TAMPERING';
+              if (adminAlertFilter === 'PROXY_ATTENDANCE') return t === 'PROXY_ATTENDANCE' || t === 'SYBIL_DEVICE';
+              if (adminAlertFilter === 'GEOFENCE_BREACH') return t === 'GEOFENCE_BREACH' || t === 'MOCK_GPS';
+              return true;
+            };
+            const filteredAlerts = securityAlerts.filter(matchAlertFilter);
+            const filteredAuditLogs = auditLogs.filter((log) => {
+              const q = auditSearchQuery.trim().toLowerCase();
+              if (!q) return true;
+              return (
+                String(log.action || '').toLowerCase().includes(q) ||
+                String(log.detail || '').toLowerCase().includes(q) ||
+                String(log.result || '').toLowerCase().includes(q)
+              );
+            });
+
+            return (
+              <div className="space-y-6">
+                {/* Khối 1: Trung tâm Giám sát Bảo mật chống Gian lận (Anti-Fraud Telemetry Panel) */}
+                <div className="faculty-glass-card p-7 rounded-3xl border border-rose-500/35 shadow-2xl space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping" />
+                        <h2 className="text-lg font-extrabold text-white m-0 inline-flex items-center gap-2">
+                          <ShieldAlert size={18} className="text-rose-400" />
+                          Trung Tâm Giám Sát Bảo Mật Chống Gian Lận (SOC Anti-Fraud Telemetry)
+                        </h2>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAdminAlertFilter('ALL')}
+                        className={`px-3 py-1 rounded-full border font-mono text-xs font-bold cursor-pointer transition-all ${
+                          adminAlertFilter === 'ALL'
+                            ? 'bg-rose-500 text-white border-rose-400'
+                            : 'bg-rose-500/15 border-rose-500/35 text-rose-300'
+                        }`}
+                      >
+                        Tất cả ({securityAlerts.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={fetchAdminAuditLogs}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <RefreshCw size={13} />
+                        Đồng Bộ Telemetry
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4 Ô Thống Kê Các Lớp Phòng Vệ Mật Mã (Click để lọc) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    {[
+                      {
+                        type: 'REPLAY_ATTACK',
+                        title: 'Chặn Replay Attack (QR Cũ)',
+                        count: securityAlerts.filter((a) => a.type === 'REPLAY_ATTACK' || a.type === 'REPLAY').length,
+                        layer: 'Dynamic Nonce',
+                        color: 'text-rose-300 border-rose-500/35 bg-rose-500/10'
+                      },
+                      {
+                        type: 'DEVICE_SPOOFING',
+                        title: 'Chặn Giả Mạo Chữ Ký Số',
+                        count: securityAlerts.filter((a) => a.type === 'DEVICE_SPOOFING' || a.type === 'TAMPERING').length,
+                        layer: 'ECDSA secp256k1 + FIDO2',
+                        color: 'text-amber-300 border-amber-500/35 bg-amber-500/10'
+                      },
+                      {
+                        type: 'PROXY_ATTENDANCE',
+                        title: 'Chặn Điểm Danh Hộ (1 Máy)',
+                        count: securityAlerts.filter((a) => a.type === 'PROXY_ATTENDANCE' || a.type === 'SYBIL_DEVICE').length,
+                        layer: 'Hardware Fingerprint',
+                        color: 'text-purple-300 border-purple-500/35 bg-purple-500/10'
+                      },
+                      {
+                        type: 'GEOFENCE_BREACH',
+                        title: 'Chặn Ngoài Vùng / Fake GPS',
+                        count: securityAlerts.filter((a) => a.type === 'GEOFENCE_BREACH' || a.type === 'MOCK_GPS').length,
+                        layer: 'Haversine + Kalman Filter',
+                        color: 'text-cyan-300 border-cyan-500/35 bg-cyan-500/10'
+                      }
+                    ].map((item) => {
+                      const isSelectedFilter = adminAlertFilter === item.type;
+                      return (
+                        <button
+                          key={item.type}
+                          type="button"
+                          onClick={() => setAdminAlertFilter((prev) => (prev === item.type ? 'ALL' : item.type))}
+                          className={`text-left p-4 rounded-2xl border flex flex-col justify-between gap-2 cursor-pointer transition-all ${
+                            isSelectedFilter
+                              ? 'bg-[#0C213D] border-cyan-400 shadow-lg'
+                              : 'bg-[#040814] border-slate-800 hover:border-cyan-500/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-xs font-bold text-slate-300">{item.title}</span>
+                            <span className={`px-2 py-0.5 rounded-md border font-mono text-[10px] font-bold ${item.color}`}>
+                              BLOCKED
+                            </span>
+                          </div>
+                          <div className="flex items-baseline justify-between pt-1 w-full">
+                            <span className="text-2xl font-extrabold text-white font-mono">{item.count}</span>
+                            <span className="text-[11px] font-mono text-[#4FF0D6]">{item.layer}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Thanh Mô Phỏng Tấn Công Kiểm Thử (Dành cho Demo Hội Đồng NCKH) */}
+                  <div className="p-4 rounded-2xl bg-[#040814] border border-[#4FF0D6]/30 flex flex-wrap items-center justify-between gap-3">
+                    <div className="text-xs">
+                      <span className="font-extrabold text-[#4FF0D6] block">
+                        ⚡ Bảng Giả Lập Tấn Công Thực Tế (Kiểm Thử Phòng Vệ Trực Tiếp)
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={simulatingAttack}
+                        onClick={() => handleSimulateAttack('REPLAY_ATTACK')}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold cursor-pointer transition-all"
+                      >
+                        Test Quét Lại QR Cũ
+                      </button>
+                      <button
+                        type="button"
+                        disabled={simulatingAttack}
+                        onClick={() => handleSimulateAttack('DEVICE_SPOOFING')}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold cursor-pointer transition-all"
+                      >
+                        Test Giả Mạo Chữ Ký
+                      </button>
+                      <button
+                        type="button"
+                        disabled={simulatingAttack}
+                        onClick={() => handleSimulateAttack('PROXY_ATTENDANCE')}
+                        className="px-3 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 text-xs font-bold cursor-pointer transition-all"
+                      >
+                        Test 1 Máy Điểm Danh Hộ
+                      </button>
+                      <button
+                        type="button"
+                        disabled={simulatingAttack}
+                        onClick={() => handleSimulateAttack('GEOFENCE_BREACH')}
+                        className="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-bold cursor-pointer transition-all"
+                      >
+                        Test Fake GPS Ngoài Vùng
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Luồng Cảnh Báo Gian Lận Bị Chặn Thời Gian Thực */}
+                  <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+                    {filteredAlerts.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-6 m-0">
+                        Không có cảnh báo nào thuộc nhóm bộ lọc này.
+                      </p>
+                    ) : (
+                      filteredAlerts.map((alert) => (
+                        <div
+                          key={alert.id}
+                          className="p-3.5 rounded-2xl bg-[#040814] border border-rose-500/30 flex flex-wrap items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="space-y-1 flex-1 min-w-[260px]">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-slate-400">[{alert.time}]</span>
+                              <span className="px-2 py-0.5 rounded-md bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono font-bold text-[11px]">
+                                {alert.vectorLabel || alert.type}
+                              </span>
+                              {alert.studentId && alert.studentId !== 'UNKNOWN' && (
+                                <span className="font-bold text-white">
+                                  SV: {alert.studentName} ({alert.studentId})
+                                </span>
+                              )}
+                              {alert.deviceId && (
+                                <span className="font-mono text-[11px] text-slate-400">
+                                  • Thiết bị: {alert.deviceId}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-200 m-0">{alert.detail}</p>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-mono text-[11px] font-bold">
+                              ✓ ĐÃ CHẶN TỰ ĐỘNG (403)
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {alert.defenseLayer && (
+                                <span className="font-mono text-[10.5px] text-[#4FF0D6]">
+                                  Lớp chặn: {alert.defenseLayer}
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleAdminRevokeWallet(alert.address || '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266')}
+                                className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 text-rose-200 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <Lock size={11} />
+                                Chặn Ví Thiết Bị
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Khối 2: Sổ cái Kiểm toán An ninh Toàn trường */}
+                <div className="faculty-glass-card p-7 rounded-3xl border border-cyan-500/30 shadow-2xl space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                    <div>
+                      <h2 className="text-lg font-bold text-cyan-300 m-0">
+                        Sổ Cái Kiểm Toán An Ninh Toàn Trường ({filteredAuditLogs.length})
                       </h2>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/35 text-rose-300 font-mono text-xs font-bold">
-                      Đã chặn tự động: {securityAlerts.length} cuộc tấn công
-                    </span>
-                    <button
-                      type="button"
-                      onClick={fetchAdminAuditLogs}
-                      className="px-3.5 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold cursor-pointer"
-                    >
-                      Đồng Bộ Telemetry
-                    </button>
-                  </div>
-                </div>
-
-                {/* 4 Ô Thống Kê Các Lớp Phòng Vệ Mật Mã */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                  {[
-                    {
-                      type: 'REPLAY_ATTACK',
-                      title: 'Chặn Replay Attack (QR Cũ)',
-                      count: securityAlerts.filter((a) => a.type === 'REPLAY_ATTACK' || a.type === 'REPLAY').length,
-                      layer: 'Dynamic Nonce 35s',
-                      color: 'text-rose-300 border-rose-500/35 bg-rose-500/10'
-                    },
-                    {
-                      type: 'DEVICE_SPOOFING',
-                      title: 'Chặn Giả Mạo Chữ Ký Số',
-                      count: securityAlerts.filter((a) => a.type === 'DEVICE_SPOOFING' || a.type === 'TAMPERING').length,
-                      layer: 'ECDSA secp256k1 + FIDO2',
-                      color: 'text-amber-300 border-amber-500/35 bg-amber-500/10'
-                    },
-                    {
-                      type: 'PROXY_ATTENDANCE',
-                      title: 'Chặn Điểm Danh Hộ (1 Máy)',
-                      count: securityAlerts.filter((a) => a.type === 'PROXY_ATTENDANCE' || a.type === 'SYBIL_DEVICE').length,
-                      layer: 'Hardware Fingerprint',
-                      color: 'text-purple-300 border-purple-500/35 bg-purple-500/10'
-                    },
-                    {
-                      type: 'GEOFENCE_BREACH',
-                      title: 'Chặn Ngoài Vùng / Fake GPS',
-                      count: securityAlerts.filter((a) => a.type === 'GEOFENCE_BREACH' || a.type === 'MOCK_GPS').length,
-                      layer: 'Haversine + Kalman Filter',
-                      color: 'text-cyan-300 border-cyan-500/35 bg-cyan-500/10'
-                    }
-                  ].map((item) => (
-                    <div
-                      key={item.type}
-                      className="p-4 rounded-2xl bg-[#040814] border border-slate-800 flex flex-col justify-between gap-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-300">{item.title}</span>
-                        <span className={`px-2 py-0.5 rounded-md border font-mono text-[10px] font-bold ${item.color}`}>
-                          BLOCKED
-                        </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="relative">
+                        <Search size={13} className="text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={auditSearchQuery}
+                          onChange={(e) => setAuditSearchQuery(e.target.value)}
+                          placeholder="Tìm nhật ký kiểm toán..."
+                          className="pl-8 pr-3 py-1.5 rounded-xl bg-[#040814] border border-slate-700 text-xs text-white placeholder-slate-400 outline-none focus:border-cyan-400 w-52"
+                        />
                       </div>
-                      <div className="flex items-baseline justify-between pt-1">
-                        <span className="text-2xl font-extrabold text-white font-mono">{item.count}</span>
-                        <span className="text-[11px] font-mono text-[#4FF0D6]">{item.layer}</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleExportAuditLogsCSV}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <Download size={13} />
+                        Xuất Báo Cáo (.CSV)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={fetchAdminAuditLogs}
+                        className="px-3.5 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <RefreshCw size={13} />
+                        Làm Mới Nhật Ký
+                      </button>
                     </div>
-                  ))}
-                </div>
-
-                {/* Thanh Mô Phỏng Tấn Công Kiểm Thử (Dành cho Demo Hội Đồng NCKH) */}
-                <div className="p-4 rounded-2xl bg-[#040814] border border-[#4FF0D6]/30 flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-xs">
-                    <span className="font-extrabold text-[#4FF0D6] block">
-                      ⚡ Bảng Giả Lập Tấn Công Thực Tế (Kiểm Thử Phòng Vệ Trực Tiếp)
-                    </span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={simulatingAttack}
-                      onClick={() => handleSimulateAttack('REPLAY_ATTACK')}
-                      className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold cursor-pointer transition-all"
-                    >
-                      Test Quét Lại QR Cũ
-                    </button>
-                    <button
-                      type="button"
-                      disabled={simulatingAttack}
-                      onClick={() => handleSimulateAttack('DEVICE_SPOOFING')}
-                      className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold cursor-pointer transition-all"
-                    >
-                      Test Giả Mạo Chữ Ký
-                    </button>
-                    <button
-                      type="button"
-                      disabled={simulatingAttack}
-                      onClick={() => handleSimulateAttack('PROXY_ATTENDANCE')}
-                      className="px-3 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 text-xs font-bold cursor-pointer transition-all"
-                    >
-                      Test 1 Máy Điểm Danh Hộ
-                    </button>
-                    <button
-                      type="button"
-                      disabled={simulatingAttack}
-                      onClick={() => handleSimulateAttack('GEOFENCE_BREACH')}
-                      className="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-bold cursor-pointer transition-all"
-                    >
-                      Test Fake GPS Ngoài Vùng
-                    </button>
-                  </div>
-                </div>
 
-                {/* Luồng Cảnh Báo Gian Lận Bị Chặn Thời Gian Thực */}
-                <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
-                  {securityAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="p-3.5 rounded-2xl bg-[#040814] border border-rose-500/30 flex flex-wrap items-center justify-between gap-3 text-xs"
-                    >
-                      <div className="space-y-1 flex-1 min-w-[260px]">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-slate-400">[{alert.time}]</span>
-                          <span className="px-2 py-0.5 rounded-md bg-rose-500/20 border border-rose-500/40 text-rose-300 font-mono font-bold text-[11px]">
-                            {alert.vectorLabel || alert.type}
+                  <div className="space-y-2 max-h-[340px] overflow-y-auto">
+                    {filteredAuditLogs.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-8 text-center">
+                        {auditLogs.length === 0
+                          ? 'Đang đồng bộ nhật ký kiểm toán từ máy chủ...'
+                          : 'Không tìm thấy bản ghi nhật ký phù hợp.'}
+                      </p>
+                    ) : (
+                      filteredAuditLogs.map((log) => (
+                        <div key={log.id} className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <div>
+                            <span className="font-mono text-slate-400 mr-2">[{log.time}]</span>
+                            <strong className="text-emerald-300 mr-2">{log.action}:</strong>
+                            <span className="text-slate-200">{log.detail}</span>
+                          </div>
+                          <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 font-mono text-xs font-semibold">
+                            {log.result}
                           </span>
-                          {alert.studentId && alert.studentId !== 'UNKNOWN' && (
-                            <span className="font-bold text-white">
-                              SV: {alert.studentName} ({alert.studentId})
-                            </span>
-                          )}
-                          {alert.deviceId && (
-                            <span className="font-mono text-[11px] text-slate-400">
-                              • Thiết bị: {alert.deviceId}
-                            </span>
-                          )}
                         </div>
-                        <p className="text-slate-200 m-0">{alert.detail}</p>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-mono text-[11px] font-bold">
-                          ✓ ĐÃ CHẶN TỰ ĐỘNG (403)
-                        </span>
-                        {alert.defenseLayer && (
-                          <span className="font-mono text-[10.5px] text-[#4FF0D6]">
-                            Lớp chặn: {alert.defenseLayer}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {/* Khối 2: Sổ cái Kiểm toán An ninh Toàn trường */}
-              <div className="p-7 rounded-3xl bg-[#081226] border border-cyan-500/30 shadow-2xl space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div>
-                    <h2 className="text-lg font-bold text-cyan-300 m-0">
-                      Sổ Cái Kiểm Toán An Ninh Toàn Trường
-                    </h2>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={fetchAdminAuditLogs}
-                    className="px-3.5 py-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-semibold cursor-pointer"
-                  >
-                    Làm Mới Nhật Ký
-                  </button>
-                </div>
-
-                <div className="space-y-2 max-h-[340px] overflow-y-auto">
-                  {auditLogs.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-8 text-center">Đang đồng bộ nhật ký kiểm toán từ máy chủ...</p>
-                  ) : (
-                    auditLogs.map((log) => (
-                      <div key={log.id} className="p-3.5 rounded-xl bg-[#040814] border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div>
-                          <span className="font-mono text-slate-400 mr-2">[{log.time}]</span>
-                          <strong className="text-emerald-300 mr-2">{log.action}:</strong>
-                          <span className="text-slate-200">{log.detail}</span>
-                        </div>
-                        <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 font-mono text-xs font-semibold">
-                          {log.result}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       ) : (
         /* ==================== GIAO DIỆN GIẢNG VIÊN (SAU KHI ĐÃ TẠO LỚP & PHÁT MÃ QR) ==================== */
@@ -4260,6 +5029,19 @@ export default function FacultyDashboard({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSoundEnabled((prev) => !prev)}
+                        className={`px-3.5 py-2.5 rounded-2xl font-semibold text-xs cursor-pointer border transition-all inline-flex items-center gap-1.5 ${
+                          soundEnabled
+                            ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200'
+                            : 'bg-[#040814] border-slate-700 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Radio size={13} />
+                        {soundEnabled ? 'Âm Báo: Bật' : 'Âm Báo: Tắt'}
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => setStageSafeMode((prev) => !prev)}
@@ -4522,6 +5304,10 @@ export default function FacultyDashboard({
                             <RefreshCw size={13} />
                             Đổi Mã QR Ngay
                           </button>
+                        </div>
+
+                        <div className="text-[11px] text-slate-400 text-center pt-0.5 font-mono">
+                          Phím tắt nhanh: <span className="text-cyan-300 font-bold">[F]</span> Toàn màn hình • <span className="text-cyan-300 font-bold">[R]</span> Đổi mã QR • <span className="text-cyan-300 font-bold">[M]</span> Điểm danh thủ công
                         </div>
                       </div>
                     </div>
@@ -4821,15 +5607,84 @@ export default function FacultyDashboard({
               )}
 
               {/* TAB 2: BẢN ĐỒ ĐỊNH VỊ GOOGLE MAPS THỜI GIAN THỰC */}
-              {activeTab === 'RADAR' && (
-                <GoogleMapsLiveView
-                  sessionConfig={sessionConfig}
-                  attendees={attendees}
-                  focusedStudentId={focusedMapStudentId}
-                  onSelectStudent={(sid) => setFocusedMapStudentId(sid)}
-                  onSyncLaptopGps={handleSyncLaptopGpsCenter}
-                />
-              )}
+              {activeTab === 'RADAR' && (() => {
+                const filteredRadarAttendees =
+                  radarFilter === 'VALID'
+                    ? attendees.filter((a) => (a.distance ?? 0) <= sessionConfig.maxRadiusMeters && !a.isMockGps)
+                    : radarFilter === 'OUTSIDE'
+                    ? attendees.filter((a) => (a.distance ?? 0) > sessionConfig.maxRadiusMeters || a.isMockGps)
+                    : attendees;
+
+                return (
+                  <div className="flex-1 flex flex-col gap-3">
+                    {/* Thanh điều chỉnh nhanh bán kính Geofence & lọc GPS trên Radar */}
+                    <div className="faculty-glass-card rounded-2xl border border-cyan-500/25 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300">
+                          <MapPin size={14} />
+                          Bán kính Geofence:
+                        </span>
+                        <div className="inline-flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
+                          {[30, 50, 100, 150].map((r) => (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => handleUpdateLiveRadius(r)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold cursor-pointer border-none transition-all ${
+                                Number(sessionConfig.maxRadiusMeters) === r
+                                  ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                                  : 'bg-transparent text-slate-300 hover:text-white hover:bg-slate-800/70'
+                              }`}
+                            >
+                              {r}m
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-300">Lọc vị trí:</span>
+                        <div className="inline-flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
+                          {[
+                            { id: 'ALL', label: `Tất cả (${attendees.length})` },
+                            {
+                              id: 'VALID',
+                              label: `Trong tâm vùng (${attendees.filter((a) => (a.distance ?? 0) <= sessionConfig.maxRadiusMeters && !a.isMockGps).length})`
+                            },
+                            {
+                              id: 'OUTSIDE',
+                              label: `Ngoài vùng / Sai số (${attendees.filter((a) => (a.distance ?? 0) > sessionConfig.maxRadiusMeters || a.isMockGps).length})`
+                            }
+                          ].map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setRadarFilter(opt.id)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer border-none transition-all ${
+                                radarFilter === opt.id
+                                  ? opt.id === 'OUTSIDE'
+                                    ? 'bg-rose-500 text-white'
+                                    : 'bg-emerald-400 text-slate-950'
+                                  : 'bg-transparent text-slate-300 hover:text-white'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <GoogleMapsLiveView
+                      sessionConfig={sessionConfig}
+                      attendees={filteredRadarAttendees}
+                      focusedStudentId={focusedMapStudentId}
+                      onSelectStudent={(sid) => setFocusedMapStudentId(sid)}
+                      onSyncLaptopGps={handleSyncLaptopGpsCenter}
+                    />
+                  </div>
+                );
+              })()}
 
               {/* TAB 3: IDS AUDIT & ĐIỂM RỦI RO GIAN LẬN TỰ ĐỘNG */}
               {activeTab === 'IDS' && (
