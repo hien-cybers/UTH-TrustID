@@ -2294,21 +2294,23 @@ export default function FacultyDashboard({
 
         {/* ==================== THANH TOPBAR EDUCAMPUS (KHÔNG CÓ NÚT ĐĂNG KÝ) ==================== */}
         <header className="relative z-20 w-full bg-gradient-to-b from-[#06183A]/75 via-[#06183A]/35 to-transparent border-b border-white/15 backdrop-blur-[2px]">
-          <div className="max-w-[1340px] mx-auto px-5 sm:px-8 lg:px-12 py-4 flex items-center justify-between gap-4">
+          <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-3 flex items-center justify-between gap-4">
             {/* Logo EduCampus - bấm quay về Landing Page */}
             <button
               type="button"
               onClick={() => setShowLoginPage(false)}
               className="flex items-center gap-2.5 bg-transparent border-none cursor-pointer p-0 text-white group"
             >
-              <GraduationCap className="w-8 h-8 text-white drop-shadow group-hover:scale-105 transition-transform" />
-              <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-white drop-shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-md group-hover:bg-[#1A6BFF] transition-all">
+                <GraduationCap className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white drop-shadow-xs">
                 EduCampus
               </span>
             </button>
 
             {/* Menu điều hướng giữa */}
-            <nav className="hidden md:flex items-center gap-8 lg:gap-10">
+            <nav className="hidden md:flex items-center gap-7 lg:gap-8">
               {[
                 { label: 'Trang chủ' },
                 { label: 'Khóa học', hasDropdown: true },
@@ -2319,10 +2321,10 @@ export default function FacultyDashboard({
                   key={item.label}
                   type="button"
                   onClick={() => setShowLoginPage(false)}
-                  className="text-sm lg:text-[15px] font-semibold text-white/90 hover:text-white bg-transparent border-none cursor-pointer transition-colors inline-flex items-center gap-1"
+                  className="text-xs sm:text-sm font-semibold text-white/90 hover:text-white bg-transparent border-none cursor-pointer transition-colors inline-flex items-center gap-1"
                 >
                   <span>{item.label}</span>
-                  {item.hasDropdown && <ChevronDown className="w-4 h-4 opacity-80" />}
+                  {item.hasDropdown && <ChevronDown className="w-3.5 h-3.5 opacity-80" />}
                 </button>
               ))}
             </nav>
@@ -2332,15 +2334,15 @@ export default function FacultyDashboard({
               <button
                 type="button"
                 onClick={() => setShowLoginPage(false)}
-                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-semibold cursor-pointer transition-all"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-semibold cursor-pointer transition-all"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Trang chủ</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleSelectLoginTab('FACULTY')}
-                className="px-5 py-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/75 text-white text-sm font-bold cursor-pointer transition-all shadow-sm"
+                className="px-4 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/75 text-white text-xs sm:text-sm font-bold cursor-pointer transition-all shadow-xs"
               >
                 Đăng nhập
               </button>
@@ -2349,16 +2351,16 @@ export default function FacultyDashboard({
         </header>
 
         {/* ==================== NỘI DUNG CHÍNH: TIÊU ĐỀ BÊN TRÁI + THẺ TRẮNG ĐĂNG NHẬP BÊN PHẢI ==================== */}
-        <main className="relative z-20 flex-1 w-full max-w-[1340px] mx-auto px-5 sm:px-8 lg:px-12 py-6 lg:py-10 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
+        <main className="relative z-20 flex-1 w-full max-w-[1200px] mx-auto px-5 sm:px-8 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
           {/* CỘT TRÁI (7 CỘT): TIÊU ĐỀ & 4 TÍNH NĂNG TRÊN NỀN XANH SÂN TRƯỜNG */}
           <div
-            className="lg:col-span-7 text-white space-y-6 self-start lg:mt-6 transition-transform duration-300 ease-out"
+            className="lg:col-span-7 text-white space-y-5 self-start lg:mt-4 transition-transform duration-300 ease-out"
             style={{
-              transform: `translate3d(${loginParallax.x * 0.35}px, ${loginParallax.y * 0.35}px, 0)`
+              transform: `translate3d(${loginParallax.x * 0.3}px, ${loginParallax.y * 0.3}px, 0)`
             }}
           >
-            <div className="space-y-4 max-w-[500px]">
-              <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-white leading-[1.2] tracking-tight m-0 drop-shadow-[0_4px_20px_rgba(0,0,0,0.35)]">
+            <div className="space-y-3.5 max-w-[460px]">
+              <h1 className="text-2xl sm:text-3xl lg:text-[38px] font-extrabold text-white leading-[1.2] tracking-tight m-0 drop-shadow-[0_4px_20px_rgba(0,0,0,0.35)]">
                 Nền tảng học tập
                 <br />
                 trực tuyến cho học sinh,
@@ -2367,11 +2369,11 @@ export default function FacultyDashboard({
               </h1>
 
               {/* Thanh gạch ngang màu xanh dương */}
-              <div className="w-14 h-1.5 rounded-full bg-[#1E6BFF] shadow-[0_0_14px_rgba(30,107,255,0.8)]" />
+              <div className="w-12 h-1.5 rounded-full bg-[#1E6BFF] shadow-[0_0_14px_rgba(30,107,255,0.8)]" />
             </div>
 
             {/* Danh sách 4 tính năng dọc với icon tròn kính mờ */}
-            <div className="space-y-3.5 pt-1">
+            <div className="space-y-3 pt-1">
               {[
                 { icon: <Monitor className="w-4 h-4 text-white" />, label: 'Khóa học đa dạng' },
                 { icon: <BookOpen className="w-4 h-4 text-white" />, label: 'Tài liệu phong phú' },
@@ -2380,12 +2382,12 @@ export default function FacultyDashboard({
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-3.5 group"
+                  className="flex items-center gap-3 group"
                 >
-                  <span className="w-10 h-10 rounded-full bg-white/15 group-hover:bg-[#1E6BFF] backdrop-blur-md border border-white/35 flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110">
+                  <span className="w-9 h-9 rounded-full bg-white/15 group-hover:bg-[#1E6BFF] backdrop-blur-md border border-white/35 flex items-center justify-center shadow-sm transition-all duration-300 group-hover:scale-105">
                     {item.icon}
                   </span>
-                  <span className="text-sm sm:text-base font-medium text-white/95 drop-shadow-sm">
+                  <span className="text-sm font-medium text-white/95 drop-shadow-xs">
                     {item.label}
                   </span>
                 </div>
@@ -2396,29 +2398,29 @@ export default function FacultyDashboard({
           {/* CỘT PHẢI (5 CỘT): THẺ TRẮNG ĐĂNG NHẬP EDUCAMPUS */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <div
-              className="w-full max-w-[450px] bg-white/95 backdrop-blur-2xl rounded-[28px] shadow-[0_28px_75px_rgba(5,18,48,0.42)] border border-white/80 p-7 sm:p-9 text-slate-900 transition-transform duration-300 ease-out"
+              className="w-full max-w-[420px] bg-white/95 backdrop-blur-2xl rounded-[24px] shadow-[0_24px_65px_rgba(5,18,48,0.4)] border border-white/80 p-6 sm:p-7 text-slate-900 transition-transform duration-300 ease-out"
               style={{
-                transform: `translate3d(${loginParallax.x * 0.25}px, ${loginParallax.y * 0.25}px, 0)`
+                transform: `translate3d(${loginParallax.x * 0.2}px, ${loginParallax.y * 0.2}px, 0)`
               }}
             >
               {/* Logo EduCampus xanh dương ở đầu thẻ */}
-              <div className="flex flex-col items-center text-center space-y-1.5 mb-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <GraduationCap className="w-9 h-9 text-[#1254D0]" />
-                  <span className="text-2xl font-extrabold tracking-tight text-[#0D2352]">
+              <div className="flex flex-col items-center text-center space-y-1 mb-4">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <GraduationCap className="w-8 h-8 text-[#1254D0]" />
+                  <span className="text-xl font-extrabold tracking-tight text-[#0D2352]">
                     EduCampus
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 m-0">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 m-0">
                   Đăng nhập
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 m-0 font-medium">
+                <p className="text-xs text-slate-500 m-0 font-medium">
                   Truy cập vào hệ thống học tập
                 </p>
               </div>
 
               {/* Thanh chuyển nhanh phân hệ (Giảng viên / Quản trị / QR Không MK) */}
-              <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-xl border border-slate-200/80 gap-1 mb-5">
+              <div className="grid grid-cols-3 bg-slate-100 p-1 rounded-xl border border-slate-200/80 gap-1 mb-4">
                 {[
                   { id: 'FACULTY', label: 'Giảng viên' },
                   { id: 'ADMIN', label: 'Quản trị' },
