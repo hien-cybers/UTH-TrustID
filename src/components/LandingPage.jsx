@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   QrCode,
   Sparkles,
-  Clock,
   Layers,
   Lock,
   BarChart3,
