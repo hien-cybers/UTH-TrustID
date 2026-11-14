@@ -54,7 +54,6 @@ export default function StudentWalletPro({
   useEffect(() => {
     setWalletSubTab(initialTab);
   }, [initialTab]);
-  const [previewStudentMssv, setPreviewStudentMssv] = useState('');
   const [verifiedReceiptSessionId, setVerifiedReceiptSessionId] = useState(null);
 
   // Sinh trắc học phần cứng (Face ID / Touch ID / Keystore)
@@ -570,12 +569,12 @@ export default function StudentWalletPro({
           {/* 4. CƠ CHẾ CHO PHÉP SINH VIÊN "XEM LỊCH SỬ ĐIỂM DANH CÁ NHÂN" & BIÊN LAI CHỮ KÝ EIP-191 TRÊN APP */}
           {(() => {
             const displayCourses = Array.isArray(coursesCatalog) ? coursesCatalog : [];
-            const holderMssv = credential?.studentId || '2251120000';
-            const myMssv = previewStudentMssv || holderMssv;
+            const myMssv = credential?.studentId || '2251120000';
+            const myFullName = credential?.fullName || 'Nguyễn Đức Hiển';
 
             return walletSubTab === 'HISTORY' ? (
               <div className="stagger-2 space-y-3.5">
-                {/* 1. Khối Tổng Quan Sổ Chuyên Cần & Bộ Lọc Pill Mềm Mại */}
+                {/* 1. Khối Tổng Quan Sổ Chuyên Cần Cá Nhân (Holder-Only) */}
                 <div className="rounded-[26px] p-4 border shadow-lg bg-gradient-to-br from-[#0F293A] via-[#0A1A2F] to-[#060E1C] border-teal-400/30 text-slate-100 space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
@@ -591,29 +590,21 @@ export default function StudentWalletPro({
                     </span>
                   </div>
 
-                  {/* Bộ chọn nhanh MSSV kiểu Pill hiện đại */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    {[
-                      { id: holderMssv, label: `${holderMssv} (Ví của tôi)` },
-                      { id: '2251120001', label: '2251120001' },
-                      { id: '2251120002', label: '2251120002' }
-                    ].map((item) => {
-                      const active = myMssv === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setPreviewStudentMssv(item.id === holderMssv ? '' : item.id)}
-                          className={`px-3 py-1.5 rounded-full text-[10.5px] font-mono cursor-pointer transition-all border ${
-                            active
-                              ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] border-transparent text-slate-950 font-extrabold shadow-[0_4px_14px_rgba(79,240,214,0.28)]'
-                              : 'bg-[#050A14] border-white/10 text-slate-400 hover:text-white font-semibold'
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      );
-                    })}
+                  {/* Thẻ Định Danh Chủ Sở Hữu Ví (Personal Holder Badge) */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-white/10">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-6 h-6 rounded-full bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 flex items-center justify-center text-[#64F5DF] flex-shrink-0">
+                        <UserCheck size={12} />
+                      </span>
+                      <span className="text-[11px] font-bold text-white truncate">
+                        {myFullName} <span className="text-slate-400 font-normal">•</span>{' '}
+                        <span className="font-mono text-[#64F5DF]">MSSV: {myMssv}</span>
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#050A14] border border-[#4FF0D6]/30 text-[#64F5DF] text-[9.5px] font-mono font-semibold flex-shrink-0">
+                      <ShieldCheck size={11} />
+                      Chỉ hiển thị dữ liệu cá nhân (Holder-Only)
+                    </span>
                   </div>
                 </div>
 
