@@ -5,26 +5,15 @@ import { io } from 'socket.io-client';
 import { getSocketUrl, smartFetch, retargetSocket, SERVER_URL } from '../utils/backendUrl';
 import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
-import { toggleTheme, getInitialThemeIsDark } from '../utils/theme';
+import { toggleTheme } from '../utils/theme';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
 
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
 }) {
-  const [isDarkTheme, setIsDarkTheme] = useState(() => getInitialThemeIsDark());
-
   useEffect(() => {
-    const handleThemeSync = (e) => {
-      if (typeof e?.detail?.isDark === 'boolean') setIsDarkTheme(e.detail.isDark);
-    };
-    window.addEventListener('uth-theme-changed', handleThemeSync);
-    return () => window.removeEventListener('uth-theme-changed', handleThemeSync);
+    toggleTheme();
   }, []);
-
-  const handleTogglePortalTheme = () => {
-    const next = toggleTheme(!isDarkTheme);
-    setIsDarkTheme(next);
-  };
   // Xác thực Quản trị tập trung (Centralized RBAC + JWT Bearer Token cho Giảng viên & Admin)
   const [token, setToken] = useState(() => localStorage.getItem('faculty_token') || null);
   const [facultyUser, setFacultyUser] = useState(() => {
@@ -141,8 +130,6 @@ export default function FacultyDashboard({
   const [selectedHistorySessionId, setSelectedHistorySessionId] = useState('ALL');
   const [courseToDelete, setCourseToDelete] = useState(null);
   const [finalizedBannerNotice, setFinalizedBannerNotice] = useState(null);
-  const [smartInheritanceNotice, setSmartInheritanceNotice] = useState(null);
-  const [hashVerifyResult, setHashVerifyResult] = useState(null);
 
   // Cấu hình phiên học của buổi điểm danh đang mở
   const [sessionConfig, setSessionConfig] = useState({
@@ -271,7 +258,6 @@ export default function FacultyDashboard({
   const [rosterFilter, setRosterFilter] = useState('ALL'); // 'ALL' | 'VALID' | 'SUSPICIOUS'
   const [stageSafeMode, setStageSafeMode] = useState(false);
   const [statusBannerMsg, setStatusBannerMsg] = useState('');
-  const [offlineSyncCount, setOfflineSyncCount] = useState(0);
 
   // Đồng bộ thời gian thực qua WebSocket với Backend
   useEffect(() => {
@@ -344,10 +330,6 @@ export default function FacultyDashboard({
         checkInTime: rec.time || rec.checkInTime || new Date().toLocaleTimeString('vi-VN', { hour12: false }),
         spotCheckStatus: rec.spotCheckVerified ? 'VERIFIED' : (rec.status === 'PENDING_SPOTCHECK' ? 'PENDING' : 'NONE')
       };
-
-      if (rec.isOfflineSynced) {
-        setOfflineSyncCount((c) => c + 1);
-      }
 
       setAttendees((prev) => {
         const exists = prev.some((item) => item.studentId === sid);
@@ -828,15 +810,6 @@ export default function FacultyDashboard({
     setIsSessionOpen(true);
     setActiveTab('STAGE');
     setTimerProgress(ROTATE_INTERVAL);
-    setSmartInheritanceNotice({
-      sessionIndex: nextIndex,
-      inheritedFrom: lastSession ? `Buổi ${lastSession.sessionIndex || lastSession.sessionNumber} (${lastSession.date || lastSession.sessionDate})` : 'Cấu hình gốc lớp học phần',
-      coords: inheritedCoords,
-      radius: inheritedRadius,
-      networkMode: inheritedNetworkMode,
-      rosterCount: inheritedRoster.length,
-      totalClassStudents: Number(targetCourse.totalStudents) || 50
-    });
 
     try {
       const res = await smartFetch('/api/session/create', {
@@ -870,14 +843,9 @@ export default function FacultyDashboard({
   const handleReopenExistingSession = async (course, sessionObj) => {
     if (!course || !sessionObj) return;
     if (sessionObj.isFinalized || sessionObj.status === 'FINALIZED') {
-      setHashVerifyResult({
-        sessionId: sessionObj.sessionId,
-        sessionIndex: sessionObj.sessionIndex || sessionObj.sessionNumber,
-        isValid: true,
-        sessionHash: sessionObj.sessionHash,
-        facultySignature: sessionObj.facultySignature,
-        message: `Buổi ${sessionObj.sessionIndex || sessionObj.sessionNumber} đã Khóa Sổ Bất Biến (Tamper-Proof Finalized). Không thể mở lại mã QR hoặc ghi thêm dữ liệu để bảo toàn tính toàn vẹn của mã băm.`
-      });
+      setStatusBannerMsg(
+        `Buổi ${sessionObj.sessionIndex || sessionObj.sessionNumber} đã Khóa Sổ Bất Biến. Không thể mở lại mã QR hoặc ghi thêm dữ liệu.`
+      );
       return;
     }
     const targetId = course.courseId || course.id;
@@ -1063,20 +1031,6 @@ export default function FacultyDashboard({
     setSelectedHistorySessionId('ALL');
     setIsCreated(false);
     setIsSessionOpen(false);
-  };
-
-  // Kiểm tra tính toàn vẹn của Mã băm buổi học đã chốt sổ (Tamper-Proof Verification)
-  const handleVerifySessionIntegrity = (course, ses) => {
-    if (!ses) return;
-    const sIdx = ses.sessionIndex || ses.sessionNumber || 1;
-    setHashVerifyResult({
-      sessionId: ses.sessionId,
-      sessionIndex: sIdx,
-      isValid: true,
-      sessionHash: ses.sessionHash || computeLocalSessionHash(ses.sessionId, ses.attendees || []),
-      facultySignature: ses.facultySignature || '0x4b7e91c2a08f3d1652e89c4a7103b5d28910fe34a1bc89213048ab92cd1980121c',
-      message: `Xác thực toàn vẹn thành công cho Buổi ${sIdx} (${ses.date || ses.sessionDate}): Danh sách ${ses.attendees?.length || 0} sinh viên khớp 100% với Merkle Leaf Hash và chữ ký số của Giảng viên.`
-    });
   };
 
   // Kết thúc buổi học hiện tại (tạm lưu chưa khóa sổ hoặc quay về Trang Chi Tiết Lớp Học)

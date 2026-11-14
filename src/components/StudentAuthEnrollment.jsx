@@ -1,15 +1,13 @@
 // src/components/StudentAuthEnrollment.jsx - Luồng Onboarding 2 Giai Đoạn (FIDO2 Claim & Gmail OTP Enrollment + Mở Khóa Hàng Ngày)
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { ethers } from 'ethers';
-import { ShieldCheck, Lock, Fingerprint, KeyRound, Mail, CheckCircle2, RefreshCw, Sun, Moon } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, Mail, CheckCircle2, RefreshCw } from 'lucide-react';
 import { smartFetch } from '../utils/backendUrl';
 import { setItem, removeItem } from '../utils/db';
 import { initializeRandomIdentity } from '../utils/identityManager';
 import { registerBiometric } from '../utils/webauthnHelper';
 import { setActiveWallet } from '../utils/sessionKeyVault';
 import { triggerScanSuccessFeedback } from '../utils/hapticAudioFeedback';
-import { toggleTheme, getInitialThemeIsDark } from '../utils/theme';
 import FaceIDModal from './FaceIDModal';
 
 const ADMIN_ROSTER_FALLBACK = {
@@ -33,26 +31,14 @@ const getSafeSavedProfile = () => {
 };
 
 export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = false }) {
-  const [isDark, setIsDark] = useState(() => getInitialThemeIsDark());
-
-  useEffect(() => {
-    const handleSync = (e) => {
-      if (typeof e?.detail?.isDark === 'boolean') setIsDark(e.detail.isDark);
-    };
-    window.addEventListener('uth-theme-changed', handleSync);
-    return () => window.removeEventListener('uth-theme-changed', handleSync);
-  }, []);
-
-  const handleSwitchTheme = () => {
-    const next = toggleTheme(!isDark);
-    setIsDark(next);
-  };
-
   // Trạng thái đã kích hoạt trước đó hay chưa
   const [isEnrolled, setIsEnrolled] = useState(() => {
     if (forceEnroll) return false;
     return localStorage.getItem('trustid_enrolled') === 'true';
   });
+
+  // Dữ liệu kích hoạt lần đầu (Giai đoạn 1)
+  const [step, setStep] = useState(1); // 1: Nhập MSSV, 2: Nhập OTP Email, 3: Xác nhận thông tin & Đặt PIN/FaceID, 4: Thành công
 
   useEffect(() => {
     if (forceEnroll) {
@@ -60,9 +46,6 @@ export default function StudentAuthEnrollment({ onAuthSuccess, forceEnroll = fal
       setStep(1);
     }
   }, [forceEnroll]);
-
-  // Dữ liệu kích hoạt lần đầu (Giai đoạn 1)
-  const [step, setStep] = useState(1); // 1: Nhập MSSV, 2: Nhập OTP Email, 3: Xác nhận thông tin & Đặt PIN/FaceID, 4: Thành công
   const [mssv, setMssv] = useState('2251120000');
   const [otp, setOtp] = useState('');
   const [setupPin, setSetupPin] = useState('123456');

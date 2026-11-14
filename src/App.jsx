@@ -15,7 +15,7 @@ import StudentAuthEnrollment from './components/StudentAuthEnrollment';
 import FaceIDModal from './components/FaceIDModal';
 import { useAutoLock } from './hooks/useAutoLock';
 import { preWarmGPS } from './utils/gpsDriftFilter';
-import { toggleTheme as applyRootTheme, getInitialThemeIsDark } from './utils/theme';
+import { toggleTheme as applyRootTheme } from './utils/theme';
 import { clearActiveWallet } from './utils/sessionKeyVault';
 import { getSocketUrl, smartFetch, retargetSocket } from './utils/backendUrl';
 import { getItem } from './utils/db';
@@ -24,16 +24,19 @@ import { signAuthChallenge } from './services/did';
 import { triggerScanSuccessFeedback, triggerSessionTerminatedFeedback } from './utils/hapticAudioFeedback';
 import './styles/appPro.css';
 
-import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink, Sun, Moon } from 'lucide-react';
+import { ShieldCheck, Lock, Fingerprint, CheckCircle2, Minimize2, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => getInitialThemeIsDark());
   // Tự động kích hoạt màn hình khóa nếu rời app quá 30 giây (Zero-Trust Session)
   const { isLocked, unlock, lockNow } = useAutoLock(30000);
   // Trạng thái xác thực phiên 2 giai đoạn (Stage 1: Gmail OTP Claim -> Stage 2: Daily FaceID/PIN)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [forceEnrollStage1, setForceEnrollStage1] = useState(false);
+
+  useEffect(() => {
+    applyRootTheme();
+  }, []);
 
   useEffect(() => {
     const handleOpenEnroll = () => {
@@ -43,21 +46,6 @@ export default function App() {
     window.addEventListener('uth-open-enrollment', handleOpenEnroll);
     return () => window.removeEventListener('uth-open-enrollment', handleOpenEnroll);
   }, []);
-
-  useEffect(() => {
-    const handleThemeSync = (e) => {
-      if (typeof e?.detail?.isDark === 'boolean') {
-        setIsDarkMode(e.detail.isDark);
-      }
-    };
-    window.addEventListener('uth-theme-changed', handleThemeSync);
-    return () => window.removeEventListener('uth-theme-changed', handleThemeSync);
-  }, []);
-
-  const handleToggleTheme = () => {
-    const next = applyRootTheme(!isDarkMode);
-    setIsDarkMode(next);
-  };
 
   // Trạng thái Lớp Học Phần & Buổi Điểm Danh đang mở từ Web Portal Giảng viên (Mặc định isOpen: false khi chưa tạo lớp)
   const [activeCourseSession, setActiveCourseSession] = useState({
@@ -711,7 +699,6 @@ export default function App() {
               path="/student"
               element={
                 <StudentWalletPro
-                  isDarkMode={isDarkMode}
                   initialTab="CARD"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}
@@ -724,7 +711,6 @@ export default function App() {
               path="/wallet"
               element={
                 <StudentWalletPro
-                  isDarkMode={isDarkMode}
                   initialTab="CARD"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}
@@ -737,7 +723,6 @@ export default function App() {
               path="/history"
               element={
                 <StudentWalletPro
-                  isDarkMode={isDarkMode}
                   initialTab="HISTORY"
                   activeCourseSession={activeCourseSession}
                   coursesCatalog={coursesCatalog}

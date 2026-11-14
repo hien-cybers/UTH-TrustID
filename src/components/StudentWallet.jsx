@@ -12,15 +12,13 @@ import {
   authenticateWithBiometrics,
   getDecryptedPrivateKey,
   getDecryptedMnemonic,
-  getPolygonAmoyBlockNumber,
   generateW3CDIDDocument,
   NETWORK_CONFIG,
 } from '../services/did';
 import { verifyGpsIntegrity } from '../utils/antiSpoofGps';
-import { getDeviceFingerprint, verifyDeviceBinding } from '../utils/deviceFingerprint';
+import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 import {
   saveCredentialToStorage,
-  getCredentialByStudentId,
   getActiveCredential,
   getAllCredentialsFromStorage,
   deleteCredentialFromStorage
@@ -52,7 +50,6 @@ import {
   Flame,
   Database,
   UploadCloud,
-  HardDrive,
 } from 'lucide-react';
 
 export default function StudentWallet() {
@@ -1045,7 +1042,7 @@ export default function StudentWallet() {
                         <h4 className="text-sm font-bold text-white mt-1">{vc.name || vc.title || 'Thẻ Sinh Viên Số UTH'}</h4>
                       </div>
                       <span className="text-[10px] text-emerald-400 font-semibold flex items-center space-x-1 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
-                        <CheckCircle size={10} />
+                        <CheckCircle2 size={10} />
                         <span>Hợp lệ</span>
                       </span>
                     </div>
