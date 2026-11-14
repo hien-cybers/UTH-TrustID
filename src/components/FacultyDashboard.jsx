@@ -2,6 +2,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { io } from 'socket.io-client';
+import {
+  BookOpen,
+  QrCode,
+  MapPin,
+  ShieldAlert,
+  Users,
+  Download,
+  Plus,
+  Sparkles,
+  Maximize2,
+  CheckCircle2,
+  Search,
+  Clock,
+  Wifi,
+  Radio,
+  UserPlus,
+  Trash2,
+  RefreshCw,
+  ArrowLeft,
+  LogOut,
+  Layers,
+  Lock,
+  Unlock,
+  X
+} from 'lucide-react';
 import { getSocketUrl, smartFetch, retargetSocket, SERVER_URL } from '../utils/backendUrl';
 import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
@@ -153,10 +178,64 @@ export default function FacultyDashboard({
     resolvedInitialRole === 'ADMIN' ? 'ADMIN_ISSUANCE' : 'STAGE'
   );
   
-  // Nonce xoay vòng & Tiến trình đếm lùi 35 giây
-  const ROTATE_INTERVAL = 35;
+  // Đồng hồ thời gian thực trên Executive Topbar
+  const [liveClock, setLiveClock] = useState(() => new Date());
+  useEffect(() => {
+    const clockTimer = setInterval(() => setLiveClock(new Date()), 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
+
+  // Bộ 3 Mẫu Học Phần Thông Minh (1-Click Presets)
+  const COURSE_PRESETS = [
+    {
+      courseCode: 'IT402.N01',
+      courseName: 'An toàn Mạng máy tính & Ứng dụng',
+      defaultRoom: 'A2-301',
+      defaultRadius: 35,
+      defaultNetworkMode: 'CELLULAR_ANY',
+      schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
+      totalStudents: 60
+    },
+    {
+      courseCode: 'IT308.N02',
+      courseName: 'Mật mã học & An ninh Blockchain',
+      defaultRoom: 'B1-405',
+      defaultRadius: 35,
+      defaultNetworkMode: 'CELLULAR_ANY',
+      schedule: 'Thứ 4 • Ca 1 (07:30 - 10:00)',
+      totalStudents: 55
+    },
+    {
+      courseCode: 'IT205.N01',
+      courseName: 'Hệ điều hành & Bảo mật Hệ thống',
+      defaultRoom: 'C3-202',
+      defaultRadius: 35,
+      defaultNetworkMode: 'CAMPUS_WIFI',
+      schedule: 'Thứ 6 • Ca 2 (09:30 - 12:00)',
+      totalStudents: 50
+    }
+  ];
+
+  // Tìm kiếm & Lọc Sổ điểm toàn kỳ + Modal Điểm danh thủ công tại lớp
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [historyEligibilityFilter, setHistoryEligibilityFilter] = useState('ALL'); // 'ALL' | 'QUALIFIED' | 'WARNING'
+  const [showManualCheckInModal, setShowManualCheckInModal] = useState(false);
+  const [manualCheckInContext, setManualCheckInContext] = useState(null); // null => live STAGE; { course, session } => history session
+  const [manualForm, setManualForm] = useState({
+    studentId: '',
+    name: '',
+    major: 'An toàn Thông tin',
+    reason: 'Quên điện thoại / Hết pin'
+  });
+
+  // Nonce xoay vòng & Chu kỳ tùy chỉnh (15s / 35s / 60s)
+  const [rotateInterval, setRotateInterval] = useState(35);
+  const rotateIntervalRef = useRef(35);
+  useEffect(() => {
+    rotateIntervalRef.current = rotateInterval;
+  }, [rotateInterval]);
   const [currentNonce, setCurrentNonce] = useState('NONCE_STAGE_8X9K');
-  const [timerProgress, setTimerProgress] = useState(ROTATE_INTERVAL);
+  const [timerProgress, setTimerProgress] = useState(35);
   const socketRef = useRef(null);
 
   // Danh sách sinh viên hiện diện thời gian thực (Khởi tạo rỗng, đồng bộ khi sinh viên quét QR)
@@ -521,7 +600,7 @@ export default function FacultyDashboard({
     socket.on('nonce-updated', (payload) => {
       if (payload?.nonce) {
         setCurrentNonce(payload.nonce);
-        setTimerProgress(ROTATE_INTERVAL);
+        setTimerProgress(rotateIntervalRef.current);
       }
     });
 
@@ -653,17 +732,146 @@ export default function FacultyDashboard({
     }
   };
 
-  // Điền nhanh thông tin mẫu vào biểu mẫu tạo lớp
-  const handleQuickFillCoursePreset = () => {
-    setNewCourseForm({
-      courseCode: 'IT402.N01',
-      courseName: 'An toàn Mạng máy tính & Ứng dụng',
-      defaultRoom: 'A2-301',
-      defaultRadius: 35,
-      defaultNetworkMode: 'CELLULAR_ANY',
-      schedule: 'Thứ 2 • Ca 3 (13:30 - 16:00)',
-      totalStudents: 60
-    });
+  // Điền nhanh thông tin mẫu vào biểu mẫu tạo lớp (hỗ trợ Bộ 3 Mẫu Học Phần Thông Minh)
+  const handleQuickFillCoursePreset = (presetIndex = 0) => {
+    const idx = typeof presetIndex === 'number' ? presetIndex : 0;
+    const preset = COURSE_PRESETS[idx] || COURSE_PRESETS[0];
+    setNewCourseForm({ ...preset });
+  };
+
+  // Tạo nhanh 1 lớp học mẫu & Mở màn chiếu QR ngay với 1 chạm
+  const handleQuickCreateDemoCourseAndLaunchQr = async (presetIndex = 0) => {
+    const idx = typeof presetIndex === 'number' ? presetIndex : 0;
+    const preset = COURSE_PRESETS[idx] || COURSE_PRESETS[0];
+    const createdCourse = {
+      id: `CLS_${preset.courseCode.replace(/[^A-Z0-9]/gi, '_')}_${Date.now().toString(36).slice(-4).toUpperCase()}`,
+      ...preset,
+      createdAt: new Date().toISOString().slice(0, 10),
+      enrolledStudents: DEFAULT_ENROLLED_ROSTER,
+      sessions: []
+    };
+    const nextList = [createdCourse, ...courses];
+    saveCoursesToStorage(nextList);
+    setShowCreateCourseForm(false);
+    await handleCreateNewSession(createdCourse, nextList);
+  };
+
+  // Xoay mã QR tức thì (chống chụp màn hình)
+  const handleInstantRotateNonce = () => {
+    const nextNonce = 'NONCE_' + Math.random().toString(36).substring(2, 9).toUpperCase();
+    setCurrentNonce(nextNonce);
+    setTimerProgress(rotateInterval);
+    socketRef.current?.emit('rotate-nonce', { sessionId, nonce: nextNonce });
+    setStatusBannerMsg(`↻ Đã đổi mã QR mới (${nextNonce}) — Chu kỳ xoay tự động ${rotateInterval}s`);
+  };
+
+  // Tùy chỉnh chu kỳ xoay mã QR (15s / 35s / 60s)
+  const handleChangeRotateInterval = (seconds) => {
+    const cleanSec = Number(seconds) || 35;
+    setRotateInterval(cleanSec);
+    setTimerProgress(cleanSec);
+    setStatusBannerMsg(`⏱ Đã chuyển chu kỳ tự động xoay mã QR sang ${cleanSec} giây`);
+  };
+
+  // Điểm danh thủ công / bổ sung sinh viên tại lớp (quên điện thoại, hết pin, vắng có phép)
+  const handleManualCheckInStudent = ({ studentId, name, major = 'An toàn Thông tin', reason = 'Điểm danh bổ sung tại lớp' }) => {
+    const cleanId = String(studentId || '').trim();
+    if (!cleanId) return;
+    const cleanName = String(name || '').trim() || `Sinh viên ${cleanId}`;
+    const nowTime = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+
+    if (!manualCheckInContext) {
+      const manualRec = {
+        studentId: cleanId,
+        name: cleanName,
+        major,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        coords: { ...sessionConfig.centerCoords },
+        distance: 0,
+        gpsAccuracy: 3.0,
+        isMockGps: false,
+        network: `GV Bổ Sung (${reason})`,
+        deviceId: `FACULTY_MANUAL_${cleanId}`,
+        checkInTime: nowTime,
+        signatureHash: computeLocalSessionHash(`${sessionId}_${cleanId}`, [{ studentId: cleanId, status: 'VERIFIED', distance: 0 }]),
+        spotCheckStatus: 'VERIFIED',
+        isManual: true
+      };
+
+      const exists = attendees.some((a) => a.studentId === cleanId);
+      const nextList = exists
+        ? attendees.map((a) => (a.studentId === cleanId ? { ...a, ...manualRec } : a))
+        : [manualRec, ...attendees];
+      setAttendees(nextList);
+
+      const updatedCourses = courses.map((c) => {
+        if ((c.courseId || c.id) !== activeCourseId && c.courseCode !== sessionConfig.courseCode) return c;
+        return {
+          ...c,
+          sessions: (c.sessions || []).map((s) =>
+            s.sessionId === sessionId
+              ? {
+                  ...s,
+                  attendees: nextList.map((a) => ({
+                    studentId: a.studentId,
+                    name: a.name,
+                    major: a.major,
+                    checkInTime: a.checkInTime,
+                    distance: a.distance,
+                    status: a.distance <= sessionConfig.maxRadiusMeters ? 'VERIFIED' : 'EXCEPTION',
+                    signatureHash: a.signatureHash
+                  }))
+                }
+              : s
+          )
+        };
+      });
+      saveCoursesToStorage(updatedCourses);
+
+      setLatestVerifiedNotice({
+        studentId: cleanId,
+        name: cleanName,
+        distance: 0,
+        network: `Điểm danh thủ công (${reason})`,
+        time: nowTime
+      });
+      setStatusBannerMsg(`✓ Đã điểm danh thủ công cho SV ${cleanName} (${cleanId}) — Lý do: ${reason}`);
+    } else {
+      const { course: targetCourse, session: targetSes } = manualCheckInContext;
+      const targetCourseId = targetCourse.courseId || targetCourse.id;
+      const targetSid = targetSes.sessionId;
+      const newRec = {
+        studentId: cleanId,
+        name: cleanName,
+        major,
+        checkInTime: nowTime,
+        distance: 0,
+        status: 'VERIFIED',
+        signatureHash: computeLocalSessionHash(`${targetSid}_${cleanId}`, [{ studentId: cleanId, status: 'VERIFIED', distance: 0 }])
+      };
+
+      const updatedCourses = courses.map((c) => {
+        if ((c.courseId || c.id) !== targetCourseId) return c;
+        return {
+          ...c,
+          sessions: (c.sessions || []).map((s) => {
+            if (s.sessionId !== targetSid) return s;
+            const prevAtt = Array.isArray(s.attendees) ? s.attendees : [];
+            const exists = prevAtt.some((a) => a.studentId === cleanId);
+            const nextAtt = exists
+              ? prevAtt.map((a) => (a.studentId === cleanId ? newRec : a))
+              : [newRec, ...prevAtt];
+            return { ...s, attendees: nextAtt };
+          })
+        };
+      });
+      saveCoursesToStorage(updatedCourses);
+      setStatusBannerMsg(
+        `✓ Đã bổ sung điểm danh SV ${cleanName} (${cleanId}) vào Buổi ${targetSes.sessionIndex || targetSes.sessionNumber}`
+      );
+    }
+
+    setManualForm((prev) => ({ ...prev, studentId: '', name: '' }));
   };
 
   // Xóa vĩnh viễn Lớp học phần (kèm đóng phiên QR nếu lớp đang mở)
@@ -809,7 +1017,7 @@ export default function FacultyDashboard({
     setIsCreated(true);
     setIsSessionOpen(true);
     setActiveTab('STAGE');
-    setTimerProgress(ROTATE_INTERVAL);
+    setTimerProgress(rotateInterval);
 
     try {
       const res = await smartFetch('/api/session/create', {
@@ -886,7 +1094,7 @@ export default function FacultyDashboard({
     setIsCreated(true);
     setIsSessionOpen(true);
     setActiveTab('STAGE');
-    setTimerProgress(ROTATE_INTERVAL);
+    setTimerProgress(rotateInterval);
 
     try {
       await smartFetch('/api/session/create', {
@@ -918,7 +1126,7 @@ export default function FacultyDashboard({
     setSessionId(newSid);
     setIsCreated(true);
     setIsSessionOpen(true);
-    setTimerProgress(ROTATE_INTERVAL);
+    setTimerProgress(rotateInterval);
   };
 
   // 1. CƠ CHẾ "KHÓA SỔ BUỔI HỌC" (SESSION FINALIZATION & TAMPER-PROOF ROOT)
@@ -1197,7 +1405,7 @@ export default function FacultyDashboard({
         });
       } catch {}
     } else {
-      setTimerProgress(ROTATE_INTERVAL);
+      setTimerProgress(rotateInterval);
       try {
         const res = await smartFetch('/api/session/create', {
           method: 'POST',
@@ -1224,7 +1432,7 @@ export default function FacultyDashboard({
     }
   };
 
-  // Vòng lặp đếm lùi xoay Nonce (35s)
+  // Vòng lặp đếm lùi xoay Nonce động theo chu kỳ rotateInterval (15s / 35s / 60s)
   useEffect(() => {
     if (!isCreated || !isSessionOpen) return;
     const interval = setInterval(() => {
@@ -1233,13 +1441,13 @@ export default function FacultyDashboard({
           const nextNonce = "NONCE_" + Math.random().toString(36).substring(2, 9).toUpperCase();
           setCurrentNonce(nextNonce);
           socketRef.current?.emit('rotate-nonce', { sessionId, nonce: nextNonce });
-          return ROTATE_INTERVAL;
+          return rotateInterval;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [isCreated, isSessionOpen, sessionId]);
+  }, [isCreated, isSessionOpen, sessionId, rotateInterval]);
 
   // Vòng lặp đếm lùi Spot-check 60s
   useEffect(() => {
@@ -2128,8 +2336,8 @@ export default function FacultyDashboard({
       {/* KHUNG VIỀN BO TRÒN NỔI DARK NEON (FLOATING ROUNDED DASHBOARD SHELL) */}
       <div className="dashboard-outer-shell w-full max-w-[1620px] mx-auto flex-1 rounded-[28px] overflow-hidden flex flex-col">
       
-      {/* ==================== THANH ĐIỀU HƯỚNG CHÍNH THEO ĐÚNG VAI TRÒ (FACULTY & ADMIN) ==================== */}
-      <header className="sticky top-0 z-30 px-6 py-4 border-b border-cyan-500/20 bg-[#060E1C]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
+      {/* ==================== THANH ĐIỀU HƯỚNG EXECUTIVE COMMAND BAR (FACULTY & ADMIN) ==================== */}
+      <header className="sticky top-0 z-30 px-5 sm:px-6 py-3.5 border-b border-cyan-500/20 bg-[#060E1C]/95 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
         
         {/* Cụm Thương hiệu & Thông tin Người dùng đang đăng nhập */}
         <div className="flex items-center gap-3.5">
@@ -2141,7 +2349,7 @@ export default function FacultyDashboard({
             U
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-base font-extrabold text-white m-0 tracking-tight">
                 {staffRole === 'ADMIN'
                   ? 'UTH-TrustID • Cổng Quản Trị Hệ Thống'
@@ -2155,6 +2363,16 @@ export default function FacultyDashboard({
                   : 'bg-[#22D3EE]/15 border-[#4FF0D6]/40 text-[#4FF0D6]'
               }`}>
                 {staffRole === 'ADMIN' ? 'Quản Trị Viên' : 'Giảng Viên'}
+              </span>
+
+              {/* Đồng hồ thời gian thực trên Topbar */}
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#040814] border border-cyan-500/25 text-[11.5px] font-mono text-cyan-200">
+                <Clock size={12} className="text-[#4FF0D6]" />
+                <strong className="text-white">
+                  {liveClock.toLocaleTimeString('vi-VN', { hour12: false })}
+                </strong>
+                <span className="text-slate-400">•</span>
+                <span>{liveClock.toLocaleDateString('vi-VN')}</span>
               </span>
 
               {/* Chỉ hiện trạng thái phiên học khi là Giảng viên */}
@@ -2192,38 +2410,50 @@ export default function FacultyDashboard({
         {/* ==================== CỤM TAB ĐIỀU HƯỚNG VIÊN THUỐC (PILL TABS) ==================== */}
         {/* 1. Tab dành riêng cho GIẢNG VIÊN (Chỉ hiện khi đã tạo lớp & đang mở buổi điểm danh) */}
         {staffRole === 'FACULTY' && isCreated && (
-          <nav className="flex items-center bg-[#040814] p-1.5 rounded-full border border-cyan-500/25 gap-1.5">
+          <nav className="flex flex-wrap items-center bg-[#040814] p-1.5 rounded-full border border-cyan-500/25 gap-1">
+            <button
+              type="button"
+              onClick={handleFinishAndSaveSession}
+              className="faculty-pill-btn px-3.5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 bg-transparent text-slate-300 hover:text-white"
+              title="Lưu tạm buổi học hiện tại và trở về Danh mục Lớp học"
+            >
+              <Layers size={14} className="text-[#4FF0D6]" />
+              Danh Mục Lớp
+            </button>
             <button
               type="button"
               onClick={() => setActiveTab('STAGE')}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`faculty-pill-btn px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'STAGE'
                   ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
+              <QrCode size={14} />
               Màn Chiếu Mã QR
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('RADAR')}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`faculty-pill-btn px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'RADAR'
                   ? 'bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] text-[#03141A] shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
+              <MapPin size={14} />
               Bản Đồ Định Vị ({attendees.length})
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('IDS')}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
+              className={`faculty-pill-btn px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border-none flex items-center gap-1.5 ${
                 activeTab === 'IDS'
                   ? 'bg-rose-500 text-white shadow-md'
                   : 'bg-transparent text-slate-300 hover:text-white'
               }`}
             >
+              <ShieldAlert size={14} />
               Giám Sát Thiết Bị
               {idsViolationCount > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-rose-500/30 border border-rose-400 text-rose-200 text-xs font-bold">
@@ -2283,7 +2513,7 @@ export default function FacultyDashboard({
                 staffRole === 'ADMIN' ? 'giangvien@uth.edu.vn' : 'admin@uth.edu.vn'
               )
             }
-            className="px-3.5 py-2 rounded-full text-xs font-semibold border border-cyan-500/30 bg-[#0C1D33] text-cyan-200 hover:border-[#4FF0D6] hover:text-white cursor-pointer transition-all"
+            className="faculty-pill-btn px-3.5 py-2 rounded-full text-xs font-semibold border border-cyan-500/30 bg-[#0C1D33] text-cyan-200 hover:border-[#4FF0D6] hover:text-white cursor-pointer transition-all"
           >
             {staffRole === 'ADMIN' ? '⇄ Chuyển Sang Giảng Viên' : '⇄ Chuyển Sang Quản Trị'}
           </button>
@@ -2293,31 +2523,24 @@ export default function FacultyDashboard({
               <button
                 type="button"
                 onClick={handleToggleSessionState}
-                className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all border cursor-pointer ${
+                className={`faculty-pill-btn px-3.5 py-2 rounded-full text-xs font-semibold transition-all border cursor-pointer inline-flex items-center gap-1.5 ${
                   isSessionOpen
                     ? 'border-amber-500/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25'
                     : 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
                 }`}
               >
+                {isSessionOpen ? <Lock size={13} /> : <Unlock size={13} />}
                 {isSessionOpen ? 'Tạm Khóa Mã QR' : 'Mở Lại Mã QR'}
               </button>
 
               <button
                 type="button"
-                onClick={handleFinishAndSaveSession}
-                className="px-3.5 py-2 rounded-full text-xs font-semibold border border-slate-700 bg-[#040814] text-slate-200 hover:text-white cursor-pointer"
-                title="Đóng màn chiếu QR hiện tại và quay về Danh Mục / Chi Tiết Lớp Học"
-              >
-                Đóng QR &amp; Về Lớp Học
-              </button>
-
-              <button
-                type="button"
                 onClick={() => handleFinalizeSession()}
-                className="px-4 py-2 rounded-full text-xs font-bold border border-emerald-400/50 bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] shadow-lg cursor-pointer transition-all"
+                className="faculty-pill-btn px-4 py-2 rounded-full text-xs font-bold border border-emerald-400/50 bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] shadow-lg cursor-pointer transition-all inline-flex items-center gap-1.5"
                 title="Đóng kết nối WebSocket, băm danh sách sinh viên có mặt thành Session Hash (Merkle Leaf), ký số Giảng viên và khóa sổ bất biến"
               >
-                Kết Thúc &amp; Chốt Sổ Buổi Học
+                <CheckCircle2 size={14} />
+                Kết Thúc &amp; Chốt Sổ
               </button>
             </>
           )}
@@ -2325,8 +2548,9 @@ export default function FacultyDashboard({
           <button
             type="button"
             onClick={handleLogout}
-            className="px-4 py-2 rounded-full text-xs font-semibold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer"
+            className="faculty-pill-btn px-3.5 py-2 rounded-full text-xs font-semibold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 cursor-pointer inline-flex items-center gap-1.5"
           >
+            <LogOut size={13} />
             Đăng Xuất
           </button>
         </div>
@@ -2337,36 +2561,54 @@ export default function FacultyDashboard({
         /* ==================== MÀN HÌNH CHÍNH GIẢNG VIÊN: QUẢN LÝ DANH MỤC LỚP HỌC PHẦN (COURSE HUB) ==================== */
         <main className="flex-1 w-full max-w-[1540px] mx-auto p-6 lg:p-8 flex flex-col gap-6">
           
-          {/* 3 Thẻ Tóm Tắt Quy Mô Học Kỳ */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="hero-navy-card p-5 rounded-[24px] bg-gradient-to-br from-[#1B3B68] to-[#102544] border border-sky-400/35 flex items-center justify-between shadow-lg">
-              <div>
+          {/* 4 Thẻ Bento KPI Tóm Tắt Quy Mô Học Kỳ */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="faculty-kpi-card p-5 rounded-[24px] flex items-center justify-between gap-3">
+              <div className="space-y-1">
                 <span className="text-xs font-medium text-slate-300 block">Lớp Học Phần Phụ Trách</span>
-                <span className="text-2xl font-bold text-white mt-1 block font-mono">{courses.length} lớp</span>
+                <span className="text-2xl font-extrabold text-white block font-mono">{courses.length} lớp</span>
+                <span className="text-[11px] font-semibold text-sky-300 block">HK II • 2025-2026</span>
               </div>
-              <span className="px-3 py-1 rounded-xl bg-sky-400/15 border border-sky-300/35 text-sky-200 text-xs font-semibold">
-                HK II • 2025-2026
-              </span>
+              <div className="w-11 h-11 rounded-2xl bg-sky-400/15 border border-sky-300/35 flex items-center justify-center text-sky-300 shrink-0">
+                <BookOpen size={20} />
+              </div>
             </div>
 
-            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-700/60 flex items-center justify-between shadow-lg">
-              <div>
+            <div className="faculty-kpi-card p-5 rounded-[24px] flex items-center justify-between gap-3">
+              <div className="space-y-1">
                 <span className="text-xs font-medium text-slate-300 block">Buổi Đã Điểm Danh</span>
-                <span className="text-2xl font-bold text-emerald-400 mt-1 block font-mono">
+                <span className="text-2xl font-extrabold text-emerald-400 block font-mono">
                   {courses.reduce((sum, c) => sum + (c.sessions?.length || 0), 0)} buổi
                 </span>
+                <span className="text-[11px] font-semibold text-emerald-300/90 block">
+                  {courses.length === 0 ? 'Chưa có phiên mở' : 'Đồng bộ sổ điểm'}
+                </span>
               </div>
-              <span className="px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
-                {courses.length === 0 ? 'Chưa mở' : 'Đang hoạt động'}
-              </span>
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300 shrink-0">
+                <QrCode size={20} />
+              </div>
             </div>
 
-            <div className="p-5 rounded-[24px] bg-[#081226] border border-slate-700/60 flex items-center justify-between shadow-lg">
-              <div>
+            <div className="faculty-kpi-card p-5 rounded-[24px] flex items-center justify-between gap-3">
+              <div className="space-y-1">
                 <span className="text-xs font-medium text-slate-300 block">Tổng Sinh Viên</span>
-                <span className="text-2xl font-bold text-sky-300 mt-1 block font-mono">
+                <span className="text-2xl font-extrabold text-cyan-300 block font-mono">
                   {courses.reduce((sum, c) => sum + (Number(c.totalStudents) || 0), 0)} SV
                 </span>
+                <span className="text-[11px] font-semibold text-slate-300 block">Định danh Zero-Trust</span>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 flex items-center justify-center text-[#4FF0D6] shrink-0">
+                <Users size={20} />
+              </div>
+            </div>
+
+            <div className="faculty-kpi-card p-5 rounded-[24px] flex items-center justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <span className="text-xs font-medium text-slate-300 block">Thao Tác Nhanh</span>
+                <span className="text-xs font-bold text-white block truncate">
+                  {showCreateCourseForm ? 'Đang mở biểu mẫu' : 'Khởi tạo học phần mới'}
+                </span>
+                <span className="text-[11px] text-cyan-300 block">Hỗ trợ mẫu 1-chạm</span>
               </div>
               <button
                 type="button"
@@ -2374,34 +2616,49 @@ export default function FacultyDashboard({
                   setHistoryCourseId(null);
                   setShowCreateCourseForm((prev) => !prev);
                 }}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_24px_rgba(56,189,248,0.28)] transition-all"
+                className="faculty-pill-btn px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_24px_rgba(56,189,248,0.28)] inline-flex items-center gap-1.5 shrink-0"
               >
-                {showCreateCourseForm ? 'Đóng' : '+ Tạo Lớp Học Phần'}
+                {showCreateCourseForm ? <X size={14} /> : <Plus size={15} />}
+                {showCreateCourseForm ? 'Đóng' : 'Tạo Lớp Mới'}
               </button>
             </div>
           </section>
 
-          {/* ==================== KHUNG TẠO LỚP HỌC PHẦN MỚI ==================== */}
+          {/* ==================== KHUNG TẠO LỚP HỌC PHẦN MỚI (CÓ BỘ 3 MẪU THÔNG MINH) ==================== */}
           {showCreateCourseForm && (
-            <section className="w-full p-7 rounded-[26px] bg-gradient-to-b from-[#17345C] to-[#0F2442] border border-sky-400/40 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+            <section className="faculty-glass-card w-full p-6 sm:p-7 rounded-[26px] space-y-6 animate-[fadeIn_0.2s_ease-out]">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/60 pb-4">
-                <h2 className="text-lg font-extrabold text-white m-0">
-                  Khởi Tạo Lớp Học Phần Mới
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleQuickFillCoursePreset}
-                    className="px-3.5 py-2 rounded-xl bg-sky-400/15 border border-sky-300/40 text-sky-200 hover:bg-sky-400/25 text-xs font-bold cursor-pointer transition-all"
-                  >
-                    ⚡ Điền Nhanh Mẫu
-                  </button>
+                <div>
+                  <h2 className="text-lg font-extrabold text-white m-0 flex items-center gap-2">
+                    <Sparkles size={18} className="text-[#4FF0D6]" />
+                    Khởi Tạo Lớp Học Phần Mới
+                  </h2>
+                  <p className="text-xs text-slate-300 mt-1 mb-0">
+                    Chọn nhanh từ 3 học phần mẫu hoặc nhập thông số lớp học của bạn.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {COURSE_PRESETS.map((preset, idx) => (
+                    <button
+                      key={preset.courseCode}
+                      type="button"
+                      onClick={() => handleQuickFillCoursePreset(idx)}
+                      className={`faculty-pill-btn px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer transition-all inline-flex items-center gap-1.5 ${
+                        newCourseForm.courseCode === preset.courseCode
+                          ? 'bg-[#4FF0D6] border-[#4FF0D6] text-[#03141A]'
+                          : 'bg-sky-400/10 border-sky-300/35 text-sky-200 hover:bg-sky-400/20'
+                      }`}
+                    >
+                      <Sparkles size={12} />
+                      {preset.courseCode}
+                    </button>
+                  ))}
                   <button
                     type="button"
                     onClick={() => setShowCreateCourseForm(false)}
-                    className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
                   >
-                    Đóng
+                    <X size={13} /> Đóng
                   </button>
                 </div>
               </div>
@@ -2499,24 +2756,26 @@ export default function FacultyDashboard({
                     <button
                       type="button"
                       onClick={() => setNewCourseForm({ ...newCourseForm, defaultNetworkMode: 'CAMPUS_WIFI' })}
-                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                         newCourseForm.defaultNetworkMode === 'CAMPUS_WIFI'
                           ? 'border-amber-400 bg-amber-500/10 text-amber-300'
                           : 'border-slate-700/70 bg-[#040814] text-slate-300 hover:border-slate-600'
                       }`}
                     >
+                      <Wifi size={16} />
                       <p className="text-xs font-bold m-0">Wi-Fi Giảng Đường</p>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setNewCourseForm({ ...newCourseForm, defaultNetworkMode: 'CELLULAR_ANY' })}
-                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                         newCourseForm.defaultNetworkMode === 'CELLULAR_ANY'
                           ? 'border-emerald-400 bg-emerald-500/10 text-emerald-300'
                           : 'border-slate-700/70 bg-[#040814] text-slate-300 hover:border-slate-600'
                       }`}
                     >
+                      <Radio size={16} />
                       <p className="text-xs font-bold m-0">Mạng 4G / 5G + GPS</p>
                     </button>
                   </div>
@@ -2524,16 +2783,17 @@ export default function FacultyDashboard({
                   <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="submit"
-                      className="w-full py-4 px-4 rounded-2xl bg-[#040814] hover:bg-slate-900 border border-[#22D3EE]/50 text-[#4FF0D6] font-bold text-xs cursor-pointer transition-all"
+                      className="faculty-pill-btn w-full py-4 px-4 rounded-2xl bg-[#040814] hover:bg-slate-900 border border-[#22D3EE]/50 text-[#4FF0D6] font-bold text-xs cursor-pointer transition-all"
                     >
                       Lưu Vào Danh Mục Lớp
                     </button>
                     <button
                       type="button"
                       onClick={(e) => handleCreateNewCourse(e, true)}
-                      className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_28px_rgba(34,211,238,0.3)] transition-all"
+                      className="faculty-pill-btn w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_10px_28px_rgba(34,211,238,0.3)] transition-all inline-flex items-center justify-center gap-1.5"
                     >
-                      Tạo Lớp &amp; Phát Mã QR Ngay →
+                      <QrCode size={14} />
+                      Tạo Lớp &amp; Phát QR Ngay
                     </button>
                   </div>
                 </div>
@@ -2578,13 +2838,29 @@ export default function FacultyDashboard({
                 });
               });
               const summaryRows = Array.from(studentSummaryMap.values());
+              const filteredSummaryRows = summaryRows.filter((row) => {
+                const q = historySearchQuery.trim().toLowerCase();
+                const matchSearch =
+                  !q ||
+                  row.studentId.toLowerCase().includes(q) ||
+                  row.name.toLowerCase().includes(q) ||
+                  (row.major || '').toLowerCase().includes(q);
+                if (!matchSearch) return false;
+                if (historyEligibilityFilter === 'ALL') return true;
+                const attendedCount = Object.keys(row.sessionsAttended).length;
+                const totalSess = sessionList.length;
+                const ratioNum = totalSess > 0 ? Number(((attendedCount / totalSess) * 100).toFixed(1)) : 100;
+                const absentCount = totalSess - attendedCount;
+                const isWarning = totalSess > 0 && ((ratioNum < 80 && absentCount >= 2) || ratioNum < 60);
+                return historyEligibilityFilter === 'WARNING' ? isWarning : !isWarning;
+              });
               const selectedSessionObj =
                 selectedHistorySessionId === 'ALL'
                   ? null
                   : sessionList.find((s) => s.sessionId === selectedHistorySessionId);
 
               return (
-                <section className="w-full p-7 rounded-[26px] bg-[#081226] border border-cyan-500/35 shadow-2xl space-y-6 animate-[fadeIn_0.2s_ease-out]">
+                <section className="faculty-glass-card w-full p-6 sm:p-7 rounded-[26px] space-y-6 animate-[fadeIn_0.2s_ease-out]">
                   {/* KHU VỰC TRÊN: THÔNG TIN LỚP HỌC PHẦN + NÚT PHÁT QR BUỔI MỚI + XÓA LỚP */}
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5">
                     <div>
@@ -2592,9 +2868,10 @@ export default function FacultyDashboard({
                         <button
                           type="button"
                           onClick={() => setHistoryCourseId(null)}
-                          className="px-3 py-1 rounded-lg bg-[#040814] border border-slate-700 hover:border-cyan-400 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer transition-all"
+                          className="faculty-pill-btn px-3 py-1.5 rounded-xl bg-[#040814] border border-slate-700 hover:border-cyan-400 text-slate-200 hover:text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5"
                         >
-                          ← Danh Sách Lớp Học
+                          <ArrowLeft size={13} />
+                          Danh Sách Lớp Học
                         </button>
                         <span className="px-3 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/35 font-mono text-xs font-bold text-cyan-300">
                           {targetCourse.courseCode}
@@ -2618,28 +2895,31 @@ export default function FacultyDashboard({
                       <button
                         type="button"
                         onClick={() => handleExportSemesterCSV(targetCourse)}
-                        className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer transition-all"
+                        className="faculty-pill-btn px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-semibold text-xs cursor-pointer inline-flex items-center gap-1.5"
                       >
+                        <Download size={14} />
                         Xuất Sổ Điểm (.CSV)
                       </button>
                       <button
                         type="button"
                         onClick={() => setCourseToDelete(targetCourse)}
-                        className="px-4 py-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-semibold text-xs cursor-pointer transition-all"
+                        className="faculty-pill-btn px-4 py-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-semibold text-xs cursor-pointer inline-flex items-center gap-1.5"
                       >
+                        <Trash2 size={14} />
                         Xóa Lớp
                       </button>
                       <button
                         type="button"
                         onClick={() => handleCreateNewSession(targetCourse)}
-                        className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-lg transition-all"
+                        className="faculty-pill-btn px-5 py-3 rounded-xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-lg inline-flex items-center gap-1.5"
                       >
+                        <QrCode size={14} />
                         + Phát Mã QR (Buổi {nextSessionIndex})
                       </button>
                     </div>
                   </div>
 
-                  {/* THÔNG BÁO ĐÃ CHỐT SỔ BUỔI HỌC (ĐÃ BỎ CHI TIẾT MÃ BĂM DÀI DÒNG) */}
+                  {/* THÔNG BÁO ĐÃ CHỐT SỔ BUỔI HỌC */}
                   {finalizedBannerNotice && (
                     <div className="p-3.5 rounded-2xl bg-emerald-500/12 border border-emerald-400/40 text-emerald-100 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5">
@@ -2772,7 +3052,7 @@ export default function FacultyDashboard({
                     );
                   })()}
 
-                  {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC TRONG LỚP (ĐÃ LOẠI BỎ KIỂM TRA MÃ BĂM & GHI CHÚ THỪA) */}
+                  {/* KHU VỰC GIỮA: DANH SÁCH CÁC BUỔI HỌC TRONG LỚP */}
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold text-white m-0">
                       Các Buổi Học Đã Mở ({sessionList.length} buổi)
@@ -2836,6 +3116,20 @@ export default function FacultyDashboard({
                                 {isSelected ? 'Đang xem' : 'Chi tiết'}
                               </button>
 
+                              {!isLocked && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setManualCheckInContext({ course: targetCourse, session: ses });
+                                    setShowManualCheckInModal(true);
+                                  }}
+                                  className="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 text-xs font-bold cursor-pointer transition-all inline-flex items-center gap-1"
+                                >
+                                  <UserPlus size={13} />
+                                  + Bổ sung SV
+                                </button>
+                              )}
+
                               <button
                                 type="button"
                                 onClick={() => handleExportSingleSessionCSV(targetCourse, ses)}
@@ -2888,9 +3182,9 @@ export default function FacultyDashboard({
                     </div>
                   </div>
 
-                  {/* KHU VỰC DƯỚI: SỔ ĐIỂM TỔNG HỢP CHUYÊN CẦN LŨY KẾ */}
-                  <div className="space-y-3 pt-2 border-t border-slate-700/60">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                  {/* KHU VỰC DƯỚI: SỔ ĐIỂM TỔNG HỢP CHUYÊN CẦN LŨY KẾ + TÌM KIẾM & LỌC */}
+                  <div className="space-y-3.5 pt-2 border-t border-slate-700/60">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
@@ -2901,7 +3195,7 @@ export default function FacultyDashboard({
                               : 'bg-[#040814] text-slate-300 border-slate-700 hover:text-white'
                           }`}
                         >
-                          Sổ Điểm Chuyên Cần Toàn Kỳ
+                          Sổ Điểm Chuyên Cần Toàn Kỳ ({filteredSummaryRows.length}/{summaryRows.length} SV)
                         </button>
                         {selectedSessionObj && (
                           <span className="px-3.5 py-2 rounded-xl bg-[#040814] border border-cyan-500/40 text-cyan-300 text-xs font-semibold">
@@ -2909,6 +3203,43 @@ export default function FacultyDashboard({
                           </span>
                         )}
                       </div>
+
+                      {selectedHistorySessionId === 'ALL' && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                              type="text"
+                              value={historySearchQuery}
+                              onChange={(e) => setHistorySearchQuery(e.target.value)}
+                              placeholder="Tìm MSSV hoặc Họ tên..."
+                              className="pl-8 pr-3 py-2 rounded-xl bg-[#040814] border border-slate-700 text-xs text-white placeholder-slate-400 outline-none focus:border-[#4FF0D6] w-52"
+                            />
+                          </div>
+                          <div className="flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
+                            {[
+                              { id: 'ALL', label: 'Tất cả' },
+                              { id: 'QUALIFIED', label: 'Đủ ĐK (≥80%)' },
+                              { id: 'WARNING', label: 'Cảnh báo (<80%)' }
+                            ].map((f) => (
+                              <button
+                                key={f.id}
+                                type="button"
+                                onClick={() => setHistoryEligibilityFilter(f.id)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer border-none transition-all ${
+                                  historyEligibilityFilter === f.id
+                                    ? f.id === 'WARNING'
+                                      ? 'bg-rose-500 text-white'
+                                      : 'bg-[#4FF0D6] text-slate-950 font-bold'
+                                    : 'bg-transparent text-slate-300 hover:text-white'
+                                }`}
+                              >
+                                {f.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {selectedHistorySessionId === 'ALL' ? (
@@ -2928,14 +3259,16 @@ export default function FacultyDashboard({
                             </tr>
                           </thead>
                           <tbody>
-                            {summaryRows.length === 0 ? (
+                            {filteredSummaryRows.length === 0 ? (
                               <tr>
                                 <td colSpan={4 + sessionList.length} className="p-8 text-center text-slate-400">
-                                  Chưa có dữ liệu điểm danh nào cho lớp học phần này.
+                                  {summaryRows.length === 0
+                                    ? 'Chưa có dữ liệu điểm danh nào cho lớp học phần này.'
+                                    : 'Không có sinh viên nào khớp điều kiện tìm kiếm / bộ lọc.'}
                                 </td>
                               </tr>
                             ) : (
-                              summaryRows.map((row) => {
+                              filteredSummaryRows.map((row) => {
                                 const attendedCount = Object.keys(row.sessionsAttended).length;
                                 const totalSess = sessionList.length;
                                 const ratioNum = totalSess > 0 ? Number(((attendedCount / totalSess) * 100).toFixed(1)) : 100;
@@ -3014,6 +3347,19 @@ export default function FacultyDashboard({
                           <div>
                             Chi tiết <strong>Buổi {selectedSessionObj?.sessionIndex || selectedSessionObj?.sessionNumber}</strong> • Ngày: <strong>{selectedSessionObj?.date || selectedSessionObj?.sessionDate}</strong>
                           </div>
+                          {selectedSessionObj && !selectedSessionObj.isFinalized && selectedSessionObj.status !== 'FINALIZED' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setManualCheckInContext({ course: targetCourse, session: selectedSessionObj });
+                                setShowManualCheckInModal(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 text-xs font-bold cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <UserPlus size={13} />
+                              + Điểm Danh Bổ Sung
+                            </button>
+                          )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                           {(selectedSessionObj?.attendees || []).map((st) => (
@@ -3040,39 +3386,47 @@ export default function FacultyDashboard({
             /* ==================== MÀN HÌNH 1: DANH SÁCH LỚP HỌC PHẦN ==================== */
             <section className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-extrabold text-white m-0">
+                <h2 className="text-lg font-extrabold text-white m-0 flex items-center gap-2">
+                  <BookOpen size={18} className="text-[#4FF0D6]" />
                   Danh Sách Lớp Học Phần
                 </h2>
               </div>
 
               {courses.length === 0 ? (
-                /* KHUNG TRẠNG THÁI RỖNG SANG TRỌNG, GỌN GÀNG */
-                <div className="w-full p-10 sm:p-14 rounded-[28px] bg-gradient-to-b from-[#17345C] via-[#112849] to-[#0B1C36] border border-dashed border-sky-400/40 shadow-[0_20px_50px_rgba(0,0,0,0.45)] flex flex-col items-center justify-center text-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4FF0D6]/20 to-[#38BDF8]/15 border border-[#4FF0D6]/45 flex items-center justify-center shadow-[0_0_30px_rgba(79,240,214,0.2)]">
-                    <svg className="w-8 h-8 text-[#4FF0D6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                /* KHUNG TRẠNG THÁI RỖNG SANG TRỌNG, GỌN GÀNG + 1-CHẠM KHỞI TẠO NHANH */
+                <div className="faculty-glass-card w-full p-10 sm:p-14 rounded-[28px] border border-dashed border-sky-400/40 flex flex-col items-center justify-center text-center gap-5">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#4FF0D6]/20 to-[#38BDF8]/15 border border-[#4FF0D6]/45 flex items-center justify-center shadow-[0_0_30px_rgba(79,240,214,0.2)] text-[#4FF0D6]">
+                    <QrCode size={30} />
                   </div>
 
-                  <div className="max-w-md space-y-1">
+                  <div className="max-w-lg space-y-1.5">
                     <h3 className="text-xl font-extrabold text-white m-0">
                       Chưa Có Lớp Học Phần
                     </h3>
-                    <p className="text-xs text-slate-300 m-0">
-                      Khởi tạo lớp học phần để bắt đầu phát mã QR điểm danh.
+                    <p className="text-xs text-slate-300 m-0 leading-relaxed">
+                      Khởi tạo lớp học phần mới hoặc dùng nút tạo nhanh 1 chạm để phát mã QR điểm danh ngay lập tức.
                     </p>
                   </div>
 
-                  <div className="pt-1">
+                  <div className="pt-1 flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickCreateDemoCourseAndLaunchQr(0)}
+                      className="faculty-pill-btn px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs sm:text-sm cursor-pointer border-none shadow-[0_12px_28px_rgba(56,189,248,0.3)] inline-flex items-center gap-2"
+                    >
+                      <Sparkles size={16} />
+                      Tạo Nhanh Lớp Mẫu &amp; Phát QR Ngay
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
-                        handleQuickFillCoursePreset();
+                        handleQuickFillCoursePreset(0);
                         setShowCreateCourseForm(true);
                       }}
-                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] hover:opacity-95 text-[#03141A] font-extrabold text-xs sm:text-sm cursor-pointer border-none shadow-[0_12px_28px_rgba(56,189,248,0.3)] transition-all"
+                      className="faculty-pill-btn px-5 py-3.5 rounded-2xl bg-[#040814] hover:bg-slate-900 border border-cyan-400/45 text-cyan-200 font-bold text-xs sm:text-sm cursor-pointer inline-flex items-center gap-2"
                     >
-                      + Tạo Lớp Học Phần Đầu Tiên
+                      <Plus size={16} />
+                      Tạo Lớp Học Phần Mới
                     </button>
                   </div>
                 </div>
@@ -3084,6 +3438,22 @@ export default function FacultyDashboard({
                     const completedSessions = sessionList.length;
                     const nextSessionNum = completedSessions + 1;
                     const totalStudentsCount = Number(course.totalStudents) || 50;
+                    const enrolledLen =
+                      (Array.isArray(course.enrolledStudents) && course.enrolledStudents.length > 0
+                        ? course.enrolledStudents.length
+                        : DEFAULT_ENROLLED_ROSTER.length) || 6;
+                    const avgCourseRate =
+                      completedSessions > 0
+                        ? Math.min(
+                            100,
+                            Math.round(
+                              sessionList.reduce(
+                                (acc, s) => acc + ((s.attendees?.length || 0) / enrolledLen) * 100,
+                                0
+                              ) / completedSessions
+                            )
+                          )
+                        : 0;
 
                     return (
                       <div
@@ -3092,7 +3462,7 @@ export default function FacultyDashboard({
                           setHistoryCourseId(cid);
                           setSelectedHistorySessionId('ALL');
                         }}
-                        className="p-6 rounded-[26px] bg-gradient-to-b from-[#17345C] to-[#0F2442] border border-sky-400/30 hover:border-[#4FF0D6]/70 shadow-xl flex flex-col justify-between gap-5 transition-all cursor-pointer"
+                        className="faculty-glass-card card-hover-lift p-6 rounded-[26px] hover:border-[#4FF0D6]/70 flex flex-col justify-between gap-5 transition-all cursor-pointer"
                       >
                         <div className="space-y-4">
                           {/* Hàng trên cùng: Mã lớp + Phòng học */}
@@ -3137,6 +3507,22 @@ export default function FacultyDashboard({
                             </div>
                           </div>
 
+                          {/* Thanh tiến độ chuyên cần trung bình của lớp */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-300 font-medium">Chuyên cần trung bình lớp</span>
+                              <span className="font-mono font-bold text-[#4FF0D6]">
+                                {completedSessions > 0 ? `${avgCourseRate}%` : 'Chưa mở buổi'}
+                              </span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-[#040814] border border-slate-800 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-[#4FF0D6] to-[#38BDF8] transition-all duration-500"
+                                style={{ width: `${completedSessions > 0 ? Math.max(6, avgCourseRate) : 0}%` }}
+                              />
+                            </div>
+                          </div>
+
                           {/* Cây phân cấp thu gọn các buổi học bên trong lớp */}
                           <div className="p-3.5 rounded-2xl bg-[#040814]/90 border border-slate-800/80 space-y-1.5">
                             <div className="text-xs font-semibold text-slate-300 mb-1">
@@ -3153,7 +3539,7 @@ export default function FacultyDashboard({
                                     • Buổi {s.sessionIndex || s.sessionNumber} ({s.date || s.sessionDate})
                                   </span>
                                   <span className="text-emerald-400 font-semibold">
-                                    {s.attendees?.length || 0}/{totalStudentsCount} SV
+                                    {s.attendees?.length || 0}/{enrolledLen} SV
                                   </span>
                                 </div>
                               ))
@@ -3161,7 +3547,7 @@ export default function FacultyDashboard({
                           </div>
                         </div>
 
-                        {/* Cụm nút hành động khi đã tạo lớp: Phát Mã QR Điểm Danh, Chi Tiết Sổ Điểm & Xóa Lớp */}
+                        {/* Cụm nút hành động khi đã tạo lớp */}
                         <div
                           className="space-y-2 pt-2 border-t border-slate-800/80"
                           onClick={(e) => e.stopPropagation()}
@@ -3169,9 +3555,10 @@ export default function FacultyDashboard({
                           <button
                             type="button"
                             onClick={() => handleCreateNewSession(course)}
-                            className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_8px_22px_rgba(34,211,238,0.28)] transition-all flex items-center justify-center gap-2"
+                            className="faculty-pill-btn w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#4FF0D6] to-[#22D3EE] hover:opacity-95 text-[#03141A] font-extrabold text-xs cursor-pointer border-none shadow-[0_8px_22px_rgba(34,211,238,0.28)] flex items-center justify-center gap-2"
                           >
-                            <span>⚡ Phát Mã QR Điểm Danh (Buổi {nextSessionNum})</span>
+                            <QrCode size={15} />
+                            <span>Phát Mã QR Điểm Danh (Buổi {nextSessionNum})</span>
                           </button>
 
                           <div className="grid grid-cols-3 gap-2">
@@ -3189,9 +3576,10 @@ export default function FacultyDashboard({
                             <button
                               type="button"
                               onClick={() => setCourseToDelete(course)}
-                              className="col-span-1 py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 font-bold text-xs cursor-pointer transition-all"
+                              className="col-span-1 py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 font-bold text-xs cursor-pointer transition-all inline-flex items-center justify-center gap-1"
                             >
-                              Xóa Lớp
+                              <Trash2 size={13} />
+                              Xóa
                             </button>
                           </div>
                         </div>
@@ -3852,13 +4240,14 @@ export default function FacultyDashboard({
               
               {/* TAB 1: MÀN CHIẾU QR ĐIỂM DANH */}
               {activeTab === 'STAGE' && staffRole === 'FACULTY' && isCreated && (
-                <div className="flex-1 rounded-3xl bg-[#081226] border border-cyan-500/30 p-6 flex flex-col justify-between shadow-2xl gap-5">
+                <div className="flex-1 faculty-glass-card rounded-3xl border border-cyan-500/30 p-6 flex flex-col justify-between shadow-2xl gap-5">
                   
                   {/* Thanh tiêu đề trên cùng của Màn Chiếu (Màn hình 3: IT402.N01 • BUỔI HỌC THỨ N) */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800/90">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-xs font-bold text-cyan-300">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-xs font-bold text-cyan-300">
+                          <QrCode size={14} />
                           {sessionConfig.courseCode} • BUỔI HỌC THỨ {sessionConfig.sessionNumber || 1}
                         </span>
                         <span className="text-xs text-slate-300">
@@ -3886,8 +4275,9 @@ export default function FacultyDashboard({
                       <button
                         type="button"
                         onClick={() => setIsProjectorFullscreen(true)}
-                        className="px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none transition-all"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs cursor-pointer border-none transition-all shadow-md shadow-cyan-500/20"
                       >
+                        <Maximize2 size={14} />
                         Phóng To QR Toàn Màn Chiếu
                       </button>
 
@@ -3903,20 +4293,49 @@ export default function FacultyDashboard({
                             setIsSessionOpen(false);
                           }
                         }}
-                        className="px-3.5 py-2.5 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs cursor-pointer transition-all"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs cursor-pointer transition-all"
                       >
+                        <Trash2 size={14} />
                         Xóa Phiên QR Này
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleFinalizeSession()}
-                        className="px-4 py-2.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg transition-all"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs cursor-pointer border-none shadow-lg transition-all"
                       >
+                        <CheckCircle2 size={14} />
                         Chốt Sổ Buổi Học
                       </button>
                     </div>
                   </div>
+
+                  {/* Thanh tiến độ sĩ số hiện diện trực tiếp */}
+                  {(() => {
+                    const activeCourseObj = courses.find((c) => (c.courseId || c.id) === activeCourseId);
+                    const targetClassTotal = Number(activeCourseObj?.totalStudents) || (activeCourseObj?.enrolledStudents?.length || 6);
+                    const presentCount = attendees.length;
+                    const progressPct = targetClassTotal > 0 ? Math.min(100, Math.round((presentCount / targetClassTotal) * 100)) : 0;
+                    return (
+                      <div className="rounded-2xl bg-[#040814]/85 border border-slate-800/90 px-4 py-3 flex flex-col gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                          <span className="inline-flex items-center gap-1.5 font-semibold text-slate-200">
+                            <Users size={14} className="text-cyan-400" />
+                            Sĩ số hiện diện: <strong className="text-white">{presentCount}/{targetClassTotal} SV</strong>
+                          </span>
+                          <span className="font-mono font-bold text-cyan-300">
+                            {progressPct}% đã điểm danh
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
+                          <div
+                            className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 transition-all duration-500"
+                            style={{ width: `${progressPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Thông báo sự kiện thời gian thực */}
                   {networkBlockNotice && (
@@ -4031,7 +4450,7 @@ export default function FacultyDashboard({
                                   stroke={ringColor}
                                   strokeWidth="6"
                                   strokeDasharray={1390}
-                                  strokeDashoffset={1390 - (timerProgress / ROTATE_INTERVAL) * 1390}
+                                  strokeDashoffset={1390 - (timerProgress / rotateInterval) * 1390}
                                   strokeLinecap="round"
                                   style={{ transition: 'stroke-dashoffset 0.95s linear, stroke 0.3s ease' }}
                                 />
@@ -4060,17 +4479,49 @@ export default function FacultyDashboard({
                         );
                       })()}
 
-                      {/* Thanh tiến trình xoay Nonce 35s */}
-                      <div className="w-[364px] max-w-full mt-3.5 space-y-1.5">
+                      {/* Thanh tiến trình xoay Nonce & Điều khiển QR Thông minh */}
+                      <div className="w-[364px] max-w-full mt-3.5 space-y-2.5">
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-300 font-medium">Chu kỳ xoay Nonce chống chụp lén:</span>
-                          <span className="text-cyan-400 font-mono font-bold">{timerProgress}s / {ROTATE_INTERVAL}s</span>
+                          <span className="text-cyan-400 font-mono font-bold">{timerProgress}s / {rotateInterval}s</span>
                         </div>
                         <div className="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
                             className="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 transition-all duration-1000 ease-linear"
-                            style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
+                            style={{ width: `${(timerProgress / rotateInterval) * 100}%` }}
                           />
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                          <div className="inline-flex items-center gap-1 bg-[#040814] border border-slate-800 rounded-xl p-1">
+                            <span className="inline-flex items-center gap-1 px-2 text-[11px] font-semibold text-slate-400">
+                              <Clock size={13} className="text-cyan-400" />
+                              Chu kỳ:
+                            </span>
+                            {[15, 35, 60].map((sec) => (
+                              <button
+                                key={sec}
+                                type="button"
+                                onClick={() => handleChangeRotateInterval(sec)}
+                                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold cursor-pointer border-none transition-all ${
+                                  rotateInterval === sec
+                                    ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                                    : 'bg-transparent text-slate-300 hover:text-white hover:bg-slate-800/70'
+                                }`}
+                              >
+                                {sec}s
+                              </button>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleInstantRotateNonce}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold text-[11px] cursor-pointer transition-all"
+                          >
+                            <RefreshCw size={13} />
+                            Đổi Mã QR Ngay
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -4199,7 +4650,7 @@ export default function FacultyDashboard({
                           CINEMA SPLIT-STAGE PROJECTOR (500x500PX)
                         </span>
                         <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs font-mono font-bold">
-                          Chu kỳ Nonce {ROTATE_INTERVAL}s
+                          Chu kỳ Nonce {rotateInterval}s
                         </span>
                       </div>
                       <h2 className="text-2xl font-extrabold text-white mt-2 mb-0">
@@ -4269,7 +4720,7 @@ export default function FacultyDashboard({
                                   stroke={hallRingColor}
                                   strokeWidth="7"
                                   strokeDasharray={1870}
-                                  strokeDashoffset={1870 - (timerProgress / ROTATE_INTERVAL) * 1870}
+                                  strokeDashoffset={1870 - (timerProgress / rotateInterval) * 1870}
                                   strokeLinecap="round"
                                   style={{ transition: 'stroke-dashoffset 0.95s linear, stroke 0.3s ease' }}
                                 />
@@ -4308,7 +4759,7 @@ export default function FacultyDashboard({
                         <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
                           <div
                             className="h-full bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 transition-all duration-1000 ease-linear"
-                            style={{ width: `${(timerProgress / ROTATE_INTERVAL) * 100}%` }}
+                            style={{ width: `${(timerProgress / rotateInterval) * 100}%` }}
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-2.5 pt-1 text-xs">
@@ -4642,10 +5093,10 @@ export default function FacultyDashboard({
 
             {/* CỘT PHẢI (4 CỘT TRÊN MÀN LỚN): DANH SÁCH SINH VIÊN HIỆN DIỆN CÓ TÌM KIẾM & BỘ LỌC */}
             <div className="lg:col-span-5 xl:col-span-4 flex flex-col">
-              <div className="flex-1 min-h-[520px] rounded-3xl bg-[#081226] border border-slate-800 p-5 flex flex-col overflow-hidden shadow-2xl gap-3.5">
+              <div className="flex-1 min-h-[520px] faculty-glass-card rounded-3xl border border-slate-800 p-5 flex flex-col overflow-hidden shadow-2xl gap-3.5">
                 
                 {/* Header Danh sách sinh viên */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
                   <div>
                     <h3 className="text-base font-bold text-white m-0">
                       Danh Sách Hiện Diện ({filteredAttendees.length}/{attendees.length})
@@ -4655,6 +5106,20 @@ export default function FacultyDashboard({
                     </p>
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setManualCheckInContext(null);
+                      setShowManualCheckInModal(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold text-xs cursor-pointer transition-all"
+                  >
+                    <UserPlus size={13} />
+                    Điểm Danh Thủ Công
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-end">
                   <div className="flex items-center bg-[#040814] p-1 rounded-xl border border-slate-800 gap-1">
                     {[
                       { id: 'ALL', label: 'Tất cả' },
@@ -4805,6 +5270,177 @@ export default function FacultyDashboard({
           </main>
         </div>
       )}
+
+      {/* MODAL ĐIỂM DANH THỦ CÔNG / BỔ SUNG TẠI LỚP */}
+      {showManualCheckInModal && (() => {
+        const modalCourse = manualCheckInContext
+          ? courses.find((c) => (c.courseId || c.id) === (manualCheckInContext.course.courseId || manualCheckInContext.course.id)) || manualCheckInContext.course
+          : courses.find((c) => (c.courseId || c.id) === activeCourseId || c.courseCode === sessionConfig.courseCode);
+        const modalSession = manualCheckInContext
+          ? (modalCourse?.sessions || []).find((s) => s.sessionId === manualCheckInContext.session.sessionId) || manualCheckInContext.session
+          : null;
+        const presentList = manualCheckInContext
+          ? (Array.isArray(modalSession?.attendees) ? modalSession.attendees : [])
+          : attendees;
+        const alreadyPresentIds = new Set(presentList.map((a) => String(a.studentId || '')));
+        const rosterList = Array.isArray(modalCourse?.enrolledStudents) && modalCourse.enrolledStudents.length > 0
+          ? modalCourse.enrolledStudents
+          : DEFAULT_ENROLLED_ROSTER;
+        const contextLabel = manualCheckInContext
+          ? `${modalCourse?.courseCode || ''} • Buổi ${modalSession?.sessionIndex || modalSession?.sessionNumber || 1}`
+          : `${sessionConfig.courseCode} • Buổi ${sessionConfig.sessionNumber || 1} (Đang phát trực tiếp)`;
+        const absentCount = rosterList.filter((st) => !alreadyPresentIds.has(String(st.studentId))).length;
+
+        return (
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowManualCheckInModal(false);
+            }}
+            className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <div className="faculty-glass-card w-full max-w-2xl rounded-3xl border border-cyan-500/35 p-6 shadow-2xl max-h-[90vh] overflow-y-auto space-y-5">
+              {/* Header Modal */}
+              <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-800/90">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-[11px] font-bold text-cyan-300">
+                    <UserPlus size={12} />
+                    ĐIỂM DANH THỦ CÔNG / BỔ SUNG TẠI LỚP
+                  </span>
+                  <h3 className="text-lg font-extrabold text-white mt-1.5 mb-0">
+                    {contextLabel}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5 mb-0">
+                    Hỗ trợ sinh viên quên điện thoại, hết pin, lỗi camera/GPS hoặc bổ sung vắng có phép.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowManualCheckInModal(false)}
+                  className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white cursor-pointer transition-all"
+                  aria-label="Đóng hộp thoại điểm danh thủ công"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Phần 1: Điểm danh nhanh từ danh sách lớp (1-click) */}
+              <div className="space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-slate-200 inline-flex items-center gap-1.5">
+                    <Users size={14} className="text-cyan-400" />
+                    Danh sách lớp học phần ({rosterList.length} SV)
+                  </span>
+                  <span className="font-mono font-semibold text-amber-300">
+                    Chưa điểm danh: {absentCount} SV
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-60 overflow-y-auto pr-1">
+                  {rosterList.map((st) => {
+                    const isPresent = alreadyPresentIds.has(String(st.studentId));
+                    return (
+                      <div
+                        key={st.studentId}
+                        className={`p-3 rounded-2xl border flex items-center justify-between gap-2 transition-all ${
+                          isPresent
+                            ? 'bg-emerald-500/10 border-emerald-500/35'
+                            : 'bg-[#040814]/85 border-slate-800 hover:border-cyan-500/40'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-white truncate">{st.name}</div>
+                          <div className="text-[11px] font-mono text-cyan-300">{st.studentId}</div>
+                        </div>
+
+                        {isPresent ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold shrink-0">
+                            <CheckCircle2 size={12} />
+                            Đã có mặt
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleManualCheckInStudent({
+                                studentId: st.studentId,
+                                name: st.name,
+                                major: st.major || 'An toàn Thông tin',
+                                reason: manualForm.reason || 'Quên điện thoại / Hết pin'
+                              })
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-[11px] font-extrabold cursor-pointer border-none shrink-0 transition-all"
+                          >
+                            <Plus size={12} />
+                            Có mặt
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Phần 2: Nhập MSSV thủ công hoặc chọn lý do bổ sung */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!manualForm.studentId.trim()) return;
+                  handleManualCheckInStudent(manualForm);
+                }}
+                className="rounded-2xl bg-[#040814]/90 border border-slate-800 p-4 space-y-3"
+              >
+                <div className="text-xs font-bold text-slate-200">
+                  Thêm MSSV ngoài danh sách / Lý do ghi nhận
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <input
+                    type="text"
+                    required
+                    value={manualForm.studentId}
+                    onChange={(e) => setManualForm((prev) => ({ ...prev, studentId: e.target.value }))}
+                    placeholder="MSSV (VD: 2251120099)"
+                    className="py-2.5 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white placeholder-slate-400 outline-none focus:border-cyan-400 font-mono"
+                  />
+                  <input
+                    type="text"
+                    value={manualForm.name}
+                    onChange={(e) => setManualForm((prev) => ({ ...prev, name: e.target.value }))}
+                    placeholder="Họ và tên sinh viên"
+                    className="py-2.5 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white placeholder-slate-400 outline-none focus:border-cyan-400"
+                  />
+                  <select
+                    value={manualForm.reason}
+                    onChange={(e) => setManualForm((prev) => ({ ...prev, reason: e.target.value }))}
+                    className="py-2.5 px-3 rounded-xl bg-[#071326] border border-slate-700 text-xs text-white outline-none focus:border-cyan-400"
+                  >
+                    <option value="Quên điện thoại / Hết pin">Quên điện thoại / Hết pin</option>
+                    <option value="Hỏng camera / Lỗi GPS">Hỏng camera / Lỗi GPS</option>
+                    <option value="Bổ sung có phép">Bổ sung có phép</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualCheckInModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold cursor-pointer"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-extrabold cursor-pointer border-none shadow-md"
+                  >
+                    <CheckCircle2 size={14} />
+                    Xác Nhận Có Mặt
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
       </div>
     </div>
   );

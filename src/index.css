@@ -631,3 +631,42 @@ button, input, select {
   animation: holoSweep 5s ease infinite;
 }
 
+/* ==================== CỔNG GIẢNG VIÊN EXECUTIVE GLASSMORPHISM COMMAND CENTER ==================== */
+.faculty-glass-card {
+  background: linear-gradient(155deg, rgba(22, 49, 89, 0.9) 0%, rgba(11, 27, 54, 0.95) 100%);
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 16px 38px -12px rgba(2, 8, 23, 0.68);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.faculty-kpi-card {
+  background: linear-gradient(145deg, rgba(24, 52, 94, 0.88) 0%, rgba(12, 30, 60, 0.94) 100%);
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 28px -10px rgba(2, 10, 26, 0.6);
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.faculty-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(79, 240, 214, 0.48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 16px 36px -10px rgba(56, 189, 248, 0.22);
+}
+
+.faculty-pill-btn {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.faculty-pill-btn:hover {
+  transform: translateY(-1px);
+}
+
+.faculty-pill-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.faculty-ambient-glow {
+  box-shadow: 0 0 42px -8px rgba(79, 240, 214, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+
