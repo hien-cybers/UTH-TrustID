@@ -32,6 +32,7 @@ import { generateMerkleCredentials } from '../utils/merkleHelper';
 import { saveCredentialToStorage } from '../utils/credentialStorage';
 import { toggleTheme } from '../utils/theme';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
+import LandingPage from './LandingPage';
 
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
@@ -181,6 +182,7 @@ export default function FacultyDashboard({
     resolvedInitialRole === 'ADMIN' ? 'ADMIN' : 'FACULTY'
   ); // 'FACULTY' | 'ADMIN' | 'QR_WEB3'
   const [qrChallengeNonce, setQrChallengeNonce] = useState('UTH_CHALLENGE_9X8F2A');
+  const [showLoginPage, setShowLoginPage] = useState(false);
   
   // Đồng hồ thời gian thực trên Executive Topbar
   const [liveClock, setLiveClock] = useState(() => new Date());
@@ -2182,10 +2184,33 @@ export default function FacultyDashboard({
     setIsCreated(false);
     setIsSessionOpen(false);
     setAuthError('');
+    setShowLoginPage(false);
   };
 
-  // ==================== CỔNG LANDING & ĐĂNG NHẬP EXECUTIVE (DARK ROYAL SAPPHIRE & OBSIDIAN) ====================
+  // ==================== CỔNG LANDING EDUCAMPUS RIÊNG BIỆT & TRANG ĐĂNG NHẬP EXECUTIVE ====================
   if (!token) {
+    const handleSelectLoginTab = (tabId) => {
+      setLoginPortalTab(tabId);
+      setAuthError('');
+      if (tabId === 'FACULTY') {
+        setLoginForm((prev) => ({ ...prev, email: 'giangvien@uth.edu.vn' }));
+      } else if (tabId === 'ADMIN') {
+        setLoginForm((prev) => ({ ...prev, email: 'admin@uth.edu.vn' }));
+      }
+    };
+
+    if (!showLoginPage) {
+      return (
+        <LandingPage
+          onOpenLogin={(roleTab = 'FACULTY') => {
+            handleSelectLoginTab(roleTab);
+            setShowLoginPage(true);
+          }}
+          onQuickDemoLogin={(email) => handleQuickSwitchAccount(email)}
+        />
+      );
+    }
+
     const handleCardMouseMove = (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const nx = (e.clientX - rect.left) / rect.width - 0.5;
@@ -2195,16 +2220,6 @@ export default function FacultyDashboard({
 
     const handleCardMouseLeave = () => {
       setLoginParallax({ x: 0, y: 0 });
-    };
-
-    const handleSelectLoginTab = (tabId) => {
-      setLoginPortalTab(tabId);
-      setAuthError('');
-      if (tabId === 'FACULTY') {
-        setLoginForm((prev) => ({ ...prev, email: 'giangvien@uth.edu.vn' }));
-      } else if (tabId === 'ADMIN') {
-        setLoginForm((prev) => ({ ...prev, email: 'admin@uth.edu.vn' }));
-      }
     };
 
     return (
@@ -2229,16 +2244,23 @@ export default function FacultyDashboard({
           }}
         />
 
-        <div className="relative z-10 w-full max-w-[1440px] mx-auto flex-1 flex flex-col justify-between gap-6">
-          {/* ==================== THANH TOPBAR LANDING PORTAL ==================== */}
+        <div className="relative z-10 w-full max-w-[1160px] mx-auto flex-1 flex flex-col justify-between gap-6">
+          {/* ==================== THANH TOPBAR TRANG ĐĂNG NHẬP RIÊNG BIỆT ==================== */}
           <header className="faculty-glass-card rounded-2xl border border-cyan-500/25 px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLoginPage(false)}
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-cyan-400/35 text-cyan-200 hover:text-white text-xs font-extrabold cursor-pointer transition-all inline-flex items-center gap-1.5"
+              >
+                ← Trang chủ EduCampus
+              </button>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4FF0D6] to-[#38BDF8] text-[#03141A] flex items-center justify-center shadow-[0_0_24px_rgba(79,240,214,0.3)] shrink-0">
                 <QrCode size={18} />
               </div>
               <div>
                 <div className="text-xs sm:text-sm font-extrabold tracking-wide text-white">
-                  UTH-TRUSTID • CỔNG ĐỊNH DANH &amp; ĐIỂM DANH SỐ ZERO-TRUST
+                  UTH-TRUSTID • CỔNG ĐĂNG NHẬP HỆ THỐNG
                 </div>
                 <div className="text-[11px] font-medium text-cyan-300">
                   Trường Đại học Giao thông Vận tải TP.HCM (UTH)
@@ -2280,126 +2302,9 @@ export default function FacultyDashboard({
             </div>
           </header>
 
-          {/* ==================== NỘI DUNG CHÍNH: SPLIT LANDING HERO (7 CỘT) + LOGIN CARD (5 CỘT) ==================== */}
-          <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch flex-1">
-            {/* CỘT TRÁI (7 CỘT): HERO SHOWCASE + BENTO CÔNG NGHỆ + QUY TRÌNH 3 BƯỚC */}
-            <div className="lg:col-span-7 flex flex-col justify-between gap-5">
-              <div className="faculty-glass-card rounded-[28px] border border-cyan-500/25 p-6 sm:p-8 flex-1 flex flex-col justify-between gap-6">
-                <div className="space-y-3.5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-[11px] font-bold tracking-wider text-cyan-300">
-                    <Sparkles size={13} />
-                    KIẾN TRÚC W3C DID &amp; MERKLE TREE THẾ HỆ MỚI
-                  </span>
-
-                  <h1 className="text-2xl sm:text-4xl font-extrabold leading-tight m-0 bg-gradient-to-r from-white via-[#BDD8E9] to-[#4FF0D6] bg-clip-text text-transparent">
-                    Hệ Sinh Thái Điểm Danh Đa Nhân Tố &amp; Định Danh Tự Chủ UTH-TrustID
-                  </h1>
-
-                  <p className="text-sm text-slate-300 leading-relaxed m-0 max-w-2xl">
-                    Giải pháp xác thực giảng đường không mật khẩu kết hợp chứng chỉ W3C Verifiable Credentials, chữ ký số ECDSA từ khóa phần cứng FIDO2, mã QR Nonce xoay vòng chống chụp màn hình và hàng rào địa lý Haversine lọc nhiễu Kalman.
-                  </p>
-                </div>
-
-                {/* 4 Thẻ Bento Công Nghệ Cốt Lõi */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {[
-                    {
-                      icon: <Layers size={16} />,
-                      accent: 'text-emerald-300 bg-emerald-500/15 border-emerald-400/35',
-                      title: 'Cấp Phát Lô Thẻ Merkle O(log N)',
-                      desc: 'Băm Keccak256 hàng loạt danh sách sinh viên, chứng minh ngoại tuyến không cần tài khoản tập trung và thu hồi khóa tức thì O(1).'
-                    },
-                    {
-                      icon: <Lock size={16} />,
-                      accent: 'text-cyan-300 bg-cyan-500/15 border-cyan-400/35',
-                      title: 'Chữ Ký Số ECDSA & Khóa FIDO2',
-                      desc: 'Khóa riêng tư lưu cục bộ kèm sinh trắc học thiết bị, ký thông điệp EIP-191 xác minh danh tính 1-1 chống điểm danh hộ.'
-                    },
-                    {
-                      icon: <QrCode size={16} />,
-                      accent: 'text-sky-300 bg-sky-500/15 border-sky-400/35',
-                      title: 'QR Nonce Xoay Vòng Chống Chụp Lén',
-                      desc: 'Tự động đổi mã Challenge theo chu kỳ 15s–60s kèm Token dùng một lần, chặn đứng ảnh chụp QR gửi qua Zalo hoặc mạng xã hội.'
-                    },
-                    {
-                      icon: <MapPin size={16} />,
-                      accent: 'text-amber-300 bg-amber-500/15 border-amber-400/35',
-                      title: 'Định Vị Haversine & Lọc Nhiễu Kalman',
-                      desc: 'Đo khoảng cách thực tế tại tâm lớp học trên bản đồ vệ tinh và phát hiện bất thường Mock GPS theo thời gian thực.'
-                    }
-                  ].map((card) => (
-                    <div
-                      key={card.title}
-                      className="faculty-kpi-card p-4 rounded-2xl bg-[#040814]/80 border border-slate-800/90 space-y-2"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${card.accent}`}>
-                          {card.icon}
-                        </span>
-                        <h3 className="text-xs sm:text-sm font-extrabold text-white m-0">
-                          {card.title}
-                        </h3>
-                      </div>
-                      <p className="text-xs text-slate-300 leading-relaxed m-0">
-                        {card.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dải Quy Trình Xác Thực 3 Bước (Cho Hội Đồng NCKH) */}
-              <div className="faculty-glass-card rounded-[24px] border border-slate-800/90 p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-300">
-                    Quy Trình Xác Thực 3 Bước Khép Kín
-                  </span>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    Zero-Trust Academic Pipeline
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {[
-                    {
-                      step: '01',
-                      title: 'Cấp Phát Gốc (Admin)',
-                      desc: 'Băm danh sách sinh viên thành cây Merkle, cấp chứng chỉ W3C VC và quản trị thu hồi khóa O(1).',
-                      badge: 'text-emerald-300 border-emerald-500/35 bg-emerald-500/10'
-                    },
-                    {
-                      step: '02',
-                      title: 'Kích Hoạt Ví (Sinh Viên)',
-                      desc: 'Xác thực OTP qua Gmail @ut.edu.vn, khởi tạo khóa phần cứng FIDO2 & Sinh trắc học.',
-                      badge: 'text-cyan-300 border-cyan-500/35 bg-cyan-500/10'
-                    },
-                    {
-                      step: '03',
-                      title: 'Điểm Danh Lớp (Giảng Viên)',
-                      desc: 'Chiếu QR Nonce động, kiểm chứng chữ ký số ecrecover + GPS thực tế và chốt sổ điểm.',
-                      badge: 'text-sky-300 border-sky-500/35 bg-sky-500/10'
-                    }
-                  ].map((wf) => (
-                    <div
-                      key={wf.step}
-                      className="p-3.5 rounded-2xl bg-[#040814]/85 border border-slate-800 space-y-1.5"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-md border font-mono text-[10px] font-extrabold ${wf.badge}`}>
-                          BƯỚC {wf.step}
-                        </span>
-                        <span className="text-xs font-bold text-white">{wf.title}</span>
-                      </div>
-                      <p className="text-[11.5px] text-slate-300 leading-relaxed m-0">
-                        {wf.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* CỘT PHẢI (5 CỘT): EXECUTIVE LOGIN CARD VỚI 3 CHẾ ĐỘ ĐĂNG NHẬP */}
-            <div className="lg:col-span-5 flex flex-col">
+          {/* ==================== NỘI DUNG CHÍNH: EXECUTIVE LOGIN CARD ĐỘC LẬP ==================== */}
+          <main className="w-full max-w-[540px] mx-auto my-auto flex flex-col">
+            <div className="flex flex-col">
               <div className="faculty-glass-card rounded-[28px] border border-cyan-500/30 shadow-2xl overflow-hidden flex-1 flex flex-col">
                 {/* Banner Nghệ Thuật Đầu Card */}
                 <div className="relative h-40 overflow-hidden bg-[#001D39] shrink-0">
