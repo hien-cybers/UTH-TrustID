@@ -2327,7 +2327,7 @@ export default function FacultyDashboard({
         </svg>
 
         {/* Nút Quay về Trang chủ ở góc trên bên trái */}
-        <div className="relative z-30 max-w-[1560px] w-full mx-auto px-6 sm:px-10 pt-5 flex items-center justify-between">
+        <div className="relative z-30 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 pt-5 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setShowLoginPage(false)}
@@ -2339,10 +2339,10 @@ export default function FacultyDashboard({
         </div>
 
         {/* ==================== NỘI DUNG CHÍNH: CỘT TRÁI THẺ ĐỊNH DANH 3D + CỘT PHẢI KHUNG ĐĂNG NHẬP ==================== */}
-        <main className="relative z-20 flex-1 w-full max-w-[1560px] mx-auto px-6 sm:px-10 lg:px-14 pb-8 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
+        <main className="relative z-20 flex-1 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 pb-8 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
           
           {/* CỘT TRÁI (6 CỘT): THẺ ĐỊNH DANH SỐ 3D TRÊN BỆ ĐẾ XOAY TRÒN & 3 NODE CÔNG NGHỆ */}
-          <div className="lg:col-span-6 relative flex items-center justify-center min-h-[440px] sm:min-h-[520px]">
+          <div className="lg:col-span-6 relative flex items-center justify-center min-h-[380px] sm:min-h-[500px] scale-[0.82] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center">
             
             {/* Quầng sáng xanh-tím phía sau Thẻ 3D */}
             <div
@@ -2899,7 +2899,7 @@ export default function FacultyDashboard({
       
       {/* ==================== THANH ĐIỀU HƯỚNG EDUCAMPUS COMMAND BAR (FACULTY & ADMIN) ==================== */}
       <header className="sticky top-0 z-30 border-b border-slate-700/60 bg-[#07152E]/92 backdrop-blur-xl">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-6 lg:px-10 py-3.5 flex flex-wrap items-center justify-between gap-3">
           
           {/* Cụm Thương hiệu EduCampus & Thông tin Người dùng */}
           <div className="flex items-center gap-3">
@@ -4348,7 +4348,7 @@ export default function FacultyDashboard({
         </main>
       ) : staffRole === 'ADMIN' ? (
         /* ==================== GIAO DIỆN DÀNH RIÊNG CHO QUẢN TRỊ VIÊN TỐI CAO (ROOT ADMIN PORTAL) ==================== */
-        <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-8 py-6 gap-5 max-w-[1400px] w-full mx-auto">
+        <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-10 py-6 gap-6 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto">
           {/* 4 Thẻ Thống Kê Bento Grid Toàn Trường Của Admin */}
           <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <div className="faculty-kpi-card p-5 rounded-2xl border border-cyan-500/30 flex items-center justify-between gap-3">

@@ -136,7 +136,7 @@ export default function LandingPage({ onOpenLogin }) {
 
       {/* ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG (NAVBAR UTH-TRUSTID CỠ LỚN) ==================== */}
       <header className="relative z-30 w-full border-b border-white/10 bg-[#08071C]/60 backdrop-blur-xl shrink-0">
-        <div className="max-w-[1640px] mx-auto px-6 sm:px-10 lg:px-14 py-4 lg:py-5 flex items-center justify-between gap-6">
+        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-4 lg:py-5 flex items-center justify-between gap-4 sm:gap-6">
           {/* Logo Khiên UTH-TrustID */}
           <div className="flex items-center gap-5">
             <button
@@ -213,8 +213,8 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </header>
 
-      {/* ==================== NỘI DUNG HERO CHÍNH GIỮA (PHÓNG TO CÂN ĐỐI TOÀN MÀN HÌNH) ==================== */}
-      <main className="relative z-20 flex-1 max-w-[1640px] w-full mx-auto px-6 sm:px-10 lg:px-14 py-6 lg:py-4 grid grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-10">
+      {/* ==================== NỘI DUNG HERO CHÍNH GIỮA (PHÓNG TO CÂN ĐỐI TOÀN MÀN HÌNH & MỌI THIẾT BỊ) ==================== */}
+      <main className="relative z-20 flex-1 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-6 lg:py-4 grid grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-10">
         
         {/* CỘT TRÁI (6 CỘT): THÔNG ĐIỆP ĐỀ TÀI NCKH UTH-TRUSTID CỠ LỚN */}
         <div className="lg:col-span-6 space-y-6 xl:space-y-7">
@@ -300,7 +300,7 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
 
         {/* CỘT PHẢI (6 CỘT): KHIÊN BẢO VỆ TRUNG TÂM PHÓNG TO VỚI CHUYỂN ĐỘNG XOAY TRÒN 360° & 3 THẺ CÔNG NGHỆ */}
-        <div className="lg:col-span-6 relative flex items-center justify-center min-h-[500px] sm:min-h-[560px] xl:min-h-[620px]">
+        <div className="lg:col-span-6 relative flex items-center justify-center min-h-[420px] sm:min-h-[540px] xl:min-h-[620px] scale-[0.78] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center">
           
           {/* Quầng sáng trung tâm lớn sau Khiên */}
           <div
@@ -592,7 +592,7 @@ export default function LandingPage({ onOpenLogin }) {
 
       {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI CỠ LỚN Ở CHÂN TRANG (KHÔNG CÒN PHẦN CUỘN DƯỚI) ==================== */}
       <footer className="relative z-20 w-full bg-[#090720]/92 backdrop-blur-xl border-t border-purple-500/30 shadow-[0_-12px_45px_rgba(7,6,24,0.85)] shrink-0">
-        <div className="max-w-[1640px] mx-auto px-6 sm:px-10 lg:px-14 py-5 lg:py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/20">
+        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-5 lg:py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/20">
           {BOTTOM_HIGHLIGHTS.map((item) => (
             <div
               key={item.id}

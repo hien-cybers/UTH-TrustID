@@ -542,25 +542,25 @@ export default function FacultyPortalView({
           'radial-gradient(circle at 75% 15%, rgba(124, 58, 237, 0.16) 0%, transparent 50%), radial-gradient(circle at 20% 85%, rgba(99, 102, 241, 0.12) 0%, transparent 50%), linear-gradient(180deg, #08071A 0%, #0B0922 100%)'
       }}
     >
-      {/* ==================== TOPBAR UTH-TRUSTID GIẢNG VIÊN ==================== */}
-      <header className="sticky top-0 z-30 h-16 px-5 sm:px-8 border-b border-purple-500/20 bg-[#0A0820]/90 backdrop-blur-xl flex items-center justify-between gap-4">
+      {/* ==================== TOPBAR UTH-TRUSTID GIẢNG VIÊN (FULL-WIDTH RESPONSIVE) ==================== */}
+      <header className="sticky top-0 z-30 min-h-16 sm:h-20 px-4 sm:px-8 lg:px-10 py-2.5 border-b border-purple-500/20 bg-[#0A0820]/92 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3">
         {/* Cụm Logo Trái */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.55)] border border-purple-300/35">
-            <ShieldCheck className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_24px_rgba(139,92,246,0.55)] border border-purple-300/35 shrink-0">
+            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           <div>
-            <div className="text-base sm:text-lg font-extrabold tracking-tight text-white leading-none">
+            <div className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-none">
               UTH-TrustID
             </div>
-            <div className="text-xs font-medium text-purple-300 mt-0.5">
+            <div className="text-xs sm:text-sm font-medium text-purple-300 mt-0.5">
               Giảng viên
             </div>
           </div>
         </div>
 
         {/* Cụm Thông báo & Hồ sơ Giảng viên Bên Phải */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2.5 sm:gap-4">
           {isCreated && (
             <button
               type="button"
@@ -568,9 +568,9 @@ export default function FacultyPortalView({
                 setSidebarTab('CLASSES');
                 setClassSubView('LIVE_SESSION');
               }}
-              className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs font-bold cursor-pointer"
+              className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-bold cursor-pointer"
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
               <span>Đang mở phiên: {sessionConfig.courseCode}</span>
             </button>
           )}
@@ -583,26 +583,26 @@ export default function FacultyPortalView({
               setLiveStageToolTab('IDS');
             }}
             title="Cảnh báo bảo mật & thông báo lớp học"
-            className="relative w-9 h-9 rounded-xl bg-[#151232] hover:bg-[#1E1945] border border-purple-400/25 flex items-center justify-center text-slate-200 cursor-pointer transition-all"
+            className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#151232] hover:bg-[#1E1945] border border-purple-400/25 flex items-center justify-center text-slate-200 cursor-pointer transition-all"
           >
-            <Bell className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#A855F7] text-[10px] font-bold text-white flex items-center justify-center">
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="absolute -top-1 -right-1 w-4.5 h-4.5 px-1 rounded-full bg-[#A855F7] text-[10px] font-bold text-white flex items-center justify-center">
               {securityAlerts?.length || 2}
             </span>
           </button>
 
           {/* Hồ sơ Giảng viên */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-white/10">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-0.5 shadow-md">
-              <div className="w-full h-full rounded-full bg-[#13102E] flex items-center justify-center text-xs font-extrabold text-purple-200">
+          <div className="flex items-center gap-3 pl-2.5 border-l border-white/10">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-0.5 shadow-md shrink-0">
+              <div className="w-full h-full rounded-full bg-[#13102E] flex items-center justify-center text-xs sm:text-sm font-extrabold text-purple-200">
                 NH
               </div>
             </div>
             <div className="hidden sm:block text-left">
-              <div className="text-xs sm:text-sm font-bold text-white leading-tight">
+              <div className="text-sm lg:text-base font-bold text-white leading-tight">
                 {lecturerDisplayName}
               </div>
-              <div className="text-[11px] text-slate-400 leading-tight">
+              <div className="text-xs text-slate-400 leading-tight mt-0.5">
                 Giảng viên
               </div>
             </div>
@@ -611,7 +611,7 @@ export default function FacultyPortalView({
           <button
             type="button"
             onClick={() => handleQuickSwitchAccount && handleQuickSwitchAccount('admin@uth.edu.vn')}
-            className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151232] hover:bg-[#1F1A48] border border-purple-400/30 text-purple-200 text-xs font-semibold cursor-pointer transition-all"
+            className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#151232] hover:bg-[#1F1A48] border border-purple-400/30 text-purple-200 text-xs sm:text-sm font-semibold cursor-pointer transition-all"
           >
             ⇄ Cổng Admin
           </button>
@@ -620,44 +620,44 @@ export default function FacultyPortalView({
             type="button"
             onClick={handleLogout}
             title="Đăng xuất"
-            className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs sm:text-sm font-bold cursor-pointer inline-flex items-center gap-1.5 transition-all"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Đăng xuất</span>
           </button>
         </div>
       </header>
 
-      {/* ==================== KHUNG LÀM VIỆC CHÍNH: SIDEBAR TRÁI + NỘI DUNG PHẢI ==================== */}
-      <div className="flex-1 flex flex-col lg:flex-row max-w-[1600px] w-full mx-auto">
+      {/* ==================== KHUNG LÀM VIỆC CHÍNH: TOÀN MÀN HÌNH 100% WIDTH & RESPONSIVE MỌI THIẾT BỊ ==================== */}
+      <div className="flex-1 flex flex-col lg:flex-row w-full">
         
-        {/* SIDEBAR TRÁI 7 MỤC CHUẨN THEO ẢNH */}
-        <aside className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-purple-500/20 bg-[#0B0920]/75 p-4 flex flex-col justify-between gap-4">
-          <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0">
+        {/* SIDEBAR TRÁI 7 MỤC CỠ LỚN (CUỘN NGANG TRÊN MOBILE/TABLET, CỘT DỌC RỘNG TRÊN DESKTOP) */}
+        <aside className="w-full lg:w-72 xl:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-purple-500/20 bg-[#0B0920]/80 p-3 sm:p-5 flex flex-col justify-between gap-5">
+          <nav className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0">
             {[
-              { id: 'HOME', label: 'Trang chủ', icon: <Home className="w-4 h-4" /> },
+              { id: 'HOME', label: 'Trang chủ', icon: <Home className="w-5 h-5 shrink-0" /> },
               {
                 id: 'CLASSES',
                 label: 'Lớp học & Điểm danh',
-                icon: <BookOpen className="w-4 h-4" />
+                icon: <BookOpen className="w-5 h-5 shrink-0" />
               },
-              { id: 'STUDENTS', label: 'Sinh viên', icon: <Users className="w-4 h-4" /> },
+              { id: 'STUDENTS', label: 'Sinh viên', icon: <Users className="w-5 h-5 shrink-0" /> },
               {
                 id: 'DID',
                 label: 'Danh tính số (DID)',
-                icon: <IdCard className="w-4 h-4" />
+                icon: <IdCard className="w-5 h-5 shrink-0" />
               },
               {
                 id: 'VC',
                 label: 'Chứng chỉ số (VC)',
-                icon: <Award className="w-4 h-4" />
+                icon: <Award className="w-5 h-5 shrink-0" />
               },
               {
                 id: 'REPORTS',
                 label: 'Báo cáo & Thống kê',
-                icon: <BarChart3 className="w-4 h-4" />
+                icon: <BarChart3 className="w-5 h-5 shrink-0" />
               },
-              { id: 'SETTINGS', label: 'Cài đặt', icon: <Settings className="w-4 h-4" /> }
+              { id: 'SETTINGS', label: 'Cài đặt', icon: <Settings className="w-5 h-5 shrink-0" /> }
             ].map((item) => {
               const isActive = sidebarTab === item.id;
               return (
@@ -670,9 +670,9 @@ export default function FacultyPortalView({
                       setClassSubView(isCreated ? 'LIVE_SESSION' : 'LIST');
                     }
                   }}
-                  className={`px-4 py-3 rounded-xl text-xs sm:text-sm font-bold cursor-pointer border-none transition-all flex items-center gap-3 whitespace-nowrap ${
+                  className={`px-4 py-3 lg:py-3.5 rounded-2xl text-xs sm:text-sm xl:text-[15px] font-bold cursor-pointer border-none transition-all flex items-center gap-3.5 whitespace-nowrap ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#8B5CF6] via-[#7C3AED] to-[#6366F1] text-white shadow-[0_6px_22px_rgba(139,92,246,0.45)]'
+                      ? 'bg-gradient-to-r from-[#8B5CF6] via-[#7C3AED] to-[#6366F1] text-white shadow-[0_8px_24px_rgba(139,92,246,0.48)]'
                       : 'bg-transparent text-slate-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -684,30 +684,30 @@ export default function FacultyPortalView({
           </nav>
 
           {/* Hộp trạng thái nhanh ở chân Sidebar */}
-          <div className="hidden lg:flex flex-col gap-2.5 p-4 rounded-2xl bg-[#120F2D] border border-purple-400/25">
-            <div className="flex items-center justify-between text-xs">
+          <div className="hidden lg:flex flex-col gap-3 p-5 rounded-2xl bg-[#120F2D] border border-purple-400/25">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="font-bold text-purple-200">Trạng thái Node DID</span>
-              <span className="inline-flex items-center gap-1 text-emerald-400 font-mono text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1.5 text-emerald-400 font-mono text-xs font-bold">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Online
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 leading-relaxed">
+            <div className="text-xs text-slate-400 leading-relaxed">
               W3C DID • WebAuthn FIDO2 • Keccak256 Merkle Tree
             </div>
             <button
               type="button"
               onClick={() => handleOpenCreateSessionScreen(activeCourseObj)}
-              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] hover:opacity-95 text-white text-xs font-extrabold border-none cursor-pointer shadow-md inline-flex items-center justify-center gap-1.5"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] hover:opacity-95 text-white text-xs sm:text-sm font-extrabold border-none cursor-pointer shadow-md inline-flex items-center justify-center gap-2"
             >
-              <QrCode className="w-3.5 h-3.5" />
+              <QrCode className="w-4 h-4" />
               <span>+ Tạo phiên điểm danh</span>
             </button>
           </div>
         </aside>
 
-        {/* KHÔNG GIAN NỘI DUNG CHÍNH BÊN PHẢI */}
-        <main className="flex-1 p-5 sm:p-7 lg:p-8 overflow-y-auto space-y-6">
+        {/* KHÔNG GIAN NỘI DUNG CHÍNH BÊN PHẢI (MỞ RỘNG TOÀN MÀN HÌNH) */}
+        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 xl:p-10 overflow-y-auto space-y-6 xl:space-y-8">
           {/* Thông báo Toast / Banner */}
           {(portalToast || statusBannerMsg) && (
             <div className="p-3.5 rounded-2xl bg-purple-500/15 border border-purple-400/45 text-purple-100 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 animate-[fadeIn_0.2s_ease-out]">
@@ -765,22 +765,22 @@ export default function FacultyPortalView({
               </div>
 
               {/* 3 Thẻ KPI Tổng quan (5 Lớp đang giảng dạy | 238 Sinh viên | 42 Buổi điểm danh) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xl:gap-6">
                 <div
                   onClick={() => {
                     setSidebarTab('CLASSES');
                     setClassSubView('LIST');
                   }}
-                  className="p-6 rounded-2xl bg-gradient-to-br from-[#1B1445]/95 to-[#120E2E]/95 border border-purple-400/35 shadow-[0_12px_32px_rgba(6,4,20,0.6)] flex items-center gap-4 cursor-pointer hover:border-purple-300/70 transition-all"
+                  className="p-6 xl:p-7 rounded-2xl bg-gradient-to-br from-[#1B1445]/95 to-[#120E2E]/95 border border-purple-400/35 shadow-[0_12px_32px_rgba(6,4,20,0.6)] flex items-center gap-5 cursor-pointer hover:border-purple-300/70 transition-all"
                 >
-                  <div className="w-13 h-13 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-[#C084FC] shrink-0">
-                    <Users className="w-6 h-6" />
+                  <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-[#C084FC] shrink-0">
+                    <Users className="w-7 h-7 xl:w-8 xl:h-8" />
                   </div>
                   <div>
-                    <div className="text-3xl font-extrabold text-white leading-none">
+                    <div className="text-3xl sm:text-4xl xl:text-[42px] font-extrabold text-white leading-none">
                       {totalCoursesCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-300 mt-1.5 font-medium">
+                    <div className="text-sm xl:text-base text-slate-300 mt-2 font-medium">
                       Lớp đang giảng dạy
                     </div>
                   </div>
@@ -788,16 +788,16 @@ export default function FacultyPortalView({
 
                 <div
                   onClick={() => setSidebarTab('STUDENTS')}
-                  className="p-6 rounded-2xl bg-gradient-to-br from-[#12224A]/95 to-[#101332]/95 border border-sky-400/35 shadow-[0_12px_32px_rgba(6,4,20,0.6)] flex items-center gap-4 cursor-pointer hover:border-sky-300/70 transition-all"
+                  className="p-6 xl:p-7 rounded-2xl bg-gradient-to-br from-[#12224A]/95 to-[#101332]/95 border border-sky-400/35 shadow-[0_12px_32px_rgba(6,4,20,0.6)] flex items-center gap-5 cursor-pointer hover:border-sky-300/70 transition-all"
                 >
-                  <div className="w-13 h-13 rounded-2xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 shrink-0">
-                    <BookOpen className="w-6 h-6" />
+                  <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 shrink-0">
+                    <BookOpen className="w-7 h-7 xl:w-8 xl:h-8" />
                   </div>
                   <div>
-                    <div className="text-3xl font-extrabold text-white leading-none">
+                    <div className="text-3xl sm:text-4xl xl:text-[42px] font-extrabold text-white leading-none">
                       {totalStudentsCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-300 mt-1.5 font-medium">
+                    <div className="text-sm xl:text-base text-slate-300 mt-2 font-medium">
                       Sinh viên
                     </div>
                   </div>
@@ -805,16 +805,16 @@ export default function FacultyPortalView({
 
                 <div
                   onClick={() => setSidebarTab('REPORTS')}
-                  className="p-6 rounded-2xl bg-gradient-to-br from-[#23154F]/95 to-[#130E30]/95 border border-purple-400/35 shadow-[0_12px_32px_rgba(6,4,20,0.6)] flex items-center gap-4 cursor-pointer hover:border-purple-300/70 transition-all"
+                  className="p-6 xl:p-7 rounded-2xl bg-gradient-to-br from-[#23154F]/95 to-[#130E30]/95 border border-purple-400/35 shadow-[0_12px_32px_rgba(6,4,20,0.6)] flex items-center gap-5 cursor-pointer hover:border-purple-300/70 transition-all sm:col-span-2 lg:col-span-1"
                 >
-                  <div className="w-13 h-13 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-[#C084FC] shrink-0">
-                    <Calendar className="w-6 h-6" />
+                  <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-[#C084FC] shrink-0">
+                    <Calendar className="w-7 h-7 xl:w-8 xl:h-8" />
                   </div>
                   <div>
-                    <div className="text-3xl font-extrabold text-white leading-none">
+                    <div className="text-3xl sm:text-4xl xl:text-[42px] font-extrabold text-white leading-none">
                       {totalSessionsCount}
                     </div>
-                    <div className="text-xs sm:text-sm text-slate-300 mt-1.5 font-medium">
+                    <div className="text-sm xl:text-base text-slate-300 mt-2 font-medium">
                       Buổi điểm danh
                     </div>
                   </div>
@@ -822,24 +822,24 @@ export default function FacultyPortalView({
               </div>
 
               {/* Biểu đồ cột: Tỷ lệ hiện diện (7 ngày gần nhất) đúng theo Panel 1 */}
-              <div className="p-6 sm:p-7 rounded-3xl bg-[#110E2B]/90 border border-purple-500/25 shadow-[0_16px_45px_rgba(5,4,18,0.7)] space-y-6">
+              <div className="p-6 sm:p-8 xl:p-9 rounded-3xl bg-[#110E2B]/90 border border-purple-500/25 shadow-[0_16px_45px_rgba(5,4,18,0.7)] space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-base sm:text-lg font-extrabold text-white m-0">
+                    <h2 className="text-lg sm:text-xl xl:text-2xl font-extrabold text-white m-0">
                       Tỷ lệ hiện diện (7 ngày gần nhất)
                     </h2>
-                    <p className="text-xs text-slate-400 mt-0.5 mb-0">
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 mb-0">
                       Thống kê xác thực hiện diện phòng học bằng QR Code + WebAuthn + W3C DID
                     </p>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-bold">
+                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs sm:text-sm font-bold">
                     Trung bình: 96,8%
                   </span>
                 </div>
 
-                <div className="flex items-end gap-3 sm:gap-6 h-64 pt-6 pb-2 px-2 border-b border-white/10 relative">
+                <div className="flex items-end gap-3 sm:gap-6 h-72 sm:h-80 xl:h-96 pt-6 pb-2 px-1 sm:px-3 border-b border-white/10 relative">
                   {/* Trục tung Y-axis */}
-                  <div className="hidden sm:flex flex-col justify-between h-full text-[11px] font-mono text-slate-400 pr-2 select-none">
+                  <div className="hidden sm:flex flex-col justify-between h-full text-xs font-mono text-slate-400 pr-2 select-none">
                     <span>100%</span>
                     <span>80%</span>
                     <span>60%</span>
@@ -849,22 +849,22 @@ export default function FacultyPortalView({
                   </div>
 
                   {/* 7 Cột tỷ lệ hiện diện */}
-                  <div className="flex-1 grid grid-cols-7 gap-3 sm:gap-5 items-end h-full">
+                  <div className="flex-1 grid grid-cols-7 gap-2 sm:gap-5 xl:gap-8 items-end h-full">
                     {SEVEN_DAY_BARS.map((bar) => (
                       <div
                         key={bar.date}
                         className="flex flex-col items-center justify-end h-full group"
                       >
-                        <span className="text-[11px] sm:text-xs font-extrabold text-slate-200 mb-2 group-hover:text-[#C084FC] transition-colors">
+                        <span className="text-[11px] sm:text-xs xl:text-sm font-extrabold text-slate-200 mb-2 group-hover:text-[#C084FC] transition-colors">
                           {String(bar.rate).replace('.', ',')}%
                         </span>
-                        <div className="w-full max-w-[54px] h-[82%] bg-[#19153A] rounded-t-xl overflow-hidden flex items-end p-0.5 border border-purple-400/20">
+                        <div className="w-full max-w-[78px] h-[84%] bg-[#19153A] rounded-t-xl overflow-hidden flex items-end p-0.5 border border-purple-400/20">
                           <div
-                            className="w-full rounded-t-lg bg-gradient-to-t from-[#5B21B6] via-[#7C3AED] to-[#C084FC] shadow-[0_0_20px_rgba(168,85,247,0.45)] group-hover:brightness-110 transition-all duration-500"
+                            className="w-full rounded-t-lg bg-gradient-to-t from-[#5B21B6] via-[#7C3AED] to-[#C084FC] shadow-[0_0_24px_rgba(168,85,247,0.48)] group-hover:brightness-110 transition-all duration-500"
                             style={{ height: `${bar.rate}%` }}
                           />
                         </div>
-                        <span className="text-xs text-slate-400 mt-2.5 font-medium">
+                        <span className="text-xs sm:text-sm text-slate-300 mt-3 font-semibold">
                           {bar.date}
                         </span>
                       </div>
@@ -1358,16 +1358,17 @@ export default function FacultyPortalView({
                         <div
                           onClick={() => setIsProjectorFullscreen(true)}
                           title="Nhấp để phóng to toàn màn chiếu"
-                          className="p-4 bg-white rounded-2xl shadow-[0_0_40px_rgba(168,85,247,0.45)] border-4 border-purple-400 cursor-pointer hover:scale-[1.02] transition-transform"
+                          className="p-4 sm:p-5 bg-white rounded-3xl shadow-[0_0_45px_rgba(168,85,247,0.48)] border-4 border-purple-400 cursor-pointer hover:scale-[1.02] transition-transform max-w-full"
                         >
                           <QRCodeCanvas
                             value={
                               qrPayloadString ||
                               `UTH_ID:${sessionId || 'SES_CNTT101'}:${currentNonce}`
                             }
-                            size={220}
+                            size={256}
                             level="M"
                             includeMargin={false}
+                            style={{ width: '100%', height: 'auto', maxWidth: '256px' }}
                           />
                         </div>
 
