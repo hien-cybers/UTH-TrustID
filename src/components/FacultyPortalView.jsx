@@ -706,11 +706,11 @@ export default function FacultyPortalView({
           </div>
         </aside>
 
-        {/* KHÔNG GIAN NỘI DUNG CHÍNH BÊN PHẢI (MỞ RỘNG TOÀN MÀN HÌNH) */}
-        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 xl:p-10 overflow-y-auto space-y-6 xl:space-y-8">
+        {/* KHÔNG GIAN NỘI DUNG CHÍNH BÊN PHẢI (MỞ RỘNG TOÀN MÀN HÌNH & VỪA KHÍT KHUNG) */}
+        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 xl:p-10 overflow-y-auto flex flex-col gap-6">
           {/* Thông báo Toast / Banner */}
           {(portalToast || statusBannerMsg) && (
-            <div className="p-3.5 rounded-2xl bg-purple-500/15 border border-purple-400/45 text-purple-100 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 animate-[fadeIn_0.2s_ease-out]">
+            <div className="p-3.5 rounded-2xl bg-purple-500/15 border border-purple-400/45 text-purple-100 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 animate-[fadeIn_0.2s_ease-out] shrink-0">
               <span>{portalToast || statusBannerMsg}</span>
               <button
                 type="button"
@@ -729,7 +729,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 1: TRANG CHỦ (TỔNG QUAN)
              ========================================================================= */}
           {sidebarTab === 'HOME' && (
-            <div className="space-y-6 animate-[fadeIn_0.25s_ease-out]">
+            <div className="flex-1 flex flex-col justify-between gap-6 animate-[fadeIn_0.25s_ease-out]">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-white m-0 tracking-tight">
@@ -822,7 +822,7 @@ export default function FacultyPortalView({
               </div>
 
               {/* Biểu đồ cột: Tỷ lệ hiện diện (7 ngày gần nhất) đúng theo Panel 1 */}
-              <div className="p-6 sm:p-8 xl:p-9 rounded-3xl bg-[#110E2B]/90 border border-purple-500/25 shadow-[0_16px_45px_rgba(5,4,18,0.7)] space-y-6">
+              <div className="flex-1 p-6 sm:p-8 xl:p-9 rounded-3xl bg-[#110E2B]/90 border border-purple-500/25 shadow-[0_16px_45px_rgba(5,4,18,0.7)] flex flex-col justify-between gap-6 min-h-[340px]">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="text-lg sm:text-xl xl:text-2xl font-extrabold text-white m-0">
@@ -837,7 +837,7 @@ export default function FacultyPortalView({
                   </span>
                 </div>
 
-                <div className="flex items-end gap-3 sm:gap-6 h-72 sm:h-80 xl:h-96 pt-6 pb-2 px-1 sm:px-3 border-b border-white/10 relative">
+                <div className="flex-1 flex items-end gap-3 sm:gap-6 min-h-[260px] pt-6 pb-2 px-1 sm:px-3 border-b border-white/10 relative">
                   {/* Trục tung Y-axis */}
                   <div className="hidden sm:flex flex-col justify-between h-full text-xs font-mono text-slate-400 pr-2 select-none">
                     <span>100%</span>

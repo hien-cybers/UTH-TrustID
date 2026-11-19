@@ -44,6 +44,7 @@ import { toggleTheme } from '../utils/theme';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
 import LandingPage from './LandingPage';
 import FacultyPortalView from './FacultyPortalView';
+import AdminPortalView from './AdminPortalView';
 
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
@@ -2890,6 +2891,46 @@ export default function FacultyDashboard({
           </div>
         )}
       </>
+    );
+  }
+
+  if (staffRole === 'ADMIN') {
+    return (
+      <AdminPortalView
+        adminStats={adminStats}
+        adminStatusMsg={adminStatusMsg}
+        setAdminStatusMsg={setAdminStatusMsg}
+        batchJson={batchJson}
+        setBatchJson={setBatchJson}
+        issuanceMode={issuanceMode}
+        setIssuanceMode={setIssuanceMode}
+        newBatchStudent={newBatchStudent}
+        setNewBatchStudent={setNewBatchStudent}
+        handleAddStudentToBatch={handleAddStudentToBatch}
+        handleRemoveStudentFromBatch={handleRemoveStudentFromBatch}
+        handleLoadPresetBatch={handleLoadPresetBatch}
+        handleAdminIssueMerkleBatch={handleAdminIssueMerkleBatch}
+        selectedMerkleLeafIdx={selectedMerkleLeafIdx}
+        setSelectedMerkleLeafIdx={setSelectedMerkleLeafIdx}
+        revokeAddressInput={revokeAddressInput}
+        setRevokeAddressInput={setRevokeAddressInput}
+        revokedKeysList={revokedKeysList}
+        handleAdminRevokeWallet={handleAdminRevokeWallet}
+        handleAdminUnrevokeWallet={handleAdminUnrevokeWallet}
+        deviceSearchQuery={deviceSearchQuery}
+        setDeviceSearchQuery={setDeviceSearchQuery}
+        deviceStatusFilter={deviceStatusFilter}
+        setDeviceStatusFilter={setDeviceStatusFilter}
+        securityAlerts={securityAlerts}
+        fetchAdminAuditLogs={fetchAdminAuditLogs}
+        handleExportAuditLogsCSV={handleExportAuditLogsCSV}
+        handleSimulateAttack={handleSimulateAttack}
+        simulatingAttack={simulatingAttack}
+        handleQuickSwitchAccount={handleQuickSwitchAccount}
+        handleLogout={handleLogout}
+        defaultEnrolledRoster={DEFAULT_ENROLLED_ROSTER}
+        presetBatchWallets={PRESET_BATCH_WALLETS}
+      />
     );
   }
 
