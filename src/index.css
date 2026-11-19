@@ -79,12 +79,26 @@ h1, h2, h3, h4, .font-display {
   line-height: 1.3;
 }
 
-/* Đảm bảo dropdown <select> trên Windows Dark Mode luôn có nền tối rõ nét */
+/* Đảm bảo dropdown <select> trên Windows Dark Mode luôn có nền tối rõ nét, còn Light Portal giữ nền sáng */
 select option,
 select optgroup {
   background-color: #13102b;
   color: #f8fafc;
   font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.uth-light-portal select option,
+.uth-light-portal select optgroup {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.uth-light-portal ::-webkit-scrollbar-track {
+  background: #e2e8f0;
+}
+
+.uth-light-portal ::-webkit-scrollbar-thumb {
+  background: #94a3b8;
 }
 
 /* Canh thẳng hàng chữ số trong bảng & thẻ thống kê */

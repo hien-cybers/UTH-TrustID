@@ -2743,14 +2743,14 @@ export default function FacultyDashboard({
 
         {/* Hộp thoại Xác nhận Xóa Lớp Học Phần */}
         {courseToDelete && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="w-full max-w-md p-6 rounded-3xl bg-[#130F30] border border-rose-500/40 shadow-2xl space-y-4 text-white">
-              <h3 className="text-base font-bold text-white m-0">
+          <div className="fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-md p-6 rounded-2xl bg-white border border-slate-200 shadow-2xl space-y-4 text-slate-800">
+              <h3 className="text-base font-bold text-[#0F294E] m-0">
                 Xác Nhận Xóa Lớp Học Phần
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed m-0">
+              <p className="text-sm text-slate-600 leading-relaxed m-0">
                 Bạn có chắc chắn muốn xóa lớp học phần{' '}
-                <strong className="text-purple-300">
+                <strong className="text-[#2563EB]">
                   {courseToDelete.courseCode} — {courseToDelete.courseName}
                 </strong>{' '}
                 cùng toàn bộ {courseToDelete.sessions?.length || 0} buổi điểm danh đã lưu?
@@ -2759,14 +2759,14 @@ export default function FacultyDashboard({
                 <button
                   type="button"
                   onClick={() => setCourseToDelete(null)}
-                  className="px-4 py-2 rounded-xl bg-white/10 text-slate-200 text-xs font-semibold cursor-pointer border-none"
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold cursor-pointer border-none"
                 >
                   Hủy Bỏ
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmDeleteCourse}
-                  className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold cursor-pointer border-none"
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold cursor-pointer border-none"
                 >
                   Xác Nhận Xóa
                 </button>
@@ -2777,38 +2777,38 @@ export default function FacultyDashboard({
 
         {/* Chế độ Toàn Màn Chiếu Hội Trường 500x500px */}
         {isProjectorFullscreen && (
-          <div className="fixed inset-0 z-50 bg-[#060516]/98 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-white">
-            <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-purple-500/25">
+          <div className="fixed inset-0 z-50 bg-[#0F294E]/97 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-white">
+            <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-white/15">
               <div>
-                <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold">
+                <span className="px-3 py-1 rounded-full bg-white/15 border border-white/25 text-sky-200 text-xs font-semibold">
                   MÀN CHIẾU HỘI TRƯỜNG • {rotateInterval}s
                 </span>
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-2 mb-0">
-                  {sessionConfig.courseCode || 'CNTT101'} —{' '}
-                  {sessionConfig.courseName || 'Lập trình Python'}
+                <h2 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-0">
+                  {sessionConfig.courseCode || 'CT101'} —{' '}
+                  {sessionConfig.courseName || 'Trí tuệ nhân tạo'}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setIsProjectorFullscreen(false)}
-                className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs cursor-pointer border-none"
+                className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-sm cursor-pointer border-none"
               >
                 Đóng toàn màn chiếu
               </button>
             </div>
 
-            <div className="p-6 bg-white rounded-3xl shadow-[0_0_80px_rgba(168,85,247,0.5)] border-4 border-purple-400 flex flex-col items-center">
+            <div className="p-6 bg-white rounded-3xl shadow-2xl border-4 border-blue-400 flex flex-col items-center">
               <QRCodeCanvas
-                value={qrPayloadString || `UTH_ID:${sessionId || 'SES_CNTT101'}:${currentNonce}`}
+                value={qrPayloadString || `UTH_ID:${sessionId || 'SES_CT101'}:${currentNonce}`}
                 size={420}
                 level="M"
                 includeMargin={false}
               />
-              <div className="mt-3 flex items-center gap-3">
-                <span className="px-3 py-1 rounded-full bg-[#7C3AED] text-white font-mono text-xs font-extrabold">
+              <div className="mt-4 flex items-center gap-3">
+                <span className="px-3.5 py-1 rounded-full bg-[#2563EB] text-white font-mono text-xs font-bold">
                   ⏱ {timerProgress}s
                 </span>
-                <span className="font-mono text-sm font-extrabold text-slate-900">
+                <span className="font-mono text-sm font-bold text-slate-900">
                   {currentNonce}
                 </span>
               </div>
@@ -2822,17 +2822,17 @@ export default function FacultyDashboard({
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowManualCheckInModal(false);
             }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 text-white"
+            className="uth-light-portal fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-xs flex items-center justify-center p-4 text-slate-800"
           >
-            <div className="w-full max-w-lg rounded-3xl bg-[#130F30] border border-purple-400/45 p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <h3 className="text-base font-extrabold text-white m-0">
+            <div className="w-full max-w-lg rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base font-bold text-[#0F294E] m-0">
                   Điểm danh thủ công / Bổ sung sinh viên
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowManualCheckInModal(false)}
-                  className="text-slate-400 hover:text-white bg-transparent border-none cursor-pointer"
+                  className="text-slate-400 hover:text-slate-700 bg-transparent border-none cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2851,20 +2851,20 @@ export default function FacultyDashboard({
                   required
                   value={manualForm.studentId}
                   onChange={(e) => setManualForm((p) => ({ ...p, studentId: e.target.value }))}
-                  placeholder="Mã số sinh viên (VD: 2151050125)"
-                  className="w-full p-3 rounded-xl bg-[#0B0920] border border-purple-400/35 text-sm text-white font-mono outline-none"
+                  placeholder="Mã số sinh viên (VD: 23510003)"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-800 font-mono outline-none focus:bg-white focus:border-blue-500"
                 />
                 <input
                   type="text"
                   value={manualForm.name}
                   onChange={(e) => setManualForm((p) => ({ ...p, name: e.target.value }))}
                   placeholder="Họ và tên sinh viên"
-                  className="w-full p-3 rounded-xl bg-[#0B0920] border border-purple-400/35 text-sm text-white outline-none"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-800 outline-none focus:bg-white focus:border-blue-500"
                 />
                 <select
                   value={manualForm.reason}
                   onChange={(e) => setManualForm((p) => ({ ...p, reason: e.target.value }))}
-                  className="w-full p-3 rounded-xl bg-[#0B0920] border border-purple-400/35 text-sm text-white outline-none"
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-sm text-slate-800 outline-none focus:border-blue-500"
                 >
                   <option value="Quên điện thoại / Hết pin">Quên điện thoại / Hết pin</option>
                   <option value="Hỏng camera / Lỗi GPS">Hỏng camera / Lỗi GPS</option>
@@ -2875,13 +2875,13 @@ export default function FacultyDashboard({
                   <button
                     type="button"
                     onClick={() => setShowManualCheckInModal(false)}
-                    className="px-4 py-2 rounded-xl bg-white/10 text-slate-200 text-xs font-bold border-none cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold border-none cursor-pointer"
                   >
                     Đóng
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs font-extrabold border-none cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-semibold border-none cursor-pointer"
                   >
                     Xác nhận có mặt
                   </button>
