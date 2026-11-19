@@ -78,8 +78,8 @@ h1, h2, h3, h4, .font-display {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   box-sizing: border-box;
 }
 
@@ -464,81 +464,62 @@ button, input, select {
   animation: btnShimmerSweep 3.8s ease-in-out infinite;
 }
 
-/* ==================== GIAO DIỆN WEB PORTAL SANG TRỌNG (ROYAL SAPPHIRE & PLATINUM GLASS) ==================== */
+/* ==================== GIAO DIỆN WEB PORTAL EDUCAMPUS (ROYAL SAPPHIRE & MODERN GLASS) ==================== */
 .ocean-palette-theme,
 .theme-fintech-dark {
-  background: radial-gradient(circle at 15% 12%, rgba(56, 189, 248, 0.22), transparent 48%),
-              radial-gradient(circle at 85% 88%, rgba(45, 212, 191, 0.16), transparent 52%),
-              linear-gradient(155deg, #0F2547 0%, #0A1931 55%, #071326 100%) !important;
+  background: radial-gradient(circle at 12% 8%, rgba(26, 107, 255, 0.2), transparent 42%),
+              radial-gradient(circle at 88% 90%, rgba(56, 189, 248, 0.14), transparent 48%),
+              linear-gradient(160deg, #07142B 0%, #0A1B38 52%, #061022 100%) !important;
   color: #F8FAFC !important;
-  font-family: 'Inter', 'Be Vietnam Pro', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .theme-fintech-dark .dashboard-outer-shell {
-  background: linear-gradient(165deg, rgba(19, 42, 78, 0.94) 0%, rgba(12, 29, 56, 0.97) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  box-shadow: 0 24px 60px -12px rgba(2, 8, 23, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .theme-fintech-dark header {
-  background: rgba(15, 34, 64, 0.92) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: rgba(8, 22, 48, 0.88) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18) !important;
 }
 
 .theme-fintech-dark .bg-\[\#081226\] {
-  background: linear-gradient(155deg, rgba(24, 52, 94, 0.88) 0%, rgba(16, 37, 70, 0.94) 100%) !important;
-  border: 1px solid rgba(148, 163, 184, 0.25) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 14px 32px -10px rgba(3, 10, 24, 0.55) !important;
+  background: linear-gradient(155deg, rgba(16, 37, 72, 0.9) 0%, rgba(11, 27, 54, 0.95) 100%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 26px -8px rgba(2, 8, 23, 0.5) !important;
 }
 
 .theme-fintech-dark .hero-navy-card {
-  background: linear-gradient(145deg, #1E3E6D 0%, #142C52 100%) !important;
-  border: 1px solid rgba(125, 211, 252, 0.38) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 14px 30px -10px rgba(14, 165, 233, 0.2) !important;
+  background: linear-gradient(145deg, #132F5C 0%, #0D2244 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.32) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 26px -8px rgba(14, 165, 233, 0.18) !important;
 }
 
 .theme-fintech-dark .bg-\[\#040814\],
 .theme-fintech-dark .bg-\[\#040814\]\/80,
+.theme-fintech-dark .bg-\[\#040814\]\/85,
 .theme-fintech-dark .bg-\[\#040814\]\/90,
 .theme-fintech-dark .bg-slate-950,
 .theme-fintech-dark .bg-slate-950\/90 {
-  background: rgba(11, 26, 50, 0.78) !important;
-  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: rgba(8, 20, 42, 0.82) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
 }
 
 .theme-fintech-dark .bg-cyan-400 {
-  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
+  background: linear-gradient(135deg, #1A6BFF 0%, #0EA5E9 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.32) !important;
+  box-shadow: 0 6px 16px rgba(26, 107, 255, 0.32) !important;
 }
 
-/* Cân chỉnh kích thước chữ & độ tương phản để mọi giảng viên, cán bộ đều nhìn rõ và êm mắt */
+/* Độ tương phản chữ rõ nét, giữ nguyên tỷ lệ kích thước chuẩn của Tailwind */
 .theme-fintech-dark .text-slate-400 {
-  color: #CBD5E1 !important;
+  color: #94A3B8 !important;
 }
 
 .theme-fintech-dark .text-slate-300 {
-  color: #E2E8F0 !important;
-}
-
-.theme-fintech-dark .text-xs {
-  font-size: 13.5px !important;
-  line-height: 1.55 !important;
-}
-
-.theme-fintech-dark .text-sm {
-  font-size: 15px !important;
-  line-height: 1.55 !important;
-}
-
-.theme-fintech-dark .text-base {
-  font-size: 16.5px !important;
-  line-height: 1.5 !important;
-}
-
-.theme-fintech-dark .text-lg {
-  font-size: 18.5px !important;
-  line-height: 1.45 !important;
+  color: #CBD5E1 !important;
 }
 
 /* ==================== HIỆU ỨNG CHUYỂN ĐỘNG MƯỢT MÀ (SMOOTH MICRO-INTERACTIONS & EFFECTS) ==================== */
