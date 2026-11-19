@@ -338,6 +338,22 @@ export default function AdminPortalView({
   // State Màn hình 5: Quản trị xác thực WebAuthn
   const [webAuthnSubTab, setWebAuthnSubTab] = useState('DEVICES'); // 'DEVICES' | 'POLICY' | 'LOGS'
   const [webAuthnSearch, setWebAuthnSearch] = useState('');
+  const [webAuthnPolicies, setWebAuthnPolicies] = useState({
+    requireUserVerification: true,
+    hardwareAttestation: true,
+    allowRoamingKeys: true,
+    strictOriginBinding: true
+  });
+
+  // Tọa độ biểu đồ đường tỷ lệ thành công 7 ngày (trục phải 90% -> 100%, y từ 158 -> 18)
+  const adminRatePoints = SEVEN_DAY_AUTH_STATS.map((item, idx) => ({
+    x: 61 + idx * 54,
+    y: 158 - ((item.rate - 90) / 10) * 140,
+    rate: item.rate
+  }));
+  const adminRatePath = adminRatePoints
+    .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y.toFixed(1)}`)
+    .join(' ');
 
   // State Màn hình 6: Quản lý Merkle Tree
   const [merkleSubTab, setMerkleSubTab] = useState('TREE'); // 'TREE' | 'PROOF'
@@ -442,637 +458,652 @@ export default function AdminPortalView({
 
   return (
     <div
-      className="min-h-screen lg:h-screen w-full bg-[#070618] text-white font-sans select-none flex flex-col lg:overflow-hidden"
+      className="min-h-screen w-full bg-[#070618] text-slate-100 font-sans flex flex-col lg:flex-row antialiased"
       style={{
         background:
-          'radial-gradient(circle at 78% 14%, rgba(124, 58, 237, 0.18) 0%, transparent 48%), radial-gradient(circle at 22% 88%, rgba(56, 189, 248, 0.12) 0%, transparent 50%), linear-gradient(180deg, #070618 0%, #0B0921 100%)'
+          'radial-gradient(circle at 78% 12%, rgba(124, 58, 237, 0.16) 0%, transparent 45%), radial-gradient(circle at 18% 88%, rgba(56, 189, 248, 0.1) 0%, transparent 48%), linear-gradient(180deg, #070618 0%, #0B0920 100%)'
       }}
     >
-      {/* ==================== KHUNG CHÍNH TOÀN MÀN HÌNH: SIDEBAR TRÁI + WORKSPACE PHẢI ==================== */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-0">
-        
-        {/* ==================== SIDEBAR TRÁI 10 MỤC CHUẨN THEO 9 MÀN HÌNH TRONG ẢNH ==================== */}
-        <aside className="w-full lg:w-72 xl:w-76 shrink-0 border-b lg:border-b-0 lg:border-r border-purple-500/20 bg-[#0A081E]/95 flex flex-col justify-between relative overflow-hidden">
-          <div className="p-4 sm:p-5 space-y-4 overflow-y-auto z-10">
-            {/* Logo UTH-TrustID Quản trị hệ thống */}
-            <div
-              onClick={() => setActiveMenu('HOME')}
-              className="flex items-center gap-3 pb-3 border-b border-purple-500/15 cursor-pointer group"
-            >
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_24px_rgba(139,92,246,0.6)] border border-purple-300/40 group-hover:scale-105 transition-transform shrink-0">
-                <ShieldCheck className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-none">
-                  UTH-TrustID
-                </div>
-                <div className="text-xs font-medium text-purple-300 mt-1">
-                  Quản trị hệ thống
-                </div>
-              </div>
+      {/* ==================== SIDEBAR TRÁI 10 MỤC (STICKY & CUỘN MƯỢT MỌI ĐỘ CAO MÀN HÌNH) ==================== */}
+      <aside className="w-full lg:w-[264px] xl:w-[276px] shrink-0 lg:sticky lg:top-0 lg:h-screen border-b lg:border-b-0 lg:border-r border-purple-500/20 bg-[#0B0920]/95 backdrop-blur-xl flex flex-col justify-between z-20">
+        <div className="flex flex-col min-h-0 flex-1">
+          {/* Logo UTH-TrustID Quản trị hệ thống */}
+          <div
+            onClick={() => setActiveMenu('HOME')}
+            className="h-[72px] px-5 border-b border-purple-500/15 flex items-center gap-3 cursor-pointer group shrink-0"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-purple-300/35 group-hover:scale-105 transition-transform shrink-0">
+              <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-
-            {/* 10 Mục Sidebar Trực Tiếp */}
-            <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0">
-              {[
-                { id: 'HOME', label: 'Trang chủ', icon: <Home className="w-4 h-4 shrink-0" /> },
-                {
-                  id: 'USERS',
-                  label: 'Quản lý người dùng',
-                  icon: <Users className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'DID',
-                  label: 'Quản lý định danh (DID)',
-                  icon: <IdCard className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'VC',
-                  label: 'Chứng chỉ số (VC)',
-                  icon: <Award className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'WEBAUTHN',
-                  label: 'WebAuthn (Passkey)',
-                  icon: <Fingerprint className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'MERKLE',
-                  label: 'Merkle Tree',
-                  icon: <GitBranch className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'BLOCKCHAIN',
-                  label: 'Blockchain',
-                  icon: <Box className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'AUDIT',
-                  label: 'Nhật ký & Giám sát',
-                  icon: <FileText className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'REPORTS',
-                  label: 'Báo cáo & Thống kê',
-                  icon: <BarChart3 className="w-4 h-4 shrink-0" />
-                },
-                {
-                  id: 'SETTINGS',
-                  label: 'Cấu hình hệ thống',
-                  icon: <Settings className="w-4 h-4 shrink-0" />
-                }
-              ].map((item) => {
-                const isActive = activeMenu === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveMenu(item.id)}
-                    className={`px-4 py-2.5 lg:py-3 rounded-xl text-xs sm:text-sm font-bold cursor-pointer border-none transition-all flex items-center gap-3 whitespace-nowrap ${
-                      isActive
-                        ? 'bg-gradient-to-r from-[#8B5CF6] via-[#7C3AED] to-[#6366F1] text-white shadow-[0_6px_22px_rgba(139,92,246,0.48)]'
-                        : 'bg-transparent text-slate-300 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Phối cảnh Tòa nhà Đại học UTH phát sáng ở chân Sidebar */}
-          <div className="hidden lg:block relative h-32 w-full overflow-hidden border-t border-purple-500/20 bg-gradient-to-t from-[#1A1142] via-[#120C30] to-transparent p-3.5">
-            <div
-              className="w-full h-full rounded-t-2xl border border-purple-400/35 bg-gradient-to-br from-[#2B1D66]/80 to-[#0D0924]/95 p-3 flex flex-col justify-between shadow-[0_0_26px_rgba(139,92,246,0.35)]"
-              style={{ transform: 'perspective(500px) rotateY(10deg)' }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded bg-purple-500/30 border border-purple-300/50 text-xs font-black tracking-widest text-white shadow-[0_0_14px_rgba(168,85,247,0.85)]">
-                  UTH
-                </span>
-                <span className="text-[10px] font-mono text-emerald-300 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  Node Active
-                </span>
+            <div className="min-w-0">
+              <div className="text-[19px] font-bold tracking-tight text-white leading-tight truncate">
+                UTH-TrustID
               </div>
-              <div className="grid grid-cols-5 gap-1.5 opacity-80">
-                {Array.from({ length: 10 }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`h-4 rounded-xs border ${
-                      idx % 3 === 0
-                        ? 'bg-amber-200/35 border-amber-200/40'
-                        : 'bg-purple-300/25 border-purple-300/25'
-                    }`}
-                  />
-                ))}
+              <div className="text-xs font-medium text-purple-300 leading-tight mt-0.5 truncate">
+                Quản trị hệ thống
               </div>
             </div>
           </div>
-        </aside>
 
-        {/* ==================== CỘT PHẢI: TOPBAR + NỘI DUNG 9 MÀN HÌNH QUẢN TRỊ ==================== */}
-        <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
-          
-          {/* TOPBAR TRÊN CÙNG (CÓ THANH TÌM KIẾM TRUNG TÂM THEO MẪU 9 MÀN HÌNH) */}
-          <header className="h-16 sm:h-18 px-5 sm:px-8 border-b border-purple-500/20 bg-[#0A0820]/90 backdrop-blur-xl flex items-center justify-between gap-4 shrink-0">
-            {/* Thanh tìm kiếm toàn cục */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && globalSearch.trim()) {
-                    setUserSearch(globalSearch);
-                    setActiveMenu('USERS');
-                  }
-                }}
-                placeholder="Tìm kiếm người dùng, DID, VC..."
-                className="w-full pl-11 pr-4 py-2 rounded-full bg-[#151232] border border-purple-400/25 text-xs sm:text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400"
-              />
-            </div>
-
-            <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveMenu('AUDIT')}
-                title="Cảnh báo hệ thống"
-                className="relative w-10 h-10 rounded-xl bg-[#151232] hover:bg-[#1E1945] border border-purple-400/25 flex items-center justify-center text-slate-200 cursor-pointer"
-              >
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center">
-                  1
-                </span>
-              </button>
-
-              <div className="flex items-center gap-2.5 pl-3 border-l border-white/10">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[#A855F7] to-[#6366F1] text-white flex items-center justify-center font-black text-sm shadow-md">
-                  A
-                </div>
-                <div className="hidden sm:block text-left">
-                  <div className="text-xs sm:text-sm font-extrabold text-white leading-tight">
-                    Admin UTH
-                  </div>
-                  <div className="text-[11px] text-purple-300 leading-tight">
-                    Quản trị viên
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleQuickSwitchAccount && handleQuickSwitchAccount('giangvien@uth.edu.vn')
-                }
-                className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#151232] hover:bg-[#1F1A48] border border-purple-400/30 text-purple-200 text-xs font-semibold cursor-pointer"
-              >
-                ⇄ Cổng Giảng Viên
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Đăng xuất</span>
-              </button>
-            </div>
-          </header>
-
-          {/* VÙNG NỘI DUNG CHÍNH (TỰ ĐỘNG GIÃN ĐẦY KHUNG MÀN HÌNH) */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-7 flex flex-col gap-5">
-            {(toastMsg || adminStatusMsg) && (
-              <div className="p-3.5 rounded-2xl bg-purple-500/15 border border-purple-400/45 text-xs sm:text-sm font-semibold text-purple-100 flex items-center justify-between gap-2 shrink-0 animate-[fadeIn_0.2s_ease-out]">
-                <span>{toastMsg || adminStatusMsg}</span>
+          {/* 10 Mục Sidebar có cuộn độc lập — không bao giờ bị cắt mục dưới trên Laptop 768p */}
+          <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-y-auto p-3 sm:p-3.5 flex-1">
+            {[
+              { id: 'HOME', label: 'Trang chủ', icon: <Home className="w-[18px] h-[18px] shrink-0" /> },
+              {
+                id: 'USERS',
+                label: 'Quản lý người dùng',
+                icon: <Users className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'DID',
+                label: 'Quản lý định danh (DID)',
+                icon: <IdCard className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'VC',
+                label: 'Chứng chỉ số (VC)',
+                icon: <Award className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'WEBAUTHN',
+                label: 'WebAuthn (Passkey)',
+                icon: <Fingerprint className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'MERKLE',
+                label: 'Merkle Tree',
+                icon: <GitBranch className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'BLOCKCHAIN',
+                label: 'Blockchain',
+                icon: <Box className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'AUDIT',
+                label: 'Nhật ký & Giám sát',
+                icon: <FileText className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'REPORTS',
+                label: 'Báo cáo & Thống kê',
+                icon: <BarChart3 className="w-[18px] h-[18px] shrink-0" />
+              },
+              {
+                id: 'SETTINGS',
+                label: 'Cấu hình hệ thống',
+                icon: <Settings className="w-[18px] h-[18px] shrink-0" />
+              }
+            ].map((item) => {
+              const isActive = activeMenu === item.id;
+              return (
                 <button
+                  key={item.id}
                   type="button"
-                  onClick={() => {
-                    setToastMsg('');
-                    if (setAdminStatusMsg) setAdminStatusMsg('');
-                  }}
-                  className="text-slate-300 hover:text-white bg-transparent border-none cursor-pointer"
+                  onClick={() => setActiveMenu(item.id)}
+                  className={`px-3.5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border-none transition-all flex items-center gap-3 whitespace-nowrap text-left shrink-0 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#8B5CF6] via-[#7C3AED] to-[#6366F1] text-white shadow-[0_6px_20px_rgba(124,58,237,0.45)]'
+                      : 'bg-transparent text-slate-300 hover:text-white hover:bg-white/[0.06]'
+                  }`}
                 >
-                  <X className="w-4 h-4" />
+                  {item.icon}
+                  <span>{item.label}</span>
                 </button>
-              </div>
-            )}
+              );
+            })}
+          </nav>
+        </div>
 
-            {/* =========================================================================
-                MÀN HÌNH 1: TRANG CHỦ – TỔNG QUAN HỆ THỐNG
-               ========================================================================= */}
-            {activeMenu === 'HOME' && (
-              <div className="flex-1 flex flex-col justify-between gap-5 min-h-0">
-                <div className="shrink-0">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white m-0 tracking-tight">
-                    Xin chào, Quản trị viên 👋
-                  </h1>
-                  <p className="text-xs sm:text-sm text-slate-300 mt-1 mb-0">
-                    Tổng quan hoạt động hệ thống UTH-TrustID
-                  </p>
+        {/* Phối cảnh Tòa nhà Đại học UTH gọn gàng ở chân Sidebar */}
+        <div className="hidden lg:block shrink-0 border-t border-purple-500/15 bg-gradient-to-t from-[#191140] via-[#120C2F] to-transparent p-3.5">
+          <div className="w-full rounded-2xl border border-purple-400/30 bg-gradient-to-br from-[#281B60]/80 to-[#0E0A26]/95 p-3 space-y-2.5 shadow-[0_0_24px_rgba(124,58,237,0.28)]">
+            <div className="flex items-center justify-between">
+              <span className="px-2.5 py-0.5 rounded-md bg-purple-500/30 border border-purple-300/45 text-xs font-bold tracking-wider text-white">
+                UTH
+              </span>
+              <span className="text-[11px] font-mono text-emerald-300 flex items-center gap-1.5 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                Node Active
+              </span>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5 opacity-80">
+              {Array.from({ length: 10 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`h-3 rounded-[3px] border ${
+                    idx % 3 === 0
+                      ? 'bg-amber-200/35 border-amber-200/40'
+                      : 'bg-purple-300/20 border-purple-300/25'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ==================== CỘT PHẢI: TOPBAR + NỘI DUNG 10 MÀN HÌNH QUẢN TRỊ ==================== */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        {/* TOPBAR TRÊN CÙNG (ĐỒNG BỘ CHIỀU CAO 72px VỚI CỔNG GIẢNG VIÊN) */}
+        <header className="sticky top-0 z-30 min-h-[72px] px-4 sm:px-6 lg:px-8 py-3 border-b border-purple-500/15 bg-[#09081C]/90 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 shrink-0">
+          {/* Thanh tìm kiếm toàn cục */}
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && globalSearch.trim()) {
+                  setUserSearch(globalSearch);
+                  setActiveMenu('USERS');
+                }
+              }}
+              placeholder="Tìm kiếm người dùng, DID, VC..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#141130] border border-purple-400/20 text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400/70 transition-colors"
+            />
+          </div>
+
+          <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMenu('AUDIT');
+                setAuditSubTab('SECURITY');
+              }}
+              title="Cảnh báo hệ thống"
+              className="relative w-10 h-10 rounded-xl bg-[#141130] hover:bg-[#1E1945] border border-purple-400/20 flex items-center justify-center text-slate-200 cursor-pointer transition-colors"
+            >
+              <Bell className="w-[18px] h-[18px]" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-[11px] font-bold text-white flex items-center justify-center tabular-nums">
+                {Math.max(1, (securityAlerts || []).length)}
+              </span>
+            </button>
+
+            <div className="flex items-center gap-2.5 pl-3 border-l border-white/10">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#A855F7] to-[#6366F1] text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">
+                A
+              </div>
+              <div className="hidden sm:block text-left">
+                <div className="text-sm font-semibold text-white leading-tight">
+                  Admin UTH
+                </div>
+                <div className="text-xs text-purple-300 leading-tight mt-0.5">
+                  Quản trị viên
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                handleQuickSwitchAccount && handleQuickSwitchAccount('giangvien@uth.edu.vn')
+              }
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141130] hover:bg-[#1F1A48] border border-purple-400/25 text-purple-200 text-xs font-semibold cursor-pointer transition-colors whitespace-nowrap"
+            >
+              ⇄ Cổng Giảng Viên
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </button>
+          </div>
+        </header>
+
+        {/* VÙNG NỘI DUNG CHÍNH (THOÁNG RỘNG, KHÔNG CẮT TRÀN) */}
+        <main className="flex-1 min-w-0 w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+          {(toastMsg || adminStatusMsg) && (
+            <div className="px-4 py-3.5 rounded-2xl bg-purple-500/15 border border-purple-400/40 text-sm font-medium text-purple-100 flex items-center justify-between gap-2 shrink-0 animate-[fadeIn_0.2s_ease-out]">
+              <span>{toastMsg || adminStatusMsg}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setToastMsg('');
+                  if (setAdminStatusMsg) setAdminStatusMsg('');
+                }}
+                className="text-slate-300 hover:text-white bg-transparent border-none cursor-pointer p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* =========================================================================
+              MÀN HÌNH 1: TRANG CHỦ – TỔNG QUAN HỆ THỐNG
+             ========================================================================= */}
+          {activeMenu === 'HOME' && (
+            <div className="flex flex-col gap-6 animate-[fadeIn_0.25s_ease-out]">
+              <div>
+                <h1 className="text-2xl sm:text-[28px] font-bold text-white m-0">
+                  Xin chào, Quản trị viên 👋
+                </h1>
+                <p className="text-sm text-slate-300 mt-1.5 mb-0">
+                  Tổng quan hoạt động hệ thống định danh số &amp; xác thực hiện diện UTH-TrustID
+                </p>
+              </div>
+
+              {/* 4 Thẻ KPI (12.548 Người dùng | 12.548 DID | 26.937 VC | 98,7% Tỷ lệ xác thực) */}
+              <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+                <div
+                  onClick={() => setActiveMenu('USERS')}
+                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#2B1460] via-[#1E1145] to-[#130C2E] border border-purple-400/30 shadow-xl flex items-center gap-4 cursor-pointer hover:border-purple-300/60 hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="w-13 h-13 rounded-2xl bg-purple-500/25 border border-purple-300/40 flex items-center justify-center text-[#C084FC] shrink-0">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-2xl sm:text-[30px] font-bold text-white leading-none tabular-nums">
+                      12.548
+                    </div>
+                    <div className="text-sm text-slate-200 mt-1.5 font-medium">
+                      Tài khoản người dùng
+                    </div>
+                    <div className="text-xs font-semibold text-emerald-400 mt-1 tabular-nums">
+                      ▲ +3,2% so với tháng trước
+                    </div>
+                  </div>
                 </div>
 
-                {/* 4 Thẻ KPI (12.548 Người dùng | 12.548 DID | 26.937 VC | 98,7% Tỷ lệ xác thực) */}
-                <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 shrink-0">
-                  <div
-                    onClick={() => setActiveMenu('USERS')}
-                    className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#2B1460] via-[#1F1147] to-[#140C30] border border-purple-400/40 shadow-xl flex items-center gap-4 cursor-pointer hover:scale-[1.01] transition-all"
-                  >
-                    <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-purple-500/25 border border-purple-300/45 flex items-center justify-center text-[#C084FC] shrink-0">
-                      <Users className="w-6 h-6 sm:w-7 sm:h-7" />
+                <div
+                  onClick={() => setActiveMenu('DID')}
+                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#132962] via-[#101F4C] to-[#0D1638] border border-blue-400/30 shadow-xl flex items-center gap-4 cursor-pointer hover:border-blue-300/60 hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="w-13 h-13 rounded-2xl bg-blue-500/25 border border-blue-300/40 flex items-center justify-center text-sky-300 shrink-0">
+                    <IdCard className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-2xl sm:text-[30px] font-bold text-white leading-none tabular-nums">
+                      12.548
                     </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl xl:text-[34px] font-extrabold text-white leading-none">
-                        12.548
-                      </div>
-                      <div className="text-xs sm:text-sm text-slate-200 mt-1.5 font-semibold">
-                        Người dùng
-                      </div>
-                      <div className="text-xs font-bold text-emerald-400 mt-1">
-                        ▲ +3,2%
-                      </div>
+                    <div className="text-sm text-slate-200 mt-1.5 font-medium">
+                      Định danh số (DID)
+                    </div>
+                    <div className="text-xs font-semibold text-emerald-400 mt-1 tabular-nums">
+                      ▲ +3,2% so với tháng trước
                     </div>
                   </div>
+                </div>
 
-                  <div
-                    onClick={() => setActiveMenu('DID')}
-                    className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#132962] via-[#101F4C] to-[#0D1638] border border-blue-400/40 shadow-xl flex items-center gap-4 cursor-pointer hover:scale-[1.01] transition-all"
-                  >
-                    <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-blue-500/25 border border-blue-300/45 flex items-center justify-center text-sky-300 shrink-0">
-                      <IdCard className="w-6 h-6 sm:w-7 sm:h-7" />
+                <div
+                  onClick={() => setActiveMenu('VC')}
+                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#0F384C] via-[#0D2B3E] to-[#0A1F2E] border border-teal-400/30 shadow-xl flex items-center gap-4 cursor-pointer hover:border-teal-300/60 hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="w-13 h-13 rounded-2xl bg-teal-500/25 border border-teal-300/40 flex items-center justify-center text-teal-300 shrink-0">
+                    <Award className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-2xl sm:text-[30px] font-bold text-white leading-none tabular-nums">
+                      26.937
                     </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl xl:text-[34px] font-extrabold text-white leading-none">
-                        12.548
-                      </div>
-                      <div className="text-xs sm:text-sm text-slate-200 mt-1.5 font-semibold">
-                        DID
-                      </div>
-                      <div className="text-xs font-bold text-emerald-400 mt-1">
-                        ▲ +3,2%
-                      </div>
+                    <div className="text-sm text-slate-200 mt-1.5 font-medium">
+                      Chứng chỉ số (VC)
+                    </div>
+                    <div className="text-xs font-semibold text-emerald-400 mt-1 tabular-nums">
+                      ▲ +5,8% so với tháng trước
                     </div>
                   </div>
+                </div>
 
-                  <div
-                    onClick={() => setActiveMenu('VC')}
-                    className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#0F384C] via-[#0D2B3E] to-[#0A1F2E] border border-teal-400/40 shadow-xl flex items-center gap-4 cursor-pointer hover:scale-[1.01] transition-all"
-                  >
-                    <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-teal-500/25 border border-teal-300/45 flex items-center justify-center text-teal-300 shrink-0">
-                      <Award className="w-6 h-6 sm:w-7 sm:h-7" />
+                <div
+                  onClick={() => setActiveMenu('WEBAUTHN')}
+                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#37155E] via-[#281047] to-[#180A2E] border border-fuchsia-400/30 shadow-xl flex items-center gap-4 cursor-pointer hover:border-fuchsia-300/60 hover:-translate-y-0.5 transition-all"
+                >
+                  <div className="w-13 h-13 rounded-2xl bg-fuchsia-500/25 border border-fuchsia-300/40 flex items-center justify-center text-fuchsia-300 shrink-0">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-2xl sm:text-[30px] font-bold text-white leading-none tabular-nums">
+                      98,7%
                     </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl xl:text-[34px] font-extrabold text-white leading-none">
-                        26.937
-                      </div>
-                      <div className="text-xs sm:text-sm text-slate-200 mt-1.5 font-semibold">
-                        VC
-                      </div>
-                      <div className="text-xs font-bold text-emerald-400 mt-1">
-                        ▲ +5,8%
-                      </div>
+                    <div className="text-sm text-slate-200 mt-1.5 font-medium">
+                      Tỷ lệ xác thực thành công
+                    </div>
+                    <div className="text-xs font-semibold text-emerald-400 mt-1 tabular-nums">
+                      ▲ +0,9% so với tháng trước
                     </div>
                   </div>
+                </div>
+              </section>
 
-                  <div
-                    onClick={() => setActiveMenu('WEBAUTHN')}
-                    className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#37155E] via-[#281047] to-[#180A2E] border border-fuchsia-400/40 shadow-xl flex items-center gap-4 cursor-pointer hover:scale-[1.01] transition-all"
-                  >
-                    <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-fuchsia-500/25 border border-fuchsia-300/45 flex items-center justify-center text-fuchsia-300 shrink-0">
-                      <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7" />
-                    </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl xl:text-[34px] font-extrabold text-white leading-none">
-                        98,7%
-                      </div>
-                      <div className="text-xs sm:text-sm text-slate-200 mt-1.5 font-semibold">
-                        Tỷ lệ xác thực
-                      </div>
-                      <div className="text-xs font-bold text-emerald-400 mt-1">
-                        ▲ +0,9%
-                      </div>
-                    </div>
+              {/* HÀNG GIỮA: KIẾN TRÚC HỆ THỐNG (7 CỘT) + THỐNG KÊ XÁC THỰC HIỆN DIỆN (5 CỘT) */}
+              <section className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+                <div className="xl:col-span-7 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/20 shadow-xl flex flex-col justify-between gap-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-lg font-bold text-white m-0 flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-[#C084FC]" />
+                      <span>Kiến trúc hệ thống</span>
+                    </h2>
+                    <span className="text-xs text-purple-300/90 font-medium">
+                      Nhấp vào từng thành phần để mở trang quản trị
+                    </span>
                   </div>
-                </section>
 
-                {/* HÀNG GIỮA: KIẾN TRÚC HỆ THỐNG (7 CỘT) + THỐNG KÊ XÁC THỰC HIỆN DIỆN (5 CỘT) */}
-                <section className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 min-h-0">
-                  <div className="xl:col-span-7 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-xl flex flex-col justify-between gap-4">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-base sm:text-lg font-extrabold text-white m-0 flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-[#C084FC]" />
-                        <span>Kiến trúc hệ thống</span>
-                      </h2>
-                      <span className="text-xs text-purple-300 font-medium">
-                        Bấm vào từng thành phần để mở trang quản trị
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-3 my-auto py-1">
-                      <div className="md:col-span-4 space-y-2.5">
-                        {[
-                          {
-                            title: 'Ứng dụng Sinh viên',
-                            sub: '(Mobile App)',
-                            icon: <Smartphone className="w-5 h-5 text-[#C084FC]" />,
-                            target: 'USERS'
-                          },
-                          {
-                            title: 'Web Giảng viên',
-                            sub: '(Teacher Portal)',
-                            icon: <Laptop className="w-5 h-5 text-[#C084FC]" />,
-                            target: 'USERS'
-                          },
-                          {
-                            title: 'Web Quản trị',
-                            sub: '(Admin Portal)',
-                            icon: <Monitor className="w-5 h-5 text-[#C084FC]" />,
-                            target: 'AUDIT'
-                          }
-                        ].map((node) => (
-                          <div
-                            key={node.title}
-                            onClick={() => setActiveMenu(node.target)}
-                            className="p-3 rounded-2xl bg-[#18133A] hover:bg-[#221B52] border border-purple-400/35 flex items-center gap-3 cursor-pointer transition-all"
-                          >
-                            <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-300/35 flex items-center justify-center shrink-0">
-                              {node.icon}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-xs sm:text-sm font-extrabold text-white truncate">
-                                {node.title}
-                              </div>
-                              <div className="text-[11px] text-slate-300">{node.sub}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="md:col-span-3 flex flex-col items-center justify-center py-2">
+                  <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-3 my-auto py-1">
+                    {/* Cột trái: 3 Ứng dụng đầu cuối */}
+                    <div className="md:col-span-4 space-y-2.5">
+                      {[
+                        {
+                          title: 'Ứng dụng Sinh viên',
+                          sub: 'Mobile App',
+                          icon: <Smartphone className="w-5 h-5 text-[#C084FC]" />,
+                          target: 'USERS'
+                        },
+                        {
+                          title: 'Web Giảng viên',
+                          sub: 'Teacher Portal',
+                          icon: <Laptop className="w-5 h-5 text-[#C084FC]" />,
+                          target: 'USERS'
+                        },
+                        {
+                          title: 'Web Quản trị',
+                          sub: 'Admin Portal',
+                          icon: <Monitor className="w-5 h-5 text-[#C084FC]" />,
+                          target: 'AUDIT'
+                        }
+                      ].map((node) => (
                         <div
-                          onClick={() => setActiveMenu('BLOCKCHAIN')}
-                          className="w-full max-w-[175px] p-4 rounded-2xl bg-gradient-to-b from-[#2A1B6E] to-[#170F3E] border-2 border-purple-400/75 shadow-[0_0_35px_rgba(139,92,246,0.55)] flex flex-col items-center text-center cursor-pointer hover:scale-105 transition-transform"
+                          key={node.title}
+                          onClick={() => setActiveMenu(node.target)}
+                          className="p-3 rounded-2xl bg-[#18133A] hover:bg-[#221B52] border border-purple-400/30 flex items-center gap-3 cursor-pointer transition-all"
                         >
-                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#A855F7] to-[#4F46E5] flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.8)] mb-2">
-                            <ShieldCheck className="w-6 h-6 text-white" />
+                          <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-300/30 flex items-center justify-center shrink-0">
+                            {node.icon}
                           </div>
-                          <div className="text-sm sm:text-base font-black text-white">
-                            UTH-TrustID
-                          </div>
-                          <div className="text-[11px] text-purple-200 mt-0.5">
-                            Core Services
+                          <div className="min-w-0">
+                            <div className="text-[13px] font-semibold text-white truncate">
+                              {node.title}
+                            </div>
+                            <div className="text-xs text-slate-300/80">{node.sub}</div>
                           </div>
                         </div>
-                      </div>
+                      ))}
+                    </div>
 
-                      <div className="md:col-span-4 space-y-2.5">
-                        {[
-                          {
-                            title: 'W3C DID',
-                            sub: 'Định danh phi tập trung',
-                            icon: <IdCard className="w-5 h-5 text-[#C084FC]" />,
-                            target: 'DID'
-                          },
-                          {
-                            title: 'WebAuthn',
-                            sub: 'Xác thực an toàn',
-                            icon: <Fingerprint className="w-5 h-5 text-sky-300" />,
-                            target: 'WEBAUTHN'
-                          },
-                          {
-                            title: 'Merkle Tree',
-                            sub: 'Bảo toàn dữ liệu',
-                            icon: <GitBranch className="w-5 h-5 text-emerald-300" />,
-                            target: 'MERKLE'
-                          }
-                        ].map((tech) => (
-                          <div
-                            key={tech.title}
-                            onClick={() => setActiveMenu(tech.target)}
-                            className="p-3 rounded-2xl bg-[#18133A] hover:bg-[#221B52] border border-purple-400/35 flex items-center gap-3 cursor-pointer transition-all"
-                          >
-                            <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-300/35 flex items-center justify-center shrink-0">
-                              {tech.icon}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-xs sm:text-sm font-extrabold text-white truncate">
-                                {tech.title}
-                              </div>
-                              <div className="text-[11px] text-slate-300 truncate">{tech.sub}</div>
-                            </div>
-                          </div>
-                        ))}
+                    {/* Cụm giữa: Mũi tên + Lõi Core Services + Mũi tên */}
+                    <div className="md:col-span-4 flex items-center justify-center gap-2 py-2">
+                      <ArrowRight className="hidden md:block w-5 h-5 text-purple-400/80 shrink-0" />
+                      <div
+                        onClick={() => setActiveMenu('BLOCKCHAIN')}
+                        className="w-full max-w-[180px] p-4 rounded-2xl bg-gradient-to-b from-[#2A1B6E] to-[#170F3E] border-2 border-purple-400/70 shadow-[0_0_32px_rgba(139,92,246,0.48)] flex flex-col items-center text-center cursor-pointer hover:scale-[1.03] transition-transform"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#A855F7] to-[#4F46E5] flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.75)] mb-2.5">
+                          <ShieldCheck className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="text-sm font-bold text-white leading-tight">
+                          UTH-TrustID
+                        </div>
+                        <div className="text-xs text-purple-200 mt-1">
+                          Core Services
+                        </div>
                       </div>
+                      <ArrowRight className="hidden md:block w-5 h-5 text-purple-400/80 shrink-0" />
+                    </div>
+
+                    {/* Cột phải: 3 Công nghệ cốt lõi */}
+                    <div className="md:col-span-4 space-y-2.5">
+                      {[
+                        {
+                          title: 'W3C DID',
+                          sub: 'Định danh phi tập trung',
+                          icon: <IdCard className="w-5 h-5 text-[#C084FC]" />,
+                          target: 'DID'
+                        },
+                        {
+                          title: 'WebAuthn',
+                          sub: 'Xác thực an toàn',
+                          icon: <Fingerprint className="w-5 h-5 text-sky-300" />,
+                          target: 'WEBAUTHN'
+                        },
+                        {
+                          title: 'Merkle Tree',
+                          sub: 'Bảo toàn dữ liệu',
+                          icon: <GitBranch className="w-5 h-5 text-emerald-300" />,
+                          target: 'MERKLE'
+                        }
+                      ].map((tech) => (
+                        <div
+                          key={tech.title}
+                          onClick={() => setActiveMenu(tech.target)}
+                          className="p-3 rounded-2xl bg-[#18133A] hover:bg-[#221B52] border border-purple-400/30 flex items-center gap-3 cursor-pointer transition-all"
+                        >
+                          <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-300/30 flex items-center justify-center shrink-0">
+                            {tech.icon}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[13px] font-semibold text-white truncate">
+                              {tech.title}
+                            </div>
+                            <div className="text-xs text-slate-300/80 truncate">{tech.sub}</div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                </div>
 
-                  {/* Biểu đồ Thống kê xác thực hiện diện */}
-                  <div className="xl:col-span-5 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-xl flex flex-col justify-between gap-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <h2 className="text-base sm:text-lg font-extrabold text-white m-0 flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5 text-[#C084FC]" />
-                        <span>Thống kê xác thực hiện diện</span>
-                      </h2>
-                      <span className="px-3 py-1 rounded-xl bg-[#181438] border border-purple-400/30 text-xs font-semibold text-slate-200">
-                        7 ngày gần nhất ⌄
-                      </span>
-                    </div>
+                {/* Biểu đồ Thống kê xác thực hiện diện (SVG đồng bộ Be Vietnam Pro & khớp số liệu thực) */}
+                <div className="xl:col-span-5 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/20 shadow-xl flex flex-col justify-between gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h2 className="text-lg font-bold text-white m-0 flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-[#C084FC]" />
+                      <span>Thống kê xác thực hiện diện</span>
+                    </h2>
+                    <span className="px-3 py-1 rounded-xl bg-[#181438] border border-purple-400/25 text-xs font-medium text-slate-200">
+                      7 ngày gần nhất
+                    </span>
+                  </div>
 
-                    <div className="my-auto pt-2">
-                      <svg className="w-full h-48 sm:h-52 overflow-visible" viewBox="0 0 460 185">
-                        <defs>
-                          <linearGradient id="adminBarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#C084FC" />
-                            <stop offset="100%" stopColor="#5B21B6" />
-                          </linearGradient>
-                        </defs>
-                        {[
-                          { y: 18, left: '1.000', right: '100%' },
-                          { y: 46, left: '800', right: '98%' },
-                          { y: 74, left: '600', right: '96%' },
-                          { y: 102, left: '400', right: '94%' },
-                          { y: 130, left: '200', right: '92%' },
-                          { y: 158, left: '0', right: '90%' }
-                        ].map((r) => (
-                          <g key={r.left}>
-                            <text x="0" y={r.y + 4} fill="#94A3B8" fontSize="10" fontFamily="monospace">
-                              {r.left}
-                            </text>
-                            <line x1="34" y1={r.y} x2="418" y2={r.y} stroke="rgba(148,163,184,0.14)" />
-                            <text x="424" y={r.y + 4} fill="#94A3B8" fontSize="10" fontFamily="monospace">
-                              {r.right}
+                  <div className="my-auto pt-2">
+                    <svg className="w-full h-52 overflow-visible" viewBox="0 0 470 188">
+                      <defs>
+                        <linearGradient id="adminBarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#C084FC" />
+                          <stop offset="100%" stopColor="#5B21B6" />
+                        </linearGradient>
+                      </defs>
+                      {[
+                        { y: 18, left: '1.000', right: '100%' },
+                        { y: 46, left: '800', right: '98%' },
+                        { y: 74, left: '600', right: '96%' },
+                        { y: 102, left: '400', right: '94%' },
+                        { y: 130, left: '200', right: '92%' },
+                        { y: 158, left: '0', right: '90%' }
+                      ].map((r) => (
+                        <g key={r.left}>
+                          <text x="0" y={r.y + 4} fill="#94A3B8" fontSize="10.5" fontWeight="500">
+                            {r.left}
+                          </text>
+                          <line
+                            x1="36"
+                            y1={r.y}
+                            x2="424"
+                            y2={r.y}
+                            stroke="rgba(148,163,184,0.16)"
+                            strokeDasharray={r.left === '0' ? undefined : '3 3'}
+                          />
+                          <text x="430" y={r.y + 4} fill="#94A3B8" fontSize="10.5" fontWeight="500">
+                            {r.right}
+                          </text>
+                        </g>
+                      ))}
+                      {SEVEN_DAY_AUTH_STATS.map((item, idx) => {
+                        const x = 48 + idx * 54;
+                        const barH = (item.count / 1000) * 140;
+                        const barY = 158 - barH;
+                        return (
+                          <g key={item.date}>
+                            <rect x={x} y={barY} width="26" height={barH} rx="5" fill="url(#adminBarGrad)" />
+                            <text x={x + 13} y="178" textAnchor="middle" fill="#CBD5E1" fontSize="11" fontWeight="500">
+                              {item.date}
                             </text>
                           </g>
-                        ))}
-                        {SEVEN_DAY_AUTH_STATS.map((item, idx) => {
-                          const x = 48 + idx * 54;
-                          const barH = (item.count / 1000) * 140;
-                          const barY = 158 - barH;
-                          return (
-                            <g key={item.date}>
-                              <rect x={x} y={barY} width="26" height={barH} rx="5" fill="url(#adminBarGrad)" />
-                              <text x={x + 13} y="176" textAnchor="middle" fill="#CBD5E1" fontSize="10.5" fontWeight="600">
-                                {item.date}
-                              </text>
-                            </g>
-                          );
-                        })}
-                        <path
-                          d="M 61 52 L 115 44 L 169 36 L 223 41 L 277 31 L 331 30 L 385 24"
-                          fill="none"
-                          stroke="#F8FAFC"
+                        );
+                      })}
+                      <path
+                        d={adminRatePath}
+                        fill="none"
+                        stroke="#F8FAFC"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      {adminRatePoints.map((pt, i) => (
+                        <circle
+                          key={i}
+                          cx={pt.x}
+                          cy={pt.y}
+                          r="4"
+                          fill="#100D28"
+                          stroke="#FFFFFF"
                           strokeWidth="2.4"
                         />
-                        {[
-                          { x: 61, y: 52 },
-                          { x: 115, y: 44 },
-                          { x: 169, y: 36 },
-                          { x: 223, y: 41 },
-                          { x: 277, y: 31 },
-                          { x: 331, y: 30 },
-                          { x: 385, y: 24 }
-                        ].map((pt, i) => (
-                          <circle key={i} cx={pt.x} cy={pt.y} r="4" fill="#100D28" stroke="#FFFFFF" strokeWidth="2.4" />
-                        ))}
-                      </svg>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-6 text-xs text-slate-300 pt-1">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-xs bg-[#A855F7]" />
-                        <span>Số lượt xác thực</span>
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <span className="w-3 h-0.5 bg-white inline-block" />
-                        <span>Tỷ lệ thành công</span>
-                      </span>
-                    </div>
+                      ))}
+                    </svg>
                   </div>
-                </section>
 
-                {/* HÀNG DƯỚI CÙNG: TRẠNG THÁI DỊCH VỤ | HOẠT ĐỘNG GẦN ĐÂY | CẢNH BÁO HỆ THỐNG */}
-                <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 shrink-0">
-                  <div className="lg:col-span-4 p-5 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-xl space-y-2.5">
-                    <h3 className="text-sm sm:text-base font-extrabold text-white m-0">
-                      Trạng thái dịch vụ
-                    </h3>
+                  <div className="flex items-center justify-center gap-6 text-xs text-slate-300 pt-1">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-[3px] bg-[#A855F7]" />
+                      <span>Số lượt xác thực</span>
+                    </span>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-4 h-0.5 bg-white inline-block rounded-full" />
+                      <span>Tỷ lệ thành công (%)</span>
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {/* HÀNG DƯỚI CÙNG: TRẠNG THÁI DỊCH VỤ | HOẠT ĐỘNG GẦN ĐÂY | CẢNH BÁO HỆ THỐNG */}
+              <section className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <div className="lg:col-span-4 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/20 shadow-xl space-y-3">
+                  <h3 className="text-base font-bold text-white m-0">
+                    Trạng thái dịch vụ
+                  </h3>
+                  <div className="space-y-2.5">
                     {[
-                      { label: 'DID Service', target: 'DID', icon: <IdCard className="w-4 h-4 text-[#C084FC]" /> },
-                      { label: 'WebAuthn', target: 'WEBAUTHN', icon: <Fingerprint className="w-4 h-4 text-[#C084FC]" /> },
-                      { label: 'Merkle Tree', target: 'MERKLE', icon: <GitBranch className="w-4 h-4 text-[#C084FC]" /> },
-                      { label: 'Blockchain', target: 'BLOCKCHAIN', icon: <Box className="w-4 h-4 text-[#C084FC]" /> }
+                      { label: 'Dịch vụ định danh (DID)', target: 'DID', icon: <IdCard className="w-4 h-4 text-[#C084FC]" /> },
+                      { label: 'Dịch vụ WebAuthn', target: 'WEBAUTHN', icon: <Fingerprint className="w-4 h-4 text-[#C084FC]" /> },
+                      { label: 'Dịch vụ Merkle Tree', target: 'MERKLE', icon: <GitBranch className="w-4 h-4 text-[#C084FC]" /> },
+                      { label: 'Kết nối Blockchain', target: 'BLOCKCHAIN', icon: <Box className="w-4 h-4 text-[#C084FC]" /> }
                     ].map((svc) => (
                       <div
                         key={svc.label}
                         onClick={() => setActiveMenu(svc.target)}
-                        className="p-2.5 px-3 rounded-xl bg-[#171336] hover:bg-[#211B4E] border border-purple-500/20 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                        className="p-3 rounded-xl bg-[#171336] hover:bg-[#211B4E] border border-purple-500/15 flex items-center justify-between gap-2 cursor-pointer transition-colors"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
                             {svc.icon}
                           </span>
-                          <span className="text-xs sm:text-sm font-semibold text-white">
+                          <span className="text-sm font-medium text-slate-100 truncate">
                             {svc.label}
                           </span>
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold whitespace-nowrap shrink-0">
                           ● Hoạt động
                         </span>
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  <div className="lg:col-span-4 p-5 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-xl space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm sm:text-base font-extrabold text-white m-0">
-                        Hoạt động gần đây
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={() => setActiveMenu('AUDIT')}
-                        className="text-xs font-semibold text-purple-300 hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <span>Xem tất cả</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="divide-y divide-purple-500/15">
-                      {SYSTEM_AUDIT_ROWS.slice(0, 4).map((act) => (
-                        <div key={act.id} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="text-xs sm:text-sm font-bold text-white truncate">
-                              {act.action}
-                            </div>
-                            <div className="text-[11px] text-slate-400 truncate">
-                              {act.user} • {act.target}
-                            </div>
+                <div className="lg:col-span-4 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/20 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-white m-0">
+                      Hoạt động gần đây
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu('AUDIT')}
+                      className="text-xs font-semibold text-purple-300 hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1"
+                    >
+                      <span>Xem tất cả</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="divide-y divide-purple-500/15">
+                    {SYSTEM_AUDIT_ROWS.slice(0, 4).map((act) => (
+                      <div key={act.id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-white truncate">
+                            {act.action}
                           </div>
-                          <span className="text-[11px] font-mono text-slate-400 shrink-0">
-                            {act.time}
-                          </span>
+                          <div className="text-xs text-slate-400 truncate mt-0.5">
+                            {act.user} • {act.target}
+                          </div>
                         </div>
-                      ))}
+                        <span className="text-xs font-mono text-slate-400 shrink-0 tabular-nums">
+                          {act.time}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 p-5 sm:p-6 rounded-3xl bg-[#100D28]/90 border border-purple-500/20 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-white m-0">
+                      Cảnh báo hệ thống
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveMenu('AUDIT');
+                        setAuditSubTab('SECURITY');
+                      }}
+                      className="text-xs font-semibold text-purple-300 hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1"
+                    >
+                      <span>Xem tất cả</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-2.5">
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/25 flex items-center gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">
+                          3 tài khoản đăng nhập bất thường
+                        </div>
+                        <div className="text-xs text-slate-300/80 mt-0.5">18/11/2026, 08:41</div>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-400/25 flex items-center gap-3">
+                      <Info className="w-5 h-5 text-sky-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">
+                          01 phiên điểm danh chưa đồng bộ
+                        </div>
+                        <div className="text-xs text-slate-300/80 mt-0.5">Lớp CTDL202 – 17/11/2026</div>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-400/25 flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">
+                          Hệ thống hoạt động ổn định
+                        </div>
+                        <div className="text-xs text-slate-300/80 mt-0.5">Không phát hiện lỗi 24h qua</div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="lg:col-span-4 p-5 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-xl space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm sm:text-base font-extrabold text-white m-0">
-                        Cảnh báo hệ thống
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={() => setActiveMenu('AUDIT')}
-                        className="text-xs font-semibold text-purple-300 hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <span>Xem tất cả</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center gap-3">
-                        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs sm:text-sm font-bold text-white truncate">
-                            3 tài khoản đăng nhập bất thường
-                          </div>
-                          <div className="text-[11px] text-slate-300">18/11/2026, 08:41</div>
-                        </div>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-400/30 flex items-center gap-3">
-                        <Info className="w-5 h-5 text-sky-400 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs sm:text-sm font-bold text-white truncate">
-                            01 phiên điểm danh chưa đồng bộ
-                          </div>
-                          <div className="text-[11px] text-slate-300">Lớp CTDL202 – 17/11/2026</div>
-                        </div>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-400/30 flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs sm:text-sm font-bold text-white truncate">
-                            Hệ thống hoạt động ổn định
-                          </div>
-                          <div className="text-[11px] text-slate-300">Không phát hiện lỗi 24h qua</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              </div>
-            )}
+                </div>
+              </section>
+            </div>
+          )}
 
             {/* =========================================================================
                 MÀN HÌNH 2: QUẢN LÝ NGƯỜI DÙNG (THEO ĐÚNG PANEL 2 TRONG ẢNH)
                ========================================================================= */}
             {activeMenu === 'USERS' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-5">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                   Quản lý người dùng
                 </h2>
 
@@ -1088,7 +1119,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setUserSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         userSubTab === tab.id ? 'text-[#C084FC]' : 'text-slate-400 hover:text-white'
                       }`}
                     >
@@ -1139,7 +1170,7 @@ export default function AdminPortalView({
                   <button
                     type="button"
                     onClick={() => setShowAddUserModal(true)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-extrabold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Thêm người dùng</span>
@@ -1148,9 +1179,9 @@ export default function AdminPortalView({
 
                 {/* Bảng danh sách người dùng */}
                 <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
+                      <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
                         <th className="p-4 w-10">
                           <input type="checkbox" className="accent-[#8B5CF6]" />
                         </th>
@@ -1268,7 +1299,7 @@ export default function AdminPortalView({
                ========================================================================= */}
             {activeMenu === 'DID' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-5">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                   Quản lý định danh số (DID)
                 </h2>
 
@@ -1309,7 +1340,7 @@ export default function AdminPortalView({
                   <button
                     type="button"
                     onClick={() => setShowAddDidModal(true)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-extrabold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Cấp DID mới</span>
@@ -1318,9 +1349,9 @@ export default function AdminPortalView({
 
                 {/* Bảng DID chuẩn Panel 3 */}
                 <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
+                      <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
                         <th className="p-4 font-bold">Mã người dùng</th>
                         <th className="p-4 font-bold">DID</th>
                         <th className="p-4 font-bold">Chủ sở hữu</th>
@@ -1397,32 +1428,32 @@ export default function AdminPortalView({
                 </div>
 
                 {/* Khối Thu hồi / Khôi phục khóa thiết bị độc lập O(1) trên Smart Contract */}
-                <div className="p-4 rounded-2xl bg-[#161236] border border-purple-400/30 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex-1 min-w-[240px]">
-                    <div className="text-xs font-bold text-purple-200 mb-1">
+                <div className="p-4 sm:p-5 rounded-2xl bg-[#161236] border border-purple-400/25 flex flex-wrap items-end justify-between gap-3">
+                  <div className="flex-1 min-w-[260px]">
+                    <div className="text-xs font-semibold text-purple-200 mb-1.5">
                       Thu hồi / Khôi phục khóa thiết bị độc lập O(1) trên chuỗi (isRevoked[address]):
                     </div>
                     <input
                       value={revokeAddressInput}
                       onChange={(e) => setRevokeAddressInput(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#0B0920] border border-purple-400/30 text-xs font-mono text-white outline-none"
+                      className="w-full p-2.5 rounded-xl bg-[#0B0920] border border-purple-400/30 text-sm font-mono text-white outline-none focus:border-purple-400"
                     />
                   </div>
-                  <div className="flex items-center gap-2 pt-4">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleAdminRevokeWallet()}
-                      className="px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-xs font-extrabold border-none cursor-pointer inline-flex items-center gap-1.5"
+                      className="px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-xs sm:text-sm font-semibold border-none cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap"
                     >
-                      <Lock className="w-3.5 h-3.5" />
+                      <Lock className="w-4 h-4" />
                       <span>Thu hồi khóa (revokeKey)</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAdminUnrevokeWallet()}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5"
+                      className="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-semibold cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap"
                     >
-                      <Unlock className="w-3.5 h-3.5" />
+                      <Unlock className="w-4 h-4" />
                       <span>Khôi phục (unrevokeKey)</span>
                     </button>
                   </div>
@@ -1435,7 +1466,7 @@ export default function AdminPortalView({
                ========================================================================= */}
             {activeMenu === 'VC' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-5">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                   Quản lý chứng chỉ số (Verifiable Credential)
                 </h2>
 
@@ -1450,7 +1481,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setVcSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         vcSubTab === tab.id ? 'text-[#C084FC]' : 'text-slate-400 hover:text-white'
                       }`}
                     >
@@ -1505,7 +1536,7 @@ export default function AdminPortalView({
                       ]);
                       triggerToast(`✓ Đã ký và phát hành chứng chỉ số ${nextId} chuẩn W3C VC`);
                     }}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-extrabold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Cấp chứng chỉ</span>
@@ -1514,9 +1545,9 @@ export default function AdminPortalView({
 
                 {/* Bảng VC */}
                 <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                  <table className="w-full text-left border-collapse text-sm">
                     <thead>
-                      <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
+                      <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
                         <th className="p-4 font-bold">Mã VC</th>
                         <th className="p-4 font-bold">Người nhận</th>
                         <th className="p-4 font-bold">Loại chứng chỉ</th>
@@ -1598,7 +1629,7 @@ export default function AdminPortalView({
                ========================================================================= */}
             {activeMenu === 'WEBAUTHN' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-6">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                   Quản trị xác thực WebAuthn (Passkey)
                 </h2>
 
@@ -1609,7 +1640,7 @@ export default function AdminPortalView({
                       <Lock className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
+                      <div className="text-2xl sm:text-3xl font-bold text-white leading-none">
                         12.548
                       </div>
                       <div className="text-xs sm:text-sm text-slate-300 mt-1">
@@ -1623,7 +1654,7 @@ export default function AdminPortalView({
                       <Monitor className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
+                      <div className="text-2xl sm:text-3xl font-bold text-white leading-none">
                         18.973
                       </div>
                       <div className="text-xs sm:text-sm text-slate-300 mt-1">
@@ -1637,7 +1668,7 @@ export default function AdminPortalView({
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
+                      <div className="text-2xl sm:text-3xl font-bold text-white leading-none">
                         98,7%
                       </div>
                       <div className="text-xs sm:text-sm text-slate-300 mt-1">
@@ -1658,7 +1689,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setWebAuthnSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         webAuthnSubTab === tab.id
                           ? 'text-[#C084FC]'
                           : 'text-slate-400 hover:text-white'
@@ -1672,55 +1703,157 @@ export default function AdminPortalView({
                   ))}
                 </div>
 
-                {/* Tìm kiếm Thiết bị */}
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={webAuthnSearch}
-                      onChange={(e) => setWebAuthnSearch(e.target.value)}
-                      placeholder="Tìm theo người dùng, thiết bị..."
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-xs sm:text-sm text-white placeholder-slate-400 outline-none"
-                    />
-                  </div>
-                </div>
+                {webAuthnSubTab === 'DEVICES' && (
+                  <>
+                    {/* Tìm kiếm Thiết bị */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="relative flex-1 max-w-md">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={webAuthnSearch}
+                          onChange={(e) => setWebAuthnSearch(e.target.value)}
+                          placeholder="Tìm theo người dùng, thiết bị, AAGUID..."
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400"
+                        />
+                      </div>
+                    </div>
 
-                {/* Bảng Thiết bị xác thực WebAuthn */}
-                <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                    <thead>
-                      <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
-                        <th className="p-4 font-bold">Người dùng</th>
-                        <th className="p-4 font-bold">Thiết bị</th>
-                        <th className="p-4 font-bold">AAGUID</th>
-                        <th className="p-4 font-bold">Ngày đăng ký</th>
-                        <th className="p-4 font-bold text-right">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-purple-500/15">
-                      {WEBAUTHN_DEVICES.filter((d) => {
-                        const q = webAuthnSearch.trim().toLowerCase();
-                        if (!q) return true;
-                        return (
-                          d.user.toLowerCase().includes(q) || d.device.toLowerCase().includes(q)
-                        );
-                      }).map((d) => (
-                        <tr key={d.id} className="hover:bg-white/5 transition-colors">
-                          <td className="p-4 font-semibold text-white">{d.user}</td>
-                          <td className="p-4 text-slate-200 font-medium">{d.device}</td>
-                          <td className="p-4 font-mono text-sky-300">{d.aaguid}</td>
-                          <td className="p-4 font-mono text-slate-300">{d.date}</td>
-                          <td className="p-4 text-right">
-                            <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
-                              Hoạt động
-                            </span>
-                          </td>
+                    {/* Bảng Thiết bị xác thực WebAuthn */}
+                    <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
+                            <th className="p-4 font-semibold">Người dùng</th>
+                            <th className="p-4 font-semibold">Thiết bị</th>
+                            <th className="p-4 font-semibold">AAGUID</th>
+                            <th className="p-4 font-semibold">Ngày đăng ký</th>
+                            <th className="p-4 font-semibold text-right">Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-purple-500/15">
+                          {WEBAUTHN_DEVICES.filter((d) => {
+                            const q = webAuthnSearch.trim().toLowerCase();
+                            if (!q) return true;
+                            return (
+                              d.user.toLowerCase().includes(q) ||
+                              d.device.toLowerCase().includes(q) ||
+                              d.aaguid.toLowerCase().includes(q)
+                            );
+                          }).map((d) => (
+                            <tr key={d.id} className="hover:bg-white/[0.04] transition-colors">
+                              <td className="p-4 font-semibold text-white whitespace-nowrap">{d.user}</td>
+                              <td className="p-4 text-slate-200 font-medium whitespace-nowrap">{d.device}</td>
+                              <td className="p-4 font-mono text-sky-300 whitespace-nowrap">{d.aaguid}</td>
+                              <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{d.date}</td>
+                              <td className="p-4 text-right whitespace-nowrap">
+                                <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
+                                  ● Hoạt động
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
+                {webAuthnSubTab === 'POLICY' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      {
+                        key: 'requireUserVerification',
+                        title: 'Bắt buộc xác thực sinh trắc học (UV = Required)',
+                        desc: 'Yêu cầu FaceID, TouchID hoặc Windows Hello PIN cho mọi giao dịch điểm danh.'
+                      },
+                      {
+                        key: 'hardwareAttestation',
+                        title: 'Kiểm chứng chứng thư phần cứng (Direct Attestation)',
+                        desc: 'Xác minh AAGUID và chuỗi chứng chỉ từ TPM / Secure Enclave của nhà sản xuất.'
+                      },
+                      {
+                        key: 'allowRoamingKeys',
+                        title: 'Cho phép khóa bảo mật phần cứng FIDO2 (YubiKey)',
+                        desc: 'Hỗ trợ giảng viên và quản trị viên đăng nhập bằng khóa USB/NFC.'
+                      },
+                      {
+                        key: 'strictOriginBinding',
+                        title: 'Ràng buộc tên miền chống Phishing (RP ID Binding)',
+                        desc: 'Khóa chữ ký mật mã chỉ hợp lệ duy nhất trên tên miền cổng UTH-TrustID.'
+                      }
+                    ].map((pol) => {
+                      const enabled = webAuthnPolicies[pol.key];
+                      return (
+                        <div
+                          key={pol.key}
+                          className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 flex items-start justify-between gap-4"
+                        >
+                          <div className="space-y-1">
+                            <div className="text-sm font-semibold text-white">{pol.title}</div>
+                            <div className="text-xs text-slate-300/85 leading-relaxed">{pol.desc}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setWebAuthnPolicies((p) => ({ ...p, [pol.key]: !p[pol.key] }));
+                              triggerToast(`✓ Đã cập nhật chính sách: ${pol.title}`);
+                            }}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border cursor-pointer shrink-0 transition-colors ${
+                              enabled
+                                ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300'
+                                : 'bg-slate-800 border-slate-600 text-slate-300'
+                            }`}
+                          >
+                            {enabled ? 'Đang bật' : 'Đang tắt'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {webAuthnSubTab === 'LOGS' && (
+                  <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
+                    <table className="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
+                          <th className="p-4 font-semibold">Thời gian</th>
+                          <th className="p-4 font-semibold">Tài khoản</th>
+                          <th className="p-4 font-semibold">Thiết bị Passkey</th>
+                          <th className="p-4 font-semibold">Độ trễ</th>
+                          <th className="p-4 font-semibold text-right">Kết quả</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-purple-500/15">
+                        {[
+                          { time: '19/11/2026, 08:15:22', user: 'Nguyễn Đức Hiển (2251120000)', device: 'iPhone 15 Pro • FaceID', ms: '118 ms', ok: true },
+                          { time: '19/11/2026, 08:14:09', user: 'ThS. Nguyễn Thị Hiên (GV0012)', device: 'Windows Hello TPM 2.0', ms: '94 ms', ok: true },
+                          { time: '19/11/2026, 08:11:45', user: 'Admin UTH (AD0001)', device: 'YubiKey 5C NFC', ms: '132 ms', ok: true },
+                          { time: '19/11/2026, 08:09:12', user: 'SV2310002 (Trần Quốc Bảo)', device: 'Unknown Emulator', ms: '21 ms', ok: false }
+                        ].map((l, idx) => (
+                          <tr key={idx} className="hover:bg-white/[0.04] transition-colors">
+                            <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{l.time}</td>
+                            <td className="p-4 font-semibold text-white whitespace-nowrap">{l.user}</td>
+                            <td className="p-4 text-slate-200 whitespace-nowrap">{l.device}</td>
+                            <td className="p-4 font-mono text-sky-300 whitespace-nowrap">{l.ms}</td>
+                            <td className="p-4 text-right whitespace-nowrap">
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                                  l.ok
+                                    ? 'bg-emerald-500/15 border-emerald-400/35 text-emerald-300'
+                                    : 'bg-rose-500/15 border-rose-400/35 text-rose-300'
+                                }`}
+                              >
+                                {l.ok ? 'Hợp lệ' : 'Từ chối (403)'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1730,7 +1863,7 @@ export default function AdminPortalView({
             {activeMenu === 'MERKLE' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                     Quản lý Merkle Tree
                   </h2>
 
@@ -1751,7 +1884,7 @@ export default function AdminPortalView({
                       ]);
                       triggerToast(`✓ Đã băm Keccak256 và tạo phiên cây Merkle ${newId}`);
                     }}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-extrabold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none shadow-lg cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Tạo cây Merkle</span>
@@ -1768,7 +1901,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setMerkleSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         merkleSubTab === tab.id
                           ? 'text-[#C084FC]'
                           : 'text-slate-400 hover:text-white'
@@ -1782,99 +1915,158 @@ export default function AdminPortalView({
                   ))}
                 </div>
 
-                {/* Bố cục 2 cột theo đúng Panel 6: Bảng phiên Merkle bên trái (7 cột) + Sơ đồ Cấu trúc Merkle Tree bên phải (5 cột) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                  <div className="lg:col-span-7 overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                      <thead>
-                        <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
-                          <th className="p-4 font-bold">Phiên/Chuỗi</th>
-                          <th className="p-4 font-bold">Merkle Root</th>
-                          <th className="p-4 font-bold text-center">Số bản ghi</th>
-                          <th className="p-4 font-bold">Ngày tạo</th>
-                          <th className="p-4 font-bold text-right">Trạng thái</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-purple-500/15">
-                        {merkleBatches.map((b) => (
-                          <tr key={b.batchId} className="hover:bg-white/5 transition-colors">
-                            <td className="p-4 font-mono font-bold text-white">{b.batchId}</td>
-                            <td className="p-4 font-mono text-sky-300">{b.root}</td>
-                            <td className="p-4 text-center font-mono font-bold text-white">
-                              {b.records}
-                            </td>
-                            <td className="p-4 font-mono text-slate-300">{b.date}</td>
-                            <td className="p-4 text-right">
-                              <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
-                                Hoàn thành
-                              </span>
-                            </td>
+                {merkleSubTab === 'TREE' ? (
+                  /* Bố cục 2 cột: Bảng phiên Merkle bên trái (7 cột) + Sơ đồ Cấu trúc Merkle Tree bên phải (5 cột) */
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    <div className="lg:col-span-7 overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
+                            <th className="p-4 font-semibold">Phiên/Chuỗi</th>
+                            <th className="p-4 font-semibold">Merkle Root</th>
+                            <th className="p-4 font-semibold text-center">Số bản ghi</th>
+                            <th className="p-4 font-semibold">Ngày tạo</th>
+                            <th className="p-4 font-semibold text-right">Trạng thái</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-purple-500/15">
+                          {merkleBatches.map((b) => (
+                            <tr key={b.batchId} className="hover:bg-white/[0.04] transition-colors">
+                              <td className="p-4 font-mono font-semibold text-white whitespace-nowrap">{b.batchId}</td>
+                              <td className="p-4 font-mono text-sky-300 whitespace-nowrap">{b.root}</td>
+                              <td className="p-4 text-center font-mono font-semibold text-white tabular-nums">
+                                {b.records}
+                              </td>
+                              <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{b.date}</td>
+                              <td className="p-4 text-right whitespace-nowrap">
+                                <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
+                                  Hoàn thành
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Sơ đồ Cấu trúc Merkle Tree (Root -> H1, H2 -> D1, D2, D3, D4) */}
+                    <div className="lg:col-span-5 p-6 rounded-2xl bg-[#161236] border border-purple-400/25 flex flex-col justify-between space-y-5">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-base font-bold text-white m-0">
+                          Cấu trúc Merkle Tree
+                        </h3>
+                        <span className="text-xs font-mono text-purple-200">
+                          Đang chọn: D{activeLeafIdx + 1}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center space-y-4 my-auto">
+                        {/* Tầng 1: Root */}
+                        <div className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white text-center shadow-[0_0_24px_rgba(124,58,237,0.45)] border border-purple-300/45">
+                          <div className="text-xs font-bold">Merkle Root</div>
+                          <div className="text-xs font-mono opacity-95 mt-0.5">{rootDisplay}</div>
+                        </div>
+
+                        {/* Đường nối */}
+                        <div className="w-3/5 h-4 border-t-2 border-l-2 border-r-2 border-purple-400/50 rounded-t-lg" />
+
+                        {/* Tầng 2: H1 & H2 */}
+                        <div className="grid grid-cols-2 gap-5 w-full">
+                          <div
+                            className={`p-3 rounded-xl border text-center transition-colors ${
+                              activeLeafIdx < 2
+                                ? 'bg-purple-500/25 border-purple-300 text-white'
+                                : 'bg-[#0B0920] border-purple-500/25 text-slate-300'
+                            }`}
+                          >
+                            <div className="text-xs font-bold">H1 = Keccak(D1, D2)</div>
+                            <div className="text-xs font-mono text-purple-200 mt-0.5">0x14e...b22</div>
+                          </div>
+                          <div
+                            className={`p-3 rounded-xl border text-center transition-colors ${
+                              activeLeafIdx >= 2
+                                ? 'bg-purple-500/25 border-purple-300 text-white'
+                                : 'bg-[#0B0920] border-purple-500/25 text-slate-300'
+                            }`}
+                          >
+                            <div className="text-xs font-bold">H2 = Keccak(D3, D4)</div>
+                            <div className="text-xs font-mono text-purple-200 mt-0.5">0x88f...c19</div>
+                          </div>
+                        </div>
+
+                        {/* Tầng 3: D1, D2, D3, D4 */}
+                        <div className="grid grid-cols-4 gap-2.5 w-full pt-1">
+                          {['D1', 'D2', 'D3', 'D4'].map((leaf, idx) => (
+                            <button
+                              key={leaf}
+                              type="button"
+                              onClick={() => setSelectedMerkleLeafIdx(idx)}
+                              className={`py-2.5 rounded-xl font-mono text-xs font-bold cursor-pointer border transition-all ${
+                                activeLeafIdx === idx
+                                  ? 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white border-purple-200 shadow-md'
+                                  : 'bg-[#0B0920] text-slate-300 border-purple-500/25 hover:text-white'
+                              }`}
+                            >
+                              {leaf}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Sơ đồ Cấu trúc Merkle Tree (Root -> H1, H2 -> D1, D2, D3, D4) */}
-                  <div className="lg:col-span-5 p-6 rounded-2xl bg-[#161236] border border-purple-400/30 flex flex-col justify-between space-y-5">
-                    <h3 className="text-base font-extrabold text-white m-0">
-                      Cấu trúc Merkle Tree
-                    </h3>
-
-                    <div className="flex flex-col items-center space-y-4 my-auto">
-                      {/* Tầng 1: Root */}
-                      <div className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white text-center shadow-[0_0_25px_rgba(139,92,246,0.55)] border border-purple-300/50">
-                        <div className="text-xs font-extrabold">Root</div>
-                        <div className="text-xs font-mono opacity-95">{rootDisplay}</div>
+                ) : (
+                  /* Tab Bằng chứng Merkle Proof O(log N) */
+                  <div className="p-6 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-bold text-white m-0">
+                          Xác minh bằng chứng Merkle Proof — O(log₂ N)
+                        </h3>
+                        <p className="text-xs text-slate-300 mt-1 mb-0">
+                          Chọn nút lá sinh viên (D1–D4) để kiểm tra nhánh băm Keccak256 đối chiếu với Root trên chuỗi
+                        </p>
                       </div>
-
-                      {/* Đường nối */}
-                      <div className="w-3/5 h-4 border-t-2 border-l-2 border-r-2 border-purple-400/50 rounded-t-lg" />
-
-                      {/* Tầng 2: H1 & H2 */}
-                      <div className="grid grid-cols-2 gap-6 w-full">
-                        <div
-                          className={`p-3 rounded-xl border text-center ${
-                            activeLeafIdx < 2
-                              ? 'bg-purple-500/25 border-purple-300 text-white'
-                              : 'bg-[#0B0920] border-purple-500/25 text-slate-300'
-                          }`}
-                        >
-                          <div className="text-xs font-extrabold">H1</div>
-                          <div className="text-[11px] font-mono text-purple-200">0x14e...b22</div>
-                        </div>
-                        <div
-                          className={`p-3 rounded-xl border text-center ${
-                            activeLeafIdx >= 2
-                              ? 'bg-purple-500/25 border-purple-300 text-white'
-                              : 'bg-[#0B0920] border-purple-500/25 text-slate-300'
-                          }`}
-                        >
-                          <div className="text-xs font-extrabold">H2</div>
-                          <div className="text-[11px] font-mono text-purple-200">0x88f...c19</div>
-                        </div>
-                      </div>
-
-                      {/* Tầng 3: D1, D2, D3, D4 */}
-                      <div className="grid grid-cols-4 gap-2.5 w-full pt-1">
+                      <div className="flex items-center gap-2">
                         {['D1', 'D2', 'D3', 'D4'].map((leaf, idx) => (
                           <button
                             key={leaf}
                             type="button"
                             onClick={() => setSelectedMerkleLeafIdx(idx)}
-                            className={`py-2.5 rounded-xl font-mono text-xs font-extrabold cursor-pointer border transition-all ${
+                            className={`px-3.5 py-2 rounded-xl font-mono text-xs font-semibold cursor-pointer border ${
                               activeLeafIdx === idx
-                                ? 'bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white border-purple-200 shadow-md'
+                                ? 'bg-[#7C3AED] text-white border-purple-300'
                                 : 'bg-[#0B0920] text-slate-300 border-purple-500/25 hover:text-white'
                             }`}
                           >
-                            {leaf}
+                            Lá {leaf}
                           </button>
                         ))}
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="p-4 rounded-xl bg-[#0B0920] border border-purple-500/20 space-y-1.5">
+                        <div className="text-xs text-slate-400">1. Mã băm Lá D{activeLeafIdx + 1}</div>
+                        <div className="font-mono text-sky-300 text-xs break-all">
+                          0x7a4f91e8c20b...d{activeLeafIdx + 1}9a
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-[#0B0920] border border-purple-500/20 space-y-1.5">
+                        <div className="text-xs text-slate-400">2. Nhánh đối xứng (Proof Siblings)</div>
+                        <div className="font-mono text-purple-200 text-xs break-all">
+                          [{activeLeafIdx < 2 ? '0x88f...c19 (H2)' : '0x14e...b22 (H1)'}, 0x4c2...a91]
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-400/35 space-y-1.5">
+                        <div className="text-xs text-emerald-200">3. Đối chiếu On-Chain Root</div>
+                        <div className="font-semibold text-emerald-300 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>Khớp {rootDisplay} (Hợp lệ)</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -1883,7 +2075,7 @@ export default function AdminPortalView({
                ========================================================================= */}
             {activeMenu === 'BLOCKCHAIN' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-6">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                   Quản lý Blockchain
                 </h2>
 
@@ -1894,7 +2086,7 @@ export default function AdminPortalView({
                       <Box className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
+                      <div className="text-2xl sm:text-3xl font-bold text-white leading-none">
                         1.245.983
                       </div>
                       <div className="text-xs sm:text-sm text-slate-300 mt-1">Giao dịch</div>
@@ -1906,7 +2098,7 @@ export default function AdminPortalView({
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
+                      <div className="text-2xl sm:text-3xl font-bold text-white leading-none">
                         100%
                       </div>
                       <div className="text-xs sm:text-sm text-slate-300 mt-1">
@@ -1920,7 +2112,7 @@ export default function AdminPortalView({
                       <Zap className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl sm:text-3xl font-extrabold text-white leading-none">
+                      <div className="text-2xl sm:text-3xl font-bold text-white leading-none">
                         1,2s
                       </div>
                       <div className="text-xs sm:text-sm text-slate-300 mt-1">
@@ -1941,7 +2133,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setBlockchainSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         blockchainSubTab === tab.id
                           ? 'text-[#C084FC]'
                           : 'text-slate-400 hover:text-white'
@@ -1955,60 +2147,139 @@ export default function AdminPortalView({
                   ))}
                 </div>
 
-                {/* Tìm kiếm TxHash */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={txSearch}
-                      onChange={(e) => setTxSearch(e.target.value)}
-                      placeholder="Tìm theo TxHash, khối, nội dung..."
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-xs sm:text-sm text-white placeholder-slate-400 outline-none"
-                    />
-                  </div>
-                  <span className="px-3.5 py-2 rounded-xl bg-[#171336] border border-purple-400/25 text-xs font-semibold text-slate-200">
-                    7 ngày gần nhất ⌄
-                  </span>
-                </div>
+                {blockchainSubTab === 'TX' && (
+                  <>
+                    {/* Tìm kiếm TxHash */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="relative flex-1 max-w-md">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={txSearch}
+                          onChange={(e) => setTxSearch(e.target.value)}
+                          placeholder="Tìm theo TxHash, khối, nội dung..."
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400"
+                        />
+                      </div>
+                      <span className="px-3.5 py-2 rounded-xl bg-[#171336] border border-purple-400/25 text-xs font-medium text-slate-200">
+                        7 ngày gần nhất
+                      </span>
+                    </div>
 
-                {/* Bảng Giao dịch Blockchain */}
-                <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                    <thead>
-                      <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
-                        <th className="p-4 font-bold">TxHash</th>
-                        <th className="p-4 font-bold">Loại giao dịch</th>
-                        <th className="p-4 font-bold">Khối</th>
-                        <th className="p-4 font-bold">Thời gian</th>
-                        <th className="p-4 font-bold text-right">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-purple-500/15">
-                      {BLOCKCHAIN_TXS.filter((tx) => {
-                        const q = txSearch.trim().toLowerCase();
-                        if (!q) return true;
-                        return (
-                          tx.txHash.toLowerCase().includes(q) ||
-                          tx.type.toLowerCase().includes(q) ||
-                          tx.block.toLowerCase().includes(q)
-                        );
-                      }).map((tx) => (
-                        <tr key={tx.txHash} className="hover:bg-white/5 transition-colors">
-                          <td className="p-4 font-mono font-bold text-sky-300">{tx.txHash}</td>
-                          <td className="p-4 font-semibold text-white">{tx.type}</td>
-                          <td className="p-4 font-mono text-slate-300">{tx.block}</td>
-                          <td className="p-4 font-mono text-slate-300">{tx.time}</td>
-                          <td className="p-4 text-right">
-                            <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
-                              Thành công
-                            </span>
-                          </td>
+                    {/* Bảng Giao dịch Blockchain */}
+                    <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
+                            <th className="p-4 font-semibold">TxHash</th>
+                            <th className="p-4 font-semibold">Loại giao dịch</th>
+                            <th className="p-4 font-semibold">Khối</th>
+                            <th className="p-4 font-semibold">Thời gian</th>
+                            <th className="p-4 font-semibold text-right">Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-purple-500/15">
+                          {BLOCKCHAIN_TXS.filter((tx) => {
+                            const q = txSearch.trim().toLowerCase();
+                            if (!q) return true;
+                            return (
+                              tx.txHash.toLowerCase().includes(q) ||
+                              tx.type.toLowerCase().includes(q) ||
+                              tx.block.toLowerCase().includes(q)
+                            );
+                          }).map((tx) => (
+                            <tr key={tx.txHash} className="hover:bg-white/[0.04] transition-colors">
+                              <td className="p-4 font-mono font-semibold text-sky-300 whitespace-nowrap">{tx.txHash}</td>
+                              <td className="p-4 font-medium text-white whitespace-nowrap">{tx.type}</td>
+                              <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{tx.block}</td>
+                              <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{tx.time}</td>
+                              <td className="p-4 text-right whitespace-nowrap">
+                                <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
+                                  Thành công
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
+                {blockchainSubTab === 'BLOCKS' && (
+                  <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
+                    <table className="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
+                          <th className="p-4 font-semibold">Số khối</th>
+                          <th className="p-4 font-semibold">Block Hash</th>
+                          <th className="p-4 font-semibold text-center">Số giao dịch</th>
+                          <th className="p-4 font-semibold">Node xác thực</th>
+                          <th className="p-4 font-semibold text-right">Thời gian</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-purple-500/15">
+                        {[
+                          { num: '#543.210', hash: '0x9a3f...41e0', txs: 18, validator: 'UTH-Validator-01', time: '18/11/2026, 10:24' },
+                          { num: '#543.209', hash: '0x7c1b...88d2', txs: 12, validator: 'UTH-Validator-02', time: '18/11/2026, 10:12' },
+                          { num: '#543.208', hash: '0x4e02...19f7', txs: 24, validator: 'UTH-Validator-01', time: '18/11/2026, 09:57' }
+                        ].map((blk) => (
+                          <tr key={blk.num} className="hover:bg-white/[0.04] transition-colors">
+                            <td className="p-4 font-mono font-semibold text-white whitespace-nowrap">{blk.num}</td>
+                            <td className="p-4 font-mono text-sky-300 whitespace-nowrap">{blk.hash}</td>
+                            <td className="p-4 text-center font-mono text-white tabular-nums">{blk.txs}</td>
+                            <td className="p-4 text-slate-200 whitespace-nowrap">{blk.validator}</td>
+                            <td className="p-4 text-right font-mono text-slate-300 whitespace-nowrap">{blk.time}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {blockchainSubTab === 'CONTRACTS' && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      {
+                        name: 'UTHIdentityRegistry.sol',
+                        address: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+                        desc: 'Quản lý W3C DID & ánh xạ khóa công khai thiết bị sinh viên/giảng viên.',
+                        calls: '842.190 lệnh gọi'
+                      },
+                      {
+                        name: 'MerkleBatchAnchor.sol',
+                        address: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+                        desc: 'Neo Merkle Root Keccak256 theo lô, tiết kiệm 96% chi phí lưu trữ on-chain.',
+                        calls: '295.412 lệnh gọi'
+                      },
+                      {
+                        name: 'CredentialRevocationO1.sol',
+                        address: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+                        desc: 'Cơ chế thu hồi khóa & chứng chỉ độ phức tạp O(1) tức thời.',
+                        calls: '108.381 lệnh gọi'
+                      }
+                    ].map((ct) => (
+                      <div
+                        key={ct.name}
+                        className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 flex flex-col justify-between gap-3"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-bold text-white">{ct.name}</span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[11px] font-semibold">
+                              Verified
+                            </span>
+                          </div>
+                          <div className="text-xs font-mono text-sky-300 break-all">{ct.address}</div>
+                          <p className="text-xs text-slate-300/85 leading-relaxed m-0 pt-1">{ct.desc}</p>
+                        </div>
+                        <div className="text-xs font-medium text-purple-200 pt-2 border-t border-white/10">
+                          {ct.calls}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -2018,7 +2289,7 @@ export default function AdminPortalView({
             {activeMenu === 'AUDIT' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                     Nhật ký &amp; Giám sát hệ thống
                   </h2>
 
@@ -2053,7 +2324,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setAuditSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         auditSubTab === tab.id
                           ? 'text-[#C084FC]'
                           : 'text-slate-400 hover:text-white'
@@ -2067,93 +2338,168 @@ export default function AdminPortalView({
                   ))}
                 </div>
 
-                {/* Toolbar Tìm kiếm & Bộ lọc mức độ */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2.5 flex-1">
-                    <div className="relative min-w-[240px] flex-1 max-w-md">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={auditQuery}
-                        onChange={(e) => setAuditQuery(e.target.value)}
-                        placeholder="Tìm theo người dùng, hành động..."
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-xs sm:text-sm text-white placeholder-slate-400 outline-none"
-                      />
+                {auditSubTab === 'ACTIVITY' && (
+                  <>
+                    {/* Toolbar Tìm kiếm & Bộ lọc mức độ */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2.5 flex-1">
+                        <div className="relative min-w-[240px] flex-1 max-w-md">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={auditQuery}
+                            onChange={(e) => setAuditQuery(e.target.value)}
+                            placeholder="Tìm theo người dùng, hành động..."
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-sm text-white placeholder-slate-400 outline-none focus:border-purple-400"
+                          />
+                        </div>
+
+                        <select
+                          value={auditLevelFilter}
+                          onChange={(e) => setAuditLevelFilter(e.target.value)}
+                          className="px-3.5 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-sm text-slate-200 font-medium outline-none"
+                        >
+                          <option value="ALL">Tất cả mức độ</option>
+                          <option value="INFO">Thông tin</option>
+                          <option value="SUCCESS">Thành công</option>
+                          <option value="WARNING">Cảnh báo</option>
+                        </select>
+
+                        <span className="px-3.5 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-xs font-mono text-slate-200 inline-flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5 text-[#C084FC]" />
+                          <span>18/11/2026</span>
+                        </span>
+                      </div>
                     </div>
 
-                    <select
-                      value={auditLevelFilter}
-                      onChange={(e) => setAuditLevelFilter(e.target.value)}
-                      className="px-3.5 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-xs sm:text-sm text-slate-200 font-semibold outline-none"
-                    >
-                      <option value="ALL">Mức độ</option>
-                      <option value="INFO">Thông tin</option>
-                      <option value="SUCCESS">Thành công</option>
-                      <option value="WARNING">Cảnh báo</option>
-                    </select>
+                    {/* Bảng Nhật ký hoạt động */}
+                    <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-purple-500/20 bg-[#171338] text-purple-200/90 text-[13px] whitespace-nowrap">
+                            <th className="p-4 font-semibold">Thời gian</th>
+                            <th className="p-4 font-semibold">Người dùng</th>
+                            <th className="p-4 font-semibold">Hành động</th>
+                            <th className="p-4 font-semibold">Đối tượng</th>
+                            <th className="p-4 font-semibold text-right">Mức độ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-purple-500/15">
+                          {SYSTEM_AUDIT_ROWS.filter((row) => {
+                            if (auditLevelFilter !== 'ALL' && row.level !== auditLevelFilter)
+                              return false;
+                            const q = auditQuery.trim().toLowerCase();
+                            if (!q) return true;
+                            return (
+                              row.action.toLowerCase().includes(q) ||
+                              row.user.toLowerCase().includes(q) ||
+                              row.target.toLowerCase().includes(q)
+                            );
+                          }).map((row) => (
+                            <tr key={row.id} className="hover:bg-white/[0.04] transition-colors">
+                              <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{row.time}</td>
+                              <td className="p-4 font-mono font-semibold text-white whitespace-nowrap">{row.user}</td>
+                              <td className="p-4 font-medium text-white">{row.action}</td>
+                              <td className="p-4 font-mono text-slate-300 whitespace-nowrap">{row.target}</td>
+                              <td className="p-4 text-right whitespace-nowrap">
+                                {row.level === 'INFO' && (
+                                  <span className="px-3 py-1 rounded-full bg-sky-500/15 border border-sky-400/35 text-sky-300 text-xs font-semibold">
+                                    ● Thông tin
+                                  </span>
+                                )}
+                                {row.level === 'SUCCESS' && (
+                                  <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold">
+                                    Thành công
+                                  </span>
+                                )}
+                                {row.level === 'WARNING' && (
+                                  <span className="px-3 py-1 rounded-full bg-rose-500/15 border border-rose-400/35 text-rose-300 text-xs font-semibold">
+                                    ⚠ Cảnh báo
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
 
-                    <span className="px-3.5 py-2.5 rounded-xl bg-[#171336] border border-purple-400/25 text-xs font-mono text-slate-200 inline-flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-[#C084FC]" />
-                      <span>18/11/2026</span>
-                    </span>
+                {auditSubTab === 'SERVICES' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { name: 'DID Resolution Service (W3C Core)', uptime: '99,98%', latency: '28 ms', cpu: '14%', mem: '412 MB' },
+                      { name: 'WebAuthn FIDO2 Assertion Engine', uptime: '99,99%', latency: '42 ms', cpu: '19%', mem: '368 MB' },
+                      { name: 'Merkle Tree Keccak256 Batcher', uptime: '100%', latency: '16 ms', cpu: '8%', mem: '220 MB' },
+                      { name: 'Blockchain RPC & Event Listener', uptime: '99,95%', latency: '64 ms', cpu: '22%', mem: '540 MB' }
+                    ].map((svc) => (
+                      <div
+                        key={svc.name}
+                        className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold text-white">{svc.name}</span>
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold shrink-0">
+                            ● Hoạt động
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 pt-1 text-center">
+                          <div className="p-2.5 rounded-xl bg-[#0B0920]">
+                            <div className="text-[11px] text-slate-400">Uptime</div>
+                            <div className="text-xs font-mono font-semibold text-emerald-300 mt-0.5">{svc.uptime}</div>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-[#0B0920]">
+                            <div className="text-[11px] text-slate-400">Độ trễ</div>
+                            <div className="text-xs font-mono font-semibold text-sky-300 mt-0.5">{svc.latency}</div>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-[#0B0920]">
+                            <div className="text-[11px] text-slate-400">CPU</div>
+                            <div className="text-xs font-mono font-semibold text-purple-200 mt-0.5">{svc.cpu}</div>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-[#0B0920]">
+                            <div className="text-[11px] text-slate-400">RAM</div>
+                            <div className="text-xs font-mono font-semibold text-slate-200 mt-0.5">{svc.mem}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
 
-                {/* Bảng Nhật ký hoạt động chuẩn Panel 8 */}
-                <div className="overflow-x-auto rounded-2xl border border-purple-500/20 bg-[#0B0920]">
-                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                    <thead>
-                      <tr className="border-b border-purple-500/20 bg-[#161236] text-slate-300">
-                        <th className="p-4 font-bold">Thời gian</th>
-                        <th className="p-4 font-bold">Người dùng</th>
-                        <th className="p-4 font-bold">Hành động</th>
-                        <th className="p-4 font-bold">Đối tượng</th>
-                        <th className="p-4 font-bold text-right">Mức độ</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-purple-500/15">
-                      {SYSTEM_AUDIT_ROWS.filter((row) => {
-                        if (auditLevelFilter !== 'ALL' && row.level !== auditLevelFilter)
-                          return false;
-                        const q = auditQuery.trim().toLowerCase();
-                        if (!q) return true;
-                        return (
-                          row.action.toLowerCase().includes(q) ||
-                          row.user.toLowerCase().includes(q) ||
-                          row.target.toLowerCase().includes(q)
-                        );
-                      }).map((row) => (
-                        <tr key={row.id} className="hover:bg-white/5 transition-colors">
-                          <td className="p-4 font-mono text-slate-300">{row.time}</td>
-                          <td className="p-4 font-mono font-bold text-white">{row.user}</td>
-                          <td className="p-4 font-semibold text-white">{row.action}</td>
-                          <td className="p-4 font-mono text-slate-300">{row.target}</td>
-                          <td className="p-4 text-right">
-                            {row.level === 'INFO' && (
-                              <span className="px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold">
-                                ● Thông tin
-                              </span>
-                            )}
-                            {row.level === 'SUCCESS' && (
-                              <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold">
-                                Thành công
-                              </span>
-                            )}
-                            {row.level === 'WARNING' && (
-                              <span className="px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs font-bold">
-                                ⚠ Cảnh báo
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {auditSubTab === 'SECURITY' && (
+                  <div className="space-y-3">
+                    {(securityAlerts || []).length > 0 ? (
+                      (securityAlerts || []).slice(0, 8).map((al) => (
+                        <div
+                          key={al.id}
+                          className="p-4 rounded-2xl bg-[#0B0920] border border-rose-500/30 flex flex-wrap items-center justify-between gap-3 text-sm"
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs text-slate-400">[{al.time}]</span>
+                              <strong className="text-rose-300 font-semibold">
+                                {al.vectorLabel || al.type}
+                              </strong>
+                            </div>
+                            <div className="text-slate-200 text-xs sm:text-sm">{al.detail}</div>
+                          </div>
+                          <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 font-mono text-xs font-semibold shrink-0">
+                            ĐÃ CHẶN (403)
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-6 rounded-2xl bg-[#161236] border border-emerald-400/25 text-center text-sm text-emerald-300 font-medium">
+                        Hệ thống SOC IDS đang hoạt động — Chưa ghi nhận cảnh báo tấn công mới. Hãy nhấn nút giả lập bên dưới để kiểm thử 4 lớp phòng vệ.
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Bảng giả lập kiểm thử 4 lớp phòng vệ SOC IDS */}
                 <div className="p-4 rounded-2xl bg-[#161236] border border-purple-400/30 flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-xs sm:text-sm font-extrabold text-[#C084FC]">
+                  <span className="text-xs sm:text-sm font-bold text-[#C084FC]">
                     ⚡ Giả lập tấn công kiểm thử phòng vệ SOC (403 Auto-Block):
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
@@ -2184,14 +2530,14 @@ export default function AdminPortalView({
             {activeMenu === 'REPORTS' && (
               <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
                     Báo cáo &amp; Thống kê
                   </h2>
 
                   <button
                     type="button"
                     onClick={handleExportAuditLogsCSV}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-extrabold border-none shadow-lg cursor-pointer inline-flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none shadow-lg cursor-pointer inline-flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
                     <span>Xuất báo cáo</span>
@@ -2210,7 +2556,7 @@ export default function AdminPortalView({
                       key={tab.id}
                       type="button"
                       onClick={() => setReportSubTab(tab.id)}
-                      className={`pb-3 text-xs sm:text-sm font-extrabold bg-transparent border-none cursor-pointer relative ${
+                      className={`pb-3 text-xs sm:text-sm font-bold bg-transparent border-none cursor-pointer relative ${
                         reportSubTab === tab.id
                           ? 'text-[#C084FC]'
                           : 'text-slate-400 hover:text-white'
@@ -2231,7 +2577,7 @@ export default function AdminPortalView({
                       <Users className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl font-extrabold text-white">12.548</div>
+                      <div className="text-2xl font-bold text-white">12.548</div>
                       <div className="text-xs text-slate-300">Người dùng</div>
                     </div>
                   </div>
@@ -2241,7 +2587,7 @@ export default function AdminPortalView({
                       <Award className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl font-extrabold text-white">26.937</div>
+                      <div className="text-2xl font-bold text-white">26.937</div>
                       <div className="text-xs text-slate-300">Chứng chỉ số</div>
                     </div>
                   </div>
@@ -2251,7 +2597,7 @@ export default function AdminPortalView({
                       <BookOpen className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl font-extrabold text-white">178</div>
+                      <div className="text-2xl font-bold text-white">178</div>
                       <div className="text-xs text-slate-300">Lớp học</div>
                     </div>
                   </div>
@@ -2261,24 +2607,32 @@ export default function AdminPortalView({
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                      <div className="text-2xl font-extrabold text-white">98,7%</div>
+                      <div className="text-2xl font-bold text-white">98,7%</div>
                       <div className="text-xs text-slate-300">Tỷ lệ xác thực</div>
                     </div>
                   </div>
                 </div>
 
-                {/* 2 Biểu đồ chuẩn Panel 9: Tỷ lệ xác thực theo vai trò (Donut) & Số lượt xác thực theo thời gian (T6..T11) */}
+                {/* 2 Biểu đồ chuẩn Panel 9: Tỷ lệ xác thực theo vai trò (Donut 3 phân đoạn) & Số lượt xác thực theo thời gian (T6..T11) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Donut Chart: Tỷ lệ xác thực theo vai trò */}
-                  <div className="lg:col-span-6 p-6 rounded-2xl bg-[#161236] border border-purple-400/30 flex flex-col justify-between space-y-4">
-                    <h3 className="text-base font-extrabold text-white m-0">
-                      Tỷ lệ xác thực theo vai trò
-                    </h3>
+                  {/* Donut Chart: Tỷ lệ xác thực theo vai trò (đủ 3 màu: Sinh viên - Giảng viên - Quản trị viên) */}
+                  <div className="lg:col-span-6 p-6 rounded-2xl bg-[#161236] border border-purple-400/25 flex flex-col justify-between space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold text-white m-0">
+                        {reportSubTab === 'DID_VC'
+                          ? 'Phân bổ định danh DID & VC theo vai trò'
+                          : reportSubTab === 'PERFORMANCE'
+                            ? 'Tỷ lệ đáp ứng SLA các dịch vụ'
+                            : 'Tỷ lệ xác thực theo vai trò'}
+                      </h3>
+                      <span className="text-xs text-purple-300 font-medium">Học kỳ 1 (2026 – 2027)</span>
+                    </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-8 py-4">
-                      <div className="relative w-36 h-36 flex items-center justify-center">
-                        <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
+                      <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
+                        <svg className="w-40 h-40 -rotate-90" viewBox="0 0 120 120">
                           <circle cx="60" cy="60" r="44" fill="transparent" stroke="#1E1946" strokeWidth="15" />
+                          {/* Sinh viên (~62% cung = 171 / 276.46) */}
                           <circle
                             cx="60"
                             cy="60"
@@ -2286,8 +2640,21 @@ export default function AdminPortalView({
                             fill="transparent"
                             stroke="#38BDF8"
                             strokeWidth="15"
-                            strokeDasharray="190 276"
+                            strokeDasharray="171 277"
+                            strokeDashoffset="0"
                           />
+                          {/* Giảng viên (~25% cung = 69 / 276.46) */}
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="44"
+                            fill="transparent"
+                            stroke="#2DD4BF"
+                            strokeWidth="15"
+                            strokeDasharray="69 277"
+                            strokeDashoffset="-171"
+                          />
+                          {/* Quản trị viên (~13% cung = 37 / 276.46) */}
                           <circle
                             cx="60"
                             cy="60"
@@ -2295,69 +2662,101 @@ export default function AdminPortalView({
                             fill="transparent"
                             stroke="#A855F7"
                             strokeWidth="15"
-                            strokeDasharray="86 276"
-                            strokeDashoffset="-190"
+                            strokeDasharray="37 277"
+                            strokeDashoffset="-240"
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-xl font-extrabold text-white">98,7%</span>
+                          <span className="text-xl font-bold text-white tabular-nums">
+                            {reportSubTab === 'PERFORMANCE' ? '99,9%' : '98,7%'}
+                          </span>
+                          <span className="text-xs text-slate-300 mt-0.5">Trung bình</span>
                         </div>
                       </div>
 
-                      <div className="space-y-3 text-xs sm:text-sm">
+                      <div className="space-y-3.5 text-sm min-w-[180px]">
                         <div className="flex items-center justify-between gap-6">
-                          <span className="inline-flex items-center gap-2 text-slate-200">
-                            <span className="w-3 h-3 rounded-full bg-sky-400" />
+                          <span className="inline-flex items-center gap-2.5 text-slate-200 font-medium">
+                            <span className="w-3 h-3 rounded-full bg-sky-400 shrink-0" />
                             <span>Sinh viên</span>
                           </span>
-                          <strong className="text-white font-mono">98,6%</strong>
+                          <strong className="text-white font-mono font-semibold tabular-nums">98,6%</strong>
                         </div>
                         <div className="flex items-center justify-between gap-6">
-                          <span className="inline-flex items-center gap-2 text-slate-200">
-                            <span className="w-3 h-3 rounded-full bg-teal-400" />
+                          <span className="inline-flex items-center gap-2.5 text-slate-200 font-medium">
+                            <span className="w-3 h-3 rounded-full bg-teal-400 shrink-0" />
                             <span>Giảng viên</span>
                           </span>
-                          <strong className="text-white font-mono">99,1%</strong>
+                          <strong className="text-white font-mono font-semibold tabular-nums">99,1%</strong>
                         </div>
                         <div className="flex items-center justify-between gap-6">
-                          <span className="inline-flex items-center gap-2 text-slate-200">
-                            <span className="w-3 h-3 rounded-full bg-purple-400" />
+                          <span className="inline-flex items-center gap-2.5 text-slate-200 font-medium">
+                            <span className="w-3 h-3 rounded-full bg-purple-400 shrink-0" />
                             <span>Quản trị viên</span>
                           </span>
-                          <strong className="text-white font-mono">100%</strong>
+                          <strong className="text-white font-mono font-semibold tabular-nums">100%</strong>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bar Chart: Số lượt xác thực theo thời gian (T6..T11) */}
-                  <div className="lg:col-span-6 p-6 rounded-2xl bg-[#161236] border border-purple-400/30 flex flex-col justify-between space-y-4">
-                    <h3 className="text-base font-extrabold text-white m-0">
-                      Số lượt xác thực theo thời gian
-                    </h3>
+                  {/* Bar Chart: Số lượt xác thực theo thời gian (T6..T11) — Explicit container height + horizontal grid */}
+                  <div className="lg:col-span-6 p-6 rounded-2xl bg-[#161236] border border-purple-400/25 flex flex-col justify-between space-y-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold text-white m-0">
+                        {reportSubTab === 'ATTENDANCE'
+                          ? 'Lượt điểm danh phòng học (T6 – T11)'
+                          : reportSubTab === 'DID_VC'
+                            ? 'Lượt cấp chứng chỉ W3C VC (T6 – T11)'
+                            : 'Số lượt xác thực theo thời gian'}
+                      </h3>
+                      <span className="text-xs text-emerald-300 font-semibold">+178% tăng trưởng</span>
+                    </div>
 
-                    <div className="flex items-end gap-4 h-48 pt-4 pb-2 px-2 border-b border-white/10">
-                      <div className="flex flex-col justify-between h-full text-[11px] font-mono text-slate-400 pr-2">
-                        <span>10.000</span>
-                        <span>8.000</span>
-                        <span>6.000</span>
-                        <span>4.000</span>
-                        <span>2.000</span>
-                        <span>0</span>
-                      </div>
+                    <div className="pt-2">
+                      <div className="flex items-stretch gap-3">
+                        <div className="flex flex-col justify-between h-[196px] text-xs font-medium text-slate-400 pr-2 tabular-nums">
+                          <span>10.000</span>
+                          <span>8.000</span>
+                          <span>6.000</span>
+                          <span>4.000</span>
+                          <span>2.000</span>
+                          <span>0</span>
+                        </div>
 
-                      <div className="flex-1 grid grid-cols-6 gap-3 items-end h-full">
-                        {MONTHLY_AUTH_BARS.map((m) => (
-                          <div key={m.month} className="flex flex-col items-center justify-end h-full">
-                            <div
-                              className="w-full max-w-[38px] rounded-t-lg bg-gradient-to-t from-[#5B21B6] via-[#7C3AED] to-[#C084FC] shadow-[0_0_16px_rgba(168,85,247,0.45)]"
-                              style={{ height: `${m.pct}%` }}
-                            />
-                            <span className="text-xs font-semibold text-slate-300 mt-2">
-                              {m.month}
-                            </span>
+                        <div className="flex-1 relative">
+                          <div className="absolute inset-x-0 top-0 h-[196px] flex flex-col justify-between pointer-events-none">
+                            {[0, 1, 2, 3, 4, 5].map((idx) => (
+                              <div
+                                key={idx}
+                                className={`w-full border-t ${
+                                  idx === 5
+                                    ? 'border-purple-400/25'
+                                    : 'border-slate-500/15 border-dashed'
+                                }`}
+                              />
+                            ))}
                           </div>
-                        ))}
+
+                          <div className="relative z-10 grid grid-cols-6 gap-2.5 sm:gap-4">
+                            {MONTHLY_AUTH_BARS.map((m) => (
+                              <div key={m.month} className="flex flex-col items-center group">
+                                <div className="w-full max-w-[44px] h-[196px] flex flex-col justify-end items-center">
+                                  <span className="text-[11px] font-semibold text-slate-300 mb-1.5 group-hover:text-white transition-colors tabular-nums">
+                                    {(m.value / 1000).toFixed(1).replace('.', ',')}k
+                                  </span>
+                                  <div
+                                    className="w-full rounded-t-lg bg-gradient-to-t from-[#5B21B6] via-[#7C3AED] to-[#C084FC] shadow-[0_0_16px_rgba(168,85,247,0.4)] group-hover:brightness-110 transition-all"
+                                    style={{ height: `${Math.max(12, m.pct - 8)}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs font-semibold text-slate-300 mt-2.5">
+                                  {m.month}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2369,19 +2768,40 @@ export default function AdminPortalView({
                 MÀN HÌNH 10: CẤU HÌNH HỆ THỐNG
                ========================================================================= */}
             {activeMenu === 'SETTINGS' && (
-              <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/25 shadow-2xl space-y-5">
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
-                  Cấu hình hệ thống UTH-TrustID
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-                  <div className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-1.5">
-                    <div className="font-bold text-white">Chuẩn Định danh phi tập trung</div>
-                    <div className="text-slate-300">W3C DID Core 1.0 • Метод did:uth:secp256k1</div>
+              <div className="p-6 sm:p-7 rounded-3xl bg-[#100D28]/90 border border-purple-500/20 shadow-2xl space-y-6">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white m-0">
+                    Cấu hình hệ thống UTH-TrustID
+                  </h2>
+                  <p className="text-sm text-slate-300 mt-1 mb-0">
+                    Quản lý tham số chuẩn W3C DID, chính sách WebAuthn FIDO2 và kết nối mạng Blockchain
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-2">
+                    <div className="font-semibold text-white">Chuẩn Định danh phi tập trung (DID)</div>
+                    <div className="text-slate-300 leading-relaxed">
+                      W3C DID Core 1.0 • Phương thức{' '}
+                      <span className="font-mono text-sky-300">did:uth:secp256k1</span>
+                    </div>
                   </div>
-                  <div className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-1.5">
-                    <div className="font-bold text-white">Cấu hình WebAuthn &amp; QR Nonce</div>
-                    <div className="text-slate-300">
+                  <div className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-2">
+                    <div className="font-semibold text-white">Cấu hình WebAuthn &amp; QR Nonce</div>
+                    <div className="text-slate-300 leading-relaxed">
                       FIDO2 Hardware Passkey • Chu kỳ xoay Nonce 35 giây • Bán kính Geofence R ≤ 35m
+                    </div>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-2">
+                    <div className="font-semibold text-white">Chính sách neo dữ liệu Merkle Tree</div>
+                    <div className="text-slate-300 leading-relaxed">
+                      Thuật toán băm Keccak256 • Tự động gom lô và neo Root on-chain mỗi cuối phiên
+                    </div>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-[#161236] border border-purple-400/25 space-y-2">
+                    <div className="font-semibold text-white">Giám sát phòng vệ SOC IDS</div>
+                    <div className="text-slate-300 leading-relaxed">
+                      Tự động chặn HTTP 403 đối với QR hết hạn, giả mạo chữ ký, điểm danh hộ và Fake GPS
                     </div>
                   </div>
                 </div>
@@ -2389,7 +2809,6 @@ export default function AdminPortalView({
             )}
           </main>
         </div>
-      </div>
 
       {/* ==================== MODAL THÊM NGƯỜI DÙNG MỚI (MÀN HÌNH 2 & 3) ==================== */}
       {(showAddUserModal || showAddDidModal) && (
@@ -2410,7 +2829,7 @@ export default function AdminPortalView({
             className="w-full max-w-md rounded-3xl bg-[#130F30] border border-purple-400/45 p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-extrabold text-white m-0">
+              <h3 className="text-base font-bold text-white m-0">
                 {showAddDidModal ? 'Cấp định danh số (DID) mới' : 'Thêm tài khoản người dùng mới'}
               </h3>
               <button
@@ -2473,7 +2892,7 @@ export default function AdminPortalView({
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs font-extrabold border-none cursor-pointer"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs font-bold border-none cursor-pointer"
               >
                 Lưu &amp; Cấp DID
               </button>

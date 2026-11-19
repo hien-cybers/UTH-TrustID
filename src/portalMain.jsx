@@ -2,7 +2,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import FacultyDashboard from './components/FacultyDashboard';
-import './styles/appPro.css';
 import './index.css';
 
 const isRootAdminPath =
