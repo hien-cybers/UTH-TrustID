@@ -43,6 +43,7 @@ import { saveCredentialToStorage } from '../utils/credentialStorage';
 import { toggleTheme } from '../utils/theme';
 import GoogleMapsLiveView from './GoogleMapsLiveView';
 import LandingPage from './LandingPage';
+import FacultyPortalView from './FacultyPortalView';
 
 export default function FacultyDashboard({
   initialMode = 'FACULTY' // 'FACULTY' | 'ADMIN'
@@ -2687,6 +2688,210 @@ export default function FacultyDashboard({
 
   const validRatioPercent =
     attendees.length > 0 ? Math.round((validAttendeesCount / attendees.length) * 100) : 100;
+
+  if (staffRole === 'FACULTY') {
+    return (
+      <>
+        <FacultyPortalView
+          facultyUser={facultyUser}
+          courses={courses}
+          isCreated={isCreated}
+          isSessionOpen={isSessionOpen}
+          sessionId={sessionId}
+          sessionConfig={sessionConfig}
+          currentNonce={currentNonce}
+          timerProgress={timerProgress}
+          rotateInterval={rotateInterval}
+          qrPayloadString={qrPayloadString}
+          attendees={attendees}
+          securityAlerts={securityAlerts}
+          spotCheckState={spotCheckState}
+          soundEnabled={soundEnabled}
+          setSoundEnabled={setSoundEnabled}
+          stageSafeMode={stageSafeMode}
+          setStageSafeMode={setStageSafeMode}
+          setIsProjectorFullscreen={setIsProjectorFullscreen}
+          showCreateCourseForm={showCreateCourseForm}
+          setShowCreateCourseForm={setShowCreateCourseForm}
+          newCourseForm={newCourseForm}
+          setNewCourseForm={setNewCourseForm}
+          coursePresets={COURSE_PRESETS}
+          handleQuickFillCoursePreset={handleQuickFillCoursePreset}
+          handleCreateNewCourse={handleCreateNewCourse}
+          handleCreateNewSession={handleCreateNewSession}
+          handleFinalizeSession={handleFinalizeSession}
+          handleToggleSessionState={handleToggleSessionState}
+          handleInstantRotateNonce={handleInstantRotateNonce}
+          handleChangeRotateInterval={handleChangeRotateInterval}
+          handleSwitchLiveNetworkMode={handleSwitchLiveNetworkMode}
+          handleUpdateLiveRadius={handleUpdateLiveRadius}
+          handleSyncLaptopGpsCenter={handleSyncLaptopGpsCenter}
+          handleTriggerSpotCheck={handleTriggerSpotCheck}
+          handleSimulateAttack={handleSimulateAttack}
+          simulatingAttack={simulatingAttack}
+          handleExportCSV={handleExportCSV}
+          handleExportSemesterCSV={handleExportSemesterCSV}
+          setShowManualCheckInModal={setShowManualCheckInModal}
+          setManualCheckInContext={setManualCheckInContext}
+          setCourseToDelete={setCourseToDelete}
+          handleQuickSwitchAccount={handleQuickSwitchAccount}
+          handleLogout={handleLogout}
+          statusBannerMsg={statusBannerMsg}
+          setStatusBannerMsg={setStatusBannerMsg}
+        />
+
+        {/* Hộp thoại Xác nhận Xóa Lớp Học Phần */}
+        {courseToDelete && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-md p-6 rounded-3xl bg-[#130F30] border border-rose-500/40 shadow-2xl space-y-4 text-white">
+              <h3 className="text-base font-bold text-white m-0">
+                Xác Nhận Xóa Lớp Học Phần
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed m-0">
+                Bạn có chắc chắn muốn xóa lớp học phần{' '}
+                <strong className="text-purple-300">
+                  {courseToDelete.courseCode} — {courseToDelete.courseName}
+                </strong>{' '}
+                cùng toàn bộ {courseToDelete.sessions?.length || 0} buổi điểm danh đã lưu?
+              </p>
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCourseToDelete(null)}
+                  className="px-4 py-2 rounded-xl bg-white/10 text-slate-200 text-xs font-semibold cursor-pointer border-none"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteCourse}
+                  className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white text-xs font-bold cursor-pointer border-none"
+                >
+                  Xác Nhận Xóa
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chế độ Toàn Màn Chiếu Hội Trường 500x500px */}
+        {isProjectorFullscreen && (
+          <div className="fixed inset-0 z-50 bg-[#060516]/98 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-white">
+            <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-purple-500/25">
+              <div>
+                <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold">
+                  MÀN CHIẾU HỘI TRƯỜNG • {rotateInterval}s
+                </span>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-2 mb-0">
+                  {sessionConfig.courseCode || 'CNTT101'} —{' '}
+                  {sessionConfig.courseName || 'Lập trình Python'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProjectorFullscreen(false)}
+                className="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs cursor-pointer border-none"
+              >
+                Đóng toàn màn chiếu
+              </button>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl shadow-[0_0_80px_rgba(168,85,247,0.5)] border-4 border-purple-400 flex flex-col items-center">
+              <QRCodeCanvas
+                value={qrPayloadString || `UTH_ID:${sessionId || 'SES_CNTT101'}:${currentNonce}`}
+                size={420}
+                level="M"
+                includeMargin={false}
+              />
+              <div className="mt-3 flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full bg-[#7C3AED] text-white font-mono text-xs font-extrabold">
+                  ⏱ {timerProgress}s
+                </span>
+                <span className="font-mono text-sm font-extrabold text-slate-900">
+                  {currentNonce}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Điểm Danh Thủ Công / Bổ Sung Tại Lớp */}
+        {showManualCheckInModal && (
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowManualCheckInModal(false);
+            }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 text-white"
+          >
+            <div className="w-full max-w-lg rounded-3xl bg-[#130F30] border border-purple-400/45 p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-base font-extrabold text-white m-0">
+                  Điểm danh thủ công / Bổ sung sinh viên
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowManualCheckInModal(false)}
+                  className="text-slate-400 hover:text-white bg-transparent border-none cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!manualForm.studentId.trim()) return;
+                  handleManualCheckInStudent(manualForm);
+                }}
+                className="space-y-3"
+              >
+                <input
+                  type="text"
+                  required
+                  value={manualForm.studentId}
+                  onChange={(e) => setManualForm((p) => ({ ...p, studentId: e.target.value }))}
+                  placeholder="Mã số sinh viên (VD: 2151050125)"
+                  className="w-full p-3 rounded-xl bg-[#0B0920] border border-purple-400/35 text-sm text-white font-mono outline-none"
+                />
+                <input
+                  type="text"
+                  value={manualForm.name}
+                  onChange={(e) => setManualForm((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="Họ và tên sinh viên"
+                  className="w-full p-3 rounded-xl bg-[#0B0920] border border-purple-400/35 text-sm text-white outline-none"
+                />
+                <select
+                  value={manualForm.reason}
+                  onChange={(e) => setManualForm((p) => ({ ...p, reason: e.target.value }))}
+                  className="w-full p-3 rounded-xl bg-[#0B0920] border border-purple-400/35 text-sm text-white outline-none"
+                >
+                  <option value="Quên điện thoại / Hết pin">Quên điện thoại / Hết pin</option>
+                  <option value="Hỏng camera / Lỗi GPS">Hỏng camera / Lỗi GPS</option>
+                  <option value="Bổ sung có phép">Bổ sung có phép</option>
+                </select>
+
+                <div className="flex justify-end gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualCheckInModal(false)}
+                    className="px-4 py-2 rounded-xl bg-white/10 text-slate-200 text-xs font-bold border-none cursor-pointer"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs font-extrabold border-none cursor-pointer"
+                  >
+                    Xác nhận có mặt
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="theme-fintech-dark min-h-screen w-full flex flex-col select-none">
