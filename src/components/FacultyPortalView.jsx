@@ -621,35 +621,32 @@ export default function FacultyPortalView({
         />
 
         <div className="relative z-10 flex flex-col min-h-0 flex-1">
-          {/* Logo Thương hiệu UTH - Đại học Giao thông Vận tải TP.HCM */}
+          {/* Logo Thương hiệu Chính thức UTH - Đại học Giao thông Vận tải TP.HCM */}
           <div
             onClick={() => setSidebarTab('HOME')}
             className="px-4 pt-5 pb-4 border-b border-white/10 cursor-pointer shrink-0"
           >
             {!sidebarCollapsed ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-[28px] font-bold tracking-tight text-[#1ECAD3] leading-none">
-                    UTH
-                  </span>
-                  <div className="text-[8.5px] font-bold leading-[1.15] text-[#F87171] uppercase tracking-tight">
-                    <div>UNIVERSITY</div>
-                    <div>OF TRANSPORT</div>
-                    <div>HOCHIMINH CITY</div>
-                  </div>
+              <div className="space-y-2.5">
+                <div className="px-1">
+                  <img
+                    src="/uth-logo.png"
+                    alt="UTH - University of Transport Ho Chi Minh City"
+                    className="w-full max-w-[214px] h-auto mx-auto block object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+                  />
                 </div>
-                <div className="text-center">
+                <div className="text-center pt-0.5">
                   <div className="text-[17px] font-bold text-white leading-tight">
                     UTH-TrustID
                   </div>
-                  <div className="text-xs font-medium text-sky-200/80 mt-0.5">
+                  <div className="text-xs font-medium text-sky-200/85 mt-0.5">
                     Giảng viên Portal
                   </div>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <span className="text-xl font-bold text-[#1ECAD3]">UTH</span>
+                <span className="text-lg font-bold text-[#1ECAD3]">UTH</span>
               </div>
             )}
           </div>
@@ -818,23 +815,24 @@ export default function FacultyPortalView({
              ========================================================================= */}
           {sidebarTab === 'HOME' && (
             <div className="flex flex-col gap-6 animate-[fadeIn_0.25s_ease-out]">
-              {/* Hero Banner Sáng với Ảnh Tòa Nhà UTH */}
-              <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-white via-[#F1F7FF] to-[#DBEAFE] border border-slate-200/80 shadow-sm min-h-[168px] sm:min-h-[188px] flex items-center">
-                {/* Ảnh tòa nhà UTH bên phải hòa mượt sang nền sáng bên trái */}
+              {/* Hero Banner Sáng với Ảnh Thật Trường Đại học Giao thông Vận tải TP.HCM (UTH) */}
+              <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-white via-[#F1F7FF] to-[#DBEAFE] border border-slate-200/80 shadow-sm min-h-[178px] sm:min-h-[205px] flex items-center">
+                {/* Ảnh thật mặt tiền trường UTH bên phải hòa mượt sang nền sáng bên trái */}
                 <div
-                  className="absolute inset-y-0 right-0 w-full md:w-[64%] bg-cover bg-center pointer-events-none"
+                  className="absolute inset-y-0 right-0 w-full md:w-[68%] bg-cover pointer-events-none"
                   style={{
                     backgroundImage: "url('/uth-campus-banner.jpg')",
+                    backgroundPosition: 'center 42%',
                     maskImage:
-                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 22%, rgba(0,0,0,0.95) 55%, black 100%)',
+                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 18%, rgba(0,0,0,0.92) 44%, black 100%)',
                     WebkitMaskImage:
-                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 22%, rgba(0,0,0,0.95) 55%, black 100%)'
+                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 18%, rgba(0,0,0,0.92) 44%, black 100%)'
                   }}
                 />
-                {/* Lớp phủ sáng nhẹ bên trái để chữ luôn sắc nét tuyệt đối trên mọi màn hình */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 md:via-white/50 to-transparent pointer-events-none" />
+                {/* Lớp phủ sáng nhẹ bên trái để chữ chào mừng luôn rõ nét tuyệt đối */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/75 md:via-white/40 to-transparent pointer-events-none" />
 
-                <div className="relative z-10 px-6 sm:px-8 py-7 max-w-xl">
+                <div className="relative z-10 px-6 sm:px-8 py-7 max-w-lg">
                   <h1 className="text-2xl sm:text-[30px] font-bold text-[#0F294E] m-0 leading-tight">
                     Xin chào, {lecturerDisplayName}!
                   </h1>
@@ -1596,8 +1594,12 @@ export default function FacultyPortalView({
                       includeMargin={false}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="px-2 py-1 rounded-md bg-white border border-slate-200 shadow-xs text-[11px] font-bold text-[#14B8A6]">
-                        UTH
+                      <div className="px-2 py-1 rounded-md bg-white border border-slate-200 shadow-xs flex items-center justify-center">
+                        <img
+                          src="/uth-logo.png"
+                          alt="UTH"
+                          className="h-3.5 w-auto object-contain"
+                        />
                       </div>
                     </div>
                   </div>
@@ -1723,8 +1725,12 @@ export default function FacultyPortalView({
                           style={{ width: '100%', height: 'auto', maxWidth: '260px' }}
                         />
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-sm text-xs font-bold text-[#14B8A6]">
-                            UTH
+                          <div className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                            <img
+                              src="/uth-logo.png"
+                              alt="UTH"
+                              className="h-4 w-auto object-contain"
+                            />
                           </div>
                         </div>
                       </div>

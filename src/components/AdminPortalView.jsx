@@ -555,29 +555,25 @@ export default function AdminPortalView({
           </nav>
         </div>
 
-        {/* Phối cảnh Tòa nhà Đại học UTH gọn gàng ở chân Sidebar */}
-        <div className="hidden lg:block shrink-0 border-t border-purple-500/15 bg-gradient-to-t from-[#191140] via-[#120C2F] to-transparent p-3.5">
-          <div className="w-full rounded-2xl border border-purple-400/30 bg-gradient-to-br from-[#281B60]/80 to-[#0E0A26]/95 p-3 space-y-2.5 shadow-[0_0_24px_rgba(124,58,237,0.28)]">
-            <div className="flex items-center justify-between">
-              <span className="px-2.5 py-0.5 rounded-md bg-purple-500/30 border border-purple-300/45 text-xs font-bold tracking-wider text-white">
-                UTH
-              </span>
-              <span className="text-[11px] font-mono text-emerald-300 flex items-center gap-1.5 font-medium">
+        {/* Ảnh thật Tòa nhà Trường Đại học Giao thông Vận tải TP.HCM (UTH) ở chân Sidebar */}
+        <div className="hidden lg:block shrink-0 border-t border-purple-500/15 bg-[#0E0A26] p-3.5">
+          <div className="relative w-full h-28 rounded-2xl overflow-hidden border border-purple-400/35 shadow-[0_0_24px_rgba(124,58,237,0.28)]">
+            <img
+              src="/uth-campus-banner.jpg"
+              alt="Trường Đại học Giao thông Vận tải TP.HCM"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0D0924]/95 via-[#130C33]/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-2.5 flex items-center justify-between gap-2">
+              <img
+                src="/uth-logo.png"
+                alt="UTH"
+                className="h-4 w-auto object-contain drop-shadow"
+              />
+              <span className="text-[11px] font-mono text-emerald-300 flex items-center gap-1.5 font-medium shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                 Node Active
               </span>
-            </div>
-            <div className="grid grid-cols-5 gap-1.5 opacity-80">
-              {Array.from({ length: 10 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`h-3 rounded-[3px] border ${
-                    idx % 3 === 0
-                      ? 'bg-amber-200/35 border-amber-200/40'
-                      : 'bg-purple-300/20 border-purple-300/25'
-                  }`}
-                />
-              ))}
             </div>
           </div>
         </div>
