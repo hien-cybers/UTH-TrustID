@@ -432,16 +432,17 @@ export default function AdminPortalView({
     triggerToast(`✓ Đã tải xuống chứng chỉ số ${vc.vcId}`);
   };
 
-  // Tọa độ biểu đồ 3 đường Trang chủ Admin (0 -> 15K, y: 155 -> 20)
-  const mapY15K = (val) => 155 - (val / 15000) * 135;
+  // Tọa độ biểu đồ 3 đường Trang chủ Admin phóng to vừa khít khung viewBox 560x255 (0 -> 15K, y: 218 -> 22)
+  const mapY15K = (val) => 218 - (val / 15000) * 196;
   const lineUsersD = OVERVIEW_7D_SERIES.map(
-    (d, i) => `${i === 0 ? 'M' : 'L'} ${48 + i * 56} ${mapY15K(d.users).toFixed(1)}`
+    (d, i) => `${i === 0 ? 'M' : 'L'} ${68 + i * 78} ${mapY15K(d.users).toFixed(1)}`
   ).join(' ');
+  const lineUsersAreaD = `${lineUsersD} L ${68 + (OVERVIEW_7D_SERIES.length - 1) * 78} 218 L 68 218 Z`;
   const lineDidD = OVERVIEW_7D_SERIES.map(
-    (d, i) => `${i === 0 ? 'M' : 'L'} ${48 + i * 56} ${mapY15K(d.did).toFixed(1)}`
+    (d, i) => `${i === 0 ? 'M' : 'L'} ${68 + i * 78} ${mapY15K(d.did).toFixed(1)}`
   ).join(' ');
   const lineVcD = OVERVIEW_7D_SERIES.map(
-    (d, i) => `${i === 0 ? 'M' : 'L'} ${48 + i * 56} ${mapY15K(d.vc).toFixed(1)}`
+    (d, i) => `${i === 0 ? 'M' : 'L'} ${68 + i * 78} ${mapY15K(d.vc).toFixed(1)}`
   ).join(' ');
 
   const sidebarItems = [
@@ -789,34 +790,42 @@ export default function AdminPortalView({
                     </div>
                   </div>
 
-                  <div className="w-full pt-2">
-                    <svg className="w-full h-52 overflow-visible" viewBox="0 0 420 180">
+                  <div className="w-full flex-1 flex items-center pt-2">
+                    <svg className="w-full h-[270px] sm:h-[300px] overflow-visible" viewBox="0 0 560 255">
+                      <defs>
+                        <linearGradient id="adminUsersArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#2563EB" stopOpacity="0.14" />
+                          <stop offset="100%" stopColor="#2563EB" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
                       {[
-                        { y: 20, label: '15K' },
-                        { y: 65, label: '10K' },
-                        { y: 110, label: '5K' },
-                        { y: 155, label: '0' }
+                        { y: 22, label: '15K' },
+                        { y: 87.3, label: '10K' },
+                        { y: 152.6, label: '5K' },
+                        { y: 218, label: '0' }
                       ].map((row) => (
                         <g key={row.label}>
-                          <text x="0" y={row.y + 4} fill="#64748B" fontSize="11" fontWeight="500">
+                          <text x="0" y={row.y + 4} fill="#64748B" fontSize="13" fontWeight="500">
                             {row.label}
                           </text>
                           <line
-                            x1="34"
+                            x1="44"
                             y1={row.y}
-                            x2="404"
+                            x2="548"
                             y2={row.y}
                             stroke="#E2E8F0"
-                            strokeWidth="1"
+                            strokeWidth="1.2"
                           />
                         </g>
                       ))}
+
+                      <path d={lineUsersAreaD} fill="url(#adminUsersArea)" />
 
                       <path
                         d={lineUsersD}
                         fill="none"
                         stroke="#2563EB"
-                        strokeWidth="2.5"
+                        strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -824,7 +833,7 @@ export default function AdminPortalView({
                         d={lineDidD}
                         fill="none"
                         stroke="#7C3AED"
-                        strokeWidth="2.5"
+                        strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -832,19 +841,19 @@ export default function AdminPortalView({
                         d={lineVcD}
                         fill="none"
                         stroke="#10B981"
-                        strokeWidth="2.5"
+                        strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
 
                       {OVERVIEW_7D_SERIES.map((d, i) => {
-                        const x = 48 + i * 56;
+                        const x = 68 + i * 78;
                         return (
                           <g key={d.day}>
-                            <circle cx={x} cy={mapY15K(d.users)} r="3.5" fill="#2563EB" stroke="#FFF" strokeWidth="1.5" />
-                            <circle cx={x} cy={mapY15K(d.did)} r="3.5" fill="#7C3AED" stroke="#FFF" strokeWidth="1.5" />
-                            <circle cx={x} cy={mapY15K(d.vc)} r="3.5" fill="#10B981" stroke="#FFF" strokeWidth="1.5" />
-                            <text x={x} y="175" textAnchor="middle" fill="#475569" fontSize="11.5" fontWeight="600">
+                            <circle cx={x} cy={mapY15K(d.users)} r="5" fill="#2563EB" stroke="#FFF" strokeWidth="2" />
+                            <circle cx={x} cy={mapY15K(d.did)} r="5" fill="#7C3AED" stroke="#FFF" strokeWidth="2" />
+                            <circle cx={x} cy={mapY15K(d.vc)} r="5" fill="#10B981" stroke="#FFF" strokeWidth="2" />
+                            <text x={x} y="244" textAnchor="middle" fill="#475569" fontSize="13.5" fontWeight="600">
                               {d.day}
                             </text>
                           </g>
@@ -2351,18 +2360,18 @@ export default function AdminPortalView({
                   </button>
                 </div>
 
-                {/* 2 Biểu đồ chính chuẩn Ô 9 */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* 2 Biểu đồ chính chuẩn Ô 9 (Phóng to vừa khít khung) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                   {/* Donut Chart: Tỷ lệ người dùng theo vai trò */}
-                  <div className="lg:col-span-6 p-5 sm:p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-4">
-                    <h2 className="text-base font-bold text-[#0F294E] m-0">
+                  <div className="lg:col-span-6 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-5">
+                    <h2 className="text-base sm:text-lg font-bold text-[#0F294E] m-0">
                       Tỷ lệ người dùng theo vai trò
                     </h2>
 
                     <div className="flex flex-wrap items-center justify-center gap-8 my-auto py-4">
-                      <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
-                        <svg className="w-44 h-44 -rotate-90" viewBox="0 0 120 120">
-                          <circle cx="60" cy="60" r="44" fill="transparent" stroke="#E2E8F0" strokeWidth="16" />
+                      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center shrink-0">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                          <circle cx="60" cy="60" r="44" fill="transparent" stroke="#E2E8F0" strokeWidth="18" />
                           {/* Sinh viên 88.4% (~244 / 276.46) */}
                           <circle
                             cx="60"
@@ -2370,7 +2379,7 @@ export default function AdminPortalView({
                             r="44"
                             fill="transparent"
                             stroke="#2563EB"
-                            strokeWidth="16"
+                            strokeWidth="18"
                             strokeDasharray="244 277"
                             strokeDashoffset="0"
                           />
@@ -2381,7 +2390,7 @@ export default function AdminPortalView({
                             r="44"
                             fill="transparent"
                             stroke="#F97316"
-                            strokeWidth="16"
+                            strokeWidth="18"
                             strokeDasharray="22.4 277"
                             strokeDashoffset="-244"
                           />
@@ -2392,32 +2401,32 @@ export default function AdminPortalView({
                             r="44"
                             fill="transparent"
                             stroke="#22C55E"
-                            strokeWidth="16"
+                            strokeWidth="18"
                             strokeDasharray="10 277"
                             strokeDashoffset="-266.4"
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                          <span className="text-xl font-bold text-[#0F294E] tabular-nums">12.548</span>
-                          <span className="text-xs text-slate-500">Người dùng</span>
+                          <span className="text-3xl font-bold text-[#0F294E] tabular-nums">12.548</span>
+                          <span className="text-sm text-slate-500 mt-1">Người dùng</span>
                         </div>
                       </div>
 
-                      <div className="space-y-3 text-sm">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-3 h-3 rounded-full bg-[#2563EB]" />
+                      <div className="space-y-4 text-sm sm:text-base">
+                        <div className="flex items-center gap-3">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#2563EB] shrink-0" />
                           <span className="text-slate-600">
                             Sinh viên: <strong className="text-[#0F294E] tabular-nums">88,4%</strong>
                           </span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-3 h-3 rounded-full bg-[#F97316]" />
+                        <div className="flex items-center gap-3">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#F97316] shrink-0" />
                           <span className="text-slate-600">
                             Giảng viên: <strong className="text-[#0F294E] tabular-nums">8,1%</strong>
                           </span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-3 h-3 rounded-full bg-[#22C55E]" />
+                        <div className="flex items-center gap-3">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#22C55E] shrink-0" />
                           <span className="text-slate-600">
                             Quản trị viên: <strong className="text-[#0F294E] tabular-nums">3,5%</strong>
                           </span>
@@ -2427,8 +2436,8 @@ export default function AdminPortalView({
                   </div>
 
                   {/* Bar Chart: Số lượng VC được cấp (T2..CN) */}
-                  <div className="lg:col-span-6 p-5 sm:p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-4">
-                    <h2 className="text-base font-bold text-[#0F294E] m-0">
+                  <div className="lg:col-span-6 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-5">
+                    <h2 className="text-base sm:text-lg font-bold text-[#0F294E] m-0">
                       {reportSubTab === 'DID'
                         ? 'Số lượng DID được cấp'
                         : reportSubTab === 'ATTENDANCE'
@@ -2436,8 +2445,8 @@ export default function AdminPortalView({
                           : 'Số lượng VC được cấp'}
                     </h2>
 
-                    <div className="flex items-stretch gap-3 pt-2">
-                      <div className="flex flex-col justify-between h-[200px] text-xs font-medium text-slate-500 pr-2 tabular-nums">
+                    <div className="flex items-stretch gap-4 pt-2 flex-1">
+                      <div className="flex flex-col justify-between h-[280px] sm:h-[310px] text-xs sm:text-sm font-medium text-slate-500 pr-2 tabular-nums">
                         <span>8K</span>
                         <span>6K</span>
                         <span>4K</span>
@@ -2446,7 +2455,7 @@ export default function AdminPortalView({
                       </div>
 
                       <div className="flex-1 relative">
-                        <div className="absolute inset-x-0 top-0 h-[200px] flex flex-col justify-between pointer-events-none">
+                        <div className="absolute inset-x-0 top-0 h-[280px] sm:h-[310px] flex flex-col justify-between pointer-events-none">
                           {[0, 1, 2, 3, 4].map((idx) => (
                             <div
                               key={idx}
@@ -2457,21 +2466,21 @@ export default function AdminPortalView({
                           ))}
                         </div>
 
-                        <div className="relative z-10 grid grid-cols-7 gap-2.5 sm:gap-3.5">
+                        <div className="relative z-10 grid grid-cols-7 gap-3 sm:gap-4">
                           {DAILY_VC_BARS.map((d) => {
                             const hPct = Math.round((d.value / 8000) * 100);
                             return (
                               <div key={d.day} className="flex flex-col items-center group">
-                                <div className="w-full max-w-[36px] h-[200px] flex flex-col justify-end items-center">
-                                  <span className="text-[11px] font-semibold text-slate-500 mb-1 group-hover:text-[#2563EB] tabular-nums">
+                                <div className="w-full max-w-[56px] h-[280px] sm:h-[310px] flex flex-col justify-end items-center">
+                                  <span className="text-xs sm:text-sm font-semibold text-slate-600 mb-1.5 group-hover:text-[#2563EB] tabular-nums">
                                     {(d.value / 1000).toFixed(1).replace('.', ',')}k
                                   </span>
                                   <div
-                                    className="w-full rounded-t-lg bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] group-hover:brightness-110 transition-all"
+                                    className="w-full rounded-t-xl bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] shadow-xs group-hover:brightness-110 transition-all"
                                     style={{ height: `${hPct}%` }}
                                   />
                                 </div>
-                                <span className="text-xs font-semibold text-slate-600 mt-2">
+                                <span className="text-xs sm:text-sm font-semibold text-slate-600 mt-3">
                                   {d.day}
                                 </span>
                               </div>

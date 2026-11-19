@@ -553,20 +553,21 @@ export default function FacultyPortalView({
       ? facultyUser.fullName
       : 'TS. Nguyễn Thị Mai';
 
-  // Tọa độ biểu đồ 2 đường Trang chủ (T2..CN)
+  // Tọa độ biểu đồ 2 đường Trang chủ (T2..CN) phóng to căng đầy viewBox 460x235 (y: 20 -> 200)
   const presentLinePts = HOME_TREND_7D.map((d, i) => ({
-    x: 48 + i * 48,
-    y: 135 - (d.present / 100) * 115,
+    x: 64 + i * 62,
+    y: 200 - (d.present / 100) * 180,
     val: d.present
   }));
   const absentLinePts = HOME_TREND_7D.map((d, i) => ({
-    x: 48 + i * 48,
-    y: 135 - (d.absent / 100) * 115,
+    x: 64 + i * 62,
+    y: 200 - (d.absent / 100) * 180,
     val: d.absent
   }));
   const presentPathD = presentLinePts
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y.toFixed(1)}`)
     .join(' ');
+  const presentAreaD = `${presentPathD} L ${presentLinePts[presentLinePts.length - 1].x} 200 L ${presentLinePts[0].x} 200 Z`;
   const absentPathD = absentLinePts
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y.toFixed(1)}`)
     .join(' ');
@@ -1007,36 +1008,44 @@ export default function FacultyPortalView({
                     </span>
                   </div>
 
-                  <div className="w-full pt-1">
-                    <svg className="w-full h-44 overflow-visible" viewBox="0 0 365 162">
+                  <div className="w-full flex-1 flex items-center pt-1">
+                    <svg className="w-full h-[240px] sm:h-[268px] overflow-visible" viewBox="0 0 460 235">
+                      <defs>
+                        <linearGradient id="facultyPresentArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#2563EB" stopOpacity="0.16" />
+                          <stop offset="100%" stopColor="#2563EB" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
                       {[
                         { y: 20, label: '100%' },
-                        { y: 43, label: '80%' },
-                        { y: 66, label: '60%' },
-                        { y: 89, label: '40%' },
-                        { y: 112, label: '20%' },
-                        { y: 135, label: '0%' }
+                        { y: 56, label: '80%' },
+                        { y: 92, label: '60%' },
+                        { y: 128, label: '40%' },
+                        { y: 164, label: '20%' },
+                        { y: 200, label: '0%' }
                       ].map((row) => (
                         <g key={row.label}>
-                          <text x="0" y={row.y + 4} fill="#64748B" fontSize="10.5" fontWeight="500">
+                          <text x="0" y={row.y + 4} fill="#64748B" fontSize="12.5" fontWeight="500">
                             {row.label}
                           </text>
                           <line
-                            x1="36"
+                            x1="44"
                             y1={row.y}
-                            x2="352"
+                            x2="450"
                             y2={row.y}
                             stroke="#E2E8F0"
-                            strokeWidth="1"
+                            strokeWidth="1.2"
                           />
                         </g>
                       ))}
+
+                      <path d={presentAreaD} fill="url(#facultyPresentArea)" />
 
                       <path
                         d={presentPathD}
                         fill="none"
                         stroke="#2563EB"
-                        strokeWidth="2.5"
+                        strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -1044,7 +1053,7 @@ export default function FacultyPortalView({
                         d={absentPathD}
                         fill="none"
                         stroke="#EF4444"
-                        strokeWidth="2.5"
+                        strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -1054,10 +1063,10 @@ export default function FacultyPortalView({
                           key={`p-${i}`}
                           cx={pt.x}
                           cy={pt.y}
-                          r="3.5"
+                          r="4.8"
                           fill="#2563EB"
                           stroke="#FFFFFF"
-                          strokeWidth="1.5"
+                          strokeWidth="2"
                         />
                       ))}
                       {absentLinePts.map((pt, i) => (
@@ -1065,21 +1074,21 @@ export default function FacultyPortalView({
                           key={`a-${i}`}
                           cx={pt.x}
                           cy={pt.y}
-                          r="3.5"
+                          r="4.8"
                           fill="#EF4444"
                           stroke="#FFFFFF"
-                          strokeWidth="1.5"
+                          strokeWidth="2"
                         />
                       ))}
 
                       {HOME_TREND_7D.map((d, i) => (
                         <text
                           key={d.day}
-                          x={48 + i * 48}
-                          y="155"
+                          x={64 + i * 62}
+                          y="224"
                           textAnchor="middle"
                           fill="#475569"
-                          fontSize="11"
+                          fontSize="13"
                           fontWeight="600"
                         >
                           {d.day}
@@ -2621,25 +2630,25 @@ export default function FacultyPortalView({
                   </div>
                 </div>
 
-                {/* 2 Biểu đồ: Donut Tỷ lệ điểm danh theo lớp + Cột Số lượt điểm danh theo tuần */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* 2 Biểu đồ: Donut Tỷ lệ điểm danh theo lớp + Cột Số lượt điểm danh theo tuần (Phóng to vừa khít khung) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                   {/* Donut Chart */}
-                  <div className="lg:col-span-5 p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-4">
-                    <h3 className="text-base font-bold text-[#0F294E] m-0">
+                  <div className="lg:col-span-5 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-5">
+                    <h3 className="text-base sm:text-lg font-bold text-[#0F294E] m-0">
                       Tỷ lệ điểm danh theo lớp
                     </h3>
 
-                    <div className="flex flex-wrap items-center justify-center gap-7 my-auto py-3">
-                      <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
-                        <svg className="w-40 h-40 -rotate-90" viewBox="0 0 120 120">
-                          <circle cx="60" cy="60" r="44" fill="transparent" stroke="#F97316" strokeWidth="16" />
+                    <div className="flex flex-wrap items-center justify-center gap-8 my-auto py-4">
+                      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center shrink-0">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                          <circle cx="60" cy="60" r="44" fill="transparent" stroke="#F97316" strokeWidth="18" />
                           <circle
                             cx="60"
                             cy="60"
                             r="44"
                             fill="transparent"
                             stroke="#22C55E"
-                            strokeWidth="16"
+                            strokeWidth="18"
                             strokeDasharray="205 277"
                             strokeDashoffset="0"
                           />
@@ -2649,26 +2658,26 @@ export default function FacultyPortalView({
                             r="44"
                             fill="transparent"
                             stroke="#2563EB"
-                            strokeWidth="16"
+                            strokeWidth="18"
                             strokeDasharray="60 277"
                             strokeDashoffset="-205"
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-xl font-bold text-[#0F294E] tabular-nums">96,1%</span>
-                          <span className="text-xs text-slate-500">Có mặt</span>
+                          <span className="text-3xl font-bold text-[#0F294E] tabular-nums">96,1%</span>
+                          <span className="text-sm text-slate-500 mt-1">Có mặt</span>
                         </div>
                       </div>
 
-                      <div className="space-y-3 text-sm">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-3 h-3 rounded-full bg-[#2563EB]" />
+                      <div className="space-y-4 text-sm sm:text-base">
+                        <div className="flex items-center gap-3">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#2563EB] shrink-0" />
                           <span className="text-slate-600">
                             Có mặt: <strong className="text-[#0F294E] tabular-nums">96,1%</strong>
                           </span>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-3 h-3 rounded-full bg-[#F97316]" />
+                        <div className="flex items-center gap-3">
+                          <span className="w-3.5 h-3.5 rounded-full bg-[#F97316] shrink-0" />
                           <span className="text-slate-600">
                             Vắng mặt: <strong className="text-[#0F294E] tabular-nums">3,9%</strong>
                           </span>
@@ -2678,13 +2687,13 @@ export default function FacultyPortalView({
                   </div>
 
                   {/* Bar Chart: Số lượt điểm danh theo tuần (T1..T7) */}
-                  <div className="lg:col-span-7 p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-4">
-                    <h3 className="text-base font-bold text-[#0F294E] m-0">
+                  <div className="lg:col-span-7 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex flex-col justify-between gap-5">
+                    <h3 className="text-base sm:text-lg font-bold text-[#0F294E] m-0">
                       Số lượt điểm danh theo tuần
                     </h3>
 
-                    <div className="flex items-stretch gap-3 pt-2">
-                      <div className="flex flex-col justify-between h-[196px] text-xs font-medium text-slate-500 pr-2 tabular-nums">
+                    <div className="flex items-stretch gap-4 pt-2 flex-1">
+                      <div className="flex flex-col justify-between h-[280px] sm:h-[310px] text-xs sm:text-sm font-medium text-slate-500 pr-2 tabular-nums">
                         <span>160</span>
                         <span>120</span>
                         <span>80</span>
@@ -2693,7 +2702,7 @@ export default function FacultyPortalView({
                       </div>
 
                       <div className="flex-1 relative">
-                        <div className="absolute inset-x-0 top-0 h-[196px] flex flex-col justify-between pointer-events-none">
+                        <div className="absolute inset-x-0 top-0 h-[280px] sm:h-[310px] flex flex-col justify-between pointer-events-none">
                           {[0, 1, 2, 3, 4].map((idx) => (
                             <div
                               key={idx}
@@ -2704,21 +2713,21 @@ export default function FacultyPortalView({
                           ))}
                         </div>
 
-                        <div className="relative z-10 grid grid-cols-7 gap-2.5 sm:gap-4">
+                        <div className="relative z-10 grid grid-cols-7 gap-3 sm:gap-5">
                           {WEEKLY_ATTENDANCE_BARS.map((w) => {
                             const hPct = Math.round((w.count / 160) * 100);
                             return (
                               <div key={w.week} className="flex flex-col items-center group">
-                                <div className="w-full max-w-[38px] h-[196px] flex flex-col justify-end items-center">
-                                  <span className="text-[11px] font-semibold text-slate-500 mb-1 group-hover:text-[#2563EB] tabular-nums">
+                                <div className="w-full max-w-[58px] h-[280px] sm:h-[310px] flex flex-col justify-end items-center">
+                                  <span className="text-xs sm:text-sm font-semibold text-slate-600 mb-1.5 group-hover:text-[#2563EB] tabular-nums">
                                     {w.count}
                                   </span>
                                   <div
-                                    className="w-full rounded-t-lg bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] group-hover:brightness-110 transition-all"
+                                    className="w-full rounded-t-xl bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] shadow-xs group-hover:brightness-110 transition-all"
                                     style={{ height: `${hPct}%` }}
                                   />
                                 </div>
-                                <span className="text-xs font-semibold text-slate-600 mt-2">
+                                <span className="text-xs sm:text-sm font-semibold text-slate-600 mt-3">
                                   {w.week}
                                 </span>
                               </div>
