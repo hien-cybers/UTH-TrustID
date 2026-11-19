@@ -1,122 +1,114 @@
 import React, { useState, useEffect } from 'react';
 import {
   GraduationCap,
-  BookOpen,
-  Users,
-  Search,
   ArrowRight,
   Play,
-  ChevronDown,
   ShieldCheck,
-  QrCode,
-  Sparkles,
   Layers,
-  Lock,
-  BarChart3,
+  Users,
+  Zap,
+  Fingerprint,
+  IdCard,
+  GitBranch,
   CheckCircle2,
-  Monitor,
-  Globe,
-  LogIn,
+  Sparkles,
+  Cpu,
+  MapPin,
   X
 } from 'lucide-react';
 
-const FLOATING_PETALS = [
-  { id: 1, top: '20%', left: '45%', size: 14, delay: '0s', duration: '6.2s' },
-  { id: 2, top: '62%', left: '34%', size: 15, delay: '1.1s', duration: '7.2s' },
-  { id: 3, top: '48%', left: '52%', size: 13, delay: '2.0s', duration: '5.8s' },
-  { id: 4, top: '54%', left: '80%', size: 12, delay: '0.7s', duration: '6.5s' },
-  { id: 5, top: '28%', left: '72%', size: 13, delay: '1.6s', duration: '6.8s' }
-];
+const GITHUB_REPO_URL = 'https://github.com/hien-cybers/UTH-TrustID';
 
-const CORE_PILLARS = [
+function GitHubIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+      />
+    </svg>
+  );
+}
+
+const BOTTOM_HIGHLIGHTS = [
   {
-    id: 'pillar-1',
-    badge: 'LỚP HỌC THÔNG MINH',
-    title: 'Khóa học & Học phần trực tuyến đa dạng',
-    desc: 'Hệ thống học phần từ đại cương, chuyên ngành đến kỹ năng mềm được tổ chức khoa học theo từng học kỳ, giúp sinh viên chủ động kế hoạch học tập.',
-    icon: <Monitor className="w-5 h-5 text-[#1A6BFF]" />,
-    accent: 'from-blue-500/12 to-sky-500/5',
-    metric: '120+ Học phần số hóa'
+    id: 'hl-1',
+    title: 'An toàn & tin cậy',
+    desc: 'Xác thực danh tính bằng khóa công khai (WebAuthn)',
+    icon: <ShieldCheck className="w-6 h-6 text-[#A855F7]" />
   },
   {
-    id: 'pillar-2',
-    badge: 'HỌC LIỆU CHUẨN HÓA',
-    title: 'Kho tài liệu, bài giảng & đề cương phong phú',
-    desc: 'Truy cập tức thì giáo trình điện tử, slide bài giảng, ngân hàng câu hỏi ôn tập và ghi chú học thuật đồng bộ trên mọi thiết bị.',
-    icon: <BookOpen className="w-5 h-5 text-indigo-600" />,
-    accent: 'from-indigo-500/12 to-purple-500/5',
-    metric: '2.500+ Tài liệu & Bài giảng'
+    id: 'hl-2',
+    title: 'Minh bạch dữ liệu',
+    desc: 'Bảo toàn và xác minh dữ liệu với Merkle Tree',
+    icon: <Layers className="w-6 h-6 text-[#A855F7]" />
   },
   {
-    id: 'pillar-3',
-    badge: 'ĐIỂM DANH SỐ 1-CHẠM',
-    title: 'Điểm danh QR động & Xác thực định danh số',
-    desc: 'Tích hợp công nghệ điểm danh mã QR xoay vòng kết hợp định vị giảng đường và ví định danh điện tử, đảm bảo minh bạch và chống điểm danh hộ.',
-    icon: <QrCode className="w-5 h-5 text-emerald-600" />,
-    accent: 'from-emerald-500/12 to-teal-500/5',
-    metric: 'Xác thực < 0.5 giây'
+    id: 'hl-3',
+    title: 'Tự chủ danh tính',
+    desc: 'Theo chuẩn W3C DID, người dùng làm chủ dữ liệu',
+    icon: <Users className="w-6 h-6 text-[#A855F7]" />
   },
   {
-    id: 'pillar-4',
-    badge: 'THEO DÕI LỘ TRÌNH',
-    title: 'Phân tích tiến độ & Chuyên cần trực quan',
-    desc: 'Bảng điều khiển trực quan giúp sinh viên và giảng viên theo dõi tỷ lệ chuyên cần, lịch sử tham gia lớp học và tiến độ hoàn thành môn học.',
-    icon: <BarChart3 className="w-5 h-5 text-amber-600" />,
-    accent: 'from-amber-500/12 to-orange-500/5',
-    metric: 'Đồng bộ thời gian thực'
+    id: 'hl-4',
+    title: 'Ứng dụng thực tiễn',
+    desc: 'Xác thực hiện diện phòng học, phù hợp môi trường đại học',
+    icon: <Zap className="w-6 h-6 text-[#A855F7]" />
   }
 ];
 
-const WORKFLOW_STEPS = [
+const SOLUTION_PILLARS = [
   {
-    step: '01',
-    title: 'Đăng nhập một chạm',
-    desc: 'Truy cập hệ thống EduCampus bằng tài khoản học vụ, Google/Microsoft SSO hoặc quét mã QR không mật khẩu.',
-    icon: <Lock className="w-4 h-4 text-white" />,
-    color: 'from-[#1A6BFF] to-[#0D47A1]'
+    id: 'sol-1',
+    badge: 'W3C DID & VERIFIABLE CREDENTIALS',
+    title: 'Định danh số tự chủ không phụ thuộc bên thứ ba',
+    desc: 'Mỗi sinh viên sở hữu một định danh phi tập trung (DID) gắn liền với cặp khóa mật mã secp256k1 lưu trữ an toàn ngay trên thiết bị cá nhân.',
+    icon: <IdCard className="w-5 h-5 text-[#C084FC]" />,
+    metric: 'Chuẩn W3C Quốc tế'
   },
   {
-    step: '02',
-    title: 'Học tập & Điểm danh tại lớp',
-    desc: 'Xem lịch học, tải tài liệu bài giảng, thảo luận cùng lớp học phần và quét QR điểm danh trực tiếp tại giảng đường.',
-    icon: <QrCode className="w-4 h-4 text-white" />,
-    color: 'from-[#0EA5E9] to-[#0284C7]'
+    id: 'sol-2',
+    badge: 'WEBAUTHN & FIDO2 PASSKEY',
+    title: 'Xác thực sinh trắc học không mật khẩu',
+    desc: 'Tích hợp khóa phần cứng FIDO2 / WebAuthn và sinh trắc học thiết bị để ký thông điệp xác thực EIP-191, ngăn chặn hoàn toàn hành vi mượn tài khoản.',
+    icon: <Fingerprint className="w-5 h-5 text-[#38BDF8]" />,
+    metric: 'Chống điểm danh hộ 100%'
   },
   {
-    step: '03',
-    title: 'Theo dõi tiến độ & Kết quả',
-    desc: 'Kiểm tra lịch sử chuyên cần minh bạch, theo dõi biểu đồ tiến độ học tập và xuất báo cáo tổng kết học kỳ.',
-    icon: <CheckCircle2 className="w-4 h-4 text-white" />,
-    color: 'from-[#10B981] to-[#059669]'
+    id: 'sol-3',
+    badge: 'MERKLE TREE O(LOG N)',
+    title: 'Cấp phát lô thẻ & Kiểm chứng nhánh băm tốc độ cao',
+    desc: 'Băm danh sách lớp bằng thuật toán Keccak256 Sorted Pairs và chỉ lưu trữ Merkle Root, cho phép xác minh tư cách sinh viên trong thời gian O(log N).',
+    icon: <GitBranch className="w-5 h-5 text-[#A855F7]" />,
+    metric: 'Thu hồi khóa độc lập O(1)'
+  },
+  {
+    id: 'sol-4',
+    badge: 'DYNAMIC QR & HAVERSINE GPS',
+    title: 'Xác thực hiện diện phòng học đa nhân tố',
+    desc: 'Kết hợp mã QR Nonce xoay vòng chống chụp màn hình với hàng rào địa lý Haversine và bộ lọc nhiễu Kalman để xác minh sinh viên có mặt thực tế tại lớp.',
+    icon: <MapPin className="w-5 h-5 text-emerald-400" />,
+    metric: 'Xác thực < 0.5 giây'
   }
 ];
 
 export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
   const [activeNav, setActiveNav] = useState('HOME');
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState('');
   const [showIntroModal, setShowIntroModal] = useState(false);
-  const [heroImgSrc, setHeroImgSrc] = useState('/campus-hero.png');
   const [scrollY, setScrollY] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [visibleSections, setVisibleSections] = useState({
-    features: false,
-    workflow: false,
-    community: false
+    topic: false,
+    tech: false,
+    results: false
   });
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentY = window.scrollY || 0;
-      setScrollY(currentY);
-      const docHeight =
-        document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      setScrollProgress(docHeight > 0 ? Math.min(100, (currentY / docHeight) * 100) : 0);
+      setScrollY(window.scrollY || 0);
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -130,92 +122,108 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      { threshold: 0.14 }
     );
-
     const nodes = document.querySelectorAll('[data-section-id]');
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
   }, []);
 
-  const handleHeroMouseMove = (e) => {
+  const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = (e.clientX - rect.left) / rect.width - 0.5;
     const ny = (e.clientY - rect.top) / rect.height - 0.5;
-    setMousePos({ x: nx * 12, y: ny * 12 });
+    setMousePos({ x: nx * 14, y: ny * 14 });
   };
 
-  const scrollToSection = (sectionId, navKey) => {
-    setActiveNav(navKey);
+  const scrollToSection = (sectionId, navId) => {
+    setActiveNav(navId);
     const el = document.getElementById(sectionId);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
-  const isScrolled = scrollY > 32;
+  const isScrolled = scrollY > 30;
 
   return (
-    <div className="min-h-screen w-full bg-[#F4F7FC] text-slate-900 font-sans select-none overflow-x-hidden relative">
-      {/* CSS Keyframes cho hiệu ứng động & cuộn mượt */}
+    <div className="min-h-screen w-full bg-[#070618] text-white font-sans select-none overflow-x-hidden relative">
+      {/* CSS Keyframes cho Khiên Bảo Vệ Xoay Tròn 360° & Hiệu Ứng Ánh Sáng */}
       <style>{`
-        @keyframes floatPetal {
-          0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          33% { transform: translate3d(10px, -9px, 0) rotate(12deg) scale(1.04); }
-          66% { transform: translate3d(-8px, 8px, 0) rotate(-10deg) scale(0.96); }
+        @keyframes orbitSpinClockwise {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
-        @keyframes shimmerSweep {
-          0% { transform: translateX(-120%) skewX(-18deg); }
-          100% { transform: translateX(220%) skewX(-18deg); }
+        @keyframes orbitSpinCounter {
+          0% { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
         }
-        @keyframes pulseRing {
-          0% { transform: scale(0.95); opacity: 0.75; }
-          70% { transform: scale(1.3); opacity: 0; }
-          100% { transform: scale(1.3); opacity: 0; }
+        @keyframes shieldFloatPulse {
+          0%, 100% {
+            transform: translateY(0px) rotateY(-6deg) rotateX(3deg);
+            filter: drop-shadow(0 0 28px rgba(139, 92, 246, 0.55));
+          }
+          50% {
+            transform: translateY(-10px) rotateY(8deg) rotateX(-3deg);
+            filter: drop-shadow(0 0 44px rgba(56, 189, 248, 0.72));
+          }
+        }
+        @keyframes radarSweepSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes cardFloatGentle {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        @keyframes pedestalWave {
+          0%, 100% { opacity: 0.55; transform: scaleX(1); }
+          50% { opacity: 0.95; transform: scaleX(1.06); }
+        }
+        @keyframes btnShine {
+          0% { transform: translateX(-130%) skewX(-20deg); }
+          100% { transform: translateX(230%) skewX(-20deg); }
         }
       `}</style>
 
-      {/* Thanh tiến trình cuộn trên đỉnh màn hình */}
-      <div className="fixed top-0 left-0 right-0 h-[3px] z-50 bg-transparent pointer-events-none">
-        <div
-          className="h-full bg-gradient-to-r from-[#1A6BFF] via-[#38BDF8] to-[#4FF0D6] transition-all duration-150"
-          style={{ width: `${scrollProgress}%` }}
-        />
-      </div>
-
-      {/* ==================== THANH ĐIỀU HƯỚNG NỔI (STICKY NAVBAR CÂN ĐỐI) ==================== */}
+      {/* ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG (NAVBAR UTH-TRUSTID) ==================== */}
       <header
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
           isScrolled
-            ? 'bg-[#071A3E]/90 backdrop-blur-xl shadow-[0_10px_30px_rgba(4,12,32,0.28)] border-b border-white/15 py-2.5'
-            : 'bg-gradient-to-b from-[#071836]/75 via-[#071836]/30 to-transparent py-3.5'
+            ? 'bg-[#08071C]/90 backdrop-blur-2xl border-b border-purple-500/20 shadow-[0_10px_35px_rgba(4,3,18,0.75)] py-3'
+            : 'bg-gradient-to-b from-[#08071C]/85 via-[#08071C]/40 to-transparent py-4'
         }`}
       >
-        <div className="max-w-[1200px] mx-auto px-5 sm:px-8 flex items-center justify-between gap-4">
-          {/* Logo EduCampus */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveNav('HOME');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="flex items-center gap-2.5 bg-transparent border-none cursor-pointer p-0 text-white group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-md group-hover:bg-[#1A6BFF] transition-all">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white drop-shadow-xs">
-              EduCampus
-            </span>
-          </button>
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-8 flex items-center justify-between gap-4">
+          {/* Logo Khiên UTH-TrustID */}
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveNav('HOME');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex items-center gap-2.5 bg-transparent border-none cursor-pointer p-0 text-white group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_22px_rgba(139,92,246,0.6)] border border-purple-300/35 group-hover:scale-105 transition-transform">
+                <ShieldCheck className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white">
+                UTH-TrustID
+              </span>
+            </button>
+            <span className="hidden md:inline-block h-5 w-px bg-white/15" />
+          </div>
 
-          {/* Menu Điều Hướng Chính */}
-          <nav className="hidden md:flex items-center gap-7 lg:gap-8">
+          {/* Menu Điều Hướng Giữa */}
+          <nav className="hidden lg:flex items-center gap-7">
             {[
               { id: 'HOME', label: 'Trang chủ', target: 'section-hero' },
-              { id: 'FEATURES', label: 'Khóa học', target: 'section-features', hasDropdown: true },
-              { id: 'DOCS', label: 'Tài liệu', target: 'section-workflow' },
-              { id: 'COMMUNITY', label: 'Cộng đồng', target: 'section-community' }
+              { id: 'TOPIC', label: 'Đề tài', target: 'section-topic' },
+              { id: 'SOLUTION', label: 'Giải pháp', target: 'section-topic' },
+              { id: 'TECH', label: 'Công nghệ', target: 'section-tech' },
+              { id: 'RESULTS', label: 'Kết quả', target: 'section-results' },
+              { id: 'TEAM', label: 'Đội ngũ', target: 'section-results' }
             ].map((item) => {
               const isActive = activeNav === item.id;
               return (
@@ -223,14 +231,13 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
                   key={item.id}
                   type="button"
                   onClick={() => scrollToSection(item.target, item.id)}
-                  className={`relative py-1.5 text-xs sm:text-sm font-semibold bg-transparent border-none cursor-pointer transition-all inline-flex items-center gap-1 ${
-                    isActive ? 'text-white' : 'text-white/85 hover:text-white'
+                  className={`relative py-1.5 text-xs sm:text-sm font-semibold bg-transparent border-none cursor-pointer transition-colors ${
+                    isActive ? 'text-white' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   <span>{item.label}</span>
-                  {item.hasDropdown && <ChevronDown className="w-3.5 h-3.5 opacity-80" />}
                   <span
-                    className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-white transition-all duration-300 ${
+                    className={`absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#A855F7] to-[#6366F1] shadow-[0_0_10px_rgba(168,85,247,0.9)] transition-all duration-300 ${
                       isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'
                     }`}
                   />
@@ -239,359 +246,465 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
             })}
           </nav>
 
-          {/* Cụm Tìm Kiếm & Nút Đăng Nhập Duy Nhất */}
-          <div className="flex items-center gap-2.5">
-            {searchOpen ? (
-              <div className="hidden sm:flex items-center bg-white/20 backdrop-blur-md border border-white/40 rounded-full px-3 py-1 gap-2">
-                <Search className="w-3.5 h-3.5 text-white" />
-                <input
-                  type="text"
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      scrollToSection('section-features', 'FEATURES');
-                    }
-                  }}
-                  placeholder="Tìm kiếm..."
-                  className="bg-transparent border-none outline-none text-xs text-white placeholder-white/75 w-32"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchOpen(false);
-                    setSearchKeyword('');
-                  }}
-                  className="bg-transparent border-none text-white/80 hover:text-white cursor-pointer p-0"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                title="Tìm kiếm"
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 flex items-center justify-center text-white cursor-pointer transition-all"
-              >
-                <Search className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* Cụm Nút Bên Phải: Mã nguồn & Dùng thử hệ thống */}
+          <div className="flex items-center gap-3">
+            <a
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#13102E]/85 hover:bg-[#1D1842] border border-purple-400/30 text-slate-200 hover:text-white text-xs sm:text-sm font-semibold no-underline transition-all"
+            >
+              <GitHubIcon className="w-4 h-4" />
+              <span>Mã nguồn</span>
+            </a>
 
             <button
               type="button"
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="group relative overflow-hidden px-5 py-2 rounded-full bg-[#1A6BFF] hover:bg-[#1557D8] text-white text-xs sm:text-sm font-bold border border-white/30 shadow-[0_8px_20px_rgba(26,107,255,0.45)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-1.5"
+              className="group relative overflow-hidden px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:opacity-95 text-white text-xs sm:text-sm font-bold border border-purple-300/40 shadow-[0_0_25px_rgba(139,92,246,0.55)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2"
             >
               <span
-                className="pointer-events-none absolute inset-y-0 w-10 bg-white/30 blur-xs"
-                style={{ animation: 'shimmerSweep 3.2s infinite' }}
+                className="pointer-events-none absolute inset-y-0 w-10 bg-white/25 blur-xs"
+                style={{ animation: 'btnShine 3.2s infinite' }}
               />
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Đăng nhập</span>
+              <span>Dùng thử hệ thống</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* ==================== SECTION 1: HERO BANNER VỪA KHÍT MÀN HÌNH (100VH BALANCED) ==================== */}
+      {/* ==================== SECTION 1: HERO UTH-TRUSTID & KHIÊN BẢO VỆ XOAY TRÒN 360° ==================== */}
       <section
         id="section-hero"
-        onMouseMove={handleHeroMouseMove}
-        className="relative w-full min-h-[580px] lg:h-screen lg:max-h-[780px] flex flex-col justify-between overflow-hidden"
+        onMouseMove={handleMouseMove}
+        className="relative w-full min-h-screen flex flex-col justify-between overflow-hidden pt-20"
+        style={{
+          background:
+            'radial-gradient(circle at 70% 42%, rgba(124, 58, 237, 0.24) 0%, rgba(56, 189, 248, 0.08) 28%, transparent 62%), radial-gradient(circle at 18% 30%, rgba(99, 102, 241, 0.16) 0%, transparent 50%), linear-gradient(180deg, #070618 0%, #0B0824 55%, #08061B 100%)'
+        }}
       >
-        {/* Ảnh nền sân trường mùa hoa phượng đỏ */}
-        <img
-          src={heroImgSrc}
-          onError={() =>
-            setHeroImgSrc(
-              'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2000&q=85'
-            )
-          }
-          alt="EduCampus Vietnamese Students Hero"
-          className="absolute inset-0 w-full h-full object-cover object-[center_22%] transition-transform duration-300 ease-out pointer-events-none"
-          style={{
-            transform: `scale(1.04) translate3d(${-mousePos.x * 0.45}px, ${Math.min(scrollY * 0.15, 60) - mousePos.y * 0.45}px, 0)`
-          }}
-        />
-
-        {/* Lớp phủ Gradient bên trái giúp chữ trắng sắc nét mà vẫn giữ sáng vùng ảnh sinh viên bên phải */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(8, 24, 54, 0.76) 0%, rgba(12, 32, 68, 0.45) 42%, rgba(12, 32, 68, 0.08) 76%, rgba(12, 32, 68, 0.14) 100%)'
-          }}
-        />
-
-        {/* Hiệu ứng cánh hoa phượng đỏ bay nhẹ */}
-        {FLOATING_PETALS.map((p) => (
+        {/* Phối cảnh tòa nhà UTH mờ ảo bên góc phải theo đúng thiết kế */}
+        <div className="pointer-events-none absolute right-0 top-16 bottom-28 w-[34%] hidden xl:flex flex-col items-end justify-center opacity-25 select-none">
           <div
-            key={p.id}
-            className="pointer-events-none absolute z-10"
+            className="w-80 h-96 rounded-l-3xl border-l border-t border-b border-purple-400/30 bg-gradient-to-br from-[#1E164B]/60 to-[#09071C]/90 p-6 flex flex-col justify-between shadow-2xl"
             style={{
-              top: p.top,
-              left: p.left,
-              width: `${p.size * 1.4}px`,
-              height: `${p.size * 0.8}px`,
-              background: 'linear-gradient(135deg, #FF5A36 0%, #E02424 70%, #9B1C1C 100%)',
-              borderRadius: '80% 15% 80% 20%',
-              boxShadow: '0 4px 12px rgba(224, 36, 36, 0.3)',
-              opacity: 0.85,
-              animation: `floatPetal ${p.duration} ease-in-out infinite`,
-              animationDelay: p.delay
-            }}
-          />
-        ))}
-
-        {/* Nội dung chính của Hero (Cân đối tỷ lệ trên màn hình Laptop & Desktop) */}
-        <div className="relative z-20 max-w-[1200px] w-full mx-auto px-5 sm:px-8 pt-24 sm:pt-28 pb-6 flex-1 flex flex-col justify-center">
-          <div
-            className="max-w-[490px] space-y-4 sm:space-y-5 transition-transform duration-300 ease-out"
-            style={{
-              transform: `translate3d(${mousePos.x * 0.25}px, ${mousePos.y * 0.25}px, 0)`
+              transform: 'perspective(900px) rotateY(-18deg) skewY(-4deg)'
             }}
           >
-            {/* Pill kính mờ */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#10233F]/60 backdrop-blur-md border border-white/40 text-white text-xs font-medium shadow-md">
-              <span className="relative flex h-2 w-2">
-                <span
-                  className="absolute inline-flex h-full w-full rounded-full bg-[#38BDF8]"
-                  style={{ animation: 'pulseRing 2s infinite' }}
+            <div className="px-4 py-1.5 rounded-lg bg-purple-500/20 border border-purple-300/40 w-fit text-2xl font-black tracking-widest text-purple-200 shadow-[0_0_20px_rgba(168,85,247,0.6)]">
+              UTH
+            </div>
+            <div className="grid grid-cols-3 gap-3 opacity-60">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 rounded bg-gradient-to-b from-purple-300/30 to-indigo-900/20 border border-purple-300/20"
                 />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#38BDF8]" />
-              </span>
-              <BookOpen className="w-3.5 h-3.5 text-sky-300" />
-              <span>Nền tảng học tập trực tuyến</span>
+              ))}
+            </div>
+            <div className="h-3 w-full rounded bg-purple-400/25" />
+          </div>
+        </div>
+
+        {/* Nội dung chính Hero: 2 Cột (Trái: Thông điệp đề tài | Phải: Khiên Bảo Vệ Xoay Tròn & 3 Node Công Nghệ) */}
+        <div className="relative z-20 max-w-[1280px] w-full mx-auto px-5 sm:px-8 py-6 lg:py-10 flex-1 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
+          
+          {/* CỘT TRÁI (6 CỘT): THÔNG ĐIỆP ĐỀ TÀI NCKH UTH-TRUSTID */}
+          <div className="lg:col-span-6 space-y-5">
+            {/* Huy hiệu Đề tài Nghiên cứu khoa học */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1C1244]/90 border border-purple-400/35 text-purple-200 text-xs sm:text-sm font-semibold shadow-[0_0_20px_rgba(139,92,246,0.25)]">
+              <GraduationCap className="w-4 h-4 text-[#C084FC]" />
+              <span>Đề tài Nghiên cứu khoa học</span>
             </div>
 
-            {/* Tiêu đề chính 2 dòng cân đối */}
-            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-white leading-[1.16] tracking-tight m-0 drop-shadow-[0_4px_18px_rgba(0,0,0,0.38)]">
-              Học tập chủ động,
-              <br />
-              kiến tạo tương lai
-            </h1>
+            {/* Tiêu đề lớn UTH-TrustID với vòng cung ánh sáng */}
+            <div className="relative inline-block">
+              <h1 className="text-4xl sm:text-6xl lg:text-[64px] font-black italic tracking-tight leading-none m-0">
+                <span className="text-white drop-shadow-[0_4px_24px_rgba(255,255,255,0.2)]">
+                  UTH-
+                </span>
+                <span className="bg-gradient-to-r from-[#C084FC] via-[#A855F7] to-[#6366F1] bg-clip-text text-transparent drop-shadow-[0_0_32px_rgba(168,85,247,0.55)]">
+                  TrustID
+                </span>
+              </h1>
+              {/* Vòng cung quỹ đạo ánh sáng bao quanh chữ TrustID */}
+              <svg
+                className="pointer-events-none absolute -right-7 -top-3 w-48 sm:w-64 h-20 sm:h-24 overflow-visible"
+                viewBox="0 0 260 90"
+                fill="none"
+              >
+                <path
+                  d="M10 68 C 95 88, 235 62, 248 22 C 254 5, 220 -4, 175 8"
+                  stroke="url(#titleArcGrad)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+                <circle cx="246" cy="24" r="3.5" fill="#E9D5FF" />
+                <circle cx="155" cy="74" r="2.2" fill="#38BDF8" />
+                <defs>
+                  <linearGradient id="titleArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(168,85,247,0)" />
+                    <stop offset="60%" stopColor="#C084FC" />
+                    <stop offset="100%" stopColor="#38BDF8" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
 
-            {/* Mô tả phụ */}
-            <p className="text-sm sm:text-[15px] text-white/95 leading-relaxed m-0 max-w-[430px] font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-              Khóa học đa dạng, tài liệu chất lượng và cộng đồng học sinh, sinh viên năng động.
+            {/* Tiêu đề phụ 2 dòng */}
+            <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-extrabold text-white leading-[1.24] tracking-tight m-0">
+              Định danh số phi tập trung và
+              <br />
+              xác thực hiện diện phòng học
+            </h2>
+
+            {/* Đoạn mô tả chuẩn học thuật */}
+            <p className="text-sm sm:text-[15px] text-slate-300/95 leading-relaxed m-0 max-w-[540px]">
+              Nghiên cứu, thiết kế và phát triển hệ thống định danh số theo chuẩn W3C DID, kết hợp WebAuthn và Merkle Tree, hướng tới môi trường học tập an toàn, minh bạch và không phụ thuộc vào bên trung gian.
             </p>
 
-            {/* Cụm nút CTA */}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            {/* Cụm 2 nút CTA: Khám phá giải pháp & Xem mã nguồn */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <button
                 type="button"
                 onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-                className="group relative overflow-hidden px-6 py-2.5 sm:py-3 rounded-full bg-[#1A6BFF] hover:bg-[#1558D6] text-white text-xs sm:text-sm font-bold border-none shadow-[0_10px_26px_rgba(26,107,255,0.5)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2"
+                className="group relative overflow-hidden px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:opacity-95 text-white text-sm font-bold border border-purple-300/45 shadow-[0_10px_32px_rgba(139,92,246,0.55)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2.5"
               >
                 <span
                   className="pointer-events-none absolute inset-y-0 w-12 bg-white/25 blur-xs"
-                  style={{ animation: 'shimmerSweep 3.5s infinite' }}
+                  style={{ animation: 'btnShine 3.4s infinite' }}
                 />
-                <span>Bắt đầu học ngay</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <span className="w-6 h-6 rounded-full bg-white text-[#6D28D9] flex items-center justify-center shadow-xs">
+                  <Play className="w-3 h-3 fill-current ml-0.5" />
+                </span>
+                <span>Khám phá giải pháp</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowIntroModal(true)}
-                className="px-5 py-2.5 sm:py-3 rounded-full bg-[#182639]/55 hover:bg-[#182639]/75 backdrop-blur-md text-white text-xs sm:text-sm font-semibold border border-white/45 cursor-pointer transition-all hover:scale-[1.02] inline-flex items-center gap-2 shadow-md"
+              <a
+                href={GITHUB_REPO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="px-6 py-3.5 rounded-2xl bg-[#110E2A]/85 hover:bg-[#1B1640] text-slate-100 text-sm font-semibold border border-purple-400/35 hover:border-purple-300/65 no-underline transition-all hover:scale-[1.02] inline-flex items-center gap-2.5 shadow-lg"
               >
-                <span className="w-5 h-5 rounded-full border border-white/80 flex items-center justify-center">
-                  <Play className="w-2.5 h-2.5 fill-white text-white ml-0.5" />
-                </span>
-                <span>Xem video giới thiệu</span>
-              </button>
+                <GitHubIcon className="w-4 h-4 text-white" />
+                <span>Xem mã nguồn</span>
+              </a>
+            </div>
+          </div>
+
+          {/* CỘT PHẢI (6 CỘT): KHIÊN BẢO VỆ TRUNG TÂM VỚI CHUYỂN ĐỘNG XOAY TRÒN 360° & 3 THẺ CÔNG NGHỆ */}
+          <div className="lg:col-span-6 relative flex items-center justify-center min-h-[440px] sm:min-h-[490px]">
+            
+            {/* Quầng sáng trung tâm sau Khiên */}
+            <div
+              className="pointer-events-none absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full blur-3xl opacity-55"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(168,85,247,0.55) 0%, rgba(56,189,248,0.28) 45%, transparent 72%)',
+                transform: `translate3d(${mousePos.x * 0.5}px, ${mousePos.y * 0.5}px, 0)`
+              }}
+            />
+
+            {/* VÒNG QUỸ ĐẠO XOAY TRÒN 1 (NGOÀI CÙNG - XOAY THUẬN CHIỀU KIM ĐỒNG HỒ 360°) */}
+            <div
+              className="pointer-events-none absolute w-[330px] h-[330px] sm:w-[400px] sm:h-[400px] rounded-full"
+              style={{ animation: 'orbitSpinClockwise 20s linear infinite' }}
+            >
+              <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                <circle
+                  cx="200"
+                  cy="200"
+                  r="186"
+                  stroke="url(#outerOrbitGrad)"
+                  strokeWidth="1.8"
+                  strokeDasharray="14 10 4 10"
+                />
+                {/* Các hạt năng lượng phát sáng xoay tròn trên quỹ đạo */}
+                <circle
+                  cx="200"
+                  cy="14"
+                  r="5"
+                  fill="#E9D5FF"
+                  style={{ filter: 'drop-shadow(0 0 10px #A855F7)' }}
+                />
+                <circle
+                  cx="386"
+                  cy="200"
+                  r="4.5"
+                  fill="#38BDF8"
+                  style={{ filter: 'drop-shadow(0 0 10px #38BDF8)' }}
+                />
+                <circle
+                  cx="200"
+                  cy="386"
+                  r="4"
+                  fill="#C084FC"
+                  style={{ filter: 'drop-shadow(0 0 8px #C084FC)' }}
+                />
+                <circle
+                  cx="14"
+                  cy="200"
+                  r="4.5"
+                  fill="#38BDF8"
+                  style={{ filter: 'drop-shadow(0 0 10px #38BDF8)' }}
+                />
+                <defs>
+                  <linearGradient id="outerOrbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#C084FC" stopOpacity="0.95" />
+                    <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.75" />
+                    <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.25" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            {/* VÒNG QUỸ ĐẠO XOAY TRÒN 2 (BÊN TRONG - XOAY NGƯỢC CHIỀU KIM ĐỒNG HỒ 360°) */}
+            <div
+              className="pointer-events-none absolute w-[250px] h-[250px] sm:w-[304px] sm:h-[304px] rounded-full"
+              style={{ animation: 'orbitSpinCounter 13s linear infinite' }}
+            >
+              <svg className="w-full h-full" viewBox="0 0 304 304" fill="none">
+                <circle
+                  cx="152"
+                  cy="152"
+                  r="140"
+                  stroke="url(#innerOrbitGrad)"
+                  strokeWidth="2.2"
+                  strokeDasharray="65 35 20 35"
+                  strokeLinecap="round"
+                />
+                <circle cx="152" cy="12" r="4" fill="#38BDF8" />
+                <circle cx="152" cy="292" r="4" fill="#E9D5FF" />
+                <defs>
+                  <linearGradient id="innerOrbitGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.9" />
+                    <stop offset="50%" stopColor="#A855F7" stopOpacity="0.65" />
+                    <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.15" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            {/* QUÉT RADAR XOAY TRÒN QUANH TÂM KHIÊN (360° CONIC RADAR SWEEP) */}
+            <div
+              className="pointer-events-none absolute w-[220px] h-[220px] sm:w-[268px] sm:h-[268px] rounded-full opacity-35"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, transparent 0deg, rgba(168, 85, 247, 0.45) 60deg, rgba(56, 189, 248, 0.65) 90deg, transparent 95deg)',
+                animation: 'radarSweepSpin 6s linear infinite'
+              }}
+            />
+
+            {/* ==================== KHIÊN BẢO VỆ 3D CHÍNH GIỮA & BỆ ĐẾ HOLOGRAM ==================== */}
+            <div className="relative z-20 flex flex-col items-center pt-6">
+              {/* Khiên 3D phát sáng có hiệu ứng nghiêng & xoay nhẹ */}
+              <div
+                onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                title="Bấm để truy cập Cổng xác thực UTH-TrustID"
+                className="relative cursor-pointer group"
+                style={{ animation: 'shieldFloatPulse 4.5s ease-in-out infinite' }}
+              >
+                {/* Vòng năng lượng xoay tròn sát viền Khiên */}
+                <div
+                  className="pointer-events-none absolute -inset-4 rounded-full border border-dashed border-sky-400/45"
+                  style={{ animation: 'orbitSpinClockwise 10s linear infinite' }}
+                />
+
+                <svg
+                  className="w-40 h-48 sm:w-48 sm:h-56 overflow-visible"
+                  viewBox="0 0 200 230"
+                  fill="none"
+                >
+                  <defs>
+                    <linearGradient id="shieldOuterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#E9D5FF" />
+                      <stop offset="35%" stopColor="#A855F7" />
+                      <stop offset="75%" stopColor="#4F46E5" />
+                      <stop offset="100%" stopColor="#38BDF8" />
+                    </linearGradient>
+                    <linearGradient id="shieldInnerGrad" x1="15%" y1="10%" x2="85%" y2="95%">
+                      <stop offset="0%" stopColor="#2A1B6E" stopOpacity="0.95" />
+                      <stop offset="55%" stopColor="#150D3A" stopOpacity="0.96" />
+                      <stop offset="100%" stopColor="#091534" stopOpacity="0.98" />
+                    </linearGradient>
+                    <linearGradient id="neonRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#38BDF8" />
+                      <stop offset="50%" stopColor="#C084FC" />
+                      <stop offset="100%" stopColor="#38BDF8" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Lớp bóng đổ 3D phía sau Khiên */}
+                  <path
+                    d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
+                    fill="url(#shieldOuterGrad)"
+                    opacity="0.35"
+                    transform="translate(6, 6)"
+                  />
+
+                  {/* Khung Khiên 3D chính */}
+                  <path
+                    d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
+                    fill="url(#shieldInnerGrad)"
+                    stroke="url(#shieldOuterGrad)"
+                    strokeWidth="4.5"
+                  />
+
+                  {/* Đường viền Neon bên trong Khiên */}
+                  <path
+                    d="M100 27 L163 54 V110 C163 155 135 186 100 202 C65 186 37 155 37 110 V54 L100 27 Z"
+                    fill="none"
+                    stroke="url(#neonRimGrad)"
+                    strokeWidth="2.2"
+                    opacity="0.9"
+                  />
+
+                  {/* Biểu tượng Sinh viên / Người dùng định danh ở chính giữa Khiên */}
+                  <circle
+                    cx="100"
+                    cy="94"
+                    r="20"
+                    fill="url(#shieldOuterGrad)"
+                    opacity="0.92"
+                  />
+                  <path
+                    d="M64 154 C64 133 79 122 100 122 C121 122 136 133 136 154"
+                    fill="url(#shieldOuterGrad)"
+                    opacity="0.88"
+                  />
+
+                  {/* Huy hiệu Khiên nhỏ có dấu tích xác thực ở góc dưới bên phải */}
+                  <g transform="translate(122, 134)">
+                    <path
+                      d="M28 4 L52 14 V35 C52 51 41 63 28 69 C15 63 4 51 4 35 V14 L28 4 Z"
+                      fill="#6D28D9"
+                      stroke="#E9D5FF"
+                      strokeWidth="3"
+                    />
+                    <path
+                      d="M18 36 L25 43 L39 27"
+                      stroke="#FFFFFF"
+                      strokeWidth="4.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </g>
+                </svg>
+              </div>
+
+              {/* Bệ Đế Hologram Phát Sáng Có Vòng Xoay 3D Dưới Chân Khiên */}
+              <div className="relative -mt-4 flex flex-col items-center">
+                {/* Cột sáng chiếu từ bệ lên khiên */}
+                <div
+                  className="pointer-events-none w-36 h-10 -mb-6 blur-md"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.45) 60%, rgba(168, 85, 247, 0.7) 100%)'
+                  }}
+                />
+                {/* Đĩa xoay 3D trên mặt bệ */}
+                <div className="relative w-52 sm:w-64 h-12 rounded-full bg-gradient-to-b from-[#231754] to-[#0C0826] border-2 border-purple-400/60 shadow-[0_0_40px_rgba(139,92,246,0.65)] flex items-center justify-center overflow-hidden">
+                  <div
+                    className="w-44 sm:w-56 h-7 rounded-full border border-dashed border-sky-300/80"
+                    style={{ animation: 'orbitSpinClockwise 8s linear infinite' }}
+                  />
+                  <div className="absolute inset-x-8 top-1.5 h-2 rounded-full bg-sky-400/50 blur-xs" />
+                </div>
+                <div
+                  className="w-64 sm:w-80 h-3 rounded-full bg-purple-500/35 blur-md -mt-1"
+                  style={{ animation: 'pedestalWave 3s ease-in-out infinite' }}
+                />
+              </div>
+            </div>
+
+            {/* ==================== 3 THẺ NODE CÔNG NGHỆ XUNG QUANH QUỸ ĐẠO KHIÊN ==================== */}
+            {/* Node 1 (Đỉnh Khiên): W3C DID */}
+            <div
+              onClick={() => scrollToSection('section-tech', 'TECH')}
+              style={{ animation: 'cardFloatGentle 4.2s ease-in-out infinite' }}
+              className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 z-30 px-4 py-2.5 rounded-2xl bg-[#16113A]/85 hover:bg-[#1F1852]/95 backdrop-blur-xl border border-purple-400/45 shadow-[0_12px_32px_rgba(10,6,34,0.75)] flex items-center gap-3 cursor-pointer transition-all hover:scale-105"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#4F46E5] border border-purple-300/45 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.5)] shrink-0">
+                <IdCard className="w-5 h-5 text-white" />
+              </div>
+              <div className="pr-1">
+                <div className="text-xs sm:text-sm font-extrabold text-white leading-tight">
+                  W3C DID
+                </div>
+                <div className="text-[11px] text-slate-300 whitespace-nowrap">
+                  Định danh phi tập trung
+                </div>
+              </div>
+            </div>
+
+            {/* Node 2 (Bên Trái Khiên): WebAuthn */}
+            <div
+              onClick={() => scrollToSection('section-tech', 'TECH')}
+              style={{
+                animation: 'cardFloatGentle 4.8s ease-in-out infinite',
+                animationDelay: '0.8s'
+              }}
+              className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-30 px-4 py-2.5 rounded-2xl bg-[#16113A]/85 hover:bg-[#1F1852]/95 backdrop-blur-xl border border-purple-400/45 shadow-[0_12px_32px_rgba(10,6,34,0.75)] flex items-center gap-3 cursor-pointer transition-all hover:scale-105"
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#38BDF8] border border-sky-300/50 flex items-center justify-center shadow-[0_0_18px_rgba(56,189,248,0.5)] shrink-0">
+                <Fingerprint className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-extrabold text-white leading-tight">
+                  WebAuthn
+                </div>
+                <div className="text-[11px] text-slate-300 leading-tight">
+                  Xác thực an toàn,
+                  <br />
+                  không mật khẩu
+                </div>
+              </div>
+            </div>
+
+            {/* Node 3 (Bên Phải Khiên): Merkle Tree */}
+            <div
+              onClick={() => scrollToSection('section-tech', 'TECH')}
+              style={{
+                animation: 'cardFloatGentle 4.5s ease-in-out infinite',
+                animationDelay: '1.5s'
+              }}
+              className="absolute right-0 sm:right-2 top-[54%] -translate-y-1/2 z-30 px-4 py-2.5 rounded-2xl bg-[#16113A]/85 hover:bg-[#1F1852]/95 backdrop-blur-xl border border-purple-400/45 shadow-[0_12px_32px_rgba(10,6,34,0.75)] flex items-center gap-3 cursor-pointer transition-all hover:scale-105"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#6366F1] border border-purple-300/45 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.5)] shrink-0">
+                <GitBranch className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-extrabold text-white leading-tight">
+                  Merkle Tree
+                </div>
+                <div className="text-[11px] text-slate-300 leading-tight">
+                  Xác minh dữ liệu
+                  <br />
+                  nhanh và minh bạch
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ==================== DẢI 3 TÍNH NĂNG KÍNH MỜ NẰM GỌN TRONG CHÂN HERO ==================== */}
-        <div className="relative z-20 w-full bg-gradient-to-b from-white/78 via-white/92 to-[#F4F7FC] backdrop-blur-xl border-t border-white/70">
-          <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-4 sm:py-5 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-300/75">
-            {[
-              {
-                icon: <GraduationCap className="w-5 h-5 text-[#1A6BFF]" />,
-                title: 'Khóa học đa dạng',
-                desc: 'Từ THPT, đại học đến kỹ năng mềm',
-                target: 'section-features',
-                nav: 'FEATURES'
-              },
-              {
-                icon: <BookOpen className="w-5 h-5 text-[#1A6BFF]" />,
-                title: 'Tài liệu phong phú',
-                desc: 'Bài giảng, đề thi, ghi chú',
-                target: 'section-workflow',
-                nav: 'DOCS'
-              },
-              {
-                icon: <Users className="w-5 h-5 text-[#1A6BFF]" />,
-                title: 'Cộng đồng học tập',
-                desc: 'Trao đổi, hỗ trợ, cùng tiến bộ',
-                target: 'section-community',
-                nav: 'COMMUNITY'
-              }
-            ].map((feat) => (
+        {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI Ở CHÂN HERO (THEO ĐÚNG MẪU ẢNH) ==================== */}
+        <div className="relative z-20 w-full bg-[#090720]/90 backdrop-blur-xl border-t border-purple-500/25 shadow-[0_-10px_40px_rgba(7,6,24,0.8)]">
+          <div className="max-w-[1280px] mx-auto px-5 sm:px-8 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/15">
+            {BOTTOM_HIGHLIGHTS.map((item) => (
               <div
-                key={feat.title}
-                onClick={() => scrollToSection(feat.target, feat.nav)}
-                className="flex items-center gap-3.5 py-2.5 md:py-1 md:px-6 first:md:pl-0 last:md:pr-0 cursor-pointer group transition-transform duration-300 hover:-translate-y-0.5"
+                key={item.id}
+                onClick={() => scrollToSection('section-topic', 'TOPIC')}
+                className="flex items-start gap-3.5 py-3 lg:py-1 lg:px-6 first:lg:pl-0 last:lg:pr-0 cursor-pointer group transition-transform duration-300 hover:-translate-y-0.5"
               >
-                <div className="w-11 h-11 rounded-full bg-white shadow-[0_4px_14px_rgba(26,107,255,0.15)] border border-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-[#1A6BFF] group-hover:text-white transition-all duration-300">
-                  {feat.icon}
+                <div className="w-11 h-11 rounded-2xl bg-[#161138] border border-purple-400/30 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(168,85,247,0.2)] group-hover:border-purple-400 group-hover:scale-105 transition-all">
+                  {item.icon}
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-[15px] font-extrabold text-slate-900 m-0 group-hover:text-[#1A6BFF] transition-colors">
-                    {feat.title}
+                  <h3 className="text-sm sm:text-[15px] font-extrabold text-white m-0 group-hover:text-[#C084FC] transition-colors">
+                    {item.title}
                   </h3>
-                  <p className="text-xs text-slate-600 m-0 mt-0.5 font-medium">
-                    {feat.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== SECTION 2: 4 TRỤ CỘT NỀN TẢNG EDUCAMPUS (CUỘN MƯỢT & CÂN ĐỐI) ==================== */}
-      <section
-        id="section-features"
-        data-section-id="features"
-        className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-10 pb-10"
-      >
-        <div
-          className={`flex flex-col md:flex-row md:items-end justify-between gap-4 mb-7 transition-all duration-700 ${
-            visibleSections.features ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-          }`}
-        >
-          <div className="space-y-1.5 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 text-[#1A6BFF] text-[11px] font-extrabold tracking-wide uppercase">
-              <Sparkles className="w-3 h-3" />
-              Giải pháp học tập &amp; quản lý đào tạo số
-            </span>
-            <h2 className="text-xl sm:text-2xl lg:text-[28px] font-extrabold text-slate-900 m-0 tracking-tight">
-              Không gian học tập trực tuyến toàn diện cho sinh viên &amp; giảng viên
-            </h2>
-          </div>
-
-          <p className="text-xs sm:text-sm text-slate-600 m-0 max-w-md leading-relaxed">
-            Kết nối liền mạch giữa quản lý lớp học phần, chia sẻ học liệu số, điểm danh thông minh và theo dõi lộ trình học tập.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-          {CORE_PILLARS.map((card, index) => (
-            <div
-              key={card.id}
-              style={{ transitionDelay: `${index * 90}ms` }}
-              className={`group relative overflow-hidden rounded-2xl bg-white p-5 sm:p-6 border border-slate-200/85 shadow-[0_8px_28px_rgba(15,23,42,0.04)] hover:shadow-[0_16px_38px_rgba(26,107,255,0.12)] hover:-translate-y-1 transition-all duration-500 flex flex-col justify-between gap-4 ${
-                visibleSections.features
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-8'
-              }`}
-            >
-              <div
-                className={`pointer-events-none absolute -right-10 -top-10 w-36 h-36 rounded-full bg-gradient-to-br ${card.accent} blur-2xl opacity-80 group-hover:scale-125 transition-transform duration-500`}
-              />
-
-              <div className="relative z-10 space-y-2.5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
-                    {card.icon}
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold tracking-wider">
-                    {card.badge}
-                  </span>
-                </div>
-
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 m-0 group-hover:text-[#1A6BFF] transition-colors">
-                  {card.title}
-                </h3>
-
-                <p className="text-xs sm:text-[13.5px] text-slate-600 leading-relaxed m-0">
-                  {card.desc}
-                </p>
-              </div>
-
-              <div className="relative z-10 pt-3 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  {card.metric}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-                  className="text-xs font-extrabold text-[#1A6BFF] hover:text-blue-800 bg-transparent border-none cursor-pointer inline-flex items-center gap-1 p-0"
-                >
-                  <span>Truy cập ngay</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ==================== SECTION 3: QUY TRÌNH 3 BƯỚC & SỐ LIỆU HỆ THỐNG ==================== */}
-      <section
-        id="section-workflow"
-        data-section-id="workflow"
-        className="max-w-[1200px] mx-auto px-5 sm:px-8 py-6"
-      >
-        <div
-          className={`rounded-3xl bg-gradient-to-br from-[#081F49] via-[#0C2B64] to-[#0F387E] text-white p-6 sm:p-8 lg:p-10 shadow-[0_20px_50px_rgba(8,31,73,0.22)] relative overflow-hidden transition-all duration-700 ${
-            visibleSections.workflow ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-7">
-            <div className="space-y-1.5 max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 border border-white/25 text-sky-200 text-[11px] font-bold">
-                <Layers className="w-3.5 h-3.5" />
-                QUY TRÌNH HỌC TẬP &amp; ĐIỂM DANH SỐ
-              </span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white m-0">
-                Kết nối giảng đường thông minh chỉ với 3 bước
-              </h2>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs text-sky-100 font-semibold">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/15">
-                <Users className="w-3.5 h-3.5 text-sky-300" />
-                15.000+ Sinh viên &amp; Giảng viên
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/15">
-                <Globe className="w-3.5 h-3.5 text-emerald-300" />
-                Đồng bộ 24/7
-              </span>
-            </div>
-          </div>
-
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-            {WORKFLOW_STEPS.map((item, idx) => (
-              <div
-                key={item.step}
-                style={{ transitionDelay: `${idx * 110}ms` }}
-                className={`rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-5 hover:bg-white/15 transition-all duration-500 hover:-translate-y-1 flex flex-col justify-between gap-3 ${
-                  visibleSections.workflow
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-6'
-                }`}
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`w-9 h-9 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-sm`}
-                    >
-                      {item.icon}
-                    </span>
-                    <span className="text-[11px] font-mono font-extrabold px-2 py-0.5 rounded-md bg-white/10 text-sky-200 border border-white/15">
-                      BƯỚC {item.step}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-extrabold text-white m-0">{item.title}</h3>
-                  <p className="text-xs text-blue-100/90 leading-relaxed m-0">
+                  <p className="text-xs text-slate-300/90 m-0 mt-1 leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -601,31 +714,104 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
         </div>
       </section>
 
-      {/* ==================== SECTION 4: CỘNG ĐỒNG & BANNER ĐĂNG NHẬP GỌN GÀNG ==================== */}
+      {/* ==================== SECTION 2: ĐỀ TÀI & GIẢI PHÁP CÔNG NGHỆ (SCROLL-REVEAL) ==================== */}
       <section
-        id="section-community"
-        data-section-id="community"
-        className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-4 pb-12"
+        id="section-topic"
+        data-section-id="topic"
+        className="max-w-[1280px] mx-auto px-5 sm:px-8 py-14"
       >
         <div
-          className={`bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/85 shadow-[0_12px_36px_rgba(15,23,42,0.05)] flex flex-col lg:flex-row items-center justify-between gap-6 transition-all duration-700 ${
-            visibleSections.community ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          className={`flex flex-col md:flex-row md:items-end justify-between gap-4 mb-9 transition-all duration-700 ${
+            visibleSections.topic ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <div className="space-y-1.5 max-w-xl text-center lg:text-left">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1A6BFF] text-[11px] font-extrabold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>CỔNG HỌC TẬP &amp; ĐIỂM DANH SỐ EDUCAMPUS</span>
+          <div className="space-y-2 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/35 text-purple-300 text-[11px] font-extrabold tracking-wider uppercase">
+              <Sparkles className="w-3.5 h-3.5" />
+              Kiến trúc đề tài &amp; giải pháp
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white m-0 tracking-tight">
+              Giải pháp xác thực hiện diện đa lớp Zero-Trust
+            </h2>
+          </div>
+
+          <p className="text-xs sm:text-sm text-slate-300 m-0 max-w-md leading-relaxed">
+            Giải quyết triệt để bài toán điểm danh hộ và rò rỉ dữ liệu cá nhân thông qua mật mã học khóa công khai và cấu trúc cây băm Merkle.
+          </p>
+        </div>
+
+        <div id="section-tech" className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {SOLUTION_PILLARS.map((card, idx) => (
+            <div
+              key={card.id}
+              style={{ transitionDelay: `${idx * 100}ms` }}
+              className={`group rounded-3xl bg-[#100C2A]/90 hover:bg-[#161138] border border-purple-500/25 hover:border-purple-400/60 p-6 shadow-[0_14px_38px_rgba(4,3,16,0.65)] transition-all duration-500 hover:-translate-y-1 flex flex-col justify-between gap-4 ${
+                visibleSections.topic ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+              }`}
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="w-11 h-11 rounded-2xl bg-[#1C1548] border border-purple-400/35 flex items-center justify-center shadow-md">
+                    {card.icon}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-200 text-[10.5px] font-mono font-bold">
+                    {card.badge}
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-extrabold text-white m-0 group-hover:text-[#C084FC] transition-colors">
+                  {card.title}
+                </h3>
+
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed m-0">
+                  {card.desc}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-purple-500/15 flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-300 inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  {card.metric}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                  className="text-xs font-extrabold text-[#C084FC] hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1 p-0"
+                >
+                  <span>Trải nghiệm ngay</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
             </div>
-            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 m-0">
-              Sẵn sàng truy cập vào hệ thống học tập trực tuyến?
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== SECTION 3: KẾT QUẢ THỰC NGHIỆM & TRẢI NGHIỆM HỆ THỐNG ==================== */}
+      <section
+        id="section-results"
+        data-section-id="results"
+        className="max-w-[1280px] mx-auto px-5 sm:px-8 pb-16"
+      >
+        <div
+          className={`rounded-3xl bg-gradient-to-r from-[#181042] via-[#22155B] to-[#15133C] border border-purple-400/35 p-7 sm:p-10 shadow-[0_24px_60px_rgba(8,5,28,0.8)] flex flex-col lg:flex-row items-center justify-between gap-6 transition-all duration-700 ${
+            visibleSections.results ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-300/35 text-purple-200 text-xs font-bold">
+              <Cpu className="w-3.5 h-3.5" />
+              <span>HỆ THỐNG DEMO THỰC NGHIỆM UTH-TRUSTID</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-white m-0">
+              Sẵn sàng kiểm thử hệ thống định danh số &amp; điểm danh phòng học?
             </h3>
-            <p className="text-xs sm:text-sm text-slate-600 m-0 leading-relaxed">
-              Đăng nhập để quản lý lớp học phần, tra cứu tài liệu bài giảng và theo dõi tiến độ chuyên cần theo thời gian thực.
+            <p className="text-xs sm:text-sm text-slate-300 m-0 leading-relaxed">
+              Truy cập trực tiếp vào Cổng Giảng viên để phát mã QR Nonce động hoặc Cổng Quản trị để cấp phát lô thẻ sinh viên trên cây Merkle.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() =>
@@ -633,9 +819,9 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
                   ? onQuickDemoLogin('giangvien@uth.edu.vn')
                   : onOpenLogin && onOpenLogin('FACULTY')
               }
-              className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 cursor-pointer transition-all"
+              className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-purple-300/35 text-white text-xs sm:text-sm font-bold cursor-pointer transition-all"
             >
-              Vào nhanh: Giảng viên
+              Demo nhanh: Giảng viên
             </button>
             <button
               type="button"
@@ -644,62 +830,62 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
                   ? onQuickDemoLogin('admin@uth.edu.vn')
                   : onOpenLogin && onOpenLogin('ADMIN')
               }
-              className="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200 cursor-pointer transition-all"
+              className="px-4 py-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 text-xs sm:text-sm font-bold cursor-pointer transition-all"
             >
-              Vào nhanh: Quản trị
+              Demo nhanh: Quản trị
             </button>
             <button
               type="button"
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="px-6 py-2.5 rounded-full bg-[#1A6BFF] hover:bg-[#1557D8] text-white text-xs sm:text-sm font-extrabold border-none shadow-[0_8px_22px_rgba(26,107,255,0.38)] cursor-pointer transition-all hover:scale-[1.02] inline-flex items-center gap-1.5"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:opacity-95 text-white text-xs sm:text-sm font-extrabold border border-purple-300/40 shadow-[0_10px_28px_rgba(139,92,246,0.5)] cursor-pointer transition-all inline-flex items-center gap-2"
             >
-              <span>Đăng nhập ngay</span>
+              <span>Dùng thử hệ thống</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       </section>
 
-      {/* ==================== MODAL XEM GIỚI THIỆU HỆ THỐNG ==================== */}
+      {/* ==================== MODAL XEM GIỚI THIỆU ==================== */}
       {showIntroModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-[fadeIn_0.2s_ease-out]">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#120E2E] rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-purple-400/40 space-y-4 text-white">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#1A6BFF] text-white flex items-center justify-center shadow-sm">
-                  <GraduationCap className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A855F7] to-[#6366F1] text-white flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-slate-900 m-0">
-                    Giới thiệu nền tảng EduCampus
+                  <h3 className="text-base font-extrabold text-white m-0">
+                    Đề tài NCKH UTH-TrustID
                   </h3>
-                  <p className="text-xs text-slate-500 m-0">
-                    Hệ thống học tập trực tuyến &amp; quản lý chuyên cần thông minh
+                  <p className="text-xs text-purple-300 m-0">
+                    Định danh số phi tập trung &amp; xác thực hiện diện phòng học
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowIntroModal(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 border-none cursor-pointer"
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 border-none cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <div className="space-y-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
               <p className="m-0">
-                <strong>EduCampus</strong> mang đến môi trường học tập số hóa đồng bộ cho sinh viên và giảng viên:
+                Hệ thống kết hợp 3 trụ cột công nghệ bảo mật hiện đại:
               </p>
               <ul className="space-y-1.5 pl-5 m-0">
                 <li>
-                  <strong>Quản lý khóa học &amp; học liệu:</strong> Tổ chức bài giảng, đề cương và tài liệu ôn tập trực quan theo từng môn học.
+                  <strong className="text-white">W3C DID:</strong> Định danh số tự chủ cho sinh viên và giảng viên.
                 </li>
                 <li>
-                  <strong>Điểm danh QR động &amp; Định danh số:</strong> Xác thực chuyên cần nhanh chóng tại lớp học, chống điểm danh hộ.
+                  <strong className="text-white">WebAuthn / FIDO2:</strong> Xác thực khóa công khai không mật khẩu gắn với phần cứng thiết bị.
                 </li>
                 <li>
-                  <strong>Theo dõi tiến độ thời gian thực:</strong> Thống kê tỷ lệ tham gia lớp học và xuất báo cáo học vụ tự động.
+                  <strong className="text-white">Merkle Tree:</strong> Xác minh chứng chỉ học vụ nhanh O(log N) và minh bạch dữ liệu.
                 </li>
               </ul>
             </div>
@@ -708,7 +894,7 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
               <button
                 type="button"
                 onClick={() => setShowIntroModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border-none cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-bold border-none cursor-pointer"
               >
                 Đóng
               </button>
@@ -718,9 +904,9 @@ export default function LandingPage({ onOpenLogin, onQuickDemoLogin }) {
                   setShowIntroModal(false);
                   if (onOpenLogin) onOpenLogin('FACULTY');
                 }}
-                className="px-4 py-2 rounded-xl bg-[#1A6BFF] hover:bg-[#1557D8] text-white text-xs font-extrabold border-none cursor-pointer inline-flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs font-extrabold border-none cursor-pointer inline-flex items-center gap-1.5"
               >
-                <span>Đi tới Đăng nhập</span>
+                <span>Dùng thử hệ thống</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
