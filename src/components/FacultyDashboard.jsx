@@ -2242,30 +2242,23 @@ export default function FacultyDashboard({
           }
         `}</style>
 
-        {/* Phối cảnh Tòa nhà Đại học UTH bên góc trái theo đúng mẫu ảnh */}
-        <div className="pointer-events-none absolute left-0 top-14 bottom-20 w-[34%] hidden lg:flex flex-col items-start justify-center opacity-40 select-none">
+        {/* Ảnh thật Tòa nhà Đại học Giao thông Vận tải TP.HCM (UTH) bên góc trái màn hình Đăng nhập */}
+        <div className="pointer-events-none absolute left-0 top-14 bottom-20 w-[34%] hidden lg:flex flex-col items-start justify-center opacity-45 select-none">
           <div
-            className="w-[380px] xl:w-[430px] h-[430px] rounded-r-3xl border-r border-t border-b border-purple-400/35 bg-gradient-to-bl from-[#221954]/80 via-[#151039]/85 to-[#08061A]/95 p-8 flex flex-col justify-between shadow-2xl"
+            className="relative w-[380px] xl:w-[430px] h-[430px] rounded-r-3xl border-r border-t border-b border-purple-400/40 overflow-hidden shadow-2xl"
             style={{
-              transform: 'perspective(950px) rotateY(18deg) skewY(3deg)'
+              transform: 'perspective(950px) rotateY(14deg) skewY(2deg)'
             }}
           >
-            <div className="self-end px-5 py-2 rounded-xl bg-purple-500/25 border border-purple-300/50 text-3xl xl:text-4xl font-black tracking-widest text-white shadow-[0_0_28px_rgba(168,85,247,0.8)]">
-              UTH
+            <img
+              src="/uth-campus-banner.jpg"
+              alt="UTH Campus"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070618] via-[#150E3A]/55 to-[#150E3A]/25" />
+            <div className="absolute top-5 right-5 px-3.5 py-2 rounded-xl bg-[#0D0A24]/85 border border-purple-300/40">
+              <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain" />
             </div>
-            <div className="grid grid-cols-4 gap-3 opacity-80">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-14 rounded-md border ${
-                    i % 3 === 0
-                      ? 'bg-gradient-to-b from-amber-200/35 to-purple-500/20 border-amber-200/35'
-                      : 'bg-gradient-to-b from-purple-300/30 to-indigo-900/25 border-purple-300/25'
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="h-4 w-full rounded bg-purple-400/30" />
           </div>
         </div>
 

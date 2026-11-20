@@ -9,8 +9,63 @@ import {
   Zap,
   Fingerprint,
   IdCard,
-  GitBranch
+  GitBranch,
+  CheckCircle2,
+  X
 } from 'lucide-react';
+
+const NAV_SECTION_MODALS = {
+  TOPIC: {
+    badge: 'ĐỀ TÀI NGHIÊN CỨU KHOA HỌC',
+    title: 'Định danh số phi tập trung & Xác thực hiện diện phòng học',
+    desc: 'Giải quyết triệt để bài toán giả mạo danh tính, điểm danh hộ, chia sẻ ảnh chụp mã QR và rủi ro lộ lọt cơ sở dữ liệu tập trung trong môi trường đại học.',
+    points: [
+      'Trao quyền tự chủ danh tính (Self-Sovereign Identity) cho sinh viên trên thiết bị cá nhân theo chuẩn W3C DID Core 1.0.',
+      'Loại bỏ hoàn toàn mật khẩu truyền thống bằng khóa phần cứng WebAuthn / FIDO2 (Face ID, Touch ID, Windows Hello).',
+      'Xác thực hiện diện đa nhân tố: QR Nonce xoay tự động + Định vị Geofencing Haversine (R ≤ 35m) + Chữ ký số EIP-191.'
+    ]
+  },
+  SOLUTION: {
+    badge: 'KIẾN TRÚC GIẢI PHÁP 3 TẦNG',
+    title: 'Mô hình Tam giác Tin cậy: Issuer – Holder – Verifier',
+    desc: 'Hệ sinh thái UTH-TrustID vận hành độc lập giữa 3 phân hệ được đồng bộ thời gian thực qua WebSocket và Smart Contract:',
+    points: [
+      '1. Nhà trường / Cổng Quản trị (Issuer): Phát hành chứng chỉ số W3C VC theo lô bằng cây băm Merkle Tree và thu hồi khóa O(1) trên chuỗi.',
+      '2. Ví Định danh Sinh viên (Holder Node - Port 5173): Lưu trữ khóa riêng tư bọc AES-GCM 256-bit (PBKDF2 100.000 vòng), hỗ trợ điểm danh Offline & tiết lộ chọn lọc ZKP-Lite.',
+      '3. Cổng Điều hành Giảng viên (Verifier - Port 5174): Phát mã QR động, giám sát bản đồ GPS Radar, hậu kiểm Spot-Check 60s và chặn gian lận SOC IDS.'
+    ]
+  },
+  TECH: {
+    badge: 'NỀN TẢNG CÔNG NGHỆ CỐT LÕI',
+    title: 'Kết hợp W3C DID • WebAuthn FIDO2 • Keccak256 Merkle Tree',
+    desc: 'Ba trụ cột mật mã học đảm bảo tính toàn vẹn, chống chối bỏ và tối ưu chi phí vận hành trên Blockchain:',
+    points: [
+      'W3C DID & Verifiable Credentials: Định danh chuẩn did:uth:secp256k1 tương thích chuẩn quốc tế W3C.',
+      'WebAuthn / Passkey & Device Fingerprint: Khóa gắn chặt với phần cứng TPM / Secure Enclave, ngăn chặn 1 thiết bị điểm danh cho 2 MSSV.',
+      'Merkle Tree Batching: Gom hàng ngàn bản ghi điểm danh và chứng chỉ thành 1 Merkle Root duy nhất (32 bytes) neo lên Smart Contract.'
+    ]
+  },
+  RESULTS: {
+    badge: 'KẾT QUẢ THỰC NGHIỆM & ĐÁNH GIÁ',
+    title: 'Hiệu năng vượt trội & Phòng vệ 100% trước 4 kịch bản tấn công',
+    desc: 'Kết quả đo kiểm thực tế trên hệ thống UTH-TrustID với quy mô 12.548 định danh và 26.937 chứng chỉ số:',
+    points: [
+      'Tiết kiệm 96,4% chi phí Gas lưu trữ On-Chain nhờ cơ chế neo lô Merkle Root so với ghi từng chứng chỉ rời rạc.',
+      'Độ trễ xác minh nhánh Merkle Proof O(log₂ N) dưới 2 ms; thu hồi khóa thiết bị bị mất độ phức tạp O(1) tức thời.',
+      'Hệ thống SOC IDS tự động chặn 100% (HTTP 403): Quét lại QR cũ (Replay Attack), Giả mạo chữ ký, Điểm danh hộ 1 máy 2 SV và Fake GPS.'
+    ]
+  },
+  TEAM: {
+    badge: 'ĐỘI NGŨ NGHIÊN CỨU & PHÁT TRIỂN',
+    title: 'Trường Đại học Giao thông Vận tải TP.HCM (UTH)',
+    desc: 'Đề tài Nghiên cứu Khoa học cấp Trường thuộc Khoa Công nghệ Thông tin – Chuyên ngành An toàn Thông tin & Khoa học Dữ liệu:',
+    points: [
+      'Đơn vị chủ trì: Khoa Công nghệ Thông tin – Trường Đại học Giao thông Vận tải TP.HCM (UTH).',
+      'Giảng viên hướng dẫn & Cổng Giảng viên: TS. Nguyễn Thị Mai / ThS. Nguyễn Thị Hiên.',
+      'Nhóm sinh viên thực hiện: Nguyễn Đức Hiển (MSSV: 2251120000) cùng cộng sự nhóm NCKH UTH-TrustID.'
+    ]
+  }
+};
 
 const GITHUB_REPO_URL = 'https://github.com/hien-cybers/UTH-TrustID';
 
@@ -88,26 +143,23 @@ export default function LandingPage({ onOpenLogin }) {
         }
       `}</style>
 
-      {/* Phối cảnh tòa nhà UTH mờ ảo bên góc phải */}
-      <div className="pointer-events-none absolute right-0 top-20 bottom-28 w-[32%] hidden xl:flex flex-col items-end justify-center opacity-25 select-none">
+      {/* Ảnh thật Tòa nhà Trường Đại học Giao thông Vận tải TP.HCM (UTH) mờ nghệ thuật bên góc phải */}
+      <div className="pointer-events-none absolute right-0 top-20 bottom-28 w-[34%] hidden xl:flex flex-col items-end justify-center opacity-35 select-none">
         <div
-          className="w-96 h-[440px] rounded-l-3xl border-l border-t border-b border-purple-400/35 bg-gradient-to-br from-[#1E164B]/65 to-[#09071C]/90 p-8 flex flex-col justify-between shadow-2xl"
+          className="relative w-96 h-[430px] rounded-l-3xl border-l border-t border-b border-purple-400/40 overflow-hidden shadow-2xl"
           style={{
-            transform: 'perspective(900px) rotateY(-18deg) skewY(-4deg)'
+            transform: 'perspective(900px) rotateY(-14deg) skewY(-2deg)'
           }}
         >
-          <div className="px-5 py-2 rounded-xl bg-purple-500/20 border border-purple-300/45 w-fit text-3xl font-black tracking-widest text-purple-200 shadow-[0_0_24px_rgba(168,85,247,0.65)]">
-            UTH
+          <img
+            src="/uth-campus-banner.jpg"
+            alt="UTH Campus"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#070618] via-[#150E3A]/55 to-[#150E3A]/30" />
+          <div className="absolute top-5 left-5 px-3.5 py-2 rounded-xl bg-[#0D0A24]/85 border border-purple-300/40">
+            <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain" />
           </div>
-          <div className="grid grid-cols-3 gap-3.5 opacity-60">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-12 rounded-md bg-gradient-to-b from-purple-300/30 to-indigo-900/20 border border-purple-300/20"
-              />
-            ))}
-          </div>
-          <div className="h-3.5 w-full rounded bg-purple-400/25" />
         </div>
       </div>
 
@@ -177,12 +229,8 @@ export default function LandingPage({ onOpenLogin }) {
             <button
               type="button"
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="group relative overflow-hidden px-6 lg:px-7 py-2.5 lg:py-3 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:opacity-95 text-white text-sm lg:text-base font-bold border border-purple-300/45 shadow-[0_0_28px_rgba(139,92,246,0.6)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2.5"
+              className="group relative overflow-hidden px-6 lg:px-7 py-2.5 lg:py-3 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:brightness-110 text-white text-sm lg:text-base font-bold border border-purple-300/45 shadow-[0_0_24px_rgba(139,92,246,0.5)] cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2.5"
             >
-              <span
-                className="pointer-events-none absolute inset-y-0 w-12 bg-white/25 blur-xs"
-                style={{ animation: 'btnShine 3.2s infinite' }}
-              />
               <span>Dùng thử hệ thống</span>
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </button>
@@ -559,6 +607,97 @@ export default function LandingPage({ onOpenLogin }) {
           ))}
         </div>
       </footer>
+      {/* ==================== MODAL NỘI DUNG HỌC THUẬT KHI BẤM CÁC MỤC NAVBAR (ĐỀ TÀI / GIẢI PHÁP / CÔNG NGHỆ / KẾT QUẢ / ĐỘI NGŨ) ==================== */}
+      {activeNav !== 'HOME' && NAV_SECTION_MODALS[activeNav] && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveNav('HOME');
+          }}
+          className="uth-modal-backdrop fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+        >
+          <div className="uth-modal-panel w-full max-w-2xl rounded-3xl bg-[#120E2E] border border-purple-400/45 p-6 sm:p-8 shadow-2xl space-y-5 text-white">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="space-y-1.5">
+                <span className="inline-block px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold tracking-wider">
+                  {NAV_SECTION_MODALS[activeNav].badge}
+                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-white m-0">
+                  {NAV_SECTION_MODALS[activeNav].title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveNav('HOME')}
+                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl p-2 border-none cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm sm:text-base text-slate-200 leading-relaxed m-0">
+              {NAV_SECTION_MODALS[activeNav].desc}
+            </p>
+
+            <div className="space-y-3">
+              {NAV_SECTION_MODALS[activeNav].points.map((pt, i) => (
+                <div
+                  key={i}
+                  className="p-3.5 rounded-2xl bg-[#1A1440] border border-purple-400/25 flex items-start gap-3 text-sm sm:text-[15px] text-slate-100 leading-relaxed"
+                >
+                  <CheckCircle2 className="w-5 h-5 text-[#C084FC] shrink-0 mt-0.5" />
+                  <span>{pt}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/10">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'TOPIC', label: 'Đề tài' },
+                  { id: 'SOLUTION', label: 'Giải pháp' },
+                  { id: 'TECH', label: 'Công nghệ' },
+                  { id: 'RESULTS', label: 'Kết quả' },
+                  { id: 'TEAM', label: 'Đội ngũ' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveNav(tab.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border cursor-pointer ${
+                      activeNav === tab.id
+                        ? 'bg-[#7C3AED] text-white border-purple-300'
+                        : 'bg-[#19133C] text-slate-300 border-purple-500/25 hover:text-white'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveNav('HOME')}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs sm:text-sm font-semibold border-none cursor-pointer"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveNav('HOME');
+                    if (onOpenLogin) onOpenLogin('FACULTY');
+                  }}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <span>Dùng thử hệ thống</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

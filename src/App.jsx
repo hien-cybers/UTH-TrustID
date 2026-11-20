@@ -9,7 +9,6 @@ import StudentWalletPro from './pages/StudentWalletPro';
 import ScanPage from './pages/ScanPage';
 import ServicePortal from './pages/ServicePortal';
 import MobileNavigation from './components/MobileNavigation';
-import UthTrustLogo from './components/UthTrustLogo';
 import LiveClock from './components/LiveClock';
 import StudentAuthEnrollment from './components/StudentAuthEnrollment';
 import FaceIDModal from './components/FaceIDModal';
@@ -585,40 +584,59 @@ export default function App() {
       {/* Khung Smartphone 430px Cố Định Chính Giữa + Tự Động Tụt Dưới Tai Thỏ / Dynamic Island (--sat) */}
       <div className="mobile-viewport mobile-app-root bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         
-        {/* Top Header Chuẩn Native iOS / Android (Đồng bộ Mint-Cyan & Bo góc mềm mại) */}
-        <header className="bg-[#071120]/95 border-b border-teal-400/20 transition-colors duration-200" style={{
-          flexShrink: 0,
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          padding: '11px 15px',
-          width: '100%'
-        }}>
+        {/* Top Header Chuẩn Native iOS / Android (Đồng bộ UTH Royal Navy & Zero-Blur 60fps) */}
+        <header
+          className="border-b border-[#1ECAD3]/25 transition-colors duration-200"
+          style={{
+            flexShrink: 0,
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            background: 'linear-gradient(135deg, #16345E 0%, #0F2547 100%)',
+            padding: '10px 14px',
+            width: '100%'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
             
-            {/* Logo Thương Hiệu UTH-TrustID */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <UthTrustLogo size={30} />
+            {/* Logo Thương Hiệu Chính Thức UTH-TrustID */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.96)',
+                  padding: '3px 7px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <img
+                  src="/uth-logo.png"
+                  alt="UTH"
+                  style={{ height: '16px', width: 'auto', display: 'block', objectFit: 'contain' }}
+                />
+              </div>
               <div style={{ minWidth: 0 }}>
                 <div className="text-white" style={{ fontWeight: 800, fontSize: '13.5px', letterSpacing: '-0.2px', whiteSpace: 'nowrap' }}>
-                  UTH TRUST<span className="text-[#64F5DF]">ID</span>
+                  UTH-Trust<span className="text-[#64F5DF]">ID</span>
                 </div>
-                <div className="text-slate-400" style={{ fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                  HOLDER NODE • SINH VIÊN
+                <div className="text-sky-200/90" style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>
+                  VÍ ĐỊNH DANH • SINH VIÊN
                 </div>
               </div>
             </div>
 
-            {/* Đồng hồ thời gian thực (<LiveClock />) + Nút Chuyển Sáng/Tối + Khóa phiên + Huy hiệu Holder FIDO2 */}
+            {/* Đồng hồ thời gian thực (<LiveClock />) + Khóa phiên + Huy hiệu Holder FIDO2 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
               <LiveClock />
 
               <button
                 onClick={handleLockSession}
                 title="Khóa phiên bảo mật ngay (Test Auto-Lock / PIN 123456)"
-                className="btn-press bg-[#4FF0D6]/10 border border-[#4FF0D6]/30 text-[#64F5DF]"
+                className="btn-press bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF]"
                 style={{
                   padding: '5px 8px',
                   borderRadius: '12px',
@@ -633,11 +651,11 @@ export default function App() {
 
               <span
                 title="Thiết bị Sinh viên đã tách biệt hoàn toàn khỏi quyền Giảng viên (Zero-Trust Holder Node)"
-                className="bg-[#4FF0D6]/15 border border-[#4FF0D6]/35 text-[#64F5DF]"
+                className="bg-[#4FF0D6]/15 border border-[#4FF0D6]/40 text-[#64F5DF]"
                 style={{
                   padding: '4px 9px',
                   borderRadius: '999px',
-                  fontSize: '9.5px',
+                  fontSize: '10px',
                   fontWeight: 800,
                   display: 'flex',
                   alignItems: 'center',
@@ -657,7 +675,7 @@ export default function App() {
         {spotCheckState.isActive && !spotCheckState.isModalOpen && (
           <div
             onClick={() => setSpotCheckState((prev) => ({ ...prev, isModalOpen: true }))}
-            className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/25 border border-amber-400/60 backdrop-blur-md flex items-center justify-between gap-2 cursor-pointer shadow-[0_8px_24px_rgba(245,158,11,0.25)]"
+            className="sticky top-[53px] z-40 mx-3 mt-2 p-3 rounded-2xl bg-amber-950/95 border border-amber-400/60 flex items-center justify-between gap-2 cursor-pointer shadow-[0_8px_24px_rgba(245,158,11,0.25)]"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="relative flex h-3 w-3 flex-shrink-0">

@@ -33,10 +33,8 @@ export default function MobileNavigation({ activeCourseSession = null, spotCheck
           max-width: 404px;
           height: 64px;
           padding: 5px 6px;
-          background: linear-gradient(145deg, rgba(10, 22, 42, 0.88) 0%, rgba(5, 12, 26, 0.94) 100%);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1px solid rgba(79, 240, 214, 0.28);
+          background: linear-gradient(145deg, rgba(20, 47, 86, 0.97) 0%, rgba(11, 27, 51, 0.99) 100%);
+          border: 1px solid rgba(79, 240, 214, 0.34);
           border-radius: 26px;
           display: flex;
           justify-content: space-between;
@@ -45,8 +43,7 @@ export default function MobileNavigation({ activeCourseSession = null, spotCheck
           z-index: 100;
           box-sizing: border-box;
           box-shadow:
-            0 16px 36px rgba(0, 6, 18, 0.78),
-            0 0 22px rgba(79, 240, 214, 0.12),
+            0 14px 32px rgba(0, 6, 18, 0.72),
             inset 0 1px 0 rgba(255, 255, 255, 0.14);
         }
 
@@ -64,11 +61,11 @@ export default function MobileNavigation({ activeCourseSession = null, spotCheck
           justify-content: center;
           gap: 3px;
           text-decoration: none;
-          color: #94A3B8;
-          font-size: 10.5px;
+          color: #CBD5E1;
+          font-size: 11.5px;
           font-weight: 600;
           letter-spacing: 0.1px;
-          transition: all 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+          transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease, background-color 0.2s ease;
           width: 33.33%;
           height: 52px;
           border-radius: 20px;
