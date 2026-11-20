@@ -2212,320 +2212,129 @@ export default function FacultyDashboard({
     }
 
     return (
-      <div
-        className="min-h-screen w-full flex flex-col justify-between relative overflow-x-hidden overflow-y-auto select-none font-sans text-white bg-[#070618]"
-        style={{
-          background:
-            'radial-gradient(circle at 34% 58%, rgba(56, 189, 248, 0.22) 0%, rgba(124, 58, 237, 0.24) 28%, transparent 62%), radial-gradient(circle at 75% 45%, rgba(139, 92, 246, 0.22) 0%, transparent 56%), linear-gradient(180deg, #060515 0%, #0B0822 54%, #070518 100%)'
-        }}
-      >
-        <style>{`
-          @keyframes loginOrbitSpin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes loginOrbitReverse {
-            from { transform: rotate(360deg); }
-            to { transform: rotate(0deg); }
-          }
-          @keyframes idCardFloat3D {
-            0%, 100% {
-              transform: perspective(1000px) rotateY(12deg) rotateX(4deg) rotateZ(-3deg) translate3d(0, 0px, 0);
-            }
-            50% {
-              transform: perspective(1000px) rotateY(8deg) rotateX(-2deg) rotateZ(-1.5deg) translate3d(0, -10px, 0);
-            }
-          }
-          @keyframes pillFloatLogin {
-            0%, 100% { transform: translate3d(0, 0px, 0); }
-            50% { transform: translate3d(0, -6px, 0); }
-          }
-        `}</style>
-
-        {/* Ảnh thật Tòa nhà Đại học Giao thông Vận tải TP.HCM (UTH) bên góc trái màn hình Đăng nhập */}
-        <div className="pointer-events-none absolute left-0 top-14 bottom-20 w-[34%] hidden lg:flex flex-col items-start justify-center opacity-45 select-none">
-          <div
-            className="relative w-[380px] xl:w-[430px] h-[430px] rounded-r-3xl border-r border-t border-b border-purple-400/40 overflow-hidden shadow-2xl"
-            style={{
-              transform: 'perspective(950px) rotateY(14deg) skewY(2deg)'
-            }}
-          >
-            <img
-              src="/uth-campus-banner.jpg"
-              alt="UTH Campus"
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070618] via-[#150E3A]/55 to-[#150E3A]/25" />
-            <div className="absolute top-5 right-5 px-3.5 py-2 rounded-xl bg-[#0D0A24]/85 border border-purple-300/40">
-              <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain" />
-            </div>
-          </div>
-        </div>
-
-        {/* Sóng lưới hạt ánh sáng (Dotted Cyber Wave Mesh) ở góc dưới bên trái */}
-        <svg
-          className="pointer-events-none absolute bottom-0 left-0 w-full lg:w-[62%] h-52 opacity-55"
-          viewBox="0 0 900 220"
-          fill="none"
-        >
-          <path
-            d="M-20 180 C 160 75, 340 210, 540 135 C 700 75, 810 155, 920 195"
-            stroke="url(#waveGrad1)"
-            strokeWidth="2.5"
-            strokeDasharray="3 8"
-          />
-          <path
-            d="M-20 198 C 180 95, 360 225, 560 152 C 720 92, 825 170, 920 210"
-            stroke="url(#waveGrad2)"
-            strokeWidth="2"
-            strokeDasharray="2 7"
-          />
-          <path
-            d="M-20 162 C 140 55, 320 195, 520 118 C 680 58, 790 140, 920 180"
-            stroke="url(#waveGrad1)"
-            strokeWidth="1.6"
-            strokeDasharray="2 9"
-          />
-          <defs>
-            <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#A855F7" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6366F1" stopOpacity="0.6" />
-              <stop offset="55%" stopColor="#C084FC" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#38BDF8" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Nút Quay về Trang chủ ở góc trên bên trái */}
-        <div className="relative z-30 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 pt-5 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setShowLoginPage(false)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#141030]/85 hover:bg-[#1E1846] border border-purple-400/35 text-slate-200 hover:text-white text-xs sm:text-sm font-semibold cursor-pointer transition-all shadow-lg"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#C084FC]" />
-            <span>Trang chủ UTH-TrustID</span>
-          </button>
-        </div>
-
-        {/* ==================== NỘI DUNG CHÍNH: CỘT TRÁI THẺ ĐỊNH DANH 3D + CỘT PHẢI KHUNG ĐĂNG NHẬP ==================== */}
-        <main className="relative z-20 flex-1 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 pb-8 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
-          
-          {/* CỘT TRÁI (6 CỘT): THẺ ĐỊNH DANH SỐ 3D TRÊN BỆ ĐẾ (CÔ LẬP GPU CONTAIN — KHÔNG BLUR REPAINT) */}
-          <div
-            className="lg:col-span-6 relative flex items-center justify-center min-h-[380px] sm:min-h-[500px] scale-[0.82] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center"
-            style={{ contain: 'layout paint' }}
-          >
-            {/* Quầng sáng Radial Gradient thuần (0px blur filter) */}
-            <div
-              className="pointer-events-none absolute w-[420px] h-[420px] sm:w-[490px] sm:h-[490px] rounded-full"
-              style={{
-                background:
-                  'radial-gradient(circle, rgba(56,189,248,0.28) 0%, rgba(139,92,246,0.22) 38%, rgba(99,102,241,0.06) 58%, transparent 72%)'
-              }}
-            />
-
-            {/* Vòng quỹ đạo xoay tròn quanh Thẻ Định Danh 3D */}
-            <div
-              className="pointer-events-none absolute w-[350px] h-[350px] sm:w-[430px] sm:h-[430px] rounded-full will-change-transform"
-              style={{ animation: 'loginOrbitSpin 24s linear infinite' }}
-            >
-              <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="182"
-                  stroke="url(#loginOrbitGrad)"
-                  strokeWidth="1.8"
-                  strokeDasharray="24 14 6 14"
-                />
-                <circle cx="200" cy="18" r="4.5" fill="#38BDF8" />
-                <circle cx="382" cy="200" r="4.5" fill="#E9D5FF" />
-                <circle cx="18" cy="200" r="4" fill="#C084FC" />
-                <defs>
-                  <linearGradient id="loginOrbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.9" />
-                    <stop offset="50%" stopColor="#C084FC" stopOpacity="0.7" />
-                    <stop offset="100%" stopColor="#6366F1" stopOpacity="0.2" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
-            <div
-              className="pointer-events-none absolute w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] rounded-full will-change-transform"
-              style={{ animation: 'loginOrbitReverse 16s linear infinite' }}
-            >
-              <svg className="w-full h-full" viewBox="0 0 300 300" fill="none">
-                <circle
-                  cx="150"
-                  cy="150"
-                  r="136"
-                  stroke="#38BDF8"
-                  strokeOpacity="0.45"
-                  strokeWidth="2"
-                  strokeDasharray="55 35"
-                />
-              </svg>
-            </div>
-
-            {/* Khối Thẻ Định Danh Hologram 3D & Bệ Đế Phát Sáng */}
-            <div className="relative z-20 flex flex-col items-center pt-10">
-              {/* Thẻ Định Danh 3D Nghiêng (KHÔNG backdrop-blur, KHÔNG drop-shadow filter -> 120fps) */}
-              <div
-                className="relative will-change-transform"
-                style={{ animation: 'idCardFloat3D 5.2s ease-in-out infinite' }}
-              >
-                <div className="relative w-48 h-60 sm:w-56 sm:h-68 rounded-[28px] bg-gradient-to-br from-[#2B4994] via-[#26236B] to-[#16143E] border-[3px] border-sky-300/80 shadow-[0_14px_34px_rgba(56,189,248,0.38)] flex flex-col items-center justify-center p-6">
-                  {/* Viền sáng bên trong thẻ */}
-                  <div className="pointer-events-none absolute inset-2.5 rounded-[20px] border border-sky-300/35" />
-
-                  {/* Hình bóng Sinh viên / Người dùng ở trung tâm thẻ */}
-                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-sky-200 via-indigo-300 to-purple-400 mb-3" />
-                  <div className="w-28 sm:w-32 h-14 rounded-t-3xl rounded-b-xl bg-gradient-to-b from-sky-200/90 via-indigo-300/80 to-purple-500/60" />
-
-                  {/* Huy hiệu Khiên Tích Xác Thực ở góc dưới bên phải của Thẻ */}
-                  <div className="absolute -bottom-3 -right-4 w-16 h-18 flex items-center justify-center">
-                    <svg className="w-16 h-18" viewBox="0 0 64 74" fill="none">
-                      <path
-                        d="M32 4 L58 15 V38 C58 55 46 67 32 72 C18 67 6 55 6 38 V15 L32 4 Z"
-                        fill="url(#badgeShieldGrad)"
-                        stroke="#F3E8FF"
-                        strokeWidth="3.5"
-                      />
-                      <path
-                        d="M21 38 L29 46 L44 29"
-                        stroke="#FFFFFF"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <defs>
-                        <linearGradient id="badgeShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#A855F7" />
-                          <stop offset="100%" stopColor="#4F46E5" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
+      <div className="min-h-screen w-full flex flex-col justify-between relative overflow-x-clip font-sans text-slate-900 bg-gradient-to-br from-white via-[#F7F4FF] to-[#EFE9FF]">
+        {/* Thanh Header Đăng nhập đồng bộ 100% với Trang chủ UTH-TrustID */}
+        <header className="relative z-30 w-full bg-white/95 border-b border-purple-100">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 h-[72px] flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <img
+                src="/uth-logo.png"
+                alt="UTH"
+                className="h-8 sm:h-9 w-auto object-contain block"
+              />
+              <span className="hidden sm:inline-block h-6 w-px bg-slate-300" />
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center shadow-xs">
+                  <ShieldCheck className="w-4 h-4 text-white" />
                 </div>
-              </div>
-
-              {/* Bệ Đế Hologram Phát Sáng (Pure Gradient — không blur-md/blur-xs) */}
-              <div className="relative -mt-3 flex flex-col items-center">
-                <div
-                  className="pointer-events-none w-48 h-12 -mb-7"
-                  style={{
-                    background:
-                      'radial-gradient(ellipse at 50% 85%, rgba(168, 85, 247, 0.45) 0%, rgba(56, 189, 248, 0.28) 45%, transparent 75%)'
-                  }}
-                />
-                <div className="relative w-64 sm:w-80 h-14 rounded-full bg-gradient-to-b from-[#251A5A] to-[#0B0724] border-2 border-sky-400/70 shadow-[0_0_28px_rgba(56,189,248,0.45)] flex items-center justify-center overflow-hidden">
-                  <div className="w-52 sm:w-68 h-8 rounded-full border-2 border-dashed border-sky-300/80" />
-                  <div className="absolute inset-x-10 top-1.5 h-2 rounded-full bg-gradient-to-r from-transparent via-sky-300/65 to-transparent" />
-                </div>
-                <div
-                  className="w-72 sm:w-96 h-5 -mt-1"
-                  style={{
-                    background:
-                      'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.38) 0%, transparent 70%)'
-                  }}
-                />
+                <span className="text-lg font-extrabold text-[#1E1B4B]">UTH-TrustID</span>
               </div>
             </div>
 
-            {/* 3 Thẻ Pill Công Nghệ (KHÔNG backdrop-blur để tránh GPU readback mỗi frame) */}
-            <div
-              style={{ animation: 'pillFloatLogin 5s ease-in-out infinite' }}
-              className="absolute top-12 sm:top-14 left-4 sm:left-10 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/96 border border-purple-400/50 shadow-[0_10px_24px_rgba(6,4,22,0.75)] flex items-center gap-3 will-change-transform"
+            <button
+              type="button"
+              onClick={() => setShowLoginPage(false)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-[#F5F3FF] border border-purple-200 text-[#4C1D95] text-xs sm:text-sm font-bold cursor-pointer transition-colors shadow-2xs"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#4F46E5] border border-purple-300/50 flex items-center justify-center shrink-0">
-                <IdCard className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm sm:text-base font-bold text-white tracking-wide">
-                W3C DID
-              </span>
-            </div>
-
-            <div
-              style={{
-                animation: 'pillFloatLogin 5.5s ease-in-out infinite',
-                animationDelay: '0.8s'
-              }}
-              className="absolute top-20 sm:top-24 right-2 sm:right-8 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/96 border border-purple-400/50 shadow-[0_10px_24px_rgba(6,4,22,0.75)] flex items-center gap-3 will-change-transform"
-            >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#38BDF8] border border-sky-300/50 flex items-center justify-center shrink-0">
-                <Fingerprint className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm sm:text-base font-bold text-white tracking-wide">
-                WebAuthn
-              </span>
-            </div>
-
-            <div
-              style={{
-                animation: 'pillFloatLogin 5.2s ease-in-out infinite',
-                animationDelay: '1.4s'
-              }}
-              className="absolute bottom-24 sm:bottom-28 left-2 sm:left-6 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/96 border border-purple-400/50 shadow-[0_10px_24px_rgba(6,4,22,0.75)] flex items-center gap-3 will-change-transform"
-            >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] border border-purple-300/50 flex items-center justify-center shrink-0">
-                <GitBranch className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm sm:text-base font-bold text-white tracking-wide">
-                Merkle Tree
-              </span>
-            </div>
+              <ArrowLeft className="w-4 h-4 text-[#6D28D9]" />
+              <span>Quay về Trang chủ</span>
+            </button>
           </div>
+        </header>
 
-          {/* CỘT PHẢI (6 CỘT): KHUNG ĐĂNG NHẬP VỮNG CHẮC, SẮC NÉT (BỎ BACKDROP-BLUR-2XL & RUNG CHUỘT) */}
-          <div className="lg:col-span-6 flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-[520px] rounded-[32px] bg-[#0E0B26]/98 border border-purple-400/45 shadow-[0_20px_60px_rgba(8,5,28,0.85)] p-8 sm:p-11 text-white uth-page-enter">
-              {/* Điểm sáng viền góc trên trái & dưới phải của khung */}
-              <div className="pointer-events-none absolute -top-px left-10 w-28 h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_15px_#A855F7]" />
-              <div className="pointer-events-none absolute -bottom-px right-10 w-28 h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_15px_#A855F7]" />
+        {/* Nội dung Đăng nhập 2 cột cân đối: Trái = Ảnh trường UTH & 3 Trụ cột công nghệ | Phải = Form Đăng nhập trắng sạch */}
+        <main className="relative z-20 flex-1 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-10 lg:py-14 grid grid-cols-1 lg:grid-cols-12 items-center gap-10">
+          {/* Cột Trái (6 cột): Giới thiệu UTH Campus & Định danh W3C DID */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#4C1D95] text-xs sm:text-sm font-semibold">
+              <ShieldCheck className="w-4 h-4 text-[#6D28D9]" />
+              <span>Cổng Xác thực Giảng viên &amp; Quản trị viên UTH</span>
+            </div>
 
-              {/* Logo Khiên UTH-TrustID & Tiêu đề */}
-              <div className="flex flex-col items-center text-center space-y-2 mb-7">
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_24px_rgba(139,92,246,0.65)] border border-purple-300/40">
-                    <ShieldCheck className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight">
-                    <span className="text-white">UTH-</span>
-                    <span className="bg-gradient-to-r from-[#C084FC] to-[#8B5CF6] bg-clip-text text-transparent">
-                      TrustID
-                    </span>
+            <div className="space-y-2.5">
+              <h2 className="text-3xl sm:text-4xl font-black text-[#1E1B4B] leading-tight m-0">
+                Hệ sinh thái Định danh Số{' '}
+                <span className="text-[#6D28D9]">UTH-TrustID</span>
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 m-0 leading-relaxed max-w-xl">
+                Quản lý phiên điểm danh QR động, bản đồ định vị GPS Radar, chứng chỉ số W3C VC và cây băm Merkle Tree theo chuẩn bảo mật đại học.
+              </p>
+            </div>
+
+            {/* Khung ảnh thực tế Trường UTH bo góc sang trọng */}
+            <div className="rounded-3xl overflow-hidden border border-purple-200/80 bg-white shadow-[0_14px_38px_rgba(109,40,217,0.1)]">
+              <div className="relative aspect-[16/9] w-full overflow-hidden">
+                <img
+                  src="/uth-campus-banner.jpg"
+                  alt="Trường Đại học Giao thông Vận tải TP.HCM (UTH)"
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/70 via-transparent to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+                  <span className="text-xs sm:text-sm font-bold text-white drop-shadow-xs">
+                    Trường Đại học Giao thông Vận tải TP.HCM (UTH)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/95 text-[#6D28D9] text-[11px] font-bold shrink-0">
+                    Zero-Trust Portal
                   </span>
                 </div>
+              </div>
+            </div>
 
-                <h1 className="text-2xl sm:text-[30px] font-extrabold text-white m-0 tracking-tight">
+            {/* 3 Thẻ công nghệ gọn gàng */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-2xs flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <IdCard className="w-4.5 h-4.5 text-[#6D28D9]" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-[#1E1B4B] truncate">W3C DID</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-2xs flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <Fingerprint className="w-4.5 h-4.5 text-[#6D28D9]" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-[#1E1B4B] truncate">WebAuthn</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-2xs flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <GitBranch className="w-4.5 h-4.5 text-[#6D28D9]" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-[#1E1B4B] truncate">Merkle Tree</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Cột Phải (6 cột): Thẻ Đăng nhập Trắng Sáng Sắc Nét */}
+          <div className="lg:col-span-6 flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-[490px] rounded-[28px] bg-white border border-purple-100 shadow-[0_20px_50px_rgba(109,40,217,0.1)] p-7 sm:p-10 text-slate-900 uth-page-enter">
+              {/* Tiêu đề thẻ Đăng nhập */}
+              <div className="flex flex-col items-center text-center space-y-2 mb-7">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center shadow-md shadow-purple-500/25 mb-1">
+                  <ShieldCheck className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-[28px] font-extrabold text-[#1E1B4B] m-0 tracking-tight">
                   Đăng nhập hệ thống
                 </h1>
-                <p className="text-sm sm:text-base text-slate-300 m-0">
-                  Xác thực an toàn bằng tài khoản UTH
+                <p className="text-sm text-slate-500 m-0">
+                  Xác thực an toàn bằng tài khoản cán bộ / giảng viên UTH
                 </p>
               </div>
 
               {/* Thông báo lỗi hoặc gợi ý mật khẩu */}
               {authError && (
-                <div className="mb-4 p-3.5 rounded-2xl bg-rose-500/15 border border-rose-400/40 text-rose-200 text-xs sm:text-sm font-semibold flex items-start gap-2.5">
-                  <ShieldAlert size={17} className="shrink-0 mt-0.5 text-rose-400" />
+                <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-semibold flex items-start gap-2.5">
+                  <ShieldAlert size={17} className="shrink-0 mt-0.5 text-rose-500" />
                   <span>{authError}</span>
                 </div>
               )}
 
               {loginHelperNotice && !authError && (
-                <div className="mb-4 p-3.5 rounded-2xl bg-purple-500/15 border border-purple-400/40 text-purple-100 text-xs sm:text-sm leading-relaxed flex items-start justify-between gap-2.5">
+                <div className="mb-4 p-3.5 rounded-2xl bg-[#F5F3FF] border border-purple-200 text-[#4C1D95] text-xs sm:text-sm leading-relaxed flex items-start justify-between gap-2.5">
                   <span>{loginHelperNotice}</span>
                   <button
                     type="button"
                     onClick={() => setLoginHelperNotice('')}
-                    className="text-purple-300 hover:text-white bg-transparent border-none cursor-pointer p-0 shrink-0"
+                    className="text-[#6D28D9] hover:text-[#4C1D95] bg-transparent border-none cursor-pointer p-0 shrink-0"
                   >
                     <X size={15} />
                   </button>
@@ -2534,24 +2343,24 @@ export default function FacultyDashboard({
 
               {/* Biểu mẫu điền Tài khoản & Mật khẩu */}
               <form onSubmit={handleLogin} className="space-y-4">
-                {/* Ô 1: Mã sinh viên / Email UTH */}
+                {/* Ô 1: Mã giảng viên / Email UTH */}
                 <div className="relative">
-                  <User className="w-5 h-5 text-slate-300 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <User className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
                     autoComplete="username"
                     value={loginForm.email}
-                    placeholder="Mã sinh viên / Email UTH"
+                    placeholder="Mã cán bộ / Email UTH"
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
                     onChange={(e) => {
                       setLoginForm({ ...loginForm, email: e.target.value });
                       if (authError) setAuthError('');
                     }}
-                    className={`w-full py-4 pl-12 pr-4 rounded-2xl bg-[#171334]/90 border text-sm sm:text-base text-white placeholder-slate-400 outline-none transition-all ${
+                    className={`w-full py-3.5 pl-12 pr-4 rounded-xl bg-slate-50 focus:bg-white border text-sm sm:text-base text-slate-900 placeholder-slate-400 outline-none transition-all ${
                       focusedField === 'email'
-                        ? 'border-purple-400 ring-4 ring-purple-500/20'
-                        : 'border-slate-700/80 hover:border-purple-400/50'
+                        ? 'border-[#7C3AED] ring-4 ring-purple-500/15'
+                        : 'border-slate-200 hover:border-purple-300'
                     }`}
                     required
                   />
@@ -2559,7 +2368,7 @@ export default function FacultyDashboard({
 
                 {/* Ô 2: Mật khẩu */}
                 <div className="relative">
-                  <Lock className="w-5 h-5 text-slate-300 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
@@ -2571,17 +2380,17 @@ export default function FacultyDashboard({
                       setLoginForm({ ...loginForm, password: e.target.value });
                       if (authError) setAuthError('');
                     }}
-                    className={`w-full py-4 pl-12 pr-12 rounded-2xl bg-[#171334]/90 border text-sm sm:text-base text-white placeholder-slate-400 outline-none transition-all ${
+                    className={`w-full py-3.5 pl-12 pr-12 rounded-xl bg-slate-50 focus:bg-white border text-sm sm:text-base text-slate-900 placeholder-slate-400 outline-none transition-all ${
                       focusedField === 'password'
-                        ? 'border-purple-400 ring-4 ring-purple-500/20'
-                        : 'border-slate-700/80 hover:border-purple-400/50'
+                        ? 'border-[#7C3AED] ring-4 ring-purple-500/15'
+                        : 'border-slate-200 hover:border-purple-300'
                     }`}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white bg-transparent border-none cursor-pointer p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 bg-transparent border-none cursor-pointer p-1"
                     title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                   >
                     {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
@@ -2590,11 +2399,11 @@ export default function FacultyDashboard({
 
                 {/* Dòng Ghi nhớ đăng nhập & Quên mật khẩu? */}
                 <div className="flex items-center justify-between pt-1 text-xs sm:text-sm">
-                  <label className="inline-flex items-center gap-2.5 text-slate-200 font-medium cursor-pointer">
+                  <label className="inline-flex items-center gap-2 text-slate-600 font-medium cursor-pointer">
                     <input
                       type="checkbox"
                       defaultChecked
-                      className="w-4 h-4 rounded border-purple-400/50 accent-[#8B5CF6] cursor-pointer"
+                      className="w-4 h-4 rounded border-slate-300 accent-[#6D28D9] cursor-pointer"
                     />
                     <span>Ghi nhớ đăng nhập</span>
                   </label>
@@ -2606,26 +2415,26 @@ export default function FacultyDashboard({
                         'Thông tin tài khoản UTH — Giảng viên: giangvien@uth.edu.vn | Quản trị: admin@uth.edu.vn | Mật khẩu: Admin@2026'
                       )
                     }
-                    className="text-xs sm:text-sm font-semibold text-[#C084FC] hover:text-purple-200 hover:underline bg-transparent border-none cursor-pointer p-0"
+                    className="text-xs sm:text-sm font-semibold text-[#6D28D9] hover:text-[#4C1D95] hover:underline bg-transparent border-none cursor-pointer p-0"
                   >
                     Quên mật khẩu?
                   </button>
                 </div>
 
-                {/* Nút Đăng nhập → (Tối ưu không dùng blur-sm sweep chạy nền gây tốn GPU) */}
+                {/* Nút Đăng nhập → */}
                 <button
                   type="submit"
                   disabled={loginLoading}
-                  className="group relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#9333EA] to-[#7C3AED] hover:brightness-110 text-white font-bold text-base sm:text-lg shadow-[0_10px_28px_rgba(147,51,234,0.42)] active:scale-[0.985] transition-transform duration-150 cursor-pointer border border-purple-300/40 inline-flex items-center justify-center gap-2.5 mt-2"
+                  className="group w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] hover:brightness-110 text-white font-bold text-base shadow-lg shadow-purple-600/25 active:scale-[0.985] transition-transform duration-150 cursor-pointer border-none inline-flex items-center justify-center gap-2 mt-2"
                 >
                   <span>{loginLoading ? 'Đang xác thực...' : 'Đăng nhập'}</span>
-                  <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
+                  <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </button>
               </form>
 
-              {/* Ghi chú bảo mật ở chân thẻ (Đã loại bỏ hoàn toàn Google/SSO/Nút đăng nhập nhanh) */}
-              <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-300 text-center">
-                <Info className="w-4 h-4 text-[#C084FC] shrink-0" />
+              {/* Ghi chú bảo mật */}
+              <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-500 text-center">
+                <Info className="w-4 h-4 text-[#6D28D9] shrink-0" />
                 <span>Vui lòng điền trực tiếp tài khoản UTH và mật khẩu để đăng nhập.</span>
               </div>
             </div>
