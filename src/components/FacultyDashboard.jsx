@@ -2242,27 +2242,27 @@ export default function FacultyDashboard({
           </div>
         </header>
 
-        {/* Nội dung Đăng nhập 2 cột cân đối giữa màn hình */}
-        <main className="relative z-20 flex-1 w-full max-w-6xl mx-auto px-5 sm:px-8 py-8 lg:py-10 grid grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-12">
+        {/* Nội dung Đăng nhập 2 cột cân đối giữa màn hình với khoảng thở rộng rãi */}
+        <main className="relative z-20 flex-1 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 items-center gap-12 lg:gap-16">
           {/* Cột Trái (6 cột): Giới thiệu UTH Campus & Định danh W3C DID */}
-          <div className="lg:col-span-6 space-y-5">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#4C1D95] text-xs sm:text-sm font-semibold">
+          <div className="lg:col-span-6 space-y-6">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#4C1D95] text-xs sm:text-sm font-semibold">
               <ShieldCheck className="w-4 h-4 text-[#6D28D9]" />
               <span>Cổng Xác thực Giảng viên &amp; Quản trị viên UTH</span>
             </div>
 
-            <div className="space-y-2">
-              <h2 className="text-3xl sm:text-[34px] font-black text-[#1E1B4B] leading-tight m-0">
+            <div className="space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-black text-[#1E1B4B] leading-tight m-0">
                 Hệ sinh thái Định danh Số{' '}
                 <span className="text-[#6D28D9]">UTH-TrustID</span>
               </h2>
-              <p className="text-sm sm:text-[15px] text-slate-600 m-0 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 m-0 leading-relaxed">
                 Điều hành phiên điểm danh QR động, bản đồ định vị GPS Radar, chứng chỉ số W3C VC và cây băm Merkle Tree theo chuẩn bảo mật đại học.
               </p>
             </div>
 
             {/* Khung ảnh thực tế Trường UTH bo góc gọn đẹp */}
-            <div className="rounded-2xl overflow-hidden border border-purple-200/80 bg-white shadow-[0_12px_32px_rgba(109,40,217,0.09)]">
+            <div className="rounded-3xl overflow-hidden border border-purple-200/80 bg-white shadow-[0_14px_36px_rgba(109,40,217,0.09)]">
               <div className="relative aspect-[16/9] w-full overflow-hidden">
                 <img
                   src="/uth-campus-banner.jpg"
@@ -2270,11 +2270,11 @@ export default function FacultyDashboard({
                   className="w-full h-full object-cover object-center"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/75 via-transparent to-transparent" />
-                <div className="absolute bottom-3.5 left-4 right-4 flex items-center justify-between gap-3">
+                <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between gap-3">
                   <span className="text-xs sm:text-sm font-bold text-white">
                     Trường ĐH Giao thông Vận tải TP.HCM (UTH)
                   </span>
-                  <span className="px-2.5 py-1 rounded-full bg-white/95 text-[#6D28D9] text-[11px] font-bold shrink-0">
+                  <span className="px-3 py-1 rounded-full bg-white/95 text-[#6D28D9] text-xs font-bold shrink-0">
                     Faculty &amp; Admin
                   </span>
                 </div>
@@ -2282,31 +2282,31 @@ export default function FacultyDashboard({
             </div>
 
             {/* 3 Thẻ công nghệ gọn đồng đều */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-white border border-purple-100 shadow-2xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#F3EEFF] flex items-center justify-center shrink-0">
-                  <IdCard className="w-4 h-4 text-[#6D28D9]" />
+            <div className="grid grid-cols-3 gap-4 pt-1">
+              <div className="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-2xs flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <IdCard className="w-4.5 h-4.5 text-[#6D28D9]" />
                 </div>
-                <span className="text-xs sm:text-[13px] font-bold text-[#1E1B4B] truncate">W3C DID</span>
+                <span className="text-xs sm:text-sm font-bold text-[#1E1B4B] truncate">W3C DID</span>
               </div>
-              <div className="p-3 rounded-xl bg-white border border-purple-100 shadow-2xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#F3EEFF] flex items-center justify-center shrink-0">
-                  <Fingerprint className="w-4 h-4 text-[#6D28D9]" />
+              <div className="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-2xs flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <Fingerprint className="w-4.5 h-4.5 text-[#6D28D9]" />
                 </div>
-                <span className="text-xs sm:text-[13px] font-bold text-[#1E1B4B] truncate">WebAuthn</span>
+                <span className="text-xs sm:text-sm font-bold text-[#1E1B4B] truncate">WebAuthn</span>
               </div>
-              <div className="p-3 rounded-xl bg-white border border-purple-100 shadow-2xs flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#F3EEFF] flex items-center justify-center shrink-0">
-                  <GitBranch className="w-4 h-4 text-[#6D28D9]" />
+              <div className="p-3.5 rounded-2xl bg-white border border-purple-100 shadow-2xs flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <GitBranch className="w-4.5 h-4.5 text-[#6D28D9]" />
                 </div>
-                <span className="text-xs sm:text-[13px] font-bold text-[#1E1B4B] truncate">Merkle Tree</span>
+                <span className="text-xs sm:text-sm font-bold text-[#1E1B4B] truncate">Merkle Tree</span>
               </div>
             </div>
           </div>
 
           {/* Cột Phải (6 cột): Thẻ Đăng nhập Trắng Sáng Cân Đối */}
           <div className="lg:col-span-6 flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-[460px] rounded-3xl bg-white border border-purple-100 shadow-[0_18px_46px_rgba(109,40,217,0.09)] p-7 sm:p-9 text-slate-900 uth-page-enter">
+            <div className="relative w-full max-w-[480px] rounded-3xl bg-white border border-purple-100 shadow-[0_20px_50px_rgba(109,40,217,0.1)] p-8 sm:p-11 text-slate-900 uth-page-enter">
               {/* Tiêu đề thẻ Đăng nhập */}
               <div className="flex flex-col items-center text-center space-y-2 mb-6">
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center shadow-md shadow-purple-500/20">

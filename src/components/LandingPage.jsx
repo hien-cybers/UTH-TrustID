@@ -68,26 +68,30 @@ const CORE_TECH_CARDS = [
 const OVERVIEW_STEPS = [
   {
     id: 'st-1',
+    stepNum: 'Bước 01',
     title: 'Giảng viên mở phiên',
-    sub: 'QR Nonce xoay động',
+    sub: 'Phát mã QR Nonce xoay động',
     icon: <QrCode className="w-5 h-5 text-[#6D28D9]" />
   },
   {
     id: 'st-2',
+    stepNum: 'Bước 02',
     title: 'Kiểm tra WebAuthn',
-    sub: 'Chữ ký & GPS Radar',
+    sub: 'Xác thực chữ ký & GPS Radar',
     icon: <Fingerprint className="w-5 h-5 text-[#6D28D9]" />
   },
   {
     id: 'st-3',
+    stepNum: 'Bước 03',
     title: 'Đối soát toàn vẹn',
-    sub: 'Merkle Tree & SOC IDS',
+    sub: 'Cây băm Merkle & SOC IDS',
     icon: <Layers className="w-5 h-5 text-[#6D28D9]" />
   },
   {
     id: 'st-4',
+    stepNum: 'Bước 04',
     title: 'Quản trị & lưu vết',
-    sub: 'Admin DID / VC / Excel',
+    sub: 'Cấp DID / VC & Xuất Excel',
     icon: <Database className="w-5 h-5 text-[#6D28D9]" />
   }
 ];
@@ -99,7 +103,7 @@ const PORTAL_MODULES = [
     title: 'Cổng Điều hành Giảng viên',
     badge: '10 Màn hình Nghiệp vụ',
     loginRole: 'FACULTY',
-    ctaLabel: 'Đăng nhập Giảng viên',
+    ctaLabel: 'Đăng nhập Cổng Giảng viên',
     icon: <MonitorCheck className="w-6 h-6 text-white" />,
     barColor: 'from-[#16345E] to-[#2563EB]',
     iconBg: 'from-[#16345E] to-[#2563EB]',
@@ -115,7 +119,7 @@ const PORTAL_MODULES = [
     title: 'Cổng Quản trị Hệ thống',
     badge: '10 Phân hệ Hạ tầng',
     loginRole: 'ADMIN',
-    ctaLabel: 'Đăng nhập Quản trị',
+    ctaLabel: 'Đăng nhập Cổng Quản trị',
     icon: <Building2 className="w-6 h-6 text-white" />,
     barColor: 'from-[#5B21B6] to-[#7C3AED]',
     iconBg: 'from-[#6D28D9] to-[#4F46E5]',
@@ -176,11 +180,11 @@ export default function LandingPage({ onOpenLogin }) {
   useEffect(() => {
     const sectionIds = ['TECH', 'SYSTEM', 'RESULTS', 'TEAM'];
     const handleScroll = () => {
-      if (window.scrollY < 200) {
+      if (window.scrollY < 240) {
         setActiveNav('HOME');
         return;
       }
-      const scrollMid = window.scrollY + 220;
+      const scrollMid = window.scrollY + 260;
       for (let i = sectionIds.length - 1; i >= 0; i -= 1) {
         const el = document.getElementById(`landing-section-${sectionIds[i]}`);
         if (el && el.offsetTop <= scrollMid) {
@@ -210,37 +214,37 @@ export default function LandingPage({ onOpenLogin }) {
         }
         @keyframes shieldFloatPulse {
           0%, 100% { transform: translate3d(0, 0px, 0); }
-          50% { transform: translate3d(0, -7px, 0); }
+          50% { transform: translate3d(0, -8px, 0); }
         }
       `}</style>
 
-      {/* ==================== 1. STICKY NAVBAR GỌN GÀNG, CÂN ĐỐI ==================== */}
-      <header className="sticky top-0 z-40 w-full bg-white/95 border-b border-purple-100 shadow-[0_2px_12px_rgba(109,40,217,0.04)]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-[70px] flex items-center justify-between gap-4">
-          {/* Logo UTH + UTH-TrustID gọn 1 dòng */}
+      {/* ==================== 1. STICKY NAVBAR THOÁNG RỘNG ==================== */}
+      <header className="sticky top-0 z-40 w-full bg-white/95 border-b border-purple-100 shadow-[0_2px_16px_rgba(109,40,217,0.05)]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 h-20 flex items-center justify-between gap-6">
+          {/* Logo UTH + UTH-TrustID có khoảng thở rộng rãi */}
           <button
             type="button"
             onClick={() => handleNavClick('HOME')}
-            className="flex items-center gap-3 bg-transparent border-none cursor-pointer p-0 shrink-0"
+            className="flex items-center gap-4 bg-transparent border-none cursor-pointer p-0 shrink-0"
           >
             <img
               src="/uth-logo.png"
               alt="UTH - University of Transport Ho Chi Minh City"
-              className="h-8 sm:h-9 w-auto object-contain block"
+              className="h-9 sm:h-10 w-auto object-contain block"
             />
-            <span className="hidden sm:inline-block h-6 w-px bg-slate-200" />
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center shadow-xs">
-                <ShieldCheck className="w-4 h-4 text-white" />
+            <span className="hidden sm:inline-block h-7 w-px bg-slate-200" />
+            <div className="hidden sm:flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center shadow-xs">
+                <ShieldCheck className="w-4.5 h-4.5 text-white" />
               </div>
-              <span className="text-lg font-extrabold tracking-tight text-[#1E1B4B]">
+              <span className="text-xl font-extrabold tracking-tight text-[#1E1B4B]">
                 UTH-TrustID
               </span>
             </div>
           </button>
 
-          {/* Menu Điều hướng 5 mục gọn thoáng */}
-          <nav className="hidden lg:flex items-center gap-7">
+          {/* Menu Điều hướng 5 mục cách đều thoáng mắt */}
+          <nav className="hidden lg:flex items-center gap-9 xl:gap-11">
             {NAV_ITEMS.map((item) => {
               const isActive = activeNav === item.id;
               return (
@@ -248,7 +252,7 @@ export default function LandingPage({ onOpenLogin }) {
                   key={item.id}
                   type="button"
                   onClick={() => handleNavClick(item.id)}
-                  className={`relative py-2 text-[15px] font-semibold bg-transparent border-none cursor-pointer transition-colors ${
+                  className={`relative py-2.5 text-[15.5px] font-semibold bg-transparent border-none cursor-pointer transition-colors ${
                     isActive ? 'text-[#6D28D9]' : 'text-slate-600 hover:text-[#6D28D9]'
                   }`}
                 >
@@ -264,22 +268,22 @@ export default function LandingPage({ onOpenLogin }) {
           </nav>
 
           {/* Nút Mã nguồn + Đăng nhập */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-3.5 shrink-0">
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-[#F5F3FF] border border-purple-200 text-[#4C1D95] text-sm font-semibold no-underline transition-colors"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-[#F5F3FF] border border-purple-200 text-[#4C1D95] text-sm font-semibold no-underline transition-colors"
             >
               <GitHubIcon className="w-4 h-4" />
               <span>Mã nguồn</span>
-              <ExternalLink className="w-3 h-3 opacity-75" />
+              <ExternalLink className="w-3.5 h-3.5 opacity-75" />
             </a>
 
             <button
               type="button"
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="px-4 sm:px-5 py-2 rounded-xl bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] hover:brightness-110 text-white text-sm font-bold border-none shadow-sm shadow-purple-500/25 cursor-pointer inline-flex items-center gap-1.5 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] hover:brightness-110 text-white text-sm font-bold border-none shadow-md shadow-purple-500/20 cursor-pointer inline-flex items-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>Đăng nhập</span>
               <ArrowRight className="w-4 h-4" />
@@ -288,119 +292,123 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </header>
 
-      {/* ==================== 2. HERO BANNER SÁNG ĐẸP: CHỮ TRÁI + KHIÊN 3D CŨ GỌN GÀNG + TÒA NHÀ UTH SẮC NÉT PHẢI ==================== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-white via-[#F8F5FF] to-[#EFE9FF]">
-        {/* Ảnh thật Tòa nhà ĐH Giao thông Vận tải TP.HCM (UTH) sáng rõ không bị che chữ tên trường */}
-        <div className="pointer-events-none hidden lg:block absolute right-0 top-0 bottom-0 w-[56%] overflow-hidden">
+      {/* ==================== 2. HERO BANNER THOÁNG RỘNG, TÁCH BẠCH RÕ RÀNG 2 CỘT ==================== */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-white via-[#F8F5FF] to-[#EFE9FF] border-b border-purple-100/80">
+        {/* Ảnh thật Tòa nhà ĐH Giao thông Vận tải TP.HCM (UTH) bên phải */}
+        <div className="pointer-events-none hidden lg:block absolute right-0 top-0 bottom-0 w-[54%] overflow-hidden">
           <img
             src="/uth-campus-banner.jpg"
             alt="Trường Đại học Giao thông Vận tải TP.HCM (UTH)"
-            className="w-full h-full object-cover object-[72%_center]"
+            className="w-full h-full object-cover object-[70%_center]"
           />
-          {/* Chuyển sắc mượt từ nền trắng bên trái sang ảnh trường */}
+          {/* Chuyển sắc rộng và mượt từ nền trắng bên trái sang ảnh trường */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                'linear-gradient(90deg, #FFFFFF 0%, rgba(248,245,255,0.94) 12%, rgba(248,245,255,0.52) 26%, rgba(248,245,255,0) 46%)'
+                'linear-gradient(90deg, #FFFFFF 0%, rgba(248,245,255,0.95) 16%, rgba(248,245,255,0.55) 34%, rgba(248,245,255,0.08) 56%)'
             }}
           />
-          {/* Chuyển sắc mềm ở chân ảnh hòa vào nền tím nhạt bên dưới */}
           <div
-            className="absolute inset-x-0 bottom-0 h-20"
+            className="absolute inset-x-0 bottom-0 h-24"
             style={{
               background:
-                'linear-gradient(0deg, #F7F5FE 0%, rgba(247,245,254,0.75) 45%, transparent 100%)'
+                'linear-gradient(0deg, #F3EEFF 0%, rgba(243,238,255,0.65) 45%, transparent 100%)'
             }}
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pt-9 pb-10 lg:pt-11 lg:pb-12 grid grid-cols-1 lg:grid-cols-12 items-center gap-6">
-          {/* Cột Trái (6 cột): Tiêu đề, mô tả súc tích & CTA */}
-          <div className="lg:col-span-6 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#4C1D95] text-xs sm:text-sm font-semibold">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-16 lg:py-24 grid grid-cols-1 lg:grid-cols-12 items-center gap-12 lg:gap-16">
+          {/* Cột Trái (6 cột): Khoảng cách dòng và khối thoáng rộng */}
+          <div className="lg:col-span-6 space-y-6 lg:space-y-7">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#4C1D95] text-xs sm:text-sm font-semibold shadow-2xs">
               <Building2 className="w-4 h-4 text-[#6D28D9]" />
-              <span>Cổng Giảng viên &amp; Quản trị viên • UTH</span>
+              <span>Cổng Điều hành Giảng viên &amp; Quản trị viên • UTH</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl xl:text-[62px] font-black tracking-tight leading-none m-0 bg-gradient-to-r from-[#4C1D95] via-[#6D28D9] to-[#7C3AED] bg-clip-text text-transparent">
-              UTH-TrustID
-            </h1>
+            <div className="space-y-3">
+              <h1 className="text-5xl sm:text-6xl xl:text-[66px] font-black tracking-tight leading-none m-0 bg-gradient-to-r from-[#4C1D95] via-[#6D28D9] to-[#7C3AED] bg-clip-text text-transparent">
+                UTH-TrustID
+              </h1>
+              <p className="text-lg sm:text-xl font-bold text-[#1E1B4B] m-0">
+                Định danh số phi tập trung &amp; Xác thực hiện diện phòng học
+              </p>
+            </div>
 
-            <p className="text-[15px] sm:text-base text-slate-700 leading-[1.68] font-medium m-0 max-w-[500px]">
-              Hệ thống quản trị định danh số phi tập trung và xác thực hiện diện phòng học dành cho <strong className="text-[#1E1B4B]">Giảng viên</strong> &amp; <strong className="text-[#1E1B4B]">Quản trị viên</strong>, ứng dụng W3C DID, WebAuthn và Merkle Tree tại Trường Đại học Giao thông Vận tải TP.HCM.
+            <p className="text-base sm:text-[17px] text-slate-700 leading-[1.75] font-medium m-0 max-w-[540px]">
+              Hệ thống quản trị định danh số chuẩn <strong className="text-[#1E1B4B]">W3C DID</strong>, xác thực không mật khẩu <strong className="text-[#1E1B4B]">WebAuthn</strong> và cây băm <strong className="text-[#1E1B4B]">Merkle Tree</strong> dành riêng cho đội ngũ Giảng viên và Quản trị viên tại Trường Đại học Giao thông Vận tải TP.HCM.
             </p>
 
-            {/* 2 Nút hành động gọn đẹp */}
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            {/* 2 Nút hành động cách nhau thoáng */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
               <button
                 type="button"
                 onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-                className="group px-6 py-3 rounded-xl bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] hover:brightness-110 text-white text-sm sm:text-[15px] font-bold border-none shadow-lg shadow-purple-600/20 cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2"
+                className="group px-7 py-4 rounded-2xl bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] hover:brightness-110 text-white text-base font-bold border-none shadow-lg shadow-purple-600/25 cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2.5"
               >
                 <span>Khám phá hệ thống</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight className="w-4.5 h-4.5 transition-transform group-hover:translate-x-0.5" />
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowIntroModal(true)}
-                className="px-5 py-3 rounded-xl bg-white hover:bg-[#F5F3FF] text-[#1E1B4B] text-sm sm:text-[15px] font-bold border border-purple-200 shadow-2xs cursor-pointer transition-colors inline-flex items-center gap-2"
+                className="px-6 py-4 rounded-2xl bg-white hover:bg-[#F5F3FF] text-[#1E1B4B] text-base font-bold border border-purple-200 shadow-xs cursor-pointer transition-colors inline-flex items-center gap-2.5"
               >
-                <span className="w-5 h-5 rounded-full bg-[#6D28D9] text-white flex items-center justify-center shrink-0">
-                  <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
+                <span className="w-6 h-6 rounded-full bg-[#6D28D9] text-white flex items-center justify-center shrink-0">
+                  <Play className="w-3 h-3 fill-current ml-0.5" />
                 </span>
                 <span>Quy trình vận hành</span>
               </button>
             </div>
 
-            {/* 3 Nhãn niềm tin gọn sắc nét */}
-            <div className="flex flex-wrap items-center gap-4 pt-2 text-[13.5px] font-bold text-[#1E1B4B]">
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#6D28D9]" />
+            {/* 3 Nhãn niềm tin cách rộng */}
+            <div className="flex flex-wrap items-center gap-6 pt-3 text-sm font-bold text-[#1E1B4B]">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="w-4.5 h-4.5 text-[#6D28D9]" />
                 <span>An toàn</span>
               </span>
-              <span className="h-3.5 w-px bg-purple-200" />
-              <span className="inline-flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#6D28D9]" />
+              <span className="h-4 w-px bg-purple-200" />
+              <span className="inline-flex items-center gap-2">
+                <Layers className="w-4.5 h-4.5 text-[#6D28D9]" />
                 <span>Minh bạch</span>
               </span>
-              <span className="h-3.5 w-px bg-purple-200" />
-              <span className="inline-flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-[#6D28D9]" />
+              <span className="h-4 w-px bg-purple-200" />
+              <span className="inline-flex items-center gap-2">
+                <Zap className="w-4.5 h-4.5 text-[#6D28D9]" />
                 <span>Phi tập trung</span>
               </span>
             </div>
           </div>
 
-          {/* Cột Phải (6 cột): Khiên 3D Cũ cỡ gọn (245px) đặt thấp góc trái tiền cảnh — KHÔNG che tên trường trên mặt tiền tòa nhà */}
-          <div className="lg:col-span-6 flex flex-col items-center lg:items-start justify-end lg:min-h-[300px]">
+          {/* Cột Phải (6 cột): Khiên 3D Cũ đặt chính giữa cột phải, tách xa cột chữ bên trái */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center">
             {/* Ảnh tòa nhà UTH trên màn hình di động / tablet */}
-            <div className="lg:hidden w-full rounded-2xl overflow-hidden border border-purple-200 shadow-md mb-4">
+            <div className="lg:hidden w-full rounded-2xl overflow-hidden border border-purple-200 shadow-md mb-8">
               <img
                 src="/uth-campus-banner.jpg"
                 alt="Trường Đại học Giao thông Vận tải TP.HCM (UTH)"
-                className="w-full h-48 sm:h-56 object-cover"
+                className="w-full h-52 sm:h-64 object-cover"
               />
             </div>
 
-            {/* Khiên Bảo vệ 3D Cũ gọn đẹp, 2 vòng xoay 360° thuần GPU */}
+            {/* Khiên Bảo vệ 3D Cũ + 2 vòng xoay 360° */}
             <div
-              className="relative w-[240px] h-[240px] sm:w-[255px] sm:h-[255px] flex items-center justify-center select-none lg:translate-y-4 lg:-ml-4"
+              className="relative w-[280px] h-[280px] sm:w-[310px] sm:h-[310px] flex items-center justify-center select-none"
               style={{ contain: 'layout paint' }}
             >
               {/* Quầng sáng mềm phía sau khiên */}
               <div
-                className="pointer-events-none absolute w-[225px] h-[225px] rounded-full"
+                className="pointer-events-none absolute w-[270px] h-[270px] rounded-full"
                 style={{
                   background:
-                    'radial-gradient(circle, rgba(255,255,255,0.88) 0%, rgba(237,233,254,0.65) 45%, rgba(168,85,247,0.12) 68%, transparent 78%)'
+                    'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(237,233,254,0.7) 46%, rgba(168,85,247,0.14) 68%, transparent 80%)'
                 }}
               />
 
               {/* Vòng quỹ đạo xoay tròn ngoài */}
               <div
-                className="pointer-events-none absolute w-[236px] h-[236px] sm:w-[250px] sm:h-[250px] rounded-full will-change-transform"
+                className="pointer-events-none absolute w-[275px] h-[275px] sm:w-[300px] sm:h-[300px] rounded-full will-change-transform"
                 style={{ animation: 'orbitSpinClockwise 24s linear infinite' }}
               >
                 <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
@@ -428,7 +436,7 @@ export default function LandingPage({ onOpenLogin }) {
 
               {/* Vòng quỹ đạo xoay tròn trong */}
               <div
-                className="pointer-events-none absolute w-[184px] h-[184px] sm:w-[196px] sm:h-[196px] rounded-full will-change-transform"
+                className="pointer-events-none absolute w-[215px] h-[215px] sm:w-[235px] sm:h-[235px] rounded-full will-change-transform"
                 style={{ animation: 'orbitSpinCounter 16s linear infinite' }}
               >
                 <svg className="w-full h-full" viewBox="0 0 304 304" fill="none">
@@ -453,7 +461,7 @@ export default function LandingPage({ onOpenLogin }) {
                 </svg>
               </div>
 
-              {/* Khiên Bảo vệ 3D Cũ + Đế Hologram gọn cân đối */}
+              {/* Khiên Bảo vệ 3D Cũ + Đế Hologram */}
               <div className="relative z-20 flex flex-col items-center pt-3">
                 <div
                   onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
@@ -462,11 +470,11 @@ export default function LandingPage({ onOpenLogin }) {
                   style={{ animation: 'shieldFloatPulse 5s ease-in-out infinite' }}
                 >
                   <div
-                    className="pointer-events-none absolute -inset-3 rounded-full border border-dashed border-[#38BDF8]/70 will-change-transform"
+                    className="pointer-events-none absolute -inset-3.5 rounded-full border border-dashed border-[#38BDF8]/70 will-change-transform"
                     style={{ animation: 'orbitSpinClockwise 12s linear infinite' }}
                   />
 
-                  <svg className="w-32 h-36 sm:w-34 sm:h-38 overflow-visible" viewBox="0 0 200 230" fill="none">
+                  <svg className="w-36 h-40 sm:w-40 sm:h-44 overflow-visible" viewBox="0 0 200 230" fill="none">
                     <defs>
                       <linearGradient id="shieldOuterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#F3E8FF" />
@@ -528,10 +536,10 @@ export default function LandingPage({ onOpenLogin }) {
                   </svg>
                 </div>
 
-                {/* Bệ Đế Hologram gọn gàng */}
+                {/* Bệ Đế Hologram */}
                 <div className="relative -mt-2 flex flex-col items-center">
-                  <div className="w-40 h-8 rounded-full bg-gradient-to-b from-[#2E1E72] to-[#110B36] border-2 border-[#A78BFA] shadow-[0_10px_24px_rgba(91,33,182,0.34)] flex items-center justify-center">
-                    <div className="w-30 h-4 rounded-full border border-dashed border-[#38BDF8]/80" />
+                  <div className="w-44 h-9 rounded-full bg-gradient-to-b from-[#2E1E72] to-[#110B36] border-2 border-[#A78BFA] shadow-[0_12px_26px_rgba(91,33,182,0.34)] flex items-center justify-center">
+                    <div className="w-34 h-4.5 rounded-full border border-dashed border-[#38BDF8]/80" />
                   </div>
                 </div>
               </div>
@@ -540,71 +548,89 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* ==================== 3. BA TRỤ CỘT CÔNG NGHỆ & LUỒNG TỔNG QUAN 4 BƯỚC ĐỀU NHAU ==================== */}
-      <section id="landing-section-TECH" className="scroll-mt-20 w-full bg-[#F7F5FE] pt-4 pb-12">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
-          {/* Hàng 3 thẻ công nghệ trắng sắc nét (gộp luôn tag kỹ thuật, tránh trùng lặp bên dưới) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* ==================== 3. BA TRỤ CỘT CÔNG NGHỆ & LUỒNG TỔNG QUAN (KHOẢNG CÁCH RỘNG THOÁNG) ==================== */}
+      <section id="landing-section-TECH" className="scroll-mt-24 w-full bg-[#F7F5FE] py-16 lg:py-24">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 space-y-16">
+          {/* Tiêu đề mục Công nghệ */}
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-white border border-purple-200 text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
+              Nền tảng Công nghệ
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
+              Ba trụ cột mật mã học bảo toàn danh tính &amp; điểm danh
+            </h2>
+          </div>
+
+          {/* Hàng 3 thẻ công nghệ cách nhau rộng rãi (gap-8, p-8) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-7 lg:gap-8">
             {CORE_TECH_CARDS.map((card) => (
               <div
                 key={card.id}
                 onClick={() => handleNavClick('SYSTEM')}
-                className="group relative bg-white rounded-2xl border border-purple-100 p-5 sm:p-6 shadow-[0_6px_24px_rgba(109,40,217,0.05)] hover:shadow-[0_14px_32px_rgba(109,40,217,0.11)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-4"
+                className="group relative bg-white rounded-3xl border border-purple-100 p-7 sm:p-8 shadow-[0_10px_30px_rgba(109,40,217,0.05)] hover:shadow-[0_18px_40px_rgba(109,40,217,0.12)] hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-6"
               >
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#F3EEFF] border border-[#E5DCFE] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="space-y-4">
+                  <div className="w-15 h-15 rounded-2xl bg-[#F3EEFF] border border-[#E5DCFE] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     {card.icon}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-lg font-extrabold text-[#1E1B4B] m-0 group-hover:text-[#6D28D9] transition-colors">
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-extrabold text-[#1E1B4B] m-0 group-hover:text-[#6D28D9] transition-colors">
                       {card.title}
                     </h3>
-                    <p className="text-sm text-slate-600 m-0 mt-1 leading-relaxed">{card.desc}</p>
+                    <p className="text-[15px] text-slate-600 m-0 leading-relaxed">{card.desc}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                  <div className="flex flex-wrap gap-2">
                     {card.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2.5 py-0.5 rounded-md bg-[#F5F3FF] text-[#5B21B6] text-[11.5px] font-mono font-semibold"
+                        className="px-3 py-1 rounded-lg bg-[#F5F3FF] text-[#5B21B6] text-xs font-mono font-semibold"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
-                  <span className="w-7 h-7 rounded-full bg-[#F3EEFF] group-hover:bg-[#6D28D9] text-[#6D28D9] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                    <ArrowRight className="w-3.5 h-3.5" />
+                  <span className="w-8 h-8 rounded-full bg-[#F3EEFF] group-hover:bg-[#6D28D9] text-[#6D28D9] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                    <ArrowRight className="w-4 h-4" />
                   </span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Thanh Tổng quan hệ thống 4 bước chiều rộng bằng nhau tuyệt đối */}
-          <div className="pt-2 flex flex-col xl:flex-row xl:items-center gap-5">
-            <div className="shrink-0 xl:w-48">
-              <h2 className="text-xl font-extrabold text-[#1E1B4B] m-0">Tổng quan hệ thống</h2>
-              <div className="w-11 h-1 rounded-full bg-[#6D28D9] mt-2" />
+          {/* Khối Tổng quan hệ thống 4 bước đóng khung thoáng rộng */}
+          <div className="p-7 sm:p-9 rounded-3xl bg-white/80 border border-purple-100/90 shadow-[0_8px_28px_rgba(109,40,217,0.04)] space-y-7">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-2xl font-extrabold text-[#1E1B4B] m-0">Tổng quan hệ thống</h3>
+                <div className="w-14 h-1 rounded-full bg-[#6D28D9] mt-2.5" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">
+                Chuỗi 4 bước điều hành &amp; đối soát dữ liệu khép kín
+              </span>
             </div>
 
-            <div className="flex-1 flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
               {OVERVIEW_STEPS.map((step, idx) => (
                 <Fragment key={step.id}>
-                  <div className="flex-1 bg-white rounded-2xl border border-purple-100 px-4 py-3.5 shadow-[0_4px_16px_rgba(109,40,217,0.04)] flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-[#F3EEFF] flex items-center justify-center shrink-0">
+                  <div className="flex-1 bg-[#FAF8FF] rounded-2xl border border-purple-100 p-5 flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-[#F3EEFF] border border-purple-200/60 flex items-center justify-center shrink-0">
                       {step.icon}
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-[13.5px] font-bold text-[#1E1B4B] truncate">
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="text-[11px] font-mono font-bold text-[#6D28D9] uppercase tracking-wider">
+                        {step.stepNum}
+                      </div>
+                      <div className="text-[15px] font-bold text-[#1E1B4B] truncate">
                         {step.title}
                       </div>
                       <div className="text-xs text-slate-500 truncate">{step.sub}</div>
                     </div>
                   </div>
                   {idx < OVERVIEW_STEPS.length - 1 && (
-                    <ArrowRight className="hidden lg:block w-4 h-4 text-[#7C3AED] shrink-0" />
+                    <ArrowRight className="hidden lg:block w-5 h-5 text-[#7C3AED] shrink-0" />
                   )}
                 </Fragment>
               ))}
@@ -616,70 +642,67 @@ export default function LandingPage({ onOpenLogin }) {
       {/* ==================== 4. HAI PHÂN HỆ NGHIỆP VỤ: GIẢNG VIÊN & QUẢN TRỊ VIÊN ==================== */}
       <section
         id="landing-section-SYSTEM"
-        className="scroll-mt-20 py-14 lg:py-16 bg-white border-t border-purple-100"
+        className="scroll-mt-24 py-20 lg:py-24 bg-white border-t border-purple-100"
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-9">
-          <div className="max-w-2xl mx-auto text-center space-y-2.5">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 space-y-14">
+          <div className="max-w-3xl mx-auto text-center space-y-3.5">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
               Phân hệ Nghiệp vụ
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1E1B4B] m-0">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
               Hai cổng điều hành chuyên biệt: Giảng viên &amp; Quản trị viên
             </h2>
-            <p className="text-sm sm:text-base text-slate-600 m-0">
-              Phân quyền tách bạch Zero-Trust giữa Cổng Giảng viên (Verifier) và Cổng Quản trị Hệ thống (Issuer).
+            <p className="text-base text-slate-600 m-0 leading-relaxed">
+              Phân quyền tách bạch Zero-Trust giữa Cổng Điều hành Giảng viên (Verifier) và Cổng Quản trị Hệ thống (Issuer).
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
             {PORTAL_MODULES.map((mod) => (
               <div
                 key={mod.step}
-                className="relative overflow-hidden rounded-3xl bg-[#FAF8FF] border border-purple-100 shadow-xs flex flex-col justify-between"
+                className="relative overflow-hidden rounded-3xl bg-[#FAF8FF] border border-purple-100 shadow-[0_10px_30px_rgba(109,40,217,0.05)] flex flex-col justify-between"
               >
-                {/* Thanh viền màu nhận diện trên đỉnh thẻ */}
-                <div className={`h-1.5 w-full bg-gradient-to-r ${mod.barColor}`} />
+                <div className={`h-2 w-full bg-gradient-to-r ${mod.barColor}`} />
 
-                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-3">
+                <div className="p-8 sm:p-10 flex-1 flex flex-col justify-between gap-8">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between gap-4">
                       <div
-                        className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${mod.iconBg} flex items-center justify-center shadow-sm`}
+                        className={`w-13 h-13 rounded-2xl bg-gradient-to-br ${mod.iconBg} flex items-center justify-center shadow-md`}
                       >
                         {mod.icon}
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-white border border-purple-200/80 text-xs font-mono font-semibold text-slate-600">
+                      <span className="px-3.5 py-1.5 rounded-full bg-white border border-purple-200/80 text-xs font-mono font-semibold text-slate-600">
                         {mod.badge}
                       </span>
                     </div>
 
-                    <div>
-                      <div className="text-[11.5px] font-bold text-[#6D28D9] tracking-wider uppercase">
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-bold text-[#6D28D9] tracking-wider uppercase">
                         {mod.step} • {mod.role}
                       </div>
-                      <h3 className="text-xl font-extrabold text-[#1E1B4B] mt-1 mb-0">
-                        {mod.title}
-                      </h3>
+                      <h3 className="text-2xl font-extrabold text-[#1E1B4B] m-0">{mod.title}</h3>
                     </div>
 
-                    <div className="space-y-2.5 pt-1">
+                    <div className="space-y-3.5 pt-1">
                       {mod.points.map((pt, i) => (
                         <div
                           key={i}
-                          className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed"
+                          className="flex items-start gap-3 text-[15px] text-slate-700 leading-relaxed"
                         >
-                          <CheckCircle2 className="w-4 h-4 text-[#6D28D9] shrink-0 mt-1" />
+                          <CheckCircle2 className="w-5 h-5 text-[#6D28D9] shrink-0 mt-0.5" />
                           <span>{pt}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-purple-100">
+                  <div className="pt-5 border-t border-purple-100">
                     <button
                       type="button"
                       onClick={() => onOpenLogin && onOpenLogin(mod.loginRole)}
-                      className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#6D28D9] text-[#5B21B6] hover:text-white border border-purple-200 hover:border-[#6D28D9] text-sm font-bold cursor-pointer inline-flex items-center gap-2 transition-colors shadow-2xs"
+                      className="px-6 py-3 rounded-xl bg-white hover:bg-[#6D28D9] text-[#5B21B6] hover:text-white border border-purple-200 hover:border-[#6D28D9] text-sm font-bold cursor-pointer inline-flex items-center gap-2 transition-colors shadow-2xs"
                     >
                       <span>{mod.ctaLabel}</span>
                       <ArrowRight className="w-4 h-4" />
@@ -695,47 +718,47 @@ export default function LandingPage({ onOpenLogin }) {
       {/* ==================== 5. KẾT QUẢ THỰC NGHIỆM & 4 LỚP PHÒNG VỆ SOC IDS ==================== */}
       <section
         id="landing-section-RESULTS"
-        className="scroll-mt-20 py-14 lg:py-16 bg-[#F7F5FE] border-t border-purple-100"
+        className="scroll-mt-24 py-20 lg:py-24 bg-[#F7F5FE] border-t border-purple-100"
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
-          <div className="max-w-2xl mx-auto text-center space-y-2.5">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-white border border-purple-200 text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 space-y-12">
+          <div className="max-w-3xl mx-auto text-center space-y-3.5">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-white border border-purple-200 text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
               Kết quả &amp; An toàn Hệ thống
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1E1B4B] m-0">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
               Hiệu năng vượt trội &amp; Phòng vệ 4 lớp SOC IDS
             </h2>
           </div>
 
-          {/* 4 Chỉ số KPI */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {/* 4 Chỉ số KPI cách thoáng */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7">
             {RESULT_METRICS.map((m, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-2xl bg-white border border-purple-100 shadow-[0_6px_20px_rgba(109,40,217,0.04)] text-center space-y-1"
+                className="p-7 rounded-3xl bg-white border border-purple-100 shadow-[0_8px_24px_rgba(109,40,217,0.05)] text-center space-y-2"
               >
-                <div className="text-2xl sm:text-3xl font-black text-[#6D28D9] tabular-nums">
+                <div className="text-3xl sm:text-4xl font-black text-[#6D28D9] tabular-nums">
                   {m.value}
                 </div>
-                <div className="text-sm sm:text-[15px] font-bold text-[#1E1B4B]">{m.label}</div>
-                <div className="text-xs text-slate-500">{m.sub}</div>
+                <div className="text-base font-bold text-[#1E1B4B]">{m.label}</div>
+                <div className="text-xs sm:text-sm text-slate-500">{m.sub}</div>
               </div>
             ))}
           </div>
 
           {/* 4 Kịch bản phòng vệ SOC IDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {DEFENSE_SCENARIOS.map((sc) => (
               <div
                 key={sc.code}
-                className="p-4 sm:p-5 rounded-2xl bg-white border border-rose-200/75 shadow-2xs space-y-1.5"
+                className="p-6 rounded-3xl bg-white border border-rose-200/80 shadow-xs space-y-2.5"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-mono font-bold text-rose-600">{sc.code}</span>
-                  <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
+                  <span className="text-xs font-mono font-bold text-rose-600">{sc.code}</span>
+                  <ShieldAlert className="w-4.5 h-4.5 text-rose-500 shrink-0" />
                 </div>
-                <h4 className="text-sm font-bold text-[#1E1B4B] m-0">{sc.title}</h4>
-                <p className="text-xs text-slate-600 m-0 leading-relaxed">{sc.desc}</p>
+                <h4 className="text-base font-bold text-[#1E1B4B] m-0">{sc.title}</h4>
+                <p className="text-sm text-slate-600 m-0 leading-relaxed">{sc.desc}</p>
               </div>
             ))}
           </div>
@@ -745,69 +768,78 @@ export default function LandingPage({ onOpenLogin }) {
       {/* ==================== 6. ĐƠN VỊ VẬN HÀNH & CTA CUỐI TRANG ==================== */}
       <section
         id="landing-section-TEAM"
-        className="scroll-mt-20 py-14 bg-white border-t border-purple-100"
+        className="scroll-mt-24 py-20 lg:py-24 bg-white border-t border-purple-100"
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl bg-[#FAF8FF] border border-purple-100 space-y-1.5">
-              <div className="text-[11.5px] font-bold text-[#6D28D9] uppercase tracking-wider">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 space-y-12">
+          <div className="max-w-3xl mx-auto text-center space-y-3.5">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
+              Đơn vị Chủ trì &amp; Vận hành
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
+              Trường Đại học Giao thông Vận tải TP.HCM (UTH)
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-7 lg:gap-8">
+            <div className="p-7 rounded-3xl bg-[#FAF8FF] border border-purple-100 space-y-2.5">
+              <div className="text-xs font-bold text-[#6D28D9] uppercase tracking-wider">
                 Đơn vị chủ trì
               </div>
-              <div className="text-base font-extrabold text-[#1E1B4B]">
+              <div className="text-lg font-extrabold text-[#1E1B4B]">
                 Khoa Công nghệ Thông tin – UTH
               </div>
-              <p className="text-sm text-slate-600 m-0 leading-relaxed">
+              <p className="text-sm sm:text-[15px] text-slate-600 m-0 leading-relaxed">
                 Trường Đại học Giao thông Vận tải TP.HCM — Triển khai hạ tầng xác thực số học thuật.
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#FAF8FF] border border-purple-100 space-y-1.5">
-              <div className="text-[11.5px] font-bold text-[#2563EB] uppercase tracking-wider">
+            <div className="p-7 rounded-3xl bg-[#FAF8FF] border border-purple-100 space-y-2.5">
+              <div className="text-xs font-bold text-[#2563EB] uppercase tracking-wider">
                 Cổng Điều hành Giảng viên
               </div>
-              <div className="text-base font-extrabold text-[#1E1B4B]">TS. Nguyễn Thị Mai</div>
-              <p className="text-sm text-slate-600 m-0 leading-relaxed">
+              <div className="text-lg font-extrabold text-[#1E1B4B]">TS. Nguyễn Thị Mai</div>
+              <p className="text-sm sm:text-[15px] text-slate-600 m-0 leading-relaxed">
                 Điều hành lớp học, giám sát phiên QR động, bản đồ GPS Radar và cấp chứng chỉ số môn học.
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#FAF8FF] border border-purple-100 space-y-1.5">
-              <div className="text-[11.5px] font-bold text-emerald-600 uppercase tracking-wider">
+            <div className="p-7 rounded-3xl bg-[#FAF8FF] border border-purple-100 space-y-2.5">
+              <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
                 Cổng Quản trị Hệ thống
               </div>
-              <div className="text-base font-extrabold text-[#1E1B4B]">
+              <div className="text-lg font-extrabold text-[#1E1B4B]">
                 Ban Quản trị UTH-TrustID
               </div>
-              <p className="text-sm text-slate-600 m-0 leading-relaxed">
+              <p className="text-sm sm:text-[15px] text-slate-600 m-0 leading-relaxed">
                 Quản trị định danh W3C DID, chính sách WebAuthn, Merkle Tree Blockchain và giám sát SOC.
               </p>
             </div>
           </div>
 
-          {/* CTA Banner gọn đẹp */}
-          <div className="p-7 sm:p-8 rounded-3xl bg-gradient-to-r from-[#4C1D95] via-[#6D28D9] to-[#7C3AED] text-white shadow-lg shadow-purple-500/20 flex flex-col md:flex-row items-center justify-between gap-5">
-            <div className="space-y-1 text-center md:text-left">
-              <h3 className="text-xl sm:text-2xl font-extrabold m-0">
+          {/* CTA Banner thoáng rộng */}
+          <div className="p-8 sm:p-11 rounded-3xl bg-gradient-to-r from-[#4C1D95] via-[#6D28D9] to-[#7C3AED] text-white shadow-xl shadow-purple-500/20 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-2 text-center md:text-left">
+              <h3 className="text-2xl sm:text-3xl font-extrabold m-0">
                 Truy cập Cổng Giảng viên &amp; Quản trị viên UTH-TrustID
               </h3>
-              <p className="text-sm text-purple-100 m-0">
+              <p className="text-sm sm:text-base text-purple-100 m-0">
                 Đăng nhập tài khoản cán bộ UTH để mở phiên điểm danh QR động và quản trị hạ tầng định danh số.
               </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+            <div className="flex flex-wrap items-center justify-center gap-3.5 shrink-0">
               <a
                 href={GITHUB_REPO_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white text-sm font-semibold no-underline inline-flex items-center gap-2 transition-colors"
+                className="px-5 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white text-sm font-semibold no-underline inline-flex items-center gap-2 transition-colors"
               >
                 <GitHubIcon className="w-4 h-4" />
-                <span>GitHub</span>
+                <span>Xem GitHub</span>
               </a>
               <button
                 type="button"
                 onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-                className="px-5 py-2.5 rounded-xl bg-white hover:bg-purple-50 text-[#5B21B6] text-sm font-extrabold border-none cursor-pointer inline-flex items-center gap-2 shadow-sm transition-transform hover:scale-[1.02]"
+                className="px-6 py-3.5 rounded-xl bg-white hover:bg-purple-50 text-[#5B21B6] text-sm font-extrabold border-none cursor-pointer inline-flex items-center gap-2 shadow-md transition-transform hover:scale-[1.02]"
               >
                 <span>Đăng nhập ngay</span>
                 <ArrowRight className="w-4 h-4" />
@@ -817,11 +849,11 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* ==================== FOOTER GỌN 1 DÒNG ==================== */}
-      <footer className="w-full bg-[#F7F5FE] border-t border-purple-100 py-5">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-wrap items-center justify-between gap-4 text-xs sm:text-sm text-slate-600">
-          <div className="flex items-center gap-3">
-            <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain block" />
+      {/* ==================== FOOTER THOÁNG ĐẸP ==================== */}
+      <footer className="w-full bg-[#F7F5FE] border-t border-purple-100 py-7">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-600">
+          <div className="flex items-center gap-3.5">
+            <img src="/uth-logo.png" alt="UTH" className="h-7 w-auto object-contain block" />
             <span className="text-slate-300">|</span>
             <span>© 2026 UTH-TrustID • Cổng Giảng viên &amp; Quản trị viên UTH</span>
           </div>
@@ -829,9 +861,9 @@ export default function LandingPage({ onOpenLogin }) {
           <button
             type="button"
             onClick={() => handleNavClick('HOME')}
-            className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#F3EEFF] text-[#6D28D9] text-xs font-bold border border-purple-200 cursor-pointer inline-flex items-center gap-1.5 shadow-2xs transition-colors"
+            className="px-4 py-2 rounded-xl bg-white hover:bg-[#F3EEFF] text-[#6D28D9] text-xs sm:text-sm font-bold border border-purple-200 cursor-pointer inline-flex items-center gap-2 shadow-2xs transition-colors"
           >
-            <ArrowUp className="w-3.5 h-3.5" />
+            <ArrowUp className="w-4 h-4" />
             <span>Lên đầu trang</span>
           </button>
         </div>
@@ -845,7 +877,7 @@ export default function LandingPage({ onOpenLogin }) {
           }}
           className="uth-modal-backdrop fixed inset-0 z-50 bg-slate-900/55 flex items-center justify-center p-4"
         >
-          <div className="uth-modal-panel w-full max-w-xl rounded-3xl bg-white border border-purple-100 p-6 sm:p-7 shadow-2xl space-y-5">
+          <div className="uth-modal-panel w-full max-w-xl rounded-3xl bg-white border border-purple-100 p-7 sm:p-8 shadow-2xl space-y-6">
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
                 <span className="inline-block px-3 py-1 rounded-full bg-[#F3EEFF] text-[#6D28D9] text-xs font-bold">
@@ -868,7 +900,7 @@ export default function LandingPage({ onOpenLogin }) {
               <img
                 src="/uth-campus-banner.jpg"
                 alt="UTH Campus"
-                className="w-full h-40 object-cover"
+                className="w-full h-44 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/80 via-transparent to-transparent flex items-end p-4">
                 <div className="text-white text-xs sm:text-sm font-semibold">
@@ -877,13 +909,13 @@ export default function LandingPage({ onOpenLogin }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {OVERVIEW_STEPS.map((st, idx) => (
                 <div
                   key={st.id}
-                  className="p-3.5 rounded-2xl bg-[#FAF8FF] border border-purple-100 flex items-center gap-3"
+                  className="p-4 rounded-2xl bg-[#FAF8FF] border border-purple-100 flex items-center gap-3.5"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#6D28D9] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-[#6D28D9] text-white font-bold text-xs flex items-center justify-center shrink-0">
                     {idx + 1}
                   </div>
                   <div className="min-w-0">
@@ -894,11 +926,11 @@ export default function LandingPage({ onOpenLogin }) {
               ))}
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setShowIntroModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold border-none cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold border-none cursor-pointer"
               >
                 Đóng
               </button>
@@ -908,7 +940,7 @@ export default function LandingPage({ onOpenLogin }) {
                   setShowIntroModal(false);
                   if (onOpenLogin) onOpenLogin('FACULTY');
                 }}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#7C3AED] text-white text-sm font-bold border-none cursor-pointer inline-flex items-center gap-2 shadow-sm"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6D28D9] to-[#7C3AED] text-white text-sm font-bold border-none cursor-pointer inline-flex items-center gap-2 shadow-sm"
               >
                 <span>Mở cổng hệ thống</span>
                 <ArrowRight className="w-4 h-4" />
