@@ -54,6 +54,7 @@
 /* Tối ưu hóa Phông chữ Tiếng Việt hiện đại, sắc nét (Be Vietnam Pro — không nén letter-spacing gây dính dấu) */
 html {
   font-size: 16px;
+  scroll-behavior: smooth;
 }
 
 html, body {
@@ -684,6 +685,159 @@ button, input, select {
 
 .faculty-ambient-glow {
   box-shadow: 0 0 42px -8px rgba(79, 240, 214, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* ==================== HỆ THỐNG CHUYỂN ĐỘNG SIÊU MƯỢT 120FPS (GPU COMPOSITOR-ONLY MOTION) ==================== */
+:root {
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes uthPageEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes uthModalBackdrop {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes uthModalPanel {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes uthToastEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes uthBarGrow {
+  0% {
+    opacity: 0.35;
+    transform: scaleY(0.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes uthLineDraw {
+  0% {
+    stroke-dashoffset: 1200;
+    opacity: 0.4;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes uthDonutReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) rotate(-18deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.uth-page-enter {
+  animation: uthPageEnter 0.34s var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+.uth-modal-backdrop {
+  animation: uthModalBackdrop 0.2s ease-out both;
+}
+
+.uth-modal-panel {
+  animation: uthModalPanel 0.28s var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+.uth-toast-enter {
+  animation: uthToastEnter 0.28s var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+.uth-bar-grow {
+  transform-origin: bottom center;
+  animation: uthBarGrow 0.62s var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+.uth-line-draw {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 0;
+  animation: uthLineDraw 0.9s var(--ease-smooth) both;
+}
+
+.uth-donut-reveal {
+  animation: uthDonutReveal 0.6s var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+
+/* Thẻ KPI & nút bấm phản hồi mượt bằng GPU (tránh transition-all gây lag layout) */
+.uth-card-lift {
+  transition: transform 0.26s var(--ease-spring), box-shadow 0.26s var(--ease-spring), border-color 0.22s ease;
+  will-change: transform;
+}
+
+.uth-card-lift:hover {
+  transform: translate3d(0, -3px, 0);
+  box-shadow: 0 12px 24px -10px rgba(15, 41, 78, 0.14);
+}
+
+.uth-card-lift:active {
+  transform: translate3d(0, -1px, 0) scale(0.99);
+}
+
+.uth-light-portal button {
+  transition: transform 0.16s var(--ease-spring), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.22s ease, opacity 0.18s ease;
+}
+
+.uth-light-portal button:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.uth-light-portal tr {
+  transition: background-color 0.16s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 

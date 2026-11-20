@@ -609,7 +609,7 @@ export default function FacultyPortalView({
       <aside
         className={`${
           sidebarCollapsed ? 'lg:w-[82px]' : 'lg:w-[258px] xl:w-[268px]'
-        } w-full shrink-0 lg:sticky lg:top-0 lg:h-screen bg-gradient-to-b from-[#16345E] via-[#173663] to-[#12294D] text-white flex flex-col justify-between relative overflow-hidden transition-all duration-200 z-30 shadow-xl`}
+        } w-full shrink-0 lg:sticky lg:top-0 lg:h-screen bg-gradient-to-b from-[#16345E] via-[#173663] to-[#12294D] text-white flex flex-col justify-between relative overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] z-30 shadow-xl`}
       >
         {/* Hình bóng mờ tòa nhà UTH ở chân Sidebar đúng theo thiết kế mẫu */}
         <div
@@ -796,7 +796,7 @@ export default function FacultyPortalView({
         <main className="flex-1 min-w-0 w-full max-w-[1560px] mx-auto p-4 sm:p-6 lg:p-7 flex flex-col gap-6">
           {/* Thông báo Toast */}
           {(portalToast || statusBannerMsg) && (
-            <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm font-medium flex items-center justify-between gap-3 animate-[fadeIn_0.2s_ease-out] shadow-xs">
+            <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm font-medium flex items-center justify-between gap-3 uth-toast-enter shadow-xs">
               <span>{portalToast || statusBannerMsg}</span>
               <button
                 type="button"
@@ -815,7 +815,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 1: TRANG CHỦ (ĐÚNG CHUẨN ẢNH 1 — HERO UTH + 4 KPI PASTEL + 3 KHỐI)
              ========================================================================= */}
           {sidebarTab === 'HOME' && (
-            <div className="flex flex-col gap-6 animate-[fadeIn_0.25s_ease-out]">
+            <div className="flex flex-col gap-6 uth-page-enter">
               {/* Hero Banner Sáng với Ảnh Thật Trường Đại học Giao thông Vận tải TP.HCM (UTH) */}
               <section className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-white via-[#F1F7FF] to-[#DBEAFE] border border-slate-200/80 shadow-sm min-h-[178px] sm:min-h-[205px] flex items-center">
                 {/* Ảnh thật mặt tiền trường UTH bên phải hòa mượt sang nền sáng bên trái */}
@@ -848,7 +848,7 @@ export default function FacultyPortalView({
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
                 <div
                   onClick={() => setSidebarTab('CLASSES')}
-                  className="p-5 rounded-2xl bg-[#F0F7FF] border border-blue-200/70 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-[#F0F7FF] border border-blue-200/70 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/15 text-[#2563EB] flex items-center justify-center shrink-0">
                     <Users className="w-6 h-6" />
@@ -865,7 +865,7 @@ export default function FacultyPortalView({
 
                 <div
                   onClick={() => setSidebarTab('STUDENTS')}
-                  className="p-5 rounded-2xl bg-[#ECFDF5] border border-emerald-200/70 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-[#ECFDF5] border border-emerald-200/70 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-[#10B981] flex items-center justify-center shrink-0">
                     <GraduationCap className="w-6 h-6" />
@@ -884,7 +884,7 @@ export default function FacultyPortalView({
                   onClick={() =>
                     setSidebarTab(isCreated ? 'LIVE_SESSION' : 'CREATE_SESSION')
                   }
-                  className="p-5 rounded-2xl bg-[#FFFBEB] border border-amber-200/75 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-[#FFFBEB] border border-amber-200/75 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-[#D97706] flex items-center justify-center shrink-0">
                     <QrCode className="w-6 h-6" />
@@ -901,7 +901,7 @@ export default function FacultyPortalView({
 
                 <div
                   onClick={() => setSidebarTab('REPORTS')}
-                  className="p-5 rounded-2xl bg-[#F5F3FF] border border-violet-200/75 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-[#F5F3FF] border border-violet-200/75 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-violet-500/15 text-[#7C3AED] flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-6 h-6" />
@@ -1048,6 +1048,7 @@ export default function FacultyPortalView({
                         strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        className="uth-line-draw"
                       />
                       <path
                         d={absentPathD}
@@ -1056,6 +1057,8 @@ export default function FacultyPortalView({
                         strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        className="uth-line-draw"
+                        style={{ animationDelay: '0.12s' }}
                       />
 
                       {presentLinePts.map((pt, i) => (
@@ -1151,7 +1154,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 2: QUẢN LÝ LỚP HỌC (ĐÚNG CHUẨN ẢNH 2, Ô 2)
              ========================================================================= */}
           {sidebarTab === 'CLASSES' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                 Quản lý lớp học
               </h1>
@@ -1406,7 +1409,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 3: TẠO PHIÊN ĐIỂM DANH (ĐÚNG CHUẨN ẢNH 2, Ô 3 — CÓ XEM TRƯỚC QR)
              ========================================================================= */}
           {sidebarTab === 'CREATE_SESSION' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                   Tạo phiên điểm danh
@@ -1631,7 +1634,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 4: PHIÊN ĐIỂM DANH ĐANG MỞ (ĐÚNG CHUẨN ẢNH 2, Ô 4 + GPS RADAR + IDS)
              ========================================================================= */}
           {sidebarTab === 'LIVE_SESSION' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-6">
                 {/* Header Phiên điểm danh */}
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -1982,7 +1985,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 5: KẾT QUẢ ĐIỂM DANH (ĐÚNG CHUẨN ẢNH 2, Ô 5)
              ========================================================================= */}
           {sidebarTab === 'RESULTS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                 Kết quả điểm danh
               </h1>
@@ -2151,7 +2154,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 6: DANH SÁCH SINH VIÊN (ĐÚNG CHUẨN ẢNH 2, Ô 6)
              ========================================================================= */}
           {sidebarTab === 'STUDENTS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                   Danh sách sinh viên – {activeCourseObj.courseCode}
@@ -2304,7 +2307,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 7: QUẢN LÝ DID (ĐÚNG CHUẨN ẢNH 2, Ô 7)
              ========================================================================= */}
           {sidebarTab === 'DID' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                 Quản lý DID
               </h1>
@@ -2401,7 +2404,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 8: CHỨNG CHỈ SỐ (VC) (ĐÚNG CHUẨN ẢNH 2, Ô 8 — 3 TAB)
              ========================================================================= */}
           {sidebarTab === 'VC' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                 Chứng chỉ số (VC)
               </h1>
@@ -2532,7 +2535,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 9: BÁO CÁO & THỐNG KÊ (ĐÚNG CHUẨN ẢNH 2, Ô 9)
              ========================================================================= */}
           {sidebarTab === 'REPORTS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                 Báo cáo &amp; Thống kê
               </h1>
@@ -2639,7 +2642,7 @@ export default function FacultyPortalView({
                     </h3>
 
                     <div className="flex flex-wrap items-center justify-center gap-8 my-auto py-4">
-                      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center shrink-0">
+                      <div className="uth-donut-reveal relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center shrink-0">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                           <circle cx="60" cy="60" r="44" fill="transparent" stroke="#F97316" strokeWidth="18" />
                           <circle
@@ -2714,7 +2717,7 @@ export default function FacultyPortalView({
                         </div>
 
                         <div className="relative z-10 grid grid-cols-7 gap-3 sm:gap-5">
-                          {WEEKLY_ATTENDANCE_BARS.map((w) => {
+                          {WEEKLY_ATTENDANCE_BARS.map((w, idx) => {
                             const hPct = Math.round((w.count / 160) * 100);
                             return (
                               <div key={w.week} className="flex flex-col items-center group">
@@ -2723,8 +2726,8 @@ export default function FacultyPortalView({
                                     {w.count}
                                   </span>
                                   <div
-                                    className="w-full rounded-t-xl bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] shadow-xs group-hover:brightness-110 transition-all"
-                                    style={{ height: `${hPct}%` }}
+                                    className="uth-bar-grow w-full rounded-t-xl bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] shadow-xs group-hover:brightness-110"
+                                    style={{ height: `${hPct}%`, animationDelay: `${idx * 55}ms` }}
                                   />
                                 </div>
                                 <span className="text-xs sm:text-sm font-semibold text-slate-600 mt-3">
@@ -2746,7 +2749,7 @@ export default function FacultyPortalView({
               MÀN HÌNH 10: CÀI ĐẶT (ĐỒNG BỘ TOÀN BỘ THAM SỐ XÁC THỰC GIẢNG VIÊN)
              ========================================================================= */}
           {sidebarTab === 'SETTINGS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <h1 className="text-xl sm:text-2xl font-bold text-[#0F294E] m-0">
                 Cài đặt xác thực &amp; Phòng học thông minh
               </h1>
@@ -2822,9 +2825,9 @@ export default function FacultyPortalView({
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedStudentDetail(null);
           }}
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="uth-modal-backdrop fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
         >
-          <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4">
+          <div className="uth-modal-panel w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4">
             <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-lg font-bold text-[#0F294E] m-0">
@@ -2885,11 +2888,11 @@ export default function FacultyPortalView({
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowAddStudentModal(false);
           }}
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="uth-modal-backdrop fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
         >
           <form
             onSubmit={handleAddStudent}
-            className="w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
+            className="uth-modal-panel w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-[#0F294E] m-0">
@@ -2965,11 +2968,11 @@ export default function FacultyPortalView({
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowIssueDidModal(false);
           }}
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="uth-modal-backdrop fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
         >
           <form
             onSubmit={handleIssueOrUpdateDid}
-            className="w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
+            className="uth-modal-panel w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-[#0F294E] m-0">
@@ -3036,11 +3039,11 @@ export default function FacultyPortalView({
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowIssueVcModal(false);
           }}
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="uth-modal-backdrop fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
         >
           <form
             onSubmit={handleIssueVc}
-            className="w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
+            className="uth-modal-panel w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-[#0F294E] m-0">

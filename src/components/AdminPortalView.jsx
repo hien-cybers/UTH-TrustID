@@ -490,7 +490,7 @@ export default function AdminPortalView({
       <aside
         className={`${
           sidebarCollapsed ? 'lg:w-[82px]' : 'lg:w-[258px] xl:w-[268px]'
-        } w-full shrink-0 lg:sticky lg:top-0 lg:h-screen bg-gradient-to-b from-[#16345E] via-[#173663] to-[#12294D] text-white flex flex-col justify-between relative overflow-hidden transition-all duration-200 z-30 shadow-xl`}
+        } w-full shrink-0 lg:sticky lg:top-0 lg:h-screen bg-gradient-to-b from-[#16345E] via-[#173663] to-[#12294D] text-white flex flex-col justify-between relative overflow-hidden transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] z-30 shadow-xl`}
       >
         {/* Hình bóng mờ tòa nhà UTH ở chân Sidebar đồng bộ Cổng Giảng viên */}
         <div
@@ -656,7 +656,7 @@ export default function AdminPortalView({
         {/* VÙNG NỘI DUNG CHÍNH */}
         <main className="flex-1 min-w-0 w-full max-w-[1560px] mx-auto p-4 sm:p-6 lg:p-7 flex flex-col gap-6">
           {(toastMsg || adminStatusMsg) && (
-            <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm font-medium flex items-center justify-between gap-3 animate-[fadeIn_0.2s_ease-out] shadow-xs">
+            <div className="px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm font-medium flex items-center justify-between gap-3 uth-toast-enter shadow-xs">
               <span>{toastMsg || adminStatusMsg}</span>
               <button
                 type="button"
@@ -675,7 +675,7 @@ export default function AdminPortalView({
               MÀN HÌNH 1: BẢNG ĐIỀU KHIỂN QUẢN TRỊ HỆ THỐNG (ĐÚNG CHUẨN Ô 1)
              ========================================================================= */}
           {activeMenu === 'HOME' && (
-            <div className="flex flex-col gap-6 animate-[fadeIn_0.25s_ease-out]">
+            <div className="flex flex-col gap-6 uth-page-enter">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h1 className="text-2xl sm:text-[26px] font-bold text-[#0F294E] m-0">
@@ -696,7 +696,7 @@ export default function AdminPortalView({
               <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
                 <div
                   onClick={() => setActiveMenu('USERS')}
-                  className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-white border border-slate-200/80 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 text-[#2563EB] flex items-center justify-center shrink-0">
                     <Users className="w-6 h-6" />
@@ -714,7 +714,7 @@ export default function AdminPortalView({
 
                 <div
                   onClick={() => setActiveMenu('DID')}
-                  className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-white border border-slate-200/80 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-violet-50 border border-violet-100 text-[#7C3AED] flex items-center justify-center shrink-0">
                     <IdCard className="w-6 h-6" />
@@ -732,7 +732,7 @@ export default function AdminPortalView({
 
                 <div
                   onClick={() => setActiveMenu('VC')}
-                  className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-white border border-slate-200/80 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                     <ShieldCheck className="w-6 h-6" />
@@ -750,7 +750,7 @@ export default function AdminPortalView({
 
                 <div
                   onClick={() => setActiveMenu('BLOCKCHAIN')}
-                  className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-4 cursor-pointer"
+                  className="p-5 rounded-2xl bg-white border border-slate-200/80 uth-card-lift flex items-center gap-4 cursor-pointer"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                     <Box className="w-6 h-6" />
@@ -828,6 +828,7 @@ export default function AdminPortalView({
                         strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        className="uth-line-draw"
                       />
                       <path
                         d={lineDidD}
@@ -836,6 +837,8 @@ export default function AdminPortalView({
                         strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        className="uth-line-draw"
+                        style={{ animationDelay: '0.1s' }}
                       />
                       <path
                         d={lineVcD}
@@ -844,6 +847,8 @@ export default function AdminPortalView({
                         strokeWidth="3.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        className="uth-line-draw"
+                        style={{ animationDelay: '0.2s' }}
                       />
 
                       {OVERVIEW_7D_SERIES.map((d, i) => {
@@ -959,7 +964,7 @@ export default function AdminPortalView({
               MÀN HÌNH 2: QUẢN LÝ NGƯỜI DÙNG (ĐÚNG CHUẨN Ô 2)
              ========================================================================= */}
           {activeMenu === 'USERS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">Quản lý người dùng</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -1148,7 +1153,7 @@ export default function AdminPortalView({
               MÀN HÌNH 3: QUẢN LÝ DID (ĐÚNG CHUẨN Ô 3 + THU HỒI KHÓA SMART CONTRACT O(1))
              ========================================================================= */}
           {activeMenu === 'DID' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">Quản lý DID</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -1358,7 +1363,7 @@ export default function AdminPortalView({
               MÀN HÌNH 4: CHỨNG CHỈ SỐ (VC) (ĐÚNG CHUẨN Ô 4)
              ========================================================================= */}
           {activeMenu === 'VC' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">Chứng chỉ số (VC)</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -1548,7 +1553,7 @@ export default function AdminPortalView({
               MÀN HÌNH 5: WEBAUTHN (PASSKEY) (ĐÚNG CHUẨN Ô 5)
              ========================================================================= */}
           {activeMenu === 'WEBAUTHN' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">WebAuthn (Passkey)</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -1736,7 +1741,7 @@ export default function AdminPortalView({
               MÀN HÌNH 6: MERKLE TREE (ĐÚNG CHUẨN Ô 6 — THÔNG TIN CÂY + SƠ ĐỒ PASTEL)
              ========================================================================= */}
           {activeMenu === 'MERKLE' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h1 className="text-2xl font-bold text-[#0F294E] m-0">Merkle Tree</h1>
@@ -1898,7 +1903,7 @@ export default function AdminPortalView({
               MÀN HÌNH 7: BLOCKCHAIN (ĐÚNG CHUẨN Ô 7 — 3 TAB GIAO DỊCH / KHỐI / SMART CONTRACT)
              ========================================================================= */}
           {activeMenu === 'BLOCKCHAIN' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">Blockchain</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -2080,7 +2085,7 @@ export default function AdminPortalView({
               MÀN HÌNH 8: NHẬT KÝ & GIÁM SÁT (ĐÚNG CHUẨN Ô 8 + SOC SIMULATOR)
              ========================================================================= */}
           {activeMenu === 'AUDIT' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h1 className="text-2xl font-bold text-[#0F294E] m-0">Nhật ký &amp; Giám sát</h1>
@@ -2314,7 +2319,7 @@ export default function AdminPortalView({
               MÀN HÌNH 9: BÁO CÁO & THỐNG KÊ (ĐÚNG CHUẨN Ô 9 — 5 TAB + DONUT 3 MÀU + CỘT VC)
              ========================================================================= */}
           {activeMenu === 'REPORTS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">Báo cáo &amp; Thống kê</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -2369,7 +2374,7 @@ export default function AdminPortalView({
                     </h2>
 
                     <div className="flex flex-wrap items-center justify-center gap-8 my-auto py-4">
-                      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center shrink-0">
+                      <div className="uth-donut-reveal relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center shrink-0">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                           <circle cx="60" cy="60" r="44" fill="transparent" stroke="#E2E8F0" strokeWidth="18" />
                           {/* Sinh viên 88.4% (~244 / 276.46) */}
@@ -2467,7 +2472,7 @@ export default function AdminPortalView({
                         </div>
 
                         <div className="relative z-10 grid grid-cols-7 gap-3 sm:gap-4">
-                          {DAILY_VC_BARS.map((d) => {
+                          {DAILY_VC_BARS.map((d, idx) => {
                             const hPct = Math.round((d.value / 8000) * 100);
                             return (
                               <div key={d.day} className="flex flex-col items-center group">
@@ -2476,8 +2481,8 @@ export default function AdminPortalView({
                                     {(d.value / 1000).toFixed(1).replace('.', ',')}k
                                   </span>
                                   <div
-                                    className="w-full rounded-t-xl bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] shadow-xs group-hover:brightness-110 transition-all"
-                                    style={{ height: `${hPct}%` }}
+                                    className="uth-bar-grow w-full rounded-t-xl bg-gradient-to-t from-[#1D4ED8] to-[#3B82F6] shadow-xs group-hover:brightness-110"
+                                    style={{ height: `${hPct}%`, animationDelay: `${idx * 55}ms` }}
                                   />
                                 </div>
                                 <span className="text-xs sm:text-sm font-semibold text-slate-600 mt-3">
@@ -2499,7 +2504,7 @@ export default function AdminPortalView({
               MÀN HÌNH 10: CẤU HÌNH HỆ THỐNG
              ========================================================================= */}
           {activeMenu === 'SETTINGS' && (
-            <div className="space-y-5 animate-[fadeIn_0.25s_ease-out]">
+            <div className="space-y-5 uth-page-enter">
               <div>
                 <h1 className="text-2xl font-bold text-[#0F294E] m-0">Cấu hình hệ thống</h1>
                 <p className="text-sm text-slate-500 mt-1 mb-0">
@@ -2548,11 +2553,11 @@ export default function AdminPortalView({
               setShowAddDidModal(false);
             }
           }}
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+          className="uth-modal-backdrop fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
         >
           <form
             onSubmit={handleCreateUser}
-            className="w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
+            className="uth-modal-panel w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-[#0F294E] m-0">

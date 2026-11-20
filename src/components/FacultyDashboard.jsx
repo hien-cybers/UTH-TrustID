@@ -87,7 +87,8 @@ export default function FacultyDashboard({
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null); // 'email' | 'password' | null
-  const [loginParallax, setLoginParallax] = useState({ x: 0, y: 0 });
+  const loginContainerRef = useRef(null);
+  const loginParallaxRafRef = useRef(null);
   const [loginHelperNotice, setLoginHelperNotice] = useState('');
   const [authError, setAuthError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -2212,53 +2213,67 @@ export default function FacultyDashboard({
       );
     }
 
+    // Zero React re-render parallax (cập nhật trực tiếp CSS Variables qua requestAnimationFrame 120fps)
     const handleCardMouseMove = (e) => {
-      const rect = e.currentTarget.getBoundingClientRect();
+      const el = loginContainerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
       const nx = (e.clientX - rect.left) / rect.width - 0.5;
       const ny = (e.clientY - rect.top) / rect.height - 0.5;
-      setLoginParallax({ x: nx * 14, y: ny * 14 });
+      if (loginParallaxRafRef.current) cancelAnimationFrame(loginParallaxRafRef.current);
+      loginParallaxRafRef.current = requestAnimationFrame(() => {
+        el.style.setProperty('--lx', `${(nx * 14).toFixed(2)}px`);
+        el.style.setProperty('--ly', `${(ny * 14).toFixed(2)}px`);
+      });
     };
 
     const handleCardMouseLeave = () => {
-      setLoginParallax({ x: 0, y: 0 });
+      const el = loginContainerRef.current;
+      if (!el) return;
+      if (loginParallaxRafRef.current) cancelAnimationFrame(loginParallaxRafRef.current);
+      loginParallaxRafRef.current = requestAnimationFrame(() => {
+        el.style.setProperty('--lx', '0px');
+        el.style.setProperty('--ly', '0px');
+      });
     };
 
     return (
       <div
+        ref={loginContainerRef}
         onMouseMove={handleCardMouseMove}
         onMouseLeave={handleCardMouseLeave}
         className="min-h-screen lg:h-screen w-full flex flex-col justify-between relative overflow-hidden select-none font-sans text-white bg-[#070618]"
         style={{
+          '--lx': '0px',
+          '--ly': '0px',
           background:
             'radial-gradient(circle at 34% 58%, rgba(56, 189, 248, 0.22) 0%, rgba(124, 58, 237, 0.24) 28%, transparent 62%), radial-gradient(circle at 75% 45%, rgba(139, 92, 246, 0.22) 0%, transparent 56%), linear-gradient(180deg, #060515 0%, #0B0822 54%, #070518 100%)'
         }}
       >
         <style>{`
           @keyframes loginOrbitSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: rotate3d(0, 0, 1, 0deg); }
+            100% { transform: rotate3d(0, 0, 1, 360deg); }
           }
           @keyframes loginOrbitReverse {
-            0% { transform: rotate(360deg); }
-            100% { transform: rotate(0deg); }
+            0% { transform: rotate3d(0, 0, 1, 360deg); }
+            100% { transform: rotate3d(0, 0, 1, 0deg); }
           }
           @keyframes idCardFloat3D {
             0%, 100% {
-              transform: perspective(1000px) rotateY(14deg) rotateX(6deg) rotateZ(-4deg) translateY(0px);
-              filter: drop-shadow(0 0 36px rgba(56, 189, 248, 0.55));
+              transform: perspective(1000px) rotateY(14deg) rotateX(6deg) rotateZ(-4deg) translate3d(0, 0px, 0);
             }
             50% {
-              transform: perspective(1000px) rotateY(6deg) rotateX(-4deg) rotateZ(-2deg) translateY(-12px);
-              filter: drop-shadow(0 0 52px rgba(168, 85, 247, 0.72));
+              transform: perspective(1000px) rotateY(6deg) rotateX(-4deg) rotateZ(-2deg) translate3d(0, -11px, 0);
             }
           }
           @keyframes pillFloatLogin {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-7px); }
+            0%, 100% { transform: translate3d(0, 0px, 0); }
+            50% { transform: translate3d(0, -7px, 0); }
           }
           @keyframes loginBtnSweep {
-            0% { transform: translateX(-130%) skewX(-18deg); }
-            100% { transform: translateX(230%) skewX(-18deg); }
+            0% { transform: translate3d(-130%, 0, 0) skewX(-18deg); }
+            100% { transform: translate3d(230%, 0, 0) skewX(-18deg); }
           }
         `}</style>
 
@@ -2347,17 +2362,17 @@ export default function FacultyDashboard({
             
             {/* Quầng sáng xanh-tím phía sau Thẻ 3D */}
             <div
-              className="pointer-events-none absolute w-[360px] h-[360px] sm:w-[440px] sm:h-[440px] rounded-full blur-3xl opacity-65"
+              className="pointer-events-none absolute w-[360px] h-[360px] sm:w-[440px] sm:h-[440px] rounded-full blur-3xl opacity-65 will-change-transform transition-transform duration-300 ease-out"
               style={{
                 background:
                   'radial-gradient(circle, rgba(56,189,248,0.48) 0%, rgba(139,92,246,0.42) 45%, transparent 72%)',
-                transform: `translate3d(${loginParallax.x * 0.5}px, ${loginParallax.y * 0.5}px, 0)`
+                transform: 'translate3d(calc(var(--lx) * 0.5), calc(var(--ly) * 0.5), 0)'
               }}
             />
 
             {/* Vòng quỹ đạo xoay tròn quanh Thẻ Định Danh 3D */}
             <div
-              className="pointer-events-none absolute w-[350px] h-[350px] sm:w-[430px] sm:h-[430px] rounded-full"
+              className="pointer-events-none absolute w-[350px] h-[350px] sm:w-[430px] sm:h-[430px] rounded-full will-change-transform"
               style={{ animation: 'loginOrbitSpin 18s linear infinite' }}
             >
               <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
@@ -2403,8 +2418,11 @@ export default function FacultyDashboard({
             <div className="relative z-20 flex flex-col items-center pt-10">
               {/* Thẻ Định Danh 3D Nghiêng */}
               <div
-                className="relative"
-                style={{ animation: 'idCardFloat3D 4.6s ease-in-out infinite' }}
+                className="relative will-change-transform"
+                style={{
+                  animation: 'idCardFloat3D 4.8s ease-in-out infinite',
+                  filter: 'drop-shadow(0 0 38px rgba(56, 189, 248, 0.52))'
+                }}
               >
                 <div className="relative w-48 h-60 sm:w-56 sm:h-68 rounded-[28px] bg-gradient-to-br from-[#3B82F6]/35 via-[#312E81]/80 to-[#1E1B4B]/95 border-[3px] border-sky-300/80 shadow-[0_0_45px_rgba(56,189,248,0.55),inset_0_0_25px_rgba(168,85,247,0.45)] backdrop-blur-xl flex flex-col items-center justify-center p-6">
                   {/* Viền sáng bên trong thẻ */}
@@ -2511,9 +2529,9 @@ export default function FacultyDashboard({
           {/* CỘT PHẢI (6 CỘT): KHUNG KÍNH ĐĂNG NHẬP HỆ THỐNG UTH-TRUSTID (CHỈ ĐĂNG NHẬP BẰNG TÀI KHOẢN ĐIỀN) */}
           <div className="lg:col-span-6 flex justify-center lg:justify-end">
             <div
-              className="relative w-full max-w-[520px] rounded-[32px] bg-[#0D0A24]/90 backdrop-blur-2xl border border-purple-400/50 shadow-[0_0_75px_rgba(139,92,246,0.3)] p-8 sm:p-11 text-white transition-transform duration-300 ease-out"
+              className="relative w-full max-w-[520px] rounded-[32px] bg-[#0D0A24]/90 backdrop-blur-2xl border border-purple-400/50 shadow-[0_0_75px_rgba(139,92,246,0.3)] p-8 sm:p-11 text-white will-change-transform transition-transform duration-300 ease-out"
               style={{
-                transform: `translate3d(${loginParallax.x * 0.2}px, ${loginParallax.y * 0.2}px, 0)`
+                transform: 'translate3d(calc(var(--lx) * 0.2), calc(var(--ly) * 0.2), 0)'
               }}
             >
               {/* Điểm sáng viền góc trên trái & dưới phải của khung */}

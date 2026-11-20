@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   GraduationCap,
   ArrowRight,
@@ -55,59 +55,74 @@ const BOTTOM_HIGHLIGHTS = [
 
 export default function LandingPage({ onOpenLogin }) {
   const [activeNav, setActiveNav] = useState('HOME');
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const rootRef = useRef(null);
+  const rafRef = useRef(null);
 
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  // Zero React re-render parallax (120fps trực tiếp qua GPU CSS Variables)
   const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+    const el = rootRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     const nx = (e.clientX - rect.left) / rect.width - 0.5;
     const ny = (e.clientY - rect.top) / rect.height - 0.5;
-    setMousePos({ x: nx * 16, y: ny * 16 });
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      el.style.setProperty('--mx', `${(nx * 16).toFixed(2)}px`);
+      el.style.setProperty('--my', `${(ny * 16).toFixed(2)}px`);
+    });
   };
 
   return (
     <div
+      ref={rootRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen lg:h-screen w-full bg-[#070618] text-white font-sans select-none overflow-x-hidden lg:overflow-hidden relative flex flex-col justify-between"
       style={{
+        '--mx': '0px',
+        '--my': '0px',
         background:
           'radial-gradient(circle at 68% 46%, rgba(124, 58, 237, 0.28) 0%, rgba(56, 189, 248, 0.1) 30%, transparent 64%), radial-gradient(circle at 18% 32%, rgba(99, 102, 241, 0.18) 0%, transparent 52%), linear-gradient(180deg, #070618 0%, #0C0926 55%, #07051A 100%)'
       }}
     >
-      {/* CSS Keyframes cho Khiên Bảo Vệ Xoay Tròn 360° & Hiệu Ứng Ánh Sáng */}
+      {/* CSS Keyframes chuẩn GPU Compositor-only (chỉ dùng transform3d & opacity, không animate filter) */}
       <style>{`
         @keyframes orbitSpinClockwise {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% { transform: rotate3d(0, 0, 1, 0deg); }
+          100% { transform: rotate3d(0, 0, 1, 360deg); }
         }
         @keyframes orbitSpinCounter {
-          0% { transform: rotate(360deg); }
-          100% { transform: rotate(0deg); }
+          0% { transform: rotate3d(0, 0, 1, 360deg); }
+          100% { transform: rotate3d(0, 0, 1, 0deg); }
         }
         @keyframes shieldFloatPulse {
           0%, 100% {
-            transform: translateY(0px) rotateY(-7deg) rotateX(3deg);
-            filter: drop-shadow(0 0 36px rgba(139, 92, 246, 0.6));
+            transform: translate3d(0, 0px, 0) rotateY(-6deg) rotateX(2.5deg);
           }
           50% {
-            transform: translateY(-12px) rotateY(9deg) rotateX(-3deg);
-            filter: drop-shadow(0 0 54px rgba(56, 189, 248, 0.78));
+            transform: translate3d(0, -11px, 0) rotateY(7deg) rotateX(-2.5deg);
           }
         }
         @keyframes radarSweepSpin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% { transform: rotate3d(0, 0, 1, 0deg); }
+          100% { transform: rotate3d(0, 0, 1, 360deg); }
         }
         @keyframes cardFloatGentle {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-7px); }
+          0%, 100% { transform: translate3d(0, 0px, 0); }
+          50% { transform: translate3d(0, -7px, 0); }
         }
         @keyframes pedestalWave {
-          0%, 100% { opacity: 0.6; transform: scaleX(1); }
-          50% { opacity: 1; transform: scaleX(1.08); }
+          0%, 100% { opacity: 0.62; transform: scale3d(1, 1, 1); }
+          50% { opacity: 0.96; transform: scale3d(1.07, 1, 1); }
         }
         @keyframes btnShine {
-          0% { transform: translateX(-130%) skewX(-20deg); }
-          100% { transform: translateX(230%) skewX(-20deg); }
+          0% { transform: translate3d(-130%, 0, 0) skewX(-20deg); }
+          100% { transform: translate3d(230%, 0, 0) skewX(-20deg); }
         }
       `}</style>
 
@@ -304,17 +319,17 @@ export default function LandingPage({ onOpenLogin }) {
           
           {/* Quầng sáng trung tâm lớn sau Khiên */}
           <div
-            className="pointer-events-none absolute w-[420px] h-[420px] xl:w-[520px] xl:h-[520px] rounded-full blur-3xl opacity-60"
+            className="pointer-events-none absolute w-[420px] h-[420px] xl:w-[520px] xl:h-[520px] rounded-full blur-3xl opacity-60 will-change-transform transition-transform duration-300 ease-out"
             style={{
               background:
                 'radial-gradient(circle, rgba(168,85,247,0.6) 0%, rgba(56,189,248,0.32) 46%, transparent 72%)',
-              transform: `translate3d(${mousePos.x * 0.5}px, ${mousePos.y * 0.5}px, 0)`
+              transform: 'translate3d(calc(var(--mx) * 0.5), calc(var(--my) * 0.5), 0)'
             }}
           />
 
           {/* VÒNG QUỸ ĐẠO XOAY TRÒN 1 (NGOÀI CÙNG - PHÓNG TO 540PX XOAY THUẬN CHIỀU KIM ĐỒNG HỒ 360°) */}
           <div
-            className="pointer-events-none absolute w-[420px] h-[420px] sm:w-[490px] sm:h-[490px] xl:w-[550px] xl:h-[550px] rounded-full"
+            className="pointer-events-none absolute w-[420px] h-[420px] sm:w-[490px] sm:h-[490px] xl:w-[550px] xl:h-[550px] rounded-full will-change-transform"
             style={{ animation: 'orbitSpinClockwise 20s linear infinite' }}
           >
             <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
@@ -406,8 +421,11 @@ export default function LandingPage({ onOpenLogin }) {
             <div
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
               title="Bấm để truy cập Cổng xác thực UTH-TrustID"
-              className="relative cursor-pointer group"
-              style={{ animation: 'shieldFloatPulse 4.5s ease-in-out infinite' }}
+              className="relative cursor-pointer group will-change-transform"
+              style={{
+                animation: 'shieldFloatPulse 4.6s ease-in-out infinite',
+                filter: 'drop-shadow(0 0 38px rgba(139, 92, 246, 0.58))'
+              }}
             >
               {/* Vòng năng lượng xoay tròn sát viền Khiên */}
               <div
