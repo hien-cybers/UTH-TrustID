@@ -10,8 +10,7 @@ import {
   Fingerprint,
   IdCard,
   GitBranch,
-  CheckCircle2,
-  X
+  CheckCircle2
 } from 'lucide-react';
 
 const NAV_SECTION_MODALS = {
@@ -111,12 +110,25 @@ const BOTTOM_HIGHLIGHTS = [
 export default function LandingPage({ onOpenLogin }) {
   const [activeNav, setActiveNav] = useState('HOME');
 
+  const handleNavClick = (sectionId) => {
+    setActiveNav(sectionId);
+    if (sectionId === 'HOME') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const targetEl = document.getElementById(`landing-section-${sectionId}`);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div
-      className="min-h-screen lg:h-screen w-full bg-[#070618] text-white font-sans select-none overflow-x-hidden lg:overflow-hidden relative flex flex-col justify-between"
+      id="landing-top"
+      className="min-h-screen w-full bg-[#070618] text-white font-sans select-none overflow-x-hidden overflow-y-auto relative flex flex-col justify-between"
       style={{
         background:
-          'radial-gradient(circle at 68% 46%, rgba(124, 58, 237, 0.28) 0%, rgba(56, 189, 248, 0.1) 30%, transparent 64%), radial-gradient(circle at 18% 32%, rgba(99, 102, 241, 0.18) 0%, transparent 52%), linear-gradient(180deg, #070618 0%, #0C0926 55%, #07051A 100%)'
+          'radial-gradient(circle at 68% 26%, rgba(124, 58, 237, 0.28) 0%, rgba(56, 189, 248, 0.1) 30%, transparent 64%), radial-gradient(circle at 18% 22%, rgba(99, 102, 241, 0.18) 0%, transparent 52%), linear-gradient(180deg, #070618 0%, #0C0926 55%, #07051A 100%)'
       }}
     >
       {/* CSS Keyframes thuần GPU Compositor (0 filter, 0 blur repaint, 0 mousemove JS) -> 60-120fps tuyệt đối */}
@@ -163,14 +175,14 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </div>
 
-      {/* ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG (NAVBAR UTH-TRUSTID CỠ LỚN) ==================== */}
-      <header className="relative z-30 w-full border-b border-white/10 bg-[#08071C]/95 shrink-0">
+      {/* ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG (STICKY NAVBAR KHI CUỘN LÊN / XUỐNG) ==================== */}
+      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#08071C]/95 shrink-0">
         <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-4 lg:py-5 flex items-center justify-between gap-4 sm:gap-6">
           {/* Logo Khiên UTH-TrustID */}
           <div className="flex items-center gap-5">
             <button
               type="button"
-              onClick={() => setActiveNav('HOME')}
+              onClick={() => handleNavClick('HOME')}
               className="flex items-center gap-3.5 bg-transparent border-none cursor-pointer p-0 text-white group"
             >
               <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-2xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_26px_rgba(139,92,246,0.65)] border border-purple-300/40 group-hover:scale-105 transition-transform">
@@ -183,7 +195,7 @@ export default function LandingPage({ onOpenLogin }) {
             <span className="hidden md:inline-block h-6 w-px bg-white/15" />
           </div>
 
-          {/* Menu Điều Hướng Giữa (Cỡ chữ lớn rõ ràng) */}
+          {/* Menu Điều Hướng Giữa (Bấm cuộn mượt tới từng phần & cuộn lên đầu trang) */}
           <nav className="hidden lg:flex items-center gap-9 xl:gap-11">
             {[
               { id: 'HOME', label: 'Trang chủ' },
@@ -198,7 +210,7 @@ export default function LandingPage({ onOpenLogin }) {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setActiveNav(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`relative py-2 text-base xl:text-[17px] font-semibold bg-transparent border-none cursor-pointer transition-colors ${
                     isActive ? 'text-white' : 'text-slate-300 hover:text-white'
                   }`}
@@ -583,9 +595,9 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </main>
 
-      {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI CỠ LỚN Ở CHÂN TRANG ==================== */}
-      <footer className="relative z-20 w-full bg-[#090720]/96 border-t border-purple-500/30 shadow-[0_-10px_30px_rgba(7,6,24,0.75)] shrink-0">
-        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-5 lg:py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/20">
+      {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI CỠ LỚN ==================== */}
+      <section className="relative z-20 w-full bg-[#090720]/96 border-y border-purple-500/30 shadow-[0_-10px_30px_rgba(7,6,24,0.75)] shrink-0">
+        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-6 lg:py-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/20">
           {BOTTOM_HIGHLIGHTS.map((item) => (
             <div
               key={item.id}
@@ -606,98 +618,90 @@ export default function LandingPage({ onOpenLogin }) {
             </div>
           ))}
         </div>
-      </footer>
-      {/* ==================== MODAL NỘI DUNG HỌC THUẬT KHI BẤM CÁC MỤC NAVBAR (ĐỀ TÀI / GIẢI PHÁP / CÔNG NGHỆ / KẾT QUẢ / ĐỘI NGŨ) ==================== */}
-      {activeNav !== 'HOME' && NAV_SECTION_MODALS[activeNav] && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setActiveNav('HOME');
-          }}
-          className="uth-modal-backdrop fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
-        >
-          <div className="uth-modal-panel w-full max-w-2xl rounded-3xl bg-[#120E2E] border border-purple-400/45 p-6 sm:p-8 shadow-2xl space-y-5 text-white">
-            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
-              <div className="space-y-1.5">
-                <span className="inline-block px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold tracking-wider">
-                  {NAV_SECTION_MODALS[activeNav].badge}
+      </section>
+
+      {/* ==================== CÁC PHẦN NỘI DUNG CUỘN LÊN / XUỐNG (ĐỀ TÀI • GIẢI PHÁP • CÔNG NGHỆ • KẾT QUẢ • ĐỘI NGŨ) ==================== */}
+      <section className="relative z-20 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-12 lg:py-16 space-y-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          {Object.entries(NAV_SECTION_MODALS).map(([key, sec]) => (
+            <div
+              key={key}
+              id={`landing-section-${key}`}
+              className={`scroll-mt-28 rounded-3xl bg-[#110D2A]/95 border p-6 sm:p-8 shadow-xl space-y-4 transition-colors ${
+                activeNav === key
+                  ? 'border-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.25)]'
+                  : 'border-purple-500/25 hover:border-purple-400/50'
+              } ${key === 'TEAM' ? 'lg:col-span-2' : ''}`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="inline-block px-3.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold tracking-wider">
+                  {sec.badge}
                 </span>
-                <h3 className="text-xl sm:text-2xl font-bold text-white m-0">
-                  {NAV_SECTION_MODALS[activeNav].title}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveNav('HOME')}
-                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl p-2 border-none cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-sm sm:text-base text-slate-200 leading-relaxed m-0">
-              {NAV_SECTION_MODALS[activeNav].desc}
-            </p>
-
-            <div className="space-y-3">
-              {NAV_SECTION_MODALS[activeNav].points.map((pt, i) => (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-2xl bg-[#1A1440] border border-purple-400/25 flex items-start gap-3 text-sm sm:text-[15px] text-slate-100 leading-relaxed"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-[#C084FC] shrink-0 mt-0.5" />
-                  <span>{pt}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/10">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { id: 'TOPIC', label: 'Đề tài' },
-                  { id: 'SOLUTION', label: 'Giải pháp' },
-                  { id: 'TECH', label: 'Công nghệ' },
-                  { id: 'RESULTS', label: 'Kết quả' },
-                  { id: 'TEAM', label: 'Đội ngũ' }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveNav(tab.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border cursor-pointer ${
-                      activeNav === tab.id
-                        ? 'bg-[#7C3AED] text-white border-purple-300'
-                        : 'bg-[#19133C] text-slate-300 border-purple-500/25 hover:text-white'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2.5">
                 <button
                   type="button"
-                  onClick={() => setActiveNav('HOME')}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs sm:text-sm font-semibold border-none cursor-pointer"
+                  onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                  className="text-xs sm:text-sm font-semibold text-[#C084FC] hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1"
                 >
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveNav('HOME');
-                    if (onOpenLogin) onOpenLogin('FACULTY');
-                  }}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  <span>Dùng thử hệ thống</span>
+                  <span>Trải nghiệm ngay</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
+
+              <h3 className="text-xl sm:text-2xl font-extrabold text-white m-0 leading-snug">
+                {sec.title}
+              </h3>
+
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed m-0">
+                {sec.desc}
+              </p>
+
+              <div className="space-y-2.5 pt-1">
+                {sec.points.map((pt, i) => (
+                  <div
+                    key={i}
+                    className="p-3.5 rounded-2xl bg-[#18133A] border border-purple-400/20 flex items-start gap-3 text-sm sm:text-[15px] text-slate-100 leading-relaxed"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-[#C084FC] shrink-0 mt-0.5" />
+                    <span>{pt}</span>
+                  </div>
+                ))}
+              </div>
             </div>
+          ))}
+        </div>
+
+        {/* Chân trang & Nút Cuộn Lên Đầu Trang */}
+        <div className="pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-400">
+          <div className="flex items-center gap-3">
+            <img
+              src="/uth-logo.png"
+              alt="UTH"
+              className="h-6 w-auto object-contain bg-white/95 px-2 py-0.5 rounded-md"
+            />
+            <span>
+              © 2026 UTH-TrustID • Trường Đại học Giao thông Vận tải TP.HCM (UTH)
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleNavClick('HOME')}
+              className="px-4 py-2 rounded-xl bg-[#171238] hover:bg-[#221A52] text-purple-200 text-xs sm:text-sm font-semibold border border-purple-400/35 cursor-pointer transition-colors"
+            >
+              ↑ Cuộn lên đầu trang
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <span>Dùng thử hệ thống</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
-      )}
+      </section>
     </div>
   );
 }

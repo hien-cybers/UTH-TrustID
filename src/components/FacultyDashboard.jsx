@@ -2213,7 +2213,7 @@ export default function FacultyDashboard({
 
     return (
       <div
-        className="min-h-screen lg:h-screen w-full flex flex-col justify-between relative overflow-hidden select-none font-sans text-white bg-[#070618]"
+        className="min-h-screen w-full flex flex-col justify-between relative overflow-x-hidden overflow-y-auto select-none font-sans text-white bg-[#070618]"
         style={{
           background:
             'radial-gradient(circle at 34% 58%, rgba(56, 189, 248, 0.22) 0%, rgba(124, 58, 237, 0.24) 28%, transparent 62%), radial-gradient(circle at 75% 45%, rgba(139, 92, 246, 0.22) 0%, transparent 56%), linear-gradient(180deg, #060515 0%, #0B0822 54%, #070518 100%)'
