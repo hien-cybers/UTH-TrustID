@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GraduationCap,
   ArrowRight,
+  ArrowUp,
   Play,
   ShieldCheck,
   Layers,
@@ -10,61 +11,13 @@ import {
   Fingerprint,
   IdCard,
   GitBranch,
-  CheckCircle2
+  CheckCircle2,
+  Building2,
+  Smartphone,
+  MonitorCheck,
+  ShieldAlert,
+  BookOpen
 } from 'lucide-react';
-
-const NAV_SECTION_MODALS = {
-  TOPIC: {
-    badge: 'ĐỀ TÀI NGHIÊN CỨU KHOA HỌC',
-    title: 'Định danh số phi tập trung & Xác thực hiện diện phòng học',
-    desc: 'Giải quyết triệt để bài toán giả mạo danh tính, điểm danh hộ, chia sẻ ảnh chụp mã QR và rủi ro lộ lọt cơ sở dữ liệu tập trung trong môi trường đại học.',
-    points: [
-      'Trao quyền tự chủ danh tính (Self-Sovereign Identity) cho sinh viên trên thiết bị cá nhân theo chuẩn W3C DID Core 1.0.',
-      'Loại bỏ hoàn toàn mật khẩu truyền thống bằng khóa phần cứng WebAuthn / FIDO2 (Face ID, Touch ID, Windows Hello).',
-      'Xác thực hiện diện đa nhân tố: QR Nonce xoay tự động + Định vị Geofencing Haversine (R ≤ 35m) + Chữ ký số EIP-191.'
-    ]
-  },
-  SOLUTION: {
-    badge: 'KIẾN TRÚC GIẢI PHÁP 3 TẦNG',
-    title: 'Mô hình Tam giác Tin cậy: Issuer – Holder – Verifier',
-    desc: 'Hệ sinh thái UTH-TrustID vận hành độc lập giữa 3 phân hệ được đồng bộ thời gian thực qua WebSocket và Smart Contract:',
-    points: [
-      '1. Nhà trường / Cổng Quản trị (Issuer): Phát hành chứng chỉ số W3C VC theo lô bằng cây băm Merkle Tree và thu hồi khóa O(1) trên chuỗi.',
-      '2. Ví Định danh Sinh viên (Holder Node - Port 5173): Lưu trữ khóa riêng tư bọc AES-GCM 256-bit (PBKDF2 100.000 vòng), hỗ trợ điểm danh Offline & tiết lộ chọn lọc ZKP-Lite.',
-      '3. Cổng Điều hành Giảng viên (Verifier - Port 5174): Phát mã QR động, giám sát bản đồ GPS Radar, hậu kiểm Spot-Check 60s và chặn gian lận SOC IDS.'
-    ]
-  },
-  TECH: {
-    badge: 'NỀN TẢNG CÔNG NGHỆ CỐT LÕI',
-    title: 'Kết hợp W3C DID • WebAuthn FIDO2 • Keccak256 Merkle Tree',
-    desc: 'Ba trụ cột mật mã học đảm bảo tính toàn vẹn, chống chối bỏ và tối ưu chi phí vận hành trên Blockchain:',
-    points: [
-      'W3C DID & Verifiable Credentials: Định danh chuẩn did:uth:secp256k1 tương thích chuẩn quốc tế W3C.',
-      'WebAuthn / Passkey & Device Fingerprint: Khóa gắn chặt với phần cứng TPM / Secure Enclave, ngăn chặn 1 thiết bị điểm danh cho 2 MSSV.',
-      'Merkle Tree Batching: Gom hàng ngàn bản ghi điểm danh và chứng chỉ thành 1 Merkle Root duy nhất (32 bytes) neo lên Smart Contract.'
-    ]
-  },
-  RESULTS: {
-    badge: 'KẾT QUẢ THỰC NGHIỆM & ĐÁNH GIÁ',
-    title: 'Hiệu năng vượt trội & Phòng vệ 100% trước 4 kịch bản tấn công',
-    desc: 'Kết quả đo kiểm thực tế trên hệ thống UTH-TrustID với quy mô 12.548 định danh và 26.937 chứng chỉ số:',
-    points: [
-      'Tiết kiệm 96,4% chi phí Gas lưu trữ On-Chain nhờ cơ chế neo lô Merkle Root so với ghi từng chứng chỉ rời rạc.',
-      'Độ trễ xác minh nhánh Merkle Proof O(log₂ N) dưới 2 ms; thu hồi khóa thiết bị bị mất độ phức tạp O(1) tức thời.',
-      'Hệ thống SOC IDS tự động chặn 100% (HTTP 403): Quét lại QR cũ (Replay Attack), Giả mạo chữ ký, Điểm danh hộ 1 máy 2 SV và Fake GPS.'
-    ]
-  },
-  TEAM: {
-    badge: 'ĐỘI NGŨ NGHIÊN CỨU & PHÁT TRIỂN',
-    title: 'Trường Đại học Giao thông Vận tải TP.HCM (UTH)',
-    desc: 'Đề tài Nghiên cứu Khoa học cấp Trường thuộc Khoa Công nghệ Thông tin – Chuyên ngành An toàn Thông tin & Khoa học Dữ liệu:',
-    points: [
-      'Đơn vị chủ trì: Khoa Công nghệ Thông tin – Trường Đại học Giao thông Vận tải TP.HCM (UTH).',
-      'Giảng viên hướng dẫn & Cổng Giảng viên: TS. Nguyễn Thị Mai / ThS. Nguyễn Thị Hiên.',
-      'Nhóm sinh viên thực hiện: Nguyễn Đức Hiển (MSSV: 2251120000) cùng cộng sự nhóm NCKH UTH-TrustID.'
-    ]
-  }
-};
 
 const GITHUB_REPO_URL = 'https://github.com/hien-cybers/UTH-TrustID';
 
@@ -80,30 +33,150 @@ function GitHubIcon({ className = 'w-5 h-5' }) {
   );
 }
 
-const BOTTOM_HIGHLIGHTS = [
+const NAV_ITEMS = [
+  { id: 'HOME', label: 'Trang chủ' },
+  { id: 'TOPIC', label: 'Đề tài' },
+  { id: 'SOLUTION', label: 'Giải pháp' },
+  { id: 'TECH', label: 'Công nghệ' },
+  { id: 'RESULTS', label: 'Kết quả' },
+  { id: 'TEAM', label: 'Đội ngũ' }
+];
+
+const CORE_HIGHLIGHTS = [
   {
     id: 'hl-1',
-    title: 'An toàn & tin cậy',
-    desc: 'Xác thực danh tính bằng khóa công khai (WebAuthn)',
-    icon: <ShieldCheck className="w-7 h-7 text-[#C084FC]" />
+    title: 'An toàn & Tin cậy',
+    desc: 'Xác thực danh tính bằng khóa công khai phần cứng WebAuthn / FIDO2.',
+    icon: <ShieldCheck className="w-6 h-6 text-[#C084FC]" />
   },
   {
     id: 'hl-2',
     title: 'Minh bạch dữ liệu',
-    desc: 'Bảo toàn và xác minh dữ liệu với Merkle Tree',
-    icon: <Layers className="w-7 h-7 text-[#C084FC]" />
+    desc: 'Bảo toàn, đóng lô và đối soát tính toàn vẹn dữ liệu bằng Merkle Tree.',
+    icon: <Layers className="w-6 h-6 text-[#38BDF8]" />
   },
   {
     id: 'hl-3',
     title: 'Tự chủ danh tính',
-    desc: 'Theo chuẩn W3C DID, người dùng làm chủ dữ liệu',
-    icon: <Users className="w-7 h-7 text-[#C084FC]" />
+    desc: 'Tuân thủ chuẩn W3C DID Core 1.0, sinh viên làm chủ khóa riêng tư.',
+    icon: <Users className="w-6 h-6 text-[#A855F7]" />
   },
   {
     id: 'hl-4',
     title: 'Ứng dụng thực tiễn',
-    desc: 'Xác thực hiện diện phòng học, phù hợp môi trường đại học',
-    icon: <Zap className="w-7 h-7 text-[#C084FC]" />
+    desc: 'Xác thực hiện diện phòng học thời gian thực, tối ưu cho đại học.',
+    icon: <Zap className="w-6 h-6 text-[#34D399]" />
+  }
+];
+
+const TOPIC_OBJECTIVES = [
+  {
+    num: '01',
+    title: 'Tự chủ danh tính chuẩn W3C DID',
+    desc: 'Trao quyền sở hữu danh tính (Self-Sovereign Identity) trực tiếp trên thiết bị cá nhân của sinh viên, loại bỏ nguy cơ rò rỉ dữ liệu tập trung.'
+  },
+  {
+    num: '02',
+    title: 'Xác thực không mật khẩu (Passwordless FIDO2)',
+    desc: 'Thay thế mật khẩu truyền thống bằng sinh trắc học phần cứng WebAuthn (Face ID, Touch ID, Windows Hello) gắn liền định danh thiết bị.'
+  },
+  {
+    num: '03',
+    title: 'Xác thực hiện diện phòng học đa nhân tố',
+    desc: 'Kết hợp mã QR Nonce xoay tự động, khoanh vùng tọa độ GPS Geofencing (R ≤ 35m) và chữ ký số mật mã EIP-191 chống điểm danh hộ tuyệt đối.'
+  }
+];
+
+const SOLUTION_LAYERS = [
+  {
+    step: '01',
+    role: 'ISSUER • NHÀ TRƯỜNG',
+    title: 'Cổng Quản trị (Admin Portal)',
+    badge: 'Port 5174 • Admin',
+    icon: <Building2 className="w-6 h-6 text-white" />,
+    accent: 'from-violet-600 to-indigo-600',
+    items: [
+      'Cấp phát & quản lý định danh số W3C DID cho toàn trường.',
+      'Đóng lô chứng chỉ số (VC) bằng cây Merkle Tree lên Blockchain.',
+      'Thu hồi khóa thiết bị bị mất với độ phức tạp O(1) tức thời.'
+    ]
+  },
+  {
+    step: '02',
+    role: 'HOLDER • SINH VIÊN',
+    title: 'Ví Định danh Di động',
+    badge: 'Port 5173 • Mobile',
+    icon: <Smartphone className="w-6 h-6 text-white" />,
+    accent: 'from-sky-500 to-blue-600',
+    items: [
+      'Lưu khóa riêng tư bọc AES-GCM 256-bit (PBKDF2 100.000 vòng).',
+      'Thẻ sinh viên số 3D tích hợp mã QR định danh & ký điểm danh 1 chạm.',
+      'Hỗ trợ hàng đợi Offline Queue và tiết lộ chọn lọc ZKP-Lite.'
+    ]
+  },
+  {
+    step: '03',
+    role: 'VERIFIER • GIẢNG VIÊN',
+    title: 'Cổng Điều hành Giảng viên',
+    badge: 'Port 5174 • Faculty',
+    icon: <MonitorCheck className="w-6 h-6 text-white" />,
+    accent: 'from-fuchsia-600 to-purple-600',
+    items: [
+      'Tạo phiên QR Nonce xoay tự động & chiếu toàn màn hình lớp học.',
+      'Giám sát bản đồ GPS Radar thời gian thực & hậu kiểm Spot-Check 60s.',
+      'Cảnh báo xâm nhập SOC IDS và xuất bảng điểm danh Excel (.xlsx).'
+    ]
+  }
+];
+
+const TECH_PILLARS = [
+  {
+    title: 'W3C DID & Verifiable Credentials',
+    icon: <IdCard className="w-6 h-6 text-[#C084FC]" />,
+    desc: 'Chuẩn hóa danh tính số phi tập trung did:uth:secp256k1 và chứng chỉ học thuật có chữ ký số xác minh độc lập không cần hỏi lại máy chủ gốc.',
+    tags: ['W3C DID 1.0', 'JSON-LD VC', 'EIP-191', 'ZKP-Lite']
+  },
+  {
+    title: 'WebAuthn / FIDO2 Passkey',
+    icon: <Fingerprint className="w-6 h-6 text-[#38BDF8]" />,
+    desc: 'Khóa mật mã sinh và bảo vệ trong vùng an toàn phần cứng TPM / Secure Enclave, ràng buộc chặt thiết bị để ngăn 1 máy điểm danh 2 MSSV.',
+    tags: ['FIDO2', 'Face ID / Touch ID', 'Device Binding', 'AES-GCM']
+  },
+  {
+    title: 'Keccak256 Merkle Tree & Smart Contract',
+    icon: <GitBranch className="w-6 h-6 text-[#34D399]" />,
+    desc: 'Gộp hàng nghìn bản ghi điểm danh & chứng chỉ thành một Merkle Root 32-byte duy nhất neo On-Chain, giảm tối đa chi phí Gas và đảm bảo bất biến.',
+    tags: ['Keccak256', 'Merkle Proof O(log N)', '32-Byte Root', 'Revocation O(1)']
+  }
+];
+
+const RESULT_METRICS = [
+  { value: '96,4%', label: 'Tiết kiệm chi phí Gas', sub: 'So với ghi từng VC rời rạc On-Chain' },
+  { value: '< 2 ms', label: 'Xác minh Merkle Proof', sub: 'Độ phức tạp tính toán O(log₂ N)' },
+  { value: '100%', label: 'Chặn tấn công SOC IDS', sub: 'Tự động từ chối HTTP 403 tức thời' },
+  { value: '12.548+', label: 'Định danh DID hoạt động', sub: 'Đồng bộ 26.937 chứng chỉ số (VC)' }
+];
+
+const DEFENSE_SCENARIOS = [
+  {
+    code: 'REPLAY_ATTACK',
+    title: 'Chống quét lại QR cũ',
+    desc: 'Từ chối ngay ảnh chụp màn hình mã QR gửi qua Zalo nhờ Nonce hết hạn tự động.'
+  },
+  {
+    code: 'DEVICE_SPOOFING',
+    title: 'Chống giả mạo chữ ký',
+    desc: 'Xác thực chữ ký số EIP-191 khớp khóa công khai DID đã đăng ký trên hệ thống.'
+  },
+  {
+    code: 'PROXY_ATTENDANCE',
+    title: 'Chống 1 máy 2 sinh viên',
+    desc: 'Khóa vân tay thiết bị (Device Fingerprint) theo từng phiên học để chặn điểm danh hộ.'
+  },
+  {
+    code: 'GEOFENCE_BREACH',
+    title: 'Chống Fake GPS ngoài lớp',
+    desc: 'Đối chiếu khoảng cách Haversine với tâm phòng học và phát hiện tọa độ giả mạo.'
   }
 ];
 
@@ -122,16 +195,33 @@ export default function LandingPage({ onOpenLogin }) {
     }
   };
 
+  // Tự động cập nhật mục Navbar đang xem khi người dùng cuộn lên / xuống
+  useEffect(() => {
+    const sectionIds = ['TOPIC', 'SOLUTION', 'TECH', 'RESULTS', 'TEAM'];
+    const handleScroll = () => {
+      if (window.scrollY < 260) {
+        setActiveNav('HOME');
+        return;
+      }
+      const scrollMid = window.scrollY + 220;
+      for (let i = sectionIds.length - 1; i >= 0; i -= 1) {
+        const el = document.getElementById(`landing-section-${sectionIds[i]}`);
+        if (el && el.offsetTop <= scrollMid) {
+          setActiveNav(sectionIds[i]);
+          return;
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div
       id="landing-top"
-      className="min-h-screen w-full bg-[#070618] text-white font-sans select-none overflow-x-hidden overflow-y-auto relative flex flex-col justify-between"
-      style={{
-        background:
-          'radial-gradient(circle at 68% 26%, rgba(124, 58, 237, 0.28) 0%, rgba(56, 189, 248, 0.1) 30%, transparent 64%), radial-gradient(circle at 18% 22%, rgba(99, 102, 241, 0.18) 0%, transparent 52%), linear-gradient(180deg, #070618 0%, #0C0926 55%, #07051A 100%)'
-      }}
+      className="min-h-screen w-full bg-[#070618] text-white font-sans overflow-x-clip relative flex flex-col"
     >
-      {/* CSS Keyframes thuần GPU Compositor (0 filter, 0 blur repaint, 0 mousemove JS) -> 60-120fps tuyệt đối */}
+      {/* CSS Keyframes thuần GPU Compositor -> 60-120fps mượt tuyệt đối */}
       <style>{`
         @keyframes orbitSpinClockwise {
           from { transform: rotate(0deg); }
@@ -142,82 +232,49 @@ export default function LandingPage({ onOpenLogin }) {
           to { transform: rotate(0deg); }
         }
         @keyframes shieldFloatPulse {
-          0%, 100% {
-            transform: translate3d(0, 0px, 0);
-          }
-          50% {
-            transform: translate3d(0, -10px, 0);
-          }
-        }
-        @keyframes cardFloatGentle {
           0%, 100% { transform: translate3d(0, 0px, 0); }
-          50% { transform: translate3d(0, -6px, 0); }
+          50% { transform: translate3d(0, -8px, 0); }
         }
       `}</style>
 
-      {/* Ảnh thật Tòa nhà Trường Đại học Giao thông Vận tải TP.HCM (UTH) mờ nghệ thuật bên góc phải */}
-      <div className="pointer-events-none absolute right-0 top-20 bottom-28 w-[34%] hidden xl:flex flex-col items-end justify-center opacity-35 select-none">
-        <div
-          className="relative w-96 h-[430px] rounded-l-3xl border-l border-t border-b border-purple-400/40 overflow-hidden shadow-2xl"
-          style={{
-            transform: 'perspective(900px) rotateY(-14deg) skewY(-2deg)'
-          }}
-        >
-          <img
-            src="/uth-campus-banner.jpg"
-            alt="UTH Campus"
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#070618] via-[#150E3A]/55 to-[#150E3A]/30" />
-          <div className="absolute top-5 left-5 px-3.5 py-2 rounded-xl bg-[#0D0A24]/85 border border-purple-300/40">
-            <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain" />
-          </div>
-        </div>
-      </div>
-
-      {/* ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG (STICKY NAVBAR KHI CUỘN LÊN / XUỐNG) ==================== */}
-      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#08071C]/95 shrink-0">
-        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-4 lg:py-5 flex items-center justify-between gap-4 sm:gap-6">
-          {/* Logo Khiên UTH-TrustID */}
-          <div className="flex items-center gap-5">
-            <button
-              type="button"
-              onClick={() => handleNavClick('HOME')}
-              className="flex items-center gap-3.5 bg-transparent border-none cursor-pointer p-0 text-white group"
-            >
-              <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-2xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_26px_rgba(139,92,246,0.65)] border border-purple-300/40 group-hover:scale-105 transition-transform">
-                <ShieldCheck className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
-              </div>
-              <span className="text-xl sm:text-2xl lg:text-[26px] font-extrabold tracking-tight text-white">
+      {/* ==================== 1. STICKY NAVBAR CỐ ĐỊNH TRÊN CÙNG ==================== */}
+      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#070618]/95">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 h-[74px] flex items-center justify-between gap-4">
+          {/* Thương hiệu UTH-TrustID */}
+          <button
+            type="button"
+            onClick={() => handleNavClick('HOME')}
+            className="flex items-center gap-3 bg-transparent border-none cursor-pointer p-0 text-white group shrink-0"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A855F7] via-[#7C3AED] to-[#4F46E5] flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.55)] border border-purple-300/40 group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left leading-tight">
+              <span className="block text-xl font-extrabold tracking-tight text-white">
                 UTH-TrustID
               </span>
-            </button>
-            <span className="hidden md:inline-block h-6 w-px bg-white/15" />
-          </div>
+              <span className="block text-[10.5px] font-semibold text-purple-300/90 uppercase tracking-wider">
+                W3C DID • WebAuthn
+              </span>
+            </div>
+          </button>
 
-          {/* Menu Điều Hướng Giữa (Bấm cuộn mượt tới từng phần & cuộn lên đầu trang) */}
-          <nav className="hidden lg:flex items-center gap-9 xl:gap-11">
-            {[
-              { id: 'HOME', label: 'Trang chủ' },
-              { id: 'TOPIC', label: 'Đề tài' },
-              { id: 'SOLUTION', label: 'Giải pháp' },
-              { id: 'TECH', label: 'Công nghệ' },
-              { id: 'RESULTS', label: 'Kết quả' },
-              { id: 'TEAM', label: 'Đội ngũ' }
-            ].map((item) => {
+          {/* Menu Điều hướng 6 mục cuộn mượt */}
+          <nav className="hidden lg:flex items-center gap-7 xl:gap-8">
+            {NAV_ITEMS.map((item) => {
               const isActive = activeNav === item.id;
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleNavClick(item.id)}
-                  className={`relative py-2 text-base xl:text-[17px] font-semibold bg-transparent border-none cursor-pointer transition-colors ${
+                  className={`relative py-2 text-[15px] font-semibold bg-transparent border-none cursor-pointer transition-colors ${
                     isActive ? 'text-white' : 'text-slate-300 hover:text-white'
                   }`}
                 >
                   <span>{item.label}</span>
                   <span
-                    className={`absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-gradient-to-r from-[#A855F7] to-[#6366F1] shadow-[0_0_12px_rgba(168,85,247,0.95)] transition-all duration-300 ${
+                    className={`absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#A855F7] to-[#38BDF8] transition-all duration-200 ${
                       isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'
                     }`}
                   />
@@ -226,482 +283,622 @@ export default function LandingPage({ onOpenLogin }) {
             })}
           </nav>
 
-          {/* Cụm Nút Bên Phải: Mã nguồn & Dùng thử hệ thống */}
-          <div className="flex items-center gap-3.5">
+          {/* Cụm nút Hành động */}
+          <div className="flex items-center gap-3 shrink-0">
             <a
               href={GITHUB_REPO_URL}
               target="_blank"
               rel="noreferrer"
-              className="hidden sm:inline-flex items-center gap-2.5 px-5 py-2.5 lg:py-3 rounded-2xl bg-[#13102E]/90 hover:bg-[#1D1842] border border-purple-400/35 text-slate-100 hover:text-white text-sm lg:text-base font-semibold no-underline transition-all"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#13102E] hover:bg-[#1D1842] border border-purple-400/30 text-slate-200 hover:text-white text-sm font-semibold no-underline transition-colors"
             >
-              <GitHubIcon className="w-5 h-5" />
+              <GitHubIcon className="w-4 h-4" />
               <span>Mã nguồn</span>
             </a>
 
             <button
               type="button"
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="group relative overflow-hidden px-6 lg:px-7 py-2.5 lg:py-3 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:brightness-110 text-white text-sm lg:text-base font-bold border border-purple-300/45 shadow-[0_0_24px_rgba(139,92,246,0.5)] cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2.5"
+              className="group px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:brightness-110 text-white text-sm font-bold border border-purple-300/40 shadow-[0_0_20px_rgba(139,92,246,0.45)] cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2"
             >
               <span>Dùng thử hệ thống</span>
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* ==================== NỘI DUNG HERO CHÍNH GIỮA (PHÓNG TO CÂN ĐỐI TOÀN MÀN HÌNH & MỌI THIẾT BỊ) ==================== */}
-      <main className="relative z-20 flex-1 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-6 lg:py-4 grid grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-10">
-        
-        {/* CỘT TRÁI (6 CỘT): THÔNG ĐIỆP ĐỀ TÀI NCKH UTH-TRUSTID CỠ LỚN */}
-        <div className="lg:col-span-6 space-y-6 xl:space-y-7">
-          {/* Huy hiệu Đề tài Nghiên cứu khoa học */}
-          <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-[#1C1244]/90 border border-purple-400/40 text-purple-200 text-sm sm:text-base lg:text-[17px] font-semibold shadow-[0_0_24px_rgba(139,92,246,0.3)]">
-            <GraduationCap className="w-5 h-5 text-[#C084FC]" />
-            <span>Đề tài Nghiên cứu khoa học</span>
-          </div>
+      {/* ==================== 2. HERO BANNER GỌN GÀNG, CÂN ĐỐI 2 CỘT ==================== */}
+      <section
+        className="relative overflow-hidden border-b border-white/10"
+        style={{
+          background:
+            'radial-gradient(circle at 72% 45%, rgba(124, 58, 237, 0.28) 0%, rgba(56, 189, 248, 0.1) 34%, transparent 66%), radial-gradient(circle at 18% 30%, rgba(99, 102, 241, 0.16) 0%, transparent 52%), linear-gradient(180deg, #070618 0%, #0D0A28 100%)'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-14 lg:py-20 grid grid-cols-1 lg:grid-cols-12 items-center gap-12 lg:gap-10">
+          {/* Cột trái (6 cột): Tiêu đề, mô tả & CTA */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1C1244] border border-purple-400/40 text-purple-200 text-xs sm:text-sm font-semibold">
+              <GraduationCap className="w-4 h-4 text-[#C084FC]" />
+              <span>Đề tài Nghiên cứu Khoa học • Đại học GTVT TP.HCM (UTH)</span>
+            </div>
 
-          {/* Tiêu đề lớn UTH-TrustID với vòng cung ánh sáng */}
-          <div className="relative inline-block">
-            <h1 className="text-5xl sm:text-7xl lg:text-[78px] xl:text-[88px] font-black italic tracking-tight leading-none m-0">
-              <span className="text-white drop-shadow-[0_4px_28px_rgba(255,255,255,0.22)]">
-                UTH-
-              </span>
-              <span className="bg-gradient-to-r from-[#C084FC] via-[#A855F7] to-[#6366F1] bg-clip-text text-transparent drop-shadow-[0_0_38px_rgba(168,85,247,0.6)]">
-                TrustID
-              </span>
-            </h1>
-            {/* Vòng cung quỹ đạo ánh sáng bao quanh chữ TrustID */}
-            <svg
-              className="pointer-events-none absolute -right-10 -top-4 w-64 sm:w-80 xl:w-96 h-24 sm:h-28 xl:h-32 overflow-visible"
-              viewBox="0 0 260 90"
-              fill="none"
-            >
-              <path
-                d="M10 68 C 95 88, 235 62, 248 22 C 254 5, 220 -4, 175 8"
-                stroke="url(#titleArcGrad)"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-              />
-              <circle cx="246" cy="24" r="4" fill="#E9D5FF" />
-              <circle cx="155" cy="74" r="2.6" fill="#38BDF8" />
-              <defs>
-                <linearGradient id="titleArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="rgba(168,85,247,0)" />
-                  <stop offset="60%" stopColor="#C084FC" />
-                  <stop offset="100%" stopColor="#38BDF8" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+            <div className="space-y-3">
+              <h1 className="text-5xl sm:text-6xl xl:text-[68px] font-black italic tracking-tight leading-none m-0">
+                <span className="text-white">UTH-</span>
+                <span className="bg-gradient-to-r from-[#C084FC] via-[#A855F7] to-[#38BDF8] bg-clip-text text-transparent">
+                  TrustID
+                </span>
+              </h1>
 
-          {/* Tiêu đề phụ 2 dòng cỡ lớn */}
-          <h2 className="text-2xl sm:text-4xl lg:text-[40px] xl:text-[46px] font-extrabold text-white leading-[1.22] tracking-tight m-0">
-            Định danh số phi tập trung và
-            <br />
-            xác thực hiện diện phòng học
-          </h2>
+              <h2 className="text-2xl sm:text-3xl xl:text-[36px] font-extrabold text-white leading-[1.25] tracking-tight m-0">
+                Định danh số phi tập trung và xác thực hiện diện phòng học
+              </h2>
+            </div>
 
-          {/* Đoạn mô tả chuẩn học thuật cỡ chữ lớn dễ đọc */}
-          <p className="text-base sm:text-lg xl:text-[19px] text-slate-200/95 leading-[1.65] m-0 max-w-[660px]">
-            Nghiên cứu, thiết kế và phát triển hệ thống định danh số theo chuẩn W3C DID, kết hợp WebAuthn và Merkle Tree, hướng tới môi trường học tập an toàn, minh bạch và không phụ thuộc vào bên trung gian.
-          </p>
+            <p className="text-base sm:text-[17px] text-slate-300 leading-relaxed m-0 max-w-xl">
+              Nghiên cứu, thiết kế và phát triển hệ thống định danh số theo chuẩn <strong className="text-white">W3C DID</strong>, kết hợp <strong className="text-white">WebAuthn (FIDO2)</strong> và <strong className="text-white">Merkle Tree</strong>, hướng tới môi trường đại học an toàn, minh bạch và chống gian lận điểm danh tuyệt đối.
+            </p>
 
-          {/* Cụm 2 nút CTA cỡ lớn: Khám phá giải pháp & Xem mã nguồn */}
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <button
-              type="button"
-              onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="group relative overflow-hidden px-7 xl:px-8 py-4 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:opacity-95 text-white text-base xl:text-lg font-bold border border-purple-300/45 shadow-[0_12px_36px_rgba(139,92,246,0.58)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-3"
-            >
-              <span className="w-7 h-7 rounded-full bg-white text-[#6D28D9] flex items-center justify-center shadow-xs">
-                <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-              </span>
-              <span>Khám phá giải pháp</span>
-            </button>
-
-            <a
-              href={GITHUB_REPO_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="px-7 xl:px-8 py-4 rounded-2xl bg-[#110E2A] hover:bg-[#1B1640] text-slate-100 text-base xl:text-lg font-semibold border border-purple-400/40 hover:border-purple-300/75 no-underline transition-transform duration-200 hover:scale-[1.02] inline-flex items-center gap-3 shadow-lg"
-            >
-              <GitHubIcon className="w-5 h-5 text-white" />
-              <span>Xem mã nguồn</span>
-            </a>
-          </div>
-        </div>
-
-        {/* CỘT PHẢI (6 CỘT): KHIÊN BẢO VỆ TRUNG TÂM PHÓNG TO VỚI CHUYỂN ĐỘNG XOAY TRÒN 360° (CÔ LẬP GPU CONTAIN) */}
-        <div
-          className="lg:col-span-6 relative flex items-center justify-center min-h-[420px] sm:min-h-[540px] xl:min-h-[620px] scale-[0.78] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center"
-          style={{ contain: 'layout paint' }}
-        >
-          {/* Quầng sáng Radial Gradient thuần (KHÔNG dùng blur-3xl gây lag GPU!) */}
-          <div
-            className="pointer-events-none absolute w-[480px] h-[480px] xl:w-[580px] xl:h-[580px] rounded-full"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(168,85,247,0.34) 0%, rgba(56,189,248,0.16) 38%, rgba(124,58,237,0.06) 58%, transparent 72%)'
-            }}
-          />
-
-          {/* VÒNG QUỸ ĐẠO XOAY TRÒN 1 (NGOÀI CÙNG — GPU LAYER RIÊNG, KHÔNG FILTER DROP-SHADOW) */}
-          <div
-            className="pointer-events-none absolute w-[420px] h-[420px] sm:w-[490px] sm:h-[490px] xl:w-[550px] xl:h-[550px] rounded-full will-change-transform"
-            style={{ animation: 'orbitSpinClockwise 24s linear infinite' }}
-          >
-            <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
-              <circle
-                cx="200"
-                cy="200"
-                r="186"
-                stroke="url(#outerOrbitGrad)"
-                strokeWidth="2"
-                strokeDasharray="16 10 4 10"
-              />
-              {/* 4 điểm sáng dùng vòng halo tròn mờ thay cho filter drop-shadow -> nhanh gấp 20x */}
-              <circle cx="200" cy="14" r="11" fill="#A855F7" opacity="0.28" />
-              <circle cx="200" cy="14" r="5" fill="#F3E8FF" />
-              <circle cx="386" cy="200" r="10" fill="#38BDF8" opacity="0.28" />
-              <circle cx="386" cy="200" r="4.8" fill="#BAE6FD" />
-              <circle cx="200" cy="386" r="9.5" fill="#C084FC" opacity="0.28" />
-              <circle cx="200" cy="386" r="4.5" fill="#E9D5FF" />
-              <circle cx="14" cy="200" r="10" fill="#38BDF8" opacity="0.28" />
-              <circle cx="14" cy="200" r="4.8" fill="#BAE6FD" />
-              <defs>
-                <linearGradient id="outerOrbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#C084FC" stopOpacity="0.95" />
-                  <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.3" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-
-          {/* VÒNG QUỸ ĐẠO XOAY TRÒN 2 (BÊN TRONG — XOAY NGƯỢC CHIỀU 360°) */}
-          <div
-            className="pointer-events-none absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] xl:w-[430px] xl:h-[430px] rounded-full will-change-transform"
-            style={{ animation: 'orbitSpinCounter 16s linear infinite' }}
-          >
-            <svg className="w-full h-full" viewBox="0 0 304 304" fill="none">
-              <circle
-                cx="152"
-                cy="152"
-                r="140"
-                stroke="url(#innerOrbitGrad)"
-                strokeWidth="2.4"
-                strokeDasharray="65 35 20 35"
-                strokeLinecap="round"
-              />
-              <circle cx="152" cy="12" r="4.5" fill="#38BDF8" />
-              <circle cx="152" cy="292" r="4.5" fill="#E9D5FF" />
-              <defs>
-                <linearGradient id="innerOrbitGrad" x1="100%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.95" />
-                  <stop offset="50%" stopColor="#A855F7" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.2" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-
-          {/* ==================== KHIÊN BẢO VỆ 3D CHÍNH GIỮA CỠ LỚN & BỆ ĐẾ HOLOGRAM ==================== */}
-          <div className="relative z-20 flex flex-col items-center pt-8">
-            <div
-              onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              title="Bấm để truy cập Cổng xác thực UTH-TrustID"
-              className="relative cursor-pointer group will-change-transform"
-              style={{ animation: 'shieldFloatPulse 5s ease-in-out infinite' }}
-            >
-              {/* Vòng năng lượng xoay tròn sát viền Khiên */}
-              <div
-                className="pointer-events-none absolute -inset-6 rounded-full border-2 border-dashed border-sky-400/45 will-change-transform"
-                style={{ animation: 'orbitSpinClockwise 12s linear infinite' }}
-              />
-
-              <svg
-                className="w-52 h-60 sm:w-64 sm:h-72 xl:w-72 xl:h-80 overflow-visible"
-                viewBox="0 0 200 230"
-                fill="none"
+            {/* Nút hành động chính */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-1">
+              <button
+                type="button"
+                onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:brightness-110 text-white text-base font-bold border border-purple-300/40 shadow-[0_10px_28px_rgba(139,92,246,0.45)] cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-2.5"
               >
-                <defs>
-                  <linearGradient id="shieldOuterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#F3E8FF" />
-                    <stop offset="35%" stopColor="#A855F7" />
-                    <stop offset="75%" stopColor="#4F46E5" />
-                    <stop offset="100%" stopColor="#38BDF8" />
-                  </linearGradient>
-                  <linearGradient id="shieldInnerGrad" x1="15%" y1="10%" x2="85%" y2="95%">
-                    <stop offset="0%" stopColor="#2E1D7A" stopOpacity="0.96" />
-                    <stop offset="55%" stopColor="#170E40" stopOpacity="0.97" />
-                    <stop offset="100%" stopColor="#091638" stopOpacity="0.98" />
-                  </linearGradient>
-                  <linearGradient id="neonRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#38BDF8" />
-                    <stop offset="50%" stopColor="#E879F9" />
-                    <stop offset="100%" stopColor="#38BDF8" />
-                  </linearGradient>
-                </defs>
+                <span className="w-6 h-6 rounded-full bg-white text-[#6D28D9] flex items-center justify-center">
+                  <Play className="w-3 h-3 fill-current ml-0.5" />
+                </span>
+                <span>Trải nghiệm hệ thống</span>
+              </button>
 
-                {/* Lớp bóng đổ 3D phía sau Khiên */}
-                <path
-                  d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
-                  fill="url(#shieldOuterGrad)"
-                  opacity="0.38"
-                  transform="translate(7, 7)"
-                />
+              <button
+                type="button"
+                onClick={() => handleNavClick('SOLUTION')}
+                className="px-6 py-3.5 rounded-2xl bg-[#13102E] hover:bg-[#1C1742] text-slate-100 text-base font-semibold border border-purple-400/35 cursor-pointer transition-colors inline-flex items-center gap-2"
+              >
+                <BookOpen className="w-4 h-4 text-[#C084FC]" />
+                <span>Xem kiến trúc giải pháp</span>
+              </button>
+            </div>
+          </div>
 
-                {/* Khung Khiên 3D chính */}
-                <path
-                  d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
-                  fill="url(#shieldInnerGrad)"
-                  stroke="url(#shieldOuterGrad)"
-                  strokeWidth="4.8"
-                />
+          {/* Cột phải (6 cột): Khiên Bảo vệ 3D sạch sẽ + Hàng 3 công nghệ căn thẳng bên dưới (KHÔNG chồng đè) */}
+          <div className="lg:col-span-6 flex flex-col items-center gap-6">
+            {/* Vùng Khiên 3D & Quỹ đạo xoay cô lập GPU */}
+            <div
+              className="relative w-full max-w-[420px] h-[330px] sm:h-[370px] flex items-center justify-center"
+              style={{ contain: 'layout paint' }}
+            >
+              {/* Quầng sáng Radial Gradient thuần */}
+              <div
+                className="pointer-events-none absolute w-[340px] h-[340px] rounded-full"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(168,85,247,0.34) 0%, rgba(56,189,248,0.14) 42%, transparent 72%)'
+                }}
+              />
 
-                {/* Đường viền Neon bên trong Khiên */}
-                <path
-                  d="M100 27 L163 54 V110 C163 155 135 186 100 202 C65 186 37 155 37 110 V54 L100 27 Z"
-                  fill="none"
-                  stroke="url(#neonRimGrad)"
-                  strokeWidth="2.5"
-                  opacity="0.95"
-                />
-
-                {/* Biểu tượng Người dùng định danh ở chính giữa Khiên */}
-                <circle
-                  cx="100"
-                  cy="94"
-                  r="21"
-                  fill="url(#shieldOuterGrad)"
-                  opacity="0.95"
-                />
-                <path
-                  d="M62 156 C62 133 78 122 100 122 C122 122 138 133 138 156"
-                  fill="url(#shieldOuterGrad)"
-                  opacity="0.9"
-                />
-
-                {/* Huy hiệu Khiên nhỏ có dấu tích xác thực ở góc dưới bên phải */}
-                <g transform="translate(122, 134)">
-                  <path
-                    d="M28 4 L52 14 V35 C52 51 41 63 28 69 C15 63 4 51 4 35 V14 L28 4 Z"
-                    fill="#6D28D9"
-                    stroke="#F3E8FF"
-                    strokeWidth="3.2"
+              {/* Vòng quỹ đạo ngoài xoay 360° */}
+              <div
+                className="pointer-events-none absolute w-[310px] h-[310px] sm:w-[350px] sm:h-[350px] rounded-full will-change-transform"
+                style={{ animation: 'orbitSpinClockwise 24s linear infinite' }}
+              >
+                <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="186"
+                    stroke="url(#outerOrbitGrad)"
+                    strokeWidth="2"
+                    strokeDasharray="16 10 4 10"
                   />
-                  <path
-                    d="M18 36 L25 43 L39 27"
-                    stroke="#FFFFFF"
-                    strokeWidth="4.8"
+                  <circle cx="200" cy="14" r="9" fill="#A855F7" opacity="0.3" />
+                  <circle cx="200" cy="14" r="4.5" fill="#F3E8FF" />
+                  <circle cx="386" cy="200" r="9" fill="#38BDF8" opacity="0.3" />
+                  <circle cx="386" cy="200" r="4.5" fill="#BAE6FD" />
+                  <circle cx="200" cy="386" r="8" fill="#C084FC" opacity="0.3" />
+                  <circle cx="200" cy="386" r="4" fill="#E9D5FF" />
+                  <circle cx="14" cy="200" r="9" fill="#38BDF8" opacity="0.3" />
+                  <circle cx="14" cy="200" r="4.5" fill="#BAE6FD" />
+                  <defs>
+                    <linearGradient id="outerOrbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#C084FC" stopOpacity="0.95" />
+                      <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.3" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+
+              {/* Vòng quỹ đạo trong xoay ngược chiều */}
+              <div
+                className="pointer-events-none absolute w-[235px] h-[235px] sm:w-[270px] sm:h-[270px] rounded-full will-change-transform"
+                style={{ animation: 'orbitSpinCounter 16s linear infinite' }}
+              >
+                <svg className="w-full h-full" viewBox="0 0 304 304" fill="none">
+                  <circle
+                    cx="152"
+                    cy="152"
+                    r="140"
+                    stroke="url(#innerOrbitGrad)"
+                    strokeWidth="2.2"
+                    strokeDasharray="65 35 20 35"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
                   />
-                </g>
-              </svg>
+                  <circle cx="152" cy="12" r="4.5" fill="#38BDF8" />
+                  <circle cx="152" cy="292" r="4.5" fill="#E9D5FF" />
+                  <defs>
+                    <linearGradient id="innerOrbitGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.95" />
+                      <stop offset="50%" stopColor="#A855F7" stopOpacity="0.7" />
+                      <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.2" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+
+              {/* Khiên Bảo vệ 3D chính giữa */}
+              <div className="relative z-10 flex flex-col items-center">
+                <div
+                  onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                  title="Bấm để truy cập Cổng xác thực UTH-TrustID"
+                  className="relative cursor-pointer will-change-transform"
+                  style={{ animation: 'shieldFloatPulse 5s ease-in-out infinite' }}
+                >
+                  <svg className="w-44 h-52 sm:w-48 sm:h-56 overflow-visible" viewBox="0 0 200 230" fill="none">
+                    <defs>
+                      <linearGradient id="shieldOuterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F3E8FF" />
+                        <stop offset="35%" stopColor="#A855F7" />
+                        <stop offset="75%" stopColor="#4F46E5" />
+                        <stop offset="100%" stopColor="#38BDF8" />
+                      </linearGradient>
+                      <linearGradient id="shieldInnerGrad" x1="15%" y1="10%" x2="85%" y2="95%">
+                        <stop offset="0%" stopColor="#2E1D7A" stopOpacity="0.96" />
+                        <stop offset="55%" stopColor="#170E40" stopOpacity="0.97" />
+                        <stop offset="100%" stopColor="#091638" stopOpacity="0.98" />
+                      </linearGradient>
+                      <linearGradient id="neonRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#38BDF8" />
+                        <stop offset="50%" stopColor="#E879F9" />
+                        <stop offset="100%" stopColor="#38BDF8" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
+                      fill="url(#shieldOuterGrad)"
+                      opacity="0.35"
+                      transform="translate(6, 6)"
+                    />
+                    <path
+                      d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
+                      fill="url(#shieldInnerGrad)"
+                      stroke="url(#shieldOuterGrad)"
+                      strokeWidth="4.8"
+                    />
+                    <path
+                      d="M100 27 L163 54 V110 C163 155 135 186 100 202 C65 186 37 155 37 110 V54 L100 27 Z"
+                      fill="none"
+                      stroke="url(#neonRimGrad)"
+                      strokeWidth="2.5"
+                      opacity="0.95"
+                    />
+                    <circle cx="100" cy="94" r="21" fill="url(#shieldOuterGrad)" opacity="0.95" />
+                    <path
+                      d="M62 156 C62 133 78 122 100 122 C122 122 138 133 138 156"
+                      fill="url(#shieldOuterGrad)"
+                      opacity="0.9"
+                    />
+                    <g transform="translate(122, 134)">
+                      <path
+                        d="M28 4 L52 14 V35 C52 51 41 63 28 69 C15 63 4 51 4 35 V14 L28 4 Z"
+                        fill="#6D28D9"
+                        stroke="#F3E8FF"
+                        strokeWidth="3.2"
+                      />
+                      <path
+                        d="M18 36 L25 43 L39 27"
+                        stroke="#FFFFFF"
+                        strokeWidth="4.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Bệ Đế Hologram gọn đẹp */}
+                <div className="relative -mt-3 flex flex-col items-center">
+                  <div className="w-56 sm:w-64 h-10 rounded-full bg-gradient-to-b from-[#26195C] to-[#0B0724] border border-purple-400/65 shadow-[0_0_24px_rgba(139,92,246,0.45)] flex items-center justify-center">
+                    <div className="w-44 sm:w-52 h-5 rounded-full border border-dashed border-sky-300/70" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Bệ Đế Hologram Phát Sáng (Pure Gradient — không blur-md/blur-xs lặp) */}
-            <div className="relative -mt-5 flex flex-col items-center">
-              <div
-                className="pointer-events-none w-52 h-14 -mb-8"
-                style={{
-                  background:
-                    'radial-gradient(ellipse at 50% 85%, rgba(168, 85, 247, 0.48) 0%, rgba(56, 189, 248, 0.25) 45%, transparent 75%)'
-                }}
-              />
-              <div className="relative w-68 sm:w-80 xl:w-96 h-14 rounded-full bg-gradient-to-b from-[#26195C] to-[#0B0724] border-2 border-purple-400/70 shadow-[0_0_32px_rgba(139,92,246,0.5)] flex items-center justify-center overflow-hidden">
-                <div className="w-56 sm:w-68 xl:w-80 h-8 rounded-full border-2 border-dashed border-sky-300/75" />
-                <div className="absolute inset-x-12 top-1.5 h-2 rounded-full bg-gradient-to-r from-transparent via-sky-300/60 to-transparent" />
-              </div>
-              <div
-                className="w-80 sm:w-96 xl:w-[440px] h-5 -mt-1"
-                style={{
-                  background:
-                    'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.4) 0%, transparent 70%)'
-                }}
-              />
-            </div>
-          </div>
+            {/* 3 Thẻ trụ cột công nghệ xếp thẳng hàng, không che khuất khiên */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => handleNavClick('TECH')}
+                className="p-3.5 rounded-2xl bg-[#130F32] hover:bg-[#1B1547] border border-purple-400/35 text-left flex items-center gap-3 cursor-pointer transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#4F46E5] flex items-center justify-center shrink-0">
+                  <IdCard className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-white truncate">W3C DID</div>
+                  <div className="text-xs text-slate-300 truncate">Định danh tự chủ</div>
+                </div>
+              </button>
 
-          {/* ==================== 3 THẺ NODE CÔNG NGHỆ CỠ LỚN (BỎ BACKDROP-BLUR ĐỂ KHÔNG LAG GPU) ==================== */}
-          {/* Node 1 (Đỉnh Khiên): W3C DID */}
-          <div
-            onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-            style={{ animation: 'cardFloatGentle 5s ease-in-out infinite' }}
-            className="absolute top-0 sm:top-1 left-1/2 -translate-x-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#16113A]/96 hover:bg-[#221A58] border border-purple-400/55 shadow-[0_14px_32px_rgba(8,5,28,0.75)] flex items-center gap-4 cursor-pointer transition-colors duration-200 will-change-transform"
-          >
-            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#4F46E5] border border-purple-300/50 flex items-center justify-center shrink-0">
-              <IdCard className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-            </div>
-            <div className="pr-1">
-              <div className="text-base sm:text-lg xl:text-xl font-bold text-white leading-tight">
-                W3C DID
-              </div>
-              <div className="text-xs sm:text-sm text-slate-200 whitespace-nowrap mt-0.5">
-                Định danh phi tập trung
-              </div>
-            </div>
-          </div>
+              <button
+                type="button"
+                onClick={() => handleNavClick('TECH')}
+                className="p-3.5 rounded-2xl bg-[#130F32] hover:bg-[#1B1547] border border-sky-400/35 text-left flex items-center gap-3 cursor-pointer transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#38BDF8] to-[#2563EB] flex items-center justify-center shrink-0">
+                  <Fingerprint className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-white truncate">WebAuthn</div>
+                  <div className="text-xs text-slate-300 truncate">Không mật khẩu</div>
+                </div>
+              </button>
 
-          {/* Node 2 (Bên Trái Khiên): WebAuthn */}
-          <div
-            onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-            style={{
-              animation: 'cardFloatGentle 5.6s ease-in-out infinite',
-              animationDelay: '0.8s'
-            }}
-            className="absolute -left-2 sm:left-0 xl:left-2 top-[48%] -translate-y-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#16113A]/96 hover:bg-[#221A58] border border-purple-400/55 shadow-[0_14px_32px_rgba(8,5,28,0.75)] flex items-center gap-4 cursor-pointer transition-colors duration-200 will-change-transform"
-          >
-            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#38BDF8] border border-sky-300/60 flex items-center justify-center shrink-0">
-              <Fingerprint className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-            </div>
-            <div>
-              <div className="text-base sm:text-lg xl:text-xl font-bold text-white leading-tight">
-                WebAuthn
-              </div>
-              <div className="text-xs sm:text-sm text-slate-200 leading-snug mt-0.5">
-                Xác thực an toàn,
-                <br />
-                không mật khẩu
-              </div>
-            </div>
-          </div>
-
-          {/* Node 3 (Bên Phải Khiên): Merkle Tree */}
-          <div
-            onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-            style={{
-              animation: 'cardFloatGentle 5.3s ease-in-out infinite',
-              animationDelay: '1.5s'
-            }}
-            className="absolute -right-2 sm:right-0 xl:right-2 top-[53%] -translate-y-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#16113A]/96 hover:bg-[#221A58] border border-purple-400/55 shadow-[0_14px_32px_rgba(8,5,28,0.75)] flex items-center gap-4 cursor-pointer transition-colors duration-200 will-change-transform"
-          >
-            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] border border-purple-300/50 flex items-center justify-center shrink-0">
-              <GitBranch className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-            </div>
-            <div>
-              <div className="text-base sm:text-lg xl:text-xl font-bold text-white leading-tight">
-                Merkle Tree
-              </div>
-              <div className="text-xs sm:text-sm text-slate-200 leading-snug mt-0.5">
-                Xác minh dữ liệu
-                <br />
-                nhanh và minh bạch
-              </div>
+              <button
+                type="button"
+                onClick={() => handleNavClick('TECH')}
+                className="p-3.5 rounded-2xl bg-[#130F32] hover:bg-[#1B1547] border border-emerald-400/35 text-left flex items-center gap-3 cursor-pointer transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#10B981] to-[#0D9488] flex items-center justify-center shrink-0">
+                  <GitBranch className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-white truncate">Merkle Tree</div>
+                  <div className="text-xs text-slate-300 truncate">Minh bạch dữ liệu</div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
-      </main>
+      </section>
 
-      {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI CỠ LỚN ==================== */}
-      <section className="relative z-20 w-full bg-[#090720]/96 border-y border-purple-500/30 shadow-[0_-10px_30px_rgba(7,6,24,0.75)] shrink-0">
-        <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-6 lg:py-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/20">
-          {BOTTOM_HIGHLIGHTS.map((item) => (
+      {/* ==================== 3. DẢI 4 GIÁ TRỊ CỐT LÕI ==================== */}
+      <section className="w-full bg-[#0A0820] border-b border-white/10 py-10">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {CORE_HIGHLIGHTS.map((item) => (
             <div
               key={item.id}
-              onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="flex items-start gap-4 py-3 lg:py-1.5 lg:px-7 first:lg:pl-0 last:lg:pr-0 cursor-pointer group transition-transform duration-300 hover:-translate-y-0.5"
+              className="p-5 rounded-2xl bg-[#110D2C] border border-purple-500/20 hover:border-purple-400/45 transition-colors flex items-start gap-4"
             >
-              <div className="w-13 h-13 rounded-2xl bg-[#17113A] border border-purple-400/35 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(168,85,247,0.25)] group-hover:border-purple-300 group-hover:scale-105 transition-all">
+              <div className="w-11 h-11 rounded-xl bg-[#1A1442] border border-purple-400/30 flex items-center justify-center shrink-0">
                 {item.icon}
               </div>
               <div>
-                <h3 className="text-base sm:text-lg xl:text-[19px] font-extrabold text-white m-0 group-hover:text-[#C084FC] transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-xs sm:text-sm xl:text-[15px] text-slate-300 m-0 mt-1 leading-relaxed">
-                  {item.desc}
-                </p>
+                <h3 className="text-base font-bold text-white m-0">{item.title}</h3>
+                <p className="text-sm text-slate-300 m-0 mt-1.5 leading-relaxed">{item.desc}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ==================== CÁC PHẦN NỘI DUNG CUỘN LÊN / XUỐNG (ĐỀ TÀI • GIẢI PHÁP • CÔNG NGHỆ • KẾT QUẢ • ĐỘI NGŨ) ==================== */}
-      <section className="relative z-20 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-12 lg:py-16 space-y-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-          {Object.entries(NAV_SECTION_MODALS).map(([key, sec]) => (
-            <div
-              key={key}
-              id={`landing-section-${key}`}
-              className={`scroll-mt-28 rounded-3xl bg-[#110D2A]/95 border p-6 sm:p-8 shadow-xl space-y-4 transition-colors ${
-                activeNav === key
-                  ? 'border-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.25)]'
-                  : 'border-purple-500/25 hover:border-purple-400/50'
-              } ${key === 'TEAM' ? 'lg:col-span-2' : ''}`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="inline-block px-3.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold tracking-wider">
-                  {sec.badge}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-                  className="text-xs sm:text-sm font-semibold text-[#C084FC] hover:text-white bg-transparent border-none cursor-pointer inline-flex items-center gap-1"
-                >
-                  <span>Trải nghiệm ngay</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-extrabold text-white m-0 leading-snug">
-                {sec.title}
-              </h3>
-
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed m-0">
-                {sec.desc}
-              </p>
-
-              <div className="space-y-2.5 pt-1">
-                {sec.points.map((pt, i) => (
-                  <div
-                    key={i}
-                    className="p-3.5 rounded-2xl bg-[#18133A] border border-purple-400/20 flex items-start gap-3 text-sm sm:text-[15px] text-slate-100 leading-relaxed"
-                  >
-                    <CheckCircle2 className="w-5 h-5 text-[#C084FC] shrink-0 mt-0.5" />
-                    <span>{pt}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Chân trang & Nút Cuộn Lên Đầu Trang */}
-        <div className="pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-400">
-          <div className="flex items-center gap-3">
-            <img
-              src="/uth-logo.png"
-              alt="UTH"
-              className="h-6 w-auto object-contain bg-white/95 px-2 py-0.5 rounded-md"
-            />
-            <span>
-              © 2026 UTH-TrustID • Trường Đại học Giao thông Vận tải TP.HCM (UTH)
+      {/* ==================== 4. ĐỀ TÀI NGHIÊN CỨU & ẢNH KHUÔN VIÊN UTH ==================== */}
+      <section id="landing-section-TOPIC" className="scroll-mt-20 py-16 lg:py-22 bg-[#070618]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-12">
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-purple-500/15 border border-purple-400/35 text-purple-200 text-xs font-bold tracking-wider uppercase">
+              Đề tài Nghiên cứu Khoa học
             </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white m-0">
+              Giải quyết triệt để bài toán định danh &amp; điểm danh hộ
+            </h2>
+            <p className="text-base text-slate-300 m-0 leading-relaxed">
+              Thay thế phương thức điểm danh thủ công và mã QR tĩnh dễ bị chia sẻ ảnh chụp bằng kiến trúc định danh phi tập trung bảo mật cao.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => handleNavClick('HOME')}
-              className="px-4 py-2 rounded-xl bg-[#171238] hover:bg-[#221A52] text-purple-200 text-xs sm:text-sm font-semibold border border-purple-400/35 cursor-pointer transition-colors"
-            >
-              ↑ Cuộn lên đầu trang
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] text-white text-xs sm:text-sm font-bold border-none cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <span>Dùng thử hệ thống</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            {/* Ảnh thật khuôn viên Đại học GTVT TP.HCM (UTH) đóng khung gọn đẹp */}
+            <div className="lg:col-span-5">
+              <div className="rounded-3xl overflow-hidden border border-purple-400/35 bg-[#110D2C] shadow-2xl">
+                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                  <img
+                    src="/uth-campus-banner.jpg"
+                    alt="Trường Đại học Giao thông Vận tải TP.HCM (UTH)"
+                    className="w-full h-full object-cover object-center"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0D0924] via-transparent to-transparent opacity-80" />
+                </div>
+                <div className="p-5 flex items-center justify-between gap-4 bg-[#110D2C]">
+                  <div className="px-3 py-1.5 rounded-xl bg-white shrink-0">
+                    <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain block" />
+                  </div>
+                  <div className="text-right min-w-0">
+                    <div className="text-sm font-bold text-white truncate">
+                      ĐH Giao thông Vận tải TP.HCM
+                    </div>
+                    <div className="text-xs text-slate-300 truncate">
+                      Khoa Công nghệ Thông tin • UTH-TrustID
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3 Mục tiêu nghiên cứu đánh số rõ ràng */}
+            <div className="lg:col-span-7 space-y-4">
+              {TOPIC_OBJECTIVES.map((obj) => (
+                <div
+                  key={obj.num}
+                  className="p-5 rounded-2xl bg-[#110D2C] border border-purple-500/20 flex items-start gap-4"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#4F46E5] text-white font-mono font-bold text-base flex items-center justify-center shrink-0">
+                    {obj.num}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white m-0">{obj.title}</h3>
+                    <p className="text-sm sm:text-[15px] text-slate-300 m-0 mt-1.5 leading-relaxed">
+                      {obj.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* ==================== 5. KIẾN TRÚC GIẢI PHÁP 3 TẦNG (ISSUER - HOLDER - VERIFIER) ==================== */}
+      <section
+        id="landing-section-SOLUTION"
+        className="scroll-mt-20 py-16 lg:py-22 bg-[#0B0922] border-y border-white/10"
+      >
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-12">
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-sky-500/15 border border-sky-400/35 text-sky-200 text-xs font-bold tracking-wider uppercase">
+              Kiến trúc Giải pháp 3 Tầng
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white m-0">
+              Mô hình Tam giác Tin cậy: Issuer – Holder – Verifier
+            </h2>
+            <p className="text-base text-slate-300 m-0 leading-relaxed">
+              Ba phân hệ vận hành độc lập theo nguyên lý Zero-Trust và đồng bộ thời gian thực qua WebSocket &amp; Smart Contract.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {SOLUTION_LAYERS.map((layer) => (
+              <div
+                key={layer.step}
+                className="p-6 rounded-3xl bg-[#120E30] border border-purple-500/25 flex flex-col justify-between gap-5"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div
+                      className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${layer.accent} flex items-center justify-center shadow-lg`}
+                    >
+                      {layer.icon}
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-slate-200">
+                      {layer.badge}
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-bold text-purple-300 tracking-wider uppercase">
+                      {layer.step} • {layer.role}
+                    </div>
+                    <h3 className="text-xl font-bold text-white mt-1 mb-0">{layer.title}</h3>
+                  </div>
+
+                  <div className="space-y-2.5 pt-1">
+                    {layer.items.map((txt, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5 text-sm text-slate-200 leading-relaxed">
+                        <CheckCircle2 className="w-4 h-4 text-[#C084FC] shrink-0 mt-1" />
+                        <span>{txt}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== 6. NỀN TẢNG CÔNG NGHỆ CỐT LÕI ==================== */}
+      <section id="landing-section-TECH" className="scroll-mt-20 py-16 lg:py-22 bg-[#070618]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-12">
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-purple-500/15 border border-purple-400/35 text-purple-200 text-xs font-bold tracking-wider uppercase">
+              Công nghệ Cốt lõi
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white m-0">
+              Ba trụ cột mật mã học bảo toàn danh tính
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TECH_PILLARS.map((tech, i) => (
+              <div
+                key={i}
+                className="p-6 rounded-3xl bg-[#110D2C] border border-purple-500/20 flex flex-col justify-between gap-5"
+              >
+                <div className="space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#1B1546] border border-purple-400/30 flex items-center justify-center">
+                    {tech.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-white m-0">{tech.title}</h3>
+                  <p className="text-sm text-slate-300 m-0 leading-relaxed">{tech.desc}</p>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
+                  {tech.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2.5 py-1 rounded-lg bg-[#1A1442] border border-purple-400/25 text-xs font-mono text-purple-200"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== 7. KẾT QUẢ THỰC NGHIỆM & 4 LỚP PHÒNG VỆ SOC IDS ==================== */}
+      <section
+        id="landing-section-RESULTS"
+        className="scroll-mt-20 py-16 lg:py-22 bg-[#0B0922] border-y border-white/10"
+      >
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-12">
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-200 text-xs font-bold tracking-wider uppercase">
+              Kết quả Thực nghiệm &amp; Đánh giá
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white m-0">
+              Hiệu năng vượt trội &amp; Phòng vệ 4 lớp SOC IDS
+            </h2>
+          </div>
+
+          {/* 4 Chỉ số KPI nổi bật */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {RESULT_METRICS.map((m, idx) => (
+              <div
+                key={idx}
+                className="p-6 rounded-2xl bg-[#120E30] border border-purple-500/25 text-center space-y-1.5"
+              >
+                <div className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-[#C084FC] to-[#38BDF8] bg-clip-text text-transparent tabular-nums">
+                  {m.value}
+                </div>
+                <div className="text-base font-bold text-white">{m.label}</div>
+                <div className="text-xs text-slate-400">{m.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 4 Kịch bản tấn công bị chặn 100% */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {DEFENSE_SCENARIOS.map((sc) => (
+              <div
+                key={sc.code}
+                className="p-5 rounded-2xl bg-[#161038] border border-rose-400/25 space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-mono font-bold text-rose-300">{sc.code}</span>
+                  <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                </div>
+                <h4 className="text-sm font-bold text-white m-0">{sc.title}</h4>
+                <p className="text-xs sm:text-[13px] text-slate-300 m-0 leading-relaxed">{sc.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== 8. ĐỘI NGŨ THỰC HIỆN & CHÂN TRANG ==================== */}
+      <section id="landing-section-TEAM" className="scroll-mt-20 py-16 lg:py-20 bg-[#070618]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10">
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <span className="inline-block px-3.5 py-1 rounded-full bg-purple-500/15 border border-purple-400/35 text-purple-200 text-xs font-bold tracking-wider uppercase">
+              Đội ngũ Nghiên cứu
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white m-0">
+              Trường Đại học Giao thông Vận tải TP.HCM (UTH)
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-[#110D2C] border border-purple-500/20 space-y-2">
+              <div className="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                Đơn vị chủ trì
+              </div>
+              <div className="text-lg font-bold text-white">Khoa Công nghệ Thông tin</div>
+              <p className="text-sm text-slate-300 m-0 leading-relaxed">
+                Trường Đại học Giao thông Vận tải TP.HCM (UTH) — Chuyên ngành An toàn Thông tin &amp; Khoa học Dữ liệu.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#110D2C] border border-purple-500/20 space-y-2">
+              <div className="text-xs font-bold text-sky-300 uppercase tracking-wider">
+                Giảng viên hướng dẫn
+              </div>
+              <div className="text-lg font-bold text-white">TS. Nguyễn Thị Mai</div>
+              <p className="text-sm text-slate-300 m-0 leading-relaxed">
+                Cố vấn chuyên môn kiến trúc bảo mật, mật mã ứng dụng &amp; đánh giá quy trình xác thực học thuật.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#110D2C] border border-purple-500/20 space-y-2">
+              <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
+                Nhóm sinh viên thực hiện
+              </div>
+              <div className="text-lg font-bold text-white">Nguyễn Đức Hiển &amp; Cộng sự</div>
+              <p className="text-sm text-slate-300 m-0 leading-relaxed">
+                MSSV: 2251120000 • Thiết kế, lập trình Full-Stack hệ sinh thái Ví DID, Cổng Giảng viên &amp; Quản trị viên.
+              </p>
+            </div>
+          </div>
+
+          {/* CTA Banner cuối trang */}
+          <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#1A1245] via-[#22165A] to-[#141D48] border border-purple-400/35 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-1.5 text-center md:text-left">
+              <h3 className="text-2xl font-extrabold text-white m-0">
+                Sẵn sàng trải nghiệm hệ sinh thái UTH-TrustID?
+              </h3>
+              <p className="text-sm sm:text-base text-slate-200 m-0">
+                Đăng nhập Cổng Giảng viên / Quản trị viên để mở phiên điểm danh QR động &amp; kiểm thử phòng vệ SOC IDS.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+              <a
+                href={GITHUB_REPO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-3 rounded-xl bg-[#0D0A24] hover:bg-[#16113A] border border-purple-400/35 text-slate-100 text-sm font-semibold no-underline inline-flex items-center gap-2"
+              >
+                <GitHubIcon className="w-4 h-4" />
+                <span>Xem GitHub</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#6366F1] hover:brightness-110 text-white text-sm font-bold border-none cursor-pointer inline-flex items-center gap-2 shadow-lg"
+              >
+                <span>Dùng thử ngay</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== FOOTER GỌN GÀNG + NÚT CUỘN LÊN ĐẦU TRANG ==================== */}
+      <footer className="w-full border-t border-white/10 bg-[#050412] py-6">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 flex flex-wrap items-center justify-between gap-4 text-sm text-slate-400">
+          <div className="flex items-center gap-3">
+            <div className="px-2.5 py-1 rounded-lg bg-white">
+              <img src="/uth-logo.png" alt="UTH" className="h-5 w-auto object-contain block" />
+            </div>
+            <span>© 2026 UTH-TrustID • Đại học Giao thông Vận tải TP.HCM</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleNavClick('HOME')}
+            className="px-4 py-2 rounded-xl bg-[#13102E] hover:bg-[#1E1848] text-purple-200 text-xs sm:text-sm font-semibold border border-purple-400/30 cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+          >
+            <ArrowUp className="w-4 h-4" />
+            <span>Cuộn lên đầu trang</span>
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }
