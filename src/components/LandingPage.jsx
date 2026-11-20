@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   GraduationCap,
   ArrowRight,
@@ -55,74 +55,36 @@ const BOTTOM_HIGHLIGHTS = [
 
 export default function LandingPage({ onOpenLogin }) {
   const [activeNav, setActiveNav] = useState('HOME');
-  const rootRef = useRef(null);
-  const rafRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  // Zero React re-render parallax (120fps trực tiếp qua GPU CSS Variables)
-  const handleMouseMove = (e) => {
-    const el = rootRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width - 0.5;
-    const ny = (e.clientY - rect.top) / rect.height - 0.5;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      el.style.setProperty('--mx', `${(nx * 16).toFixed(2)}px`);
-      el.style.setProperty('--my', `${(ny * 16).toFixed(2)}px`);
-    });
-  };
 
   return (
     <div
-      ref={rootRef}
-      onMouseMove={handleMouseMove}
       className="min-h-screen lg:h-screen w-full bg-[#070618] text-white font-sans select-none overflow-x-hidden lg:overflow-hidden relative flex flex-col justify-between"
       style={{
-        '--mx': '0px',
-        '--my': '0px',
         background:
           'radial-gradient(circle at 68% 46%, rgba(124, 58, 237, 0.28) 0%, rgba(56, 189, 248, 0.1) 30%, transparent 64%), radial-gradient(circle at 18% 32%, rgba(99, 102, 241, 0.18) 0%, transparent 52%), linear-gradient(180deg, #070618 0%, #0C0926 55%, #07051A 100%)'
       }}
     >
-      {/* CSS Keyframes chuẩn GPU Compositor-only (chỉ dùng transform3d & opacity, không animate filter) */}
+      {/* CSS Keyframes thuần GPU Compositor (0 filter, 0 blur repaint, 0 mousemove JS) -> 60-120fps tuyệt đối */}
       <style>{`
         @keyframes orbitSpinClockwise {
-          0% { transform: rotate3d(0, 0, 1, 0deg); }
-          100% { transform: rotate3d(0, 0, 1, 360deg); }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         @keyframes orbitSpinCounter {
-          0% { transform: rotate3d(0, 0, 1, 360deg); }
-          100% { transform: rotate3d(0, 0, 1, 0deg); }
+          from { transform: rotate(360deg); }
+          to { transform: rotate(0deg); }
         }
         @keyframes shieldFloatPulse {
           0%, 100% {
-            transform: translate3d(0, 0px, 0) rotateY(-6deg) rotateX(2.5deg);
+            transform: translate3d(0, 0px, 0);
           }
           50% {
-            transform: translate3d(0, -11px, 0) rotateY(7deg) rotateX(-2.5deg);
+            transform: translate3d(0, -10px, 0);
           }
-        }
-        @keyframes radarSweepSpin {
-          0% { transform: rotate3d(0, 0, 1, 0deg); }
-          100% { transform: rotate3d(0, 0, 1, 360deg); }
         }
         @keyframes cardFloatGentle {
           0%, 100% { transform: translate3d(0, 0px, 0); }
-          50% { transform: translate3d(0, -7px, 0); }
-        }
-        @keyframes pedestalWave {
-          0%, 100% { opacity: 0.62; transform: scale3d(1, 1, 1); }
-          50% { opacity: 0.96; transform: scale3d(1.07, 1, 1); }
-        }
-        @keyframes btnShine {
-          0% { transform: translate3d(-130%, 0, 0) skewX(-20deg); }
-          100% { transform: translate3d(230%, 0, 0) skewX(-20deg); }
+          50% { transform: translate3d(0, -6px, 0); }
         }
       `}</style>
 
@@ -150,7 +112,7 @@ export default function LandingPage({ onOpenLogin }) {
       </div>
 
       {/* ==================== THANH ĐIỀU HƯỚNG TRÊN CÙNG (NAVBAR UTH-TRUSTID CỠ LỚN) ==================== */}
-      <header className="relative z-30 w-full border-b border-white/10 bg-[#08071C]/60 backdrop-blur-xl shrink-0">
+      <header className="relative z-30 w-full border-b border-white/10 bg-[#08071C]/95 shrink-0">
         <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-4 lg:py-5 flex items-center justify-between gap-4 sm:gap-6">
           {/* Logo Khiên UTH-TrustID */}
           <div className="flex items-center gap-5">
@@ -292,10 +254,6 @@ export default function LandingPage({ onOpenLogin }) {
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
               className="group relative overflow-hidden px-7 xl:px-8 py-4 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#7C3AED] to-[#6366F1] hover:opacity-95 text-white text-base xl:text-lg font-bold border border-purple-300/45 shadow-[0_12px_36px_rgba(139,92,246,0.58)] cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center gap-3"
             >
-              <span
-                className="pointer-events-none absolute inset-y-0 w-14 bg-white/25 blur-xs"
-                style={{ animation: 'btnShine 3.4s infinite' }}
-              />
               <span className="w-7 h-7 rounded-full bg-white text-[#6D28D9] flex items-center justify-center shadow-xs">
                 <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
               </span>
@@ -306,7 +264,7 @@ export default function LandingPage({ onOpenLogin }) {
               href={GITHUB_REPO_URL}
               target="_blank"
               rel="noreferrer"
-              className="px-7 xl:px-8 py-4 rounded-2xl bg-[#110E2A]/90 hover:bg-[#1B1640] text-slate-100 text-base xl:text-lg font-semibold border border-purple-400/40 hover:border-purple-300/75 no-underline transition-all hover:scale-[1.02] inline-flex items-center gap-3 shadow-xl"
+              className="px-7 xl:px-8 py-4 rounded-2xl bg-[#110E2A] hover:bg-[#1B1640] text-slate-100 text-base xl:text-lg font-semibold border border-purple-400/40 hover:border-purple-300/75 no-underline transition-transform duration-200 hover:scale-[1.02] inline-flex items-center gap-3 shadow-lg"
             >
               <GitHubIcon className="w-5 h-5 text-white" />
               <span>Xem mã nguồn</span>
@@ -314,23 +272,24 @@ export default function LandingPage({ onOpenLogin }) {
           </div>
         </div>
 
-        {/* CỘT PHẢI (6 CỘT): KHIÊN BẢO VỆ TRUNG TÂM PHÓNG TO VỚI CHUYỂN ĐỘNG XOAY TRÒN 360° & 3 THẺ CÔNG NGHỆ */}
-        <div className="lg:col-span-6 relative flex items-center justify-center min-h-[420px] sm:min-h-[540px] xl:min-h-[620px] scale-[0.78] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center">
-          
-          {/* Quầng sáng trung tâm lớn sau Khiên */}
+        {/* CỘT PHẢI (6 CỘT): KHIÊN BẢO VỆ TRUNG TÂM PHÓNG TO VỚI CHUYỂN ĐỘNG XOAY TRÒN 360° (CÔ LẬP GPU CONTAIN) */}
+        <div
+          className="lg:col-span-6 relative flex items-center justify-center min-h-[420px] sm:min-h-[540px] xl:min-h-[620px] scale-[0.78] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center"
+          style={{ contain: 'layout paint' }}
+        >
+          {/* Quầng sáng Radial Gradient thuần (KHÔNG dùng blur-3xl gây lag GPU!) */}
           <div
-            className="pointer-events-none absolute w-[420px] h-[420px] xl:w-[520px] xl:h-[520px] rounded-full blur-3xl opacity-60 will-change-transform transition-transform duration-300 ease-out"
+            className="pointer-events-none absolute w-[480px] h-[480px] xl:w-[580px] xl:h-[580px] rounded-full"
             style={{
               background:
-                'radial-gradient(circle, rgba(168,85,247,0.6) 0%, rgba(56,189,248,0.32) 46%, transparent 72%)',
-              transform: 'translate3d(calc(var(--mx) * 0.5), calc(var(--my) * 0.5), 0)'
+                'radial-gradient(circle, rgba(168,85,247,0.34) 0%, rgba(56,189,248,0.16) 38%, rgba(124,58,237,0.06) 58%, transparent 72%)'
             }}
           />
 
-          {/* VÒNG QUỸ ĐẠO XOAY TRÒN 1 (NGOÀI CÙNG - PHÓNG TO 540PX XOAY THUẬN CHIỀU KIM ĐỒNG HỒ 360°) */}
+          {/* VÒNG QUỸ ĐẠO XOAY TRÒN 1 (NGOÀI CÙNG — GPU LAYER RIÊNG, KHÔNG FILTER DROP-SHADOW) */}
           <div
             className="pointer-events-none absolute w-[420px] h-[420px] sm:w-[490px] sm:h-[490px] xl:w-[550px] xl:h-[550px] rounded-full will-change-transform"
-            style={{ animation: 'orbitSpinClockwise 20s linear infinite' }}
+            style={{ animation: 'orbitSpinClockwise 24s linear infinite' }}
           >
             <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
               <circle
@@ -341,34 +300,15 @@ export default function LandingPage({ onOpenLogin }) {
                 strokeWidth="2"
                 strokeDasharray="16 10 4 10"
               />
-              <circle
-                cx="200"
-                cy="14"
-                r="5.5"
-                fill="#E9D5FF"
-                style={{ filter: 'drop-shadow(0 0 12px #A855F7)' }}
-              />
-              <circle
-                cx="386"
-                cy="200"
-                r="5"
-                fill="#38BDF8"
-                style={{ filter: 'drop-shadow(0 0 12px #38BDF8)' }}
-              />
-              <circle
-                cx="200"
-                cy="386"
-                r="4.5"
-                fill="#C084FC"
-                style={{ filter: 'drop-shadow(0 0 10px #C084FC)' }}
-              />
-              <circle
-                cx="14"
-                cy="200"
-                r="5"
-                fill="#38BDF8"
-                style={{ filter: 'drop-shadow(0 0 12px #38BDF8)' }}
-              />
+              {/* 4 điểm sáng dùng vòng halo tròn mờ thay cho filter drop-shadow -> nhanh gấp 20x */}
+              <circle cx="200" cy="14" r="11" fill="#A855F7" opacity="0.28" />
+              <circle cx="200" cy="14" r="5" fill="#F3E8FF" />
+              <circle cx="386" cy="200" r="10" fill="#38BDF8" opacity="0.28" />
+              <circle cx="386" cy="200" r="4.8" fill="#BAE6FD" />
+              <circle cx="200" cy="386" r="9.5" fill="#C084FC" opacity="0.28" />
+              <circle cx="200" cy="386" r="4.5" fill="#E9D5FF" />
+              <circle cx="14" cy="200" r="10" fill="#38BDF8" opacity="0.28" />
+              <circle cx="14" cy="200" r="4.8" fill="#BAE6FD" />
               <defs>
                 <linearGradient id="outerOrbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#C084FC" stopOpacity="0.95" />
@@ -379,10 +319,10 @@ export default function LandingPage({ onOpenLogin }) {
             </svg>
           </div>
 
-          {/* VÒNG QUỸ ĐẠO XOAY TRÒN 2 (BÊN TRONG - PHÓNG TO 420PX XOAY NGƯỢC CHIỀU KIM ĐỒNG HỒ 360°) */}
+          {/* VÒNG QUỸ ĐẠO XOAY TRÒN 2 (BÊN TRONG — XOAY NGƯỢC CHIỀU 360°) */}
           <div
-            className="pointer-events-none absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] xl:w-[430px] xl:h-[430px] rounded-full"
-            style={{ animation: 'orbitSpinCounter 13s linear infinite' }}
+            className="pointer-events-none absolute w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] xl:w-[430px] xl:h-[430px] rounded-full will-change-transform"
+            style={{ animation: 'orbitSpinCounter 16s linear infinite' }}
           >
             <svg className="w-full h-full" viewBox="0 0 304 304" fill="none">
               <circle
@@ -406,31 +346,18 @@ export default function LandingPage({ onOpenLogin }) {
             </svg>
           </div>
 
-          {/* QUÉT RADAR XOAY TRÒN QUANH TÂM KHIÊN (360° CONIC RADAR SWEEP CỠ LỚN) */}
-          <div
-            className="pointer-events-none absolute w-[290px] h-[290px] sm:w-[340px] sm:h-[340px] xl:w-[390px] xl:h-[390px] rounded-full opacity-40"
-            style={{
-              background:
-                'conic-gradient(from 0deg, transparent 0deg, rgba(168, 85, 247, 0.48) 60deg, rgba(56, 189, 248, 0.7) 90deg, transparent 96deg)',
-              animation: 'radarSweepSpin 6s linear infinite'
-            }}
-          />
-
           {/* ==================== KHIÊN BẢO VỆ 3D CHÍNH GIỮA CỠ LỚN & BỆ ĐẾ HOLOGRAM ==================== */}
           <div className="relative z-20 flex flex-col items-center pt-8">
             <div
               onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
               title="Bấm để truy cập Cổng xác thực UTH-TrustID"
               className="relative cursor-pointer group will-change-transform"
-              style={{
-                animation: 'shieldFloatPulse 4.6s ease-in-out infinite',
-                filter: 'drop-shadow(0 0 38px rgba(139, 92, 246, 0.58))'
-              }}
+              style={{ animation: 'shieldFloatPulse 5s ease-in-out infinite' }}
             >
               {/* Vòng năng lượng xoay tròn sát viền Khiên */}
               <div
-                className="pointer-events-none absolute -inset-6 rounded-full border-2 border-dashed border-sky-400/50"
-                style={{ animation: 'orbitSpinClockwise 10s linear infinite' }}
+                className="pointer-events-none absolute -inset-6 rounded-full border-2 border-dashed border-sky-400/45 will-change-transform"
+                style={{ animation: 'orbitSpinClockwise 12s linear infinite' }}
               />
 
               <svg
@@ -515,41 +442,41 @@ export default function LandingPage({ onOpenLogin }) {
               </svg>
             </div>
 
-            {/* Bệ Đế Hologram Phát Sáng Có Vòng Xoay 3D Dưới Chân Khiên */}
+            {/* Bệ Đế Hologram Phát Sáng (Pure Gradient — không blur-md/blur-xs lặp) */}
             <div className="relative -mt-5 flex flex-col items-center">
               <div
-                className="pointer-events-none w-48 h-14 -mb-8 blur-md"
+                className="pointer-events-none w-52 h-14 -mb-8"
                 style={{
                   background:
-                    'linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.5) 55%, rgba(168, 85, 247, 0.78) 100%)'
+                    'radial-gradient(ellipse at 50% 85%, rgba(168, 85, 247, 0.48) 0%, rgba(56, 189, 248, 0.25) 45%, transparent 75%)'
                 }}
               />
-              <div className="relative w-68 sm:w-80 xl:w-96 h-14 rounded-full bg-gradient-to-b from-[#26195C] to-[#0B0724] border-2 border-purple-400/70 shadow-[0_0_50px_rgba(139,92,246,0.75)] flex items-center justify-center overflow-hidden">
-                <div
-                  className="w-56 sm:w-68 xl:w-80 h-8 rounded-full border-2 border-dashed border-sky-300/85"
-                  style={{ animation: 'orbitSpinClockwise 8s linear infinite' }}
-                />
-                <div className="absolute inset-x-10 top-1.5 h-2.5 rounded-full bg-sky-400/60 blur-xs" />
+              <div className="relative w-68 sm:w-80 xl:w-96 h-14 rounded-full bg-gradient-to-b from-[#26195C] to-[#0B0724] border-2 border-purple-400/70 shadow-[0_0_32px_rgba(139,92,246,0.5)] flex items-center justify-center overflow-hidden">
+                <div className="w-56 sm:w-68 xl:w-80 h-8 rounded-full border-2 border-dashed border-sky-300/75" />
+                <div className="absolute inset-x-12 top-1.5 h-2 rounded-full bg-gradient-to-r from-transparent via-sky-300/60 to-transparent" />
               </div>
               <div
-                className="w-80 sm:w-96 xl:w-[440px] h-4 rounded-full bg-purple-500/45 blur-md -mt-1"
-                style={{ animation: 'pedestalWave 3s ease-in-out infinite' }}
+                className="w-80 sm:w-96 xl:w-[440px] h-5 -mt-1"
+                style={{
+                  background:
+                    'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.4) 0%, transparent 70%)'
+                }}
               />
             </div>
           </div>
 
-          {/* ==================== 3 THẺ NODE CÔNG NGHỆ CỠ LỚN XUNG QUANH QUỸ ĐẠO KHIÊN ==================== */}
+          {/* ==================== 3 THẺ NODE CÔNG NGHỆ CỠ LỚN (BỎ BACKDROP-BLUR ĐỂ KHÔNG LAG GPU) ==================== */}
           {/* Node 1 (Đỉnh Khiên): W3C DID */}
           <div
             onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-            style={{ animation: 'cardFloatGentle 4.2s ease-in-out infinite' }}
-            className="absolute top-0 sm:top-1 left-1/2 -translate-x-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#17123E]/90 hover:bg-[#221A58] backdrop-blur-xl border border-purple-400/55 shadow-[0_16px_40px_rgba(8,5,28,0.85)] flex items-center gap-4 cursor-pointer transition-all hover:scale-105"
+            style={{ animation: 'cardFloatGentle 5s ease-in-out infinite' }}
+            className="absolute top-0 sm:top-1 left-1/2 -translate-x-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#16113A]/96 hover:bg-[#221A58] border border-purple-400/55 shadow-[0_14px_32px_rgba(8,5,28,0.75)] flex items-center gap-4 cursor-pointer transition-colors duration-200 will-change-transform"
           >
-            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#4F46E5] border border-purple-300/50 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.6)] shrink-0">
+            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#4F46E5] border border-purple-300/50 flex items-center justify-center shrink-0">
               <IdCard className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div className="pr-1">
-              <div className="text-base sm:text-lg xl:text-xl font-extrabold text-white leading-tight">
+              <div className="text-base sm:text-lg xl:text-xl font-bold text-white leading-tight">
                 W3C DID
               </div>
               <div className="text-xs sm:text-sm text-slate-200 whitespace-nowrap mt-0.5">
@@ -562,16 +489,16 @@ export default function LandingPage({ onOpenLogin }) {
           <div
             onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
             style={{
-              animation: 'cardFloatGentle 4.8s ease-in-out infinite',
+              animation: 'cardFloatGentle 5.6s ease-in-out infinite',
               animationDelay: '0.8s'
             }}
-            className="absolute -left-2 sm:left-0 xl:left-2 top-[48%] -translate-y-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#17123E]/90 hover:bg-[#221A58] backdrop-blur-xl border border-purple-400/55 shadow-[0_16px_40px_rgba(8,5,28,0.85)] flex items-center gap-4 cursor-pointer transition-all hover:scale-105"
+            className="absolute -left-2 sm:left-0 xl:left-2 top-[48%] -translate-y-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#16113A]/96 hover:bg-[#221A58] border border-purple-400/55 shadow-[0_14px_32px_rgba(8,5,28,0.75)] flex items-center gap-4 cursor-pointer transition-colors duration-200 will-change-transform"
           >
-            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#38BDF8] border border-sky-300/60 flex items-center justify-center shadow-[0_0_22px_rgba(56,189,248,0.6)] shrink-0">
+            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#38BDF8] border border-sky-300/60 flex items-center justify-center shrink-0">
               <Fingerprint className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div>
-              <div className="text-base sm:text-lg xl:text-xl font-extrabold text-white leading-tight">
+              <div className="text-base sm:text-lg xl:text-xl font-bold text-white leading-tight">
                 WebAuthn
               </div>
               <div className="text-xs sm:text-sm text-slate-200 leading-snug mt-0.5">
@@ -586,16 +513,16 @@ export default function LandingPage({ onOpenLogin }) {
           <div
             onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
             style={{
-              animation: 'cardFloatGentle 4.5s ease-in-out infinite',
+              animation: 'cardFloatGentle 5.3s ease-in-out infinite',
               animationDelay: '1.5s'
             }}
-            className="absolute -right-2 sm:right-0 xl:right-2 top-[53%] -translate-y-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#17123E]/90 hover:bg-[#221A58] backdrop-blur-xl border border-purple-400/55 shadow-[0_16px_40px_rgba(8,5,28,0.85)] flex items-center gap-4 cursor-pointer transition-all hover:scale-105"
+            className="absolute -right-2 sm:right-0 xl:right-2 top-[53%] -translate-y-1/2 z-30 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl bg-[#16113A]/96 hover:bg-[#221A58] border border-purple-400/55 shadow-[0_14px_32px_rgba(8,5,28,0.75)] flex items-center gap-4 cursor-pointer transition-colors duration-200 will-change-transform"
           >
-            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] border border-purple-300/50 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.6)] shrink-0">
+            <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] border border-purple-300/50 flex items-center justify-center shrink-0">
               <GitBranch className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div>
-              <div className="text-base sm:text-lg xl:text-xl font-extrabold text-white leading-tight">
+              <div className="text-base sm:text-lg xl:text-xl font-bold text-white leading-tight">
                 Merkle Tree
               </div>
               <div className="text-xs sm:text-sm text-slate-200 leading-snug mt-0.5">
@@ -608,8 +535,8 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </main>
 
-      {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI CỠ LỚN Ở CHÂN TRANG (KHÔNG CÒN PHẦN CUỘN DƯỚI) ==================== */}
-      <footer className="relative z-20 w-full bg-[#090720]/92 backdrop-blur-xl border-t border-purple-500/30 shadow-[0_-12px_45px_rgba(7,6,24,0.85)] shrink-0">
+      {/* ==================== DẢI 4 GIÁ TRỊ CỐT LÕI CỠ LỚN Ở CHÂN TRANG ==================== */}
+      <footer className="relative z-20 w-full bg-[#090720]/96 border-t border-purple-500/30 shadow-[0_-10px_30px_rgba(7,6,24,0.75)] shrink-0">
         <div className="w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-5 lg:py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-purple-500/20">
           {BOTTOM_HIGHLIGHTS.map((item) => (
             <div

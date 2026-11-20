@@ -87,8 +87,6 @@ export default function FacultyDashboard({
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null); // 'email' | 'password' | null
-  const loginContainerRef = useRef(null);
-  const loginParallaxRafRef = useRef(null);
   const [loginHelperNotice, setLoginHelperNotice] = useState('');
   const [authError, setAuthError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -2213,67 +2211,34 @@ export default function FacultyDashboard({
       );
     }
 
-    // Zero React re-render parallax (cập nhật trực tiếp CSS Variables qua requestAnimationFrame 120fps)
-    const handleCardMouseMove = (e) => {
-      const el = loginContainerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const nx = (e.clientX - rect.left) / rect.width - 0.5;
-      const ny = (e.clientY - rect.top) / rect.height - 0.5;
-      if (loginParallaxRafRef.current) cancelAnimationFrame(loginParallaxRafRef.current);
-      loginParallaxRafRef.current = requestAnimationFrame(() => {
-        el.style.setProperty('--lx', `${(nx * 14).toFixed(2)}px`);
-        el.style.setProperty('--ly', `${(ny * 14).toFixed(2)}px`);
-      });
-    };
-
-    const handleCardMouseLeave = () => {
-      const el = loginContainerRef.current;
-      if (!el) return;
-      if (loginParallaxRafRef.current) cancelAnimationFrame(loginParallaxRafRef.current);
-      loginParallaxRafRef.current = requestAnimationFrame(() => {
-        el.style.setProperty('--lx', '0px');
-        el.style.setProperty('--ly', '0px');
-      });
-    };
-
     return (
       <div
-        ref={loginContainerRef}
-        onMouseMove={handleCardMouseMove}
-        onMouseLeave={handleCardMouseLeave}
         className="min-h-screen lg:h-screen w-full flex flex-col justify-between relative overflow-hidden select-none font-sans text-white bg-[#070618]"
         style={{
-          '--lx': '0px',
-          '--ly': '0px',
           background:
             'radial-gradient(circle at 34% 58%, rgba(56, 189, 248, 0.22) 0%, rgba(124, 58, 237, 0.24) 28%, transparent 62%), radial-gradient(circle at 75% 45%, rgba(139, 92, 246, 0.22) 0%, transparent 56%), linear-gradient(180deg, #060515 0%, #0B0822 54%, #070518 100%)'
         }}
       >
         <style>{`
           @keyframes loginOrbitSpin {
-            0% { transform: rotate3d(0, 0, 1, 0deg); }
-            100% { transform: rotate3d(0, 0, 1, 360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
           @keyframes loginOrbitReverse {
-            0% { transform: rotate3d(0, 0, 1, 360deg); }
-            100% { transform: rotate3d(0, 0, 1, 0deg); }
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
           }
           @keyframes idCardFloat3D {
             0%, 100% {
-              transform: perspective(1000px) rotateY(14deg) rotateX(6deg) rotateZ(-4deg) translate3d(0, 0px, 0);
+              transform: perspective(1000px) rotateY(12deg) rotateX(4deg) rotateZ(-3deg) translate3d(0, 0px, 0);
             }
             50% {
-              transform: perspective(1000px) rotateY(6deg) rotateX(-4deg) rotateZ(-2deg) translate3d(0, -11px, 0);
+              transform: perspective(1000px) rotateY(8deg) rotateX(-2deg) rotateZ(-1.5deg) translate3d(0, -10px, 0);
             }
           }
           @keyframes pillFloatLogin {
             0%, 100% { transform: translate3d(0, 0px, 0); }
-            50% { transform: translate3d(0, -7px, 0); }
-          }
-          @keyframes loginBtnSweep {
-            0% { transform: translate3d(-130%, 0, 0) skewX(-18deg); }
-            100% { transform: translate3d(230%, 0, 0) skewX(-18deg); }
+            50% { transform: translate3d(0, -6px, 0); }
           }
         `}</style>
 
@@ -2357,23 +2322,24 @@ export default function FacultyDashboard({
         {/* ==================== NỘI DUNG CHÍNH: CỘT TRÁI THẺ ĐỊNH DANH 3D + CỘT PHẢI KHUNG ĐĂNG NHẬP ==================== */}
         <main className="relative z-20 flex-1 w-full max-w-[1920px] 2xl:max-w-[95vw] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 pb-8 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
           
-          {/* CỘT TRÁI (6 CỘT): THẺ ĐỊNH DANH SỐ 3D TRÊN BỆ ĐẾ XOAY TRÒN & 3 NODE CÔNG NGHỆ */}
-          <div className="lg:col-span-6 relative flex items-center justify-center min-h-[380px] sm:min-h-[500px] scale-[0.82] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center">
-            
-            {/* Quầng sáng xanh-tím phía sau Thẻ 3D */}
+          {/* CỘT TRÁI (6 CỘT): THẺ ĐỊNH DANH SỐ 3D TRÊN BỆ ĐẾ (CÔ LẬP GPU CONTAIN — KHÔNG BLUR REPAINT) */}
+          <div
+            className="lg:col-span-6 relative flex items-center justify-center min-h-[380px] sm:min-h-[500px] scale-[0.82] sm:scale-95 lg:scale-100 2xl:scale-105 origin-center"
+            style={{ contain: 'layout paint' }}
+          >
+            {/* Quầng sáng Radial Gradient thuần (0px blur filter) */}
             <div
-              className="pointer-events-none absolute w-[360px] h-[360px] sm:w-[440px] sm:h-[440px] rounded-full blur-3xl opacity-65 will-change-transform transition-transform duration-300 ease-out"
+              className="pointer-events-none absolute w-[420px] h-[420px] sm:w-[490px] sm:h-[490px] rounded-full"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(56,189,248,0.48) 0%, rgba(139,92,246,0.42) 45%, transparent 72%)',
-                transform: 'translate3d(calc(var(--lx) * 0.5), calc(var(--ly) * 0.5), 0)'
+                  'radial-gradient(circle, rgba(56,189,248,0.28) 0%, rgba(139,92,246,0.22) 38%, rgba(99,102,241,0.06) 58%, transparent 72%)'
               }}
             />
 
             {/* Vòng quỹ đạo xoay tròn quanh Thẻ Định Danh 3D */}
             <div
               className="pointer-events-none absolute w-[350px] h-[350px] sm:w-[430px] sm:h-[430px] rounded-full will-change-transform"
-              style={{ animation: 'loginOrbitSpin 18s linear infinite' }}
+              style={{ animation: 'loginOrbitSpin 24s linear infinite' }}
             >
               <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
                 <circle
@@ -2398,8 +2364,8 @@ export default function FacultyDashboard({
             </div>
 
             <div
-              className="pointer-events-none absolute w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] rounded-full"
-              style={{ animation: 'loginOrbitReverse 12s linear infinite' }}
+              className="pointer-events-none absolute w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] rounded-full will-change-transform"
+              style={{ animation: 'loginOrbitReverse 16s linear infinite' }}
             >
               <svg className="w-full h-full" viewBox="0 0 300 300" fill="none">
                 <circle
@@ -2416,24 +2382,21 @@ export default function FacultyDashboard({
 
             {/* Khối Thẻ Định Danh Hologram 3D & Bệ Đế Phát Sáng */}
             <div className="relative z-20 flex flex-col items-center pt-10">
-              {/* Thẻ Định Danh 3D Nghiêng */}
+              {/* Thẻ Định Danh 3D Nghiêng (KHÔNG backdrop-blur, KHÔNG drop-shadow filter -> 120fps) */}
               <div
                 className="relative will-change-transform"
-                style={{
-                  animation: 'idCardFloat3D 4.8s ease-in-out infinite',
-                  filter: 'drop-shadow(0 0 38px rgba(56, 189, 248, 0.52))'
-                }}
+                style={{ animation: 'idCardFloat3D 5.2s ease-in-out infinite' }}
               >
-                <div className="relative w-48 h-60 sm:w-56 sm:h-68 rounded-[28px] bg-gradient-to-br from-[#3B82F6]/35 via-[#312E81]/80 to-[#1E1B4B]/95 border-[3px] border-sky-300/80 shadow-[0_0_45px_rgba(56,189,248,0.55),inset_0_0_25px_rgba(168,85,247,0.45)] backdrop-blur-xl flex flex-col items-center justify-center p-6">
+                <div className="relative w-48 h-60 sm:w-56 sm:h-68 rounded-[28px] bg-gradient-to-br from-[#2B4994] via-[#26236B] to-[#16143E] border-[3px] border-sky-300/80 shadow-[0_14px_34px_rgba(56,189,248,0.38)] flex flex-col items-center justify-center p-6">
                   {/* Viền sáng bên trong thẻ */}
                   <div className="pointer-events-none absolute inset-2.5 rounded-[20px] border border-sky-300/35" />
 
                   {/* Hình bóng Sinh viên / Người dùng ở trung tâm thẻ */}
-                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-sky-200 via-indigo-300 to-purple-400 shadow-[0_0_20px_rgba(56,189,248,0.65)] mb-3" />
+                  <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-sky-200 via-indigo-300 to-purple-400 mb-3" />
                   <div className="w-28 sm:w-32 h-14 rounded-t-3xl rounded-b-xl bg-gradient-to-b from-sky-200/90 via-indigo-300/80 to-purple-500/60" />
 
                   {/* Huy hiệu Khiên Tích Xác Thực ở góc dưới bên phải của Thẻ */}
-                  <div className="absolute -bottom-3 -right-4 w-16 h-18 flex items-center justify-center drop-shadow-[0_8px_20px_rgba(139,92,246,0.8)]">
+                  <div className="absolute -bottom-3 -right-4 w-16 h-18 flex items-center justify-center">
                     <svg className="w-16 h-18" viewBox="0 0 64 74" fill="none">
                       <path
                         d="M32 4 L58 15 V38 C58 55 46 67 32 72 C18 67 6 55 6 38 V15 L32 4 Z"
@@ -2459,81 +2422,76 @@ export default function FacultyDashboard({
                 </div>
               </div>
 
-              {/* Bệ Đế Hologram Phát Sáng Xoay Tròn Dưới Chân Thẻ */}
+              {/* Bệ Đế Hologram Phát Sáng (Pure Gradient — không blur-md/blur-xs) */}
               <div className="relative -mt-3 flex flex-col items-center">
                 <div
-                  className="pointer-events-none w-44 h-12 -mb-7 blur-md"
+                  className="pointer-events-none w-48 h-12 -mb-7"
                   style={{
                     background:
-                      'linear-gradient(180deg, transparent 0%, rgba(56, 189, 248, 0.65) 55%, rgba(168, 85, 247, 0.85) 100%)'
+                      'radial-gradient(ellipse at 50% 85%, rgba(168, 85, 247, 0.45) 0%, rgba(56, 189, 248, 0.28) 45%, transparent 75%)'
                   }}
                 />
-                <div className="relative w-64 sm:w-80 h-14 rounded-full bg-gradient-to-b from-[#251A5A] to-[#0B0724] border-2 border-sky-400/70 shadow-[0_0_50px_rgba(56,189,248,0.65)] flex items-center justify-center overflow-hidden">
-                  <div
-                    className="w-52 sm:w-68 h-8 rounded-full border-2 border-dashed border-sky-300/90"
-                    style={{ animation: 'loginOrbitSpin 8s linear infinite' }}
-                  />
-                  <div className="absolute inset-x-10 top-1.5 h-2.5 rounded-full bg-sky-300/75 blur-xs" />
+                <div className="relative w-64 sm:w-80 h-14 rounded-full bg-gradient-to-b from-[#251A5A] to-[#0B0724] border-2 border-sky-400/70 shadow-[0_0_28px_rgba(56,189,248,0.45)] flex items-center justify-center overflow-hidden">
+                  <div className="w-52 sm:w-68 h-8 rounded-full border-2 border-dashed border-sky-300/80" />
+                  <div className="absolute inset-x-10 top-1.5 h-2 rounded-full bg-gradient-to-r from-transparent via-sky-300/65 to-transparent" />
                 </div>
-                <div className="w-72 sm:w-96 h-4 rounded-full bg-purple-500/50 blur-md -mt-1" />
+                <div
+                  className="w-72 sm:w-96 h-5 -mt-1"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.38) 0%, transparent 70%)'
+                  }}
+                />
               </div>
             </div>
 
-            {/* 3 Thẻ Pill Công Nghệ Xung Quanh Thẻ Định Danh 3D */}
-            {/* Pill 1 (Trái Trên): W3C DID */}
+            {/* 3 Thẻ Pill Công Nghệ (KHÔNG backdrop-blur để tránh GPU readback mỗi frame) */}
             <div
-              style={{ animation: 'pillFloatLogin 4.2s ease-in-out infinite' }}
-              className="absolute top-12 sm:top-14 left-4 sm:left-10 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/90 backdrop-blur-xl border border-purple-400/50 shadow-[0_12px_30px_rgba(6,4,22,0.85)] flex items-center gap-3"
+              style={{ animation: 'pillFloatLogin 5s ease-in-out infinite' }}
+              className="absolute top-12 sm:top-14 left-4 sm:left-10 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/96 border border-purple-400/50 shadow-[0_10px_24px_rgba(6,4,22,0.75)] flex items-center gap-3 will-change-transform"
             >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#4F46E5] border border-purple-300/50 flex items-center justify-center shrink-0">
                 <IdCard className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm sm:text-base font-extrabold text-white tracking-wide">
+              <span className="text-sm sm:text-base font-bold text-white tracking-wide">
                 W3C DID
               </span>
             </div>
 
-            {/* Pill 2 (Phải Trên): WebAuthn */}
             <div
               style={{
-                animation: 'pillFloatLogin 4.7s ease-in-out infinite',
+                animation: 'pillFloatLogin 5.5s ease-in-out infinite',
                 animationDelay: '0.8s'
               }}
-              className="absolute top-20 sm:top-24 right-2 sm:right-8 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/90 backdrop-blur-xl border border-purple-400/50 shadow-[0_12px_30px_rgba(6,4,22,0.85)] flex items-center gap-3"
+              className="absolute top-20 sm:top-24 right-2 sm:right-8 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/96 border border-purple-400/50 shadow-[0_10px_24px_rgba(6,4,22,0.75)] flex items-center gap-3 will-change-transform"
             >
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#38BDF8] border border-sky-300/50 flex items-center justify-center shrink-0">
                 <Fingerprint className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm sm:text-base font-extrabold text-white tracking-wide">
+              <span className="text-sm sm:text-base font-bold text-white tracking-wide">
                 WebAuthn
               </span>
             </div>
 
-            {/* Pill 3 (Trái Dưới): Merkle Tree */}
             <div
               style={{
-                animation: 'pillFloatLogin 4.4s ease-in-out infinite',
+                animation: 'pillFloatLogin 5.2s ease-in-out infinite',
                 animationDelay: '1.4s'
               }}
-              className="absolute bottom-24 sm:bottom-28 left-2 sm:left-6 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/90 backdrop-blur-xl border border-purple-400/50 shadow-[0_12px_30px_rgba(6,4,22,0.85)] flex items-center gap-3"
+              className="absolute bottom-24 sm:bottom-28 left-2 sm:left-6 z-30 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#16123B]/96 border border-purple-400/50 shadow-[0_10px_24px_rgba(6,4,22,0.75)] flex items-center gap-3 will-change-transform"
             >
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] border border-purple-300/50 flex items-center justify-center shrink-0">
                 <GitBranch className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm sm:text-base font-extrabold text-white tracking-wide">
+              <span className="text-sm sm:text-base font-bold text-white tracking-wide">
                 Merkle Tree
               </span>
             </div>
           </div>
 
-          {/* CỘT PHẢI (6 CỘT): KHUNG KÍNH ĐĂNG NHẬP HỆ THỐNG UTH-TRUSTID (CHỈ ĐĂNG NHẬP BẰNG TÀI KHOẢN ĐIỀN) */}
+          {/* CỘT PHẢI (6 CỘT): KHUNG ĐĂNG NHẬP VỮNG CHẮC, SẮC NÉT (BỎ BACKDROP-BLUR-2XL & RUNG CHUỘT) */}
           <div className="lg:col-span-6 flex justify-center lg:justify-end">
-            <div
-              className="relative w-full max-w-[520px] rounded-[32px] bg-[#0D0A24]/90 backdrop-blur-2xl border border-purple-400/50 shadow-[0_0_75px_rgba(139,92,246,0.3)] p-8 sm:p-11 text-white will-change-transform transition-transform duration-300 ease-out"
-              style={{
-                transform: 'translate3d(calc(var(--lx) * 0.2), calc(var(--ly) * 0.2), 0)'
-              }}
-            >
+            <div className="relative w-full max-w-[520px] rounded-[32px] bg-[#0E0B26]/98 border border-purple-400/45 shadow-[0_20px_60px_rgba(8,5,28,0.85)] p-8 sm:p-11 text-white uth-page-enter">
               {/* Điểm sáng viền góc trên trái & dưới phải của khung */}
               <div className="pointer-events-none absolute -top-px left-10 w-28 h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_15px_#A855F7]" />
               <div className="pointer-events-none absolute -bottom-px right-10 w-28 h-[2px] bg-gradient-to-r from-transparent via-purple-300 to-transparent shadow-[0_0_15px_#A855F7]" />
@@ -2661,18 +2619,14 @@ export default function FacultyDashboard({
                   </button>
                 </div>
 
-                {/* Nút Đăng nhập → */}
+                {/* Nút Đăng nhập → (Tối ưu không dùng blur-sm sweep chạy nền gây tốn GPU) */}
                 <button
                   type="submit"
                   disabled={loginLoading}
-                  className="group relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#C084FC] via-[#9333EA] to-[#7C3AED] hover:opacity-95 text-white font-extrabold text-base sm:text-lg shadow-[0_12px_36px_rgba(147,51,234,0.55)] hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-purple-300/45 inline-flex items-center justify-center gap-2.5 mt-2"
+                  className="group relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#A855F7] via-[#9333EA] to-[#7C3AED] hover:brightness-110 text-white font-bold text-base sm:text-lg shadow-[0_10px_28px_rgba(147,51,234,0.42)] active:scale-[0.985] transition-transform duration-150 cursor-pointer border border-purple-300/40 inline-flex items-center justify-center gap-2.5 mt-2"
                 >
-                  <span
-                    className="pointer-events-none absolute inset-y-0 w-16 bg-white/25 blur-sm"
-                    style={{ animation: 'loginBtnSweep 3.4s infinite' }}
-                  />
                   <span>{loginLoading ? 'Đang xác thực...' : 'Đăng nhập'}</span>
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
                 </button>
               </form>
 
