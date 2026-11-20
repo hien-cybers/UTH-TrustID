@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FlaskConical,
+  ShieldCheck,
   ArrowRight,
   ArrowUp,
   Play,
-  ShieldCheck,
   Layers,
   Zap,
   Fingerprint,
@@ -12,11 +11,11 @@ import {
   GitBranch,
   CheckCircle2,
   Building2,
-  Smartphone,
   MonitorCheck,
   ShieldAlert,
   ExternalLink,
-  User,
+  QrCode,
+  Database,
   X
 } from 'lucide-react';
 
@@ -38,30 +37,30 @@ const NAV_ITEMS = [
   { id: 'HOME', label: 'Trang chủ' },
   { id: 'INTRO', label: 'Giới thiệu' },
   { id: 'TECH', label: 'Công nghệ' },
-  { id: 'SYSTEM', label: 'Hệ thống' },
+  { id: 'SYSTEM', label: 'Phân hệ' },
   { id: 'RESULTS', label: 'Kết quả' },
-  { id: 'TEAM', label: 'Đội ngũ' }
+  { id: 'TEAM', label: 'Đơn vị' }
 ];
 
 const HERO_TECH_CARDS = [
   {
     id: 'W3C_DID',
     title: 'W3C DID',
-    desc: 'Định danh số phi tập trung theo chuẩn W3C, giúp người dùng tự chủ danh tính và kiểm soát dữ liệu.',
+    desc: 'Quản trị và cấp phát định danh số phi tập trung chuẩn W3C, minh bạch hóa dữ liệu toàn trường.',
     icon: <IdCard className="w-8 h-8 text-[#6D28D9]" />,
     target: 'TECH'
   },
   {
     id: 'WEBAUTHN',
     title: 'WebAuthn',
-    desc: 'Xác thực an toàn, không mật khẩu với khóa công khai (Passkey), tăng cường bảo mật và trải nghiệm.',
+    desc: 'Kiểm soát chính sách xác thực không mật khẩu (Passkey), ràng buộc thiết bị và chống giả mạo.',
     icon: <Fingerprint className="w-8 h-8 text-[#6D28D9]" />,
     target: 'TECH'
   },
   {
     id: 'MERKLE',
     title: 'Merkle Tree',
-    desc: 'Xác minh tính toàn vẹn và minh bạch dữ liệu điểm danh, đảm bảo không thể giả mạo.',
+    desc: 'Đóng lô chứng chỉ số, xác minh tính toàn vẹn điểm danh và neo Merkle Root lên Blockchain.',
     icon: <GitBranch className="w-8 h-8 text-[#6D28D9]" />,
     target: 'TECH'
   }
@@ -70,45 +69,45 @@ const HERO_TECH_CARDS = [
 const OVERVIEW_STEPS = [
   {
     id: 'st-1',
-    title: 'Sinh viên',
-    sub: '(Thiết bị di động)',
-    icon: <User className="w-5 h-5 text-[#6D28D9]" />
+    title: 'Giảng viên mở phiên',
+    sub: '(QR Nonce xoay động)',
+    icon: <QrCode className="w-5 h-5 text-[#6D28D9]" />
   },
   {
     id: 'st-2',
-    title: 'Xác thực WebAuthn',
-    sub: '(Passkey)',
+    title: 'Kiểm tra WebAuthn',
+    sub: '(Chữ ký & GPS Radar)',
     icon: <Fingerprint className="w-5 h-5 text-[#6D28D9]" />
   },
   {
     id: 'st-3',
-    title: 'Ghi nhận & xác minh',
-    sub: '(Merkle Tree)',
+    title: 'Ghi nhận & đối soát',
+    sub: '(Merkle Tree & SOC IDS)',
     icon: <Layers className="w-5 h-5 text-[#6D28D9]" />
   },
   {
     id: 'st-4',
-    title: 'Lưu trữ & quản lý',
-    sub: '(W3C DID)',
-    icon: <IdCard className="w-5 h-5 text-[#6D28D9]" />
+    title: 'Quản trị & lưu vết',
+    sub: '(Admin DID / VC / Excel)',
+    icon: <Database className="w-5 h-5 text-[#6D28D9]" />
   }
 ];
 
 const INTRO_OBJECTIVES = [
   {
     num: '01',
-    title: 'Tự chủ danh tính theo chuẩn quốc tế W3C DID Core 1.0',
-    desc: 'Trao quyền kiểm soát danh tính số (Self-Sovereign Identity) trực tiếp cho sinh viên trên thiết bị cá nhân, loại bỏ rủi ro rò rỉ dữ liệu tập trung.'
+    title: 'Điều hành điểm danh phòng học thời gian thực cho Giảng viên',
+    desc: 'Tạo phiên QR Nonce xoay tự động chống chụp ảnh, theo dõi bản đồ GPS Radar lớp học, kích hoạt hậu kiểm Spot-Check 60s và xuất báo cáo Excel (.xlsx).'
   },
   {
     num: '02',
-    title: 'Xác thực không mật khẩu bằng WebAuthn / FIDO2 Passkey',
-    desc: 'Khóa riêng tư sinh và bảo vệ trong chip bảo mật phần cứng (Face ID, Touch ID, Windows Hello), gắn chặt với thiết bị sinh viên.'
+    title: 'Quản trị hạ tầng định danh W3C DID & Chứng chỉ số (VC) cho Admin',
+    desc: 'Cấp phát và quản lý danh mục người dùng, định danh DID, chứng chỉ số học thuật theo lô Merkle Tree và thu hồi khóa thiết bị độ phức tạp O(1).'
   },
   {
     num: '03',
-    title: 'Xác thực hiện diện phòng học đa nhân tố thời gian thực',
-    desc: 'Kết hợp mã QR Nonce xoay liên tục, khoanh vùng GPS Geofencing (R ≤ 35m), chữ ký số EIP-191 và hậu kiểm Spot-Check 60 giây.'
+    title: 'Phòng vệ chủ động 4 lớp SOC IDS & Minh bạch On-Chain',
+    desc: 'Tự động phát hiện và chặn đứng hành vi quét lại QR cũ, giả mạo chữ ký EIP-191, điểm danh hộ 1 máy nhiều tài khoản và Fake GPS ngoài phạm vi lớp.'
   }
 ];
 
@@ -116,61 +115,52 @@ const TECH_DETAILS = [
   {
     title: 'W3C DID & Verifiable Credentials',
     icon: <IdCard className="w-6 h-6 text-[#6D28D9]" />,
-    desc: 'Định danh chuẩn did:uth:secp256k1 và chứng chỉ học thuật có chữ ký số xác minh độc lập, hỗ trợ tiết lộ chọn lọc ZKP-Lite bảo vệ quyền riêng tư.',
-    tags: ['W3C DID 1.0', 'JSON-LD VC', 'EIP-191', 'ZKP-Lite']
+    desc: 'Quản trị định danh chuẩn did:uth:secp256k1 và phát hành chứng chỉ số học thuật có chữ ký số xác minh độc lập trên toàn hệ thống UTH.',
+    tags: ['W3C DID 1.0', 'JSON-LD VC', 'EIP-191', 'Zero-Trust']
   },
   {
-    title: 'WebAuthn / FIDO2 Passkey',
+    title: 'WebAuthn / FIDO2 & Device Policy',
     icon: <Fingerprint className="w-6 h-6 text-[#6D28D9]" />,
-    desc: 'Cơ chế xác thực khóa công khai gắn phần cứng TPM / Secure Enclave cùng mã hóa AES-GCM 256-bit (PBKDF2 100.000 vòng) ngăn điểm danh hộ.',
-    tags: ['FIDO2 Passkey', 'Face ID / Touch ID', 'Device Binding', 'AES-GCM 256']
+    desc: 'Thiết lập chính sách xác thực phần cứng TPM / Secure Enclave, ràng buộc thiết bị theo từng phiên học để ngăn chặn gian lận điểm danh hộ.',
+    tags: ['FIDO2 Passkey', 'Device Binding', 'SOC Policy', 'Auto-Block 403']
   },
   {
-    title: 'Keccak256 Merkle Tree & On-Chain Anchor',
+    title: 'Keccak256 Merkle Tree & Blockchain',
     icon: <GitBranch className="w-6 h-6 text-[#6D28D9]" />,
-    desc: 'Đóng lô hàng nghìn lượt điểm danh & chứng chỉ số thành 1 Merkle Root 32-byte duy nhất neo lên Blockchain, xác minh nhánh Proof O(log₂ N).',
+    desc: 'Đóng lô hàng nghìn bản ghi điểm danh & chứng chỉ thành 1 Merkle Root 32-byte duy nhất neo lên Smart Contract, xác minh nhánh Proof O(log₂ N).',
     tags: ['Keccak256', 'Merkle Proof O(log N)', '32-Byte Root', 'Revocation O(1)']
   }
 ];
 
-const SYSTEM_MODULES = [
+const PORTAL_MODULES = [
   {
     step: '01',
-    role: 'ISSUER • NHÀ TRƯỜNG',
-    title: 'Cổng Quản trị (Admin Portal)',
-    badge: 'Port 5174 • Admin',
-    icon: <Building2 className="w-6 h-6 text-white" />,
-    accent: 'from-[#6D28D9] to-[#4F46E5]',
+    role: 'VERIFIER • GIẢNG VIÊN',
+    title: 'Cổng Điều hành Giảng viên (Faculty Portal)',
+    badge: '10 Màn hình Nghiệp vụ',
+    loginRole: 'FACULTY',
+    ctaLabel: 'Đăng nhập Cổng Giảng viên',
+    icon: <MonitorCheck className="w-6 h-6 text-white" />,
+    accent: 'from-[#16345E] to-[#2563EB]',
     points: [
-      'Cấp phát, giám sát định danh W3C DID và phân quyền tài khoản toàn trường.',
-      'Đóng lô chứng chỉ số (VC) bằng cây Merkle Tree và neo lên Blockchain.',
-      'Thu hồi khóa thiết bị bị mất độ phức tạp O(1) và theo dõi nhật ký SOC.'
+      'Quản lý lớp học, tạo phiên điểm danh QR Nonce động và chế độ chiếu toàn màn hình.',
+      'Giám sát bản đồ GPS Radar phòng học theo bán kính lớp & hậu kiểm Spot-Check 60s.',
+      'Cấp chứng chỉ số (VC), quản lý DID lớp học, cảnh báo SOC IDS và xuất Excel (.xlsx).'
     ]
   },
   {
     step: '02',
-    role: 'HOLDER • SINH VIÊN',
-    title: 'Ví Định danh Di động (DID Wallet)',
-    badge: 'Port 5173 • Mobile',
-    icon: <Smartphone className="w-6 h-6 text-white" />,
-    accent: 'from-[#0284C7] to-[#2563EB]',
+    role: 'ISSUER • QUẢN TRỊ VIÊN',
+    title: 'Cổng Quản trị Hệ thống (Admin Portal)',
+    badge: '10 Phân hệ Hạ tầng',
+    loginRole: 'ADMIN',
+    ctaLabel: 'Đăng nhập Cổng Quản trị',
+    icon: <Building2 className="w-6 h-6 text-white" />,
+    accent: 'from-[#6D28D9] to-[#4F46E5]',
     points: [
-      'Thẻ sinh viên số 3D hiển thị logo UTH, mã QR định danh & trạng thái xác thực.',
-      'Quét QR điểm danh 1 chạm với WebAuthn Passkey và ký chữ ký số EIP-191.',
-      'Hỗ trợ hàng đợi Offline Queue khi mất mạng và tiết lộ chọn lọc ZKP-Lite.'
-    ]
-  },
-  {
-    step: '03',
-    role: 'VERIFIER • GIẢNG VIÊN',
-    title: 'Cổng Điều hành Giảng viên',
-    badge: 'Port 5174 • Faculty',
-    icon: <MonitorCheck className="w-6 h-6 text-white" />,
-    accent: 'from-[#7C3AED] to-[#9333EA]',
-    points: [
-      'Tạo phiên QR Nonce xoay liên tục chống chụp màn hình & chiếu toàn màn hình.',
-      'Giám sát bản đồ GPS Radar lớp học & phát lệnh hậu kiểm Spot-Check 60s.',
-      'Cảnh báo xâm nhập SOC IDS 4 lớp và xuất báo cáo điểm danh chuẩn Excel (.xlsx).'
+      'Quản trị tài khoản người dùng, cấp phát định danh W3C DID & quản lý vòng đời VC toàn trường.',
+      'Vận hành cây băm Merkle Tree, neo Merkle Root lên Blockchain và giám sát Smart Contract.',
+      'Cấu hình chính sách WebAuthn (Passkey), thu hồi khóa O(1), nhật ký kiểm toán & báo cáo.'
     ]
   }
 ];
@@ -179,29 +169,29 @@ const RESULT_METRICS = [
   { value: '96,4%', label: 'Tiết kiệm chi phí Gas', sub: 'So với ghi từng chứng chỉ rời rạc On-Chain' },
   { value: '< 2 ms', label: 'Xác minh Merkle Proof', sub: 'Độ phức tạp tính toán O(log₂ N) tức thì' },
   { value: '100%', label: 'Chặn tấn công SOC IDS', sub: 'Tự động từ chối HTTP 403 cả 4 kịch bản' },
-  { value: '12.548+', label: 'Định danh DID hoạt động', sub: 'Đồng bộ 26.937 chứng chỉ số (VC)' }
+  { value: '12.548+', label: 'Định danh DID quản trị', sub: 'Đồng bộ 26.937 chứng chỉ số (VC)' }
 ];
 
 const DEFENSE_SCENARIOS = [
   {
     code: 'REPLAY_ATTACK',
     title: 'Chống quét lại ảnh QR cũ',
-    desc: 'Vô hiệu hóa ảnh chụp màn hình QR gửi qua Zalo nhờ Nonce hết hạn sau vài giây.'
+    desc: 'Vô hiệu hóa ảnh chụp màn hình QR gửi qua mạng nhờ mã Nonce xoay liên tục.'
   },
   {
     code: 'DEVICE_SPOOFING',
     title: 'Chống giả mạo chữ ký số',
-    desc: 'Đối chiếu chữ ký mật mã EIP-191 khớp khóa công khai DID đã đăng ký của sinh viên.'
+    desc: 'Đối chiếu chữ ký mật mã EIP-191 khớp khóa công khai DID đã đăng ký trên hệ thống.'
   },
   {
     code: 'PROXY_ATTENDANCE',
-    title: 'Chống 1 máy điểm danh 2 SV',
+    title: 'Chống 1 máy điểm danh hộ',
     desc: 'Khóa vân tay phần cứng thiết bị (Device Fingerprint) trên mỗi phiên học.'
   },
   {
     code: 'GEOFENCE_BREACH',
-    title: 'Chống Fake GPS ngoài phòng học',
-    desc: 'Tính khoảng cách Haversine so với tâm lớp học và cảnh báo tọa độ giả lập.'
+    title: 'Chống Fake GPS ngoài lớp',
+    desc: 'Tính khoảng cách Haversine so với tâm phòng học và cảnh báo tọa độ giả lập.'
   }
 ];
 
@@ -246,10 +236,19 @@ export default function LandingPage({ onOpenLogin }) {
       id="landing-top"
       className="min-h-screen w-full bg-[#F7F5FE] text-slate-900 font-sans overflow-x-clip relative flex flex-col"
     >
+      {/* Keyframes thuần GPU Compositor cho Khiên 3D & 2 Vòng quỹ đạo xoay tròn như cũ */}
       <style>{`
-        @keyframes shieldLightFloat {
+        @keyframes orbitSpinClockwise {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes orbitSpinCounter {
+          from { transform: rotate(360deg); }
+          to { transform: rotate(0deg); }
+        }
+        @keyframes shieldFloatPulse {
           0%, 100% { transform: translate3d(0, 0px, 0); }
-          50% { transform: translate3d(0, -8px, 0); }
+          50% { transform: translate3d(0, -9px, 0); }
         }
       `}</style>
 
@@ -273,14 +272,19 @@ export default function LandingPage({ onOpenLogin }) {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] flex items-center justify-center shadow-sm shadow-purple-500/30">
                   <ShieldCheck className="w-4.5 h-4.5 text-white" />
                 </div>
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#1E1B4B]">
-                  UTH-TrustID
-                </span>
+                <div className="text-left leading-tight">
+                  <span className="block text-lg font-extrabold tracking-tight text-[#1E1B4B]">
+                    UTH-TrustID
+                  </span>
+                  <span className="block text-[10px] font-bold text-[#6D28D9] uppercase tracking-wider">
+                    Faculty &amp; Admin Portal
+                  </span>
+                </div>
               </div>
             </button>
           </div>
 
-          {/* Giữa: 6 Mục điều hướng chuẩn ảnh mẫu */}
+          {/* Giữa: 6 Mục điều hướng */}
           <nav className="hidden lg:flex items-center gap-7 xl:gap-8">
             {NAV_ITEMS.map((item) => {
               const isActive = activeNav === item.id;
@@ -304,7 +308,7 @@ export default function LandingPage({ onOpenLogin }) {
             })}
           </nav>
 
-          {/* Phải: Nút Xem mã nguồn màu tím chuẩn ảnh mẫu */}
+          {/* Phải: Nút Xem mã nguồn màu tím */}
           <div className="flex items-center gap-2.5 shrink-0">
             <a
               href={GITHUB_REPO_URL}
@@ -320,18 +324,15 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </header>
 
-      {/* ==================== 2. HERO BANNER TRẮNG – TÍM LAVENDER + ẢNH TÒA NHÀ UTH THẬT & KHIÊN 3D ==================== */}
+      {/* ==================== 2. HERO BANNER TRẮNG – TÍM LAVENDER + ẢNH UTH & KHIÊN 3D XOAY QUỸ ĐẠO NHƯ CŨ ==================== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-white via-[#F7F4FF] to-[#EFE9FF]">
-        {/* Dải sóng tím lavender mềm mại ở góc trên trái & chân Hero */}
+        {/* Dải sóng tím lavender mềm mại ở góc trên trái */}
         <svg
-          className="pointer-events-none absolute top-0 left-0 w-72 h-52 opacity-60"
+          className="pointer-events-none absolute top-0 left-0 w-72 h-52 opacity-55"
           viewBox="0 0 300 220"
           fill="none"
         >
-          <path
-            d="M-30 10 C 60 80, 140 130, 260 155 L -30 220 Z"
-            fill="url(#leftSoftWave)"
-          />
+          <path d="M-30 10 C 60 80, 140 130, 260 155 L -30 220 Z" fill="url(#leftSoftWave)" />
           <defs>
             <linearGradient id="leftSoftWave" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#C4B5FD" stopOpacity="0.55" />
@@ -340,49 +341,47 @@ export default function LandingPage({ onOpenLogin }) {
           </defs>
         </svg>
 
-        {/* Ảnh thật Tòa nhà ĐH Giao thông Vận tải TP.HCM (UTH) hòa quyện mượt mà bên phải màn hình lớn */}
+        {/* Ảnh thật Tòa nhà ĐH Giao thông Vận tải TP.HCM (UTH) hòa nền mượt bên phải */}
         <div className="pointer-events-none hidden lg:block absolute right-0 top-0 bottom-0 w-[62%] overflow-hidden">
           <img
             src="/uth-campus-banner.jpg"
             alt="Trường Đại học Giao thông Vận tải TP.HCM (UTH)"
             className="w-full h-full object-cover object-center"
           />
-          {/* Lớp chuyển sắc hòa nền mượt từ trái sang ảnh tòa nhà (không cắt cứng) */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                'linear-gradient(90deg, #FFFFFF 0%, rgba(248,245,255,0.96) 10%, rgba(247,244,255,0.62) 24%, rgba(247,244,255,0) 44%)'
+                'linear-gradient(90deg, #FFFFFF 0%, rgba(248,245,255,0.96) 10%, rgba(247,244,255,0.62) 26%, rgba(247,244,255,0.12) 48%)'
             }}
           />
-          {/* Lớp chuyển sắc mềm ở mép dưới vào nền lavender */}
           <div
             className="absolute inset-x-0 bottom-0 h-28"
             style={{
               background:
-                'linear-gradient(0deg, #F7F5FE 0%, rgba(247,245,254,0.75) 45%, transparent 100%)'
+                'linear-gradient(0deg, #F7F5FE 0%, rgba(247,245,254,0.8) 45%, transparent 100%)'
             }}
           />
         </div>
 
         {/* Nội dung chính Hero */}
-        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-10 pb-12 lg:pt-14 lg:pb-16 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
-          {/* Cột trái (6 cột): Huy hiệu NCKH, UTH-TrustID, Mô tả, 2 nút CTA & 3 giá trị */}
+        <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-10 pb-12 lg:pt-12 lg:pb-14 grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
+          {/* Cột trái (6 cột): Thông điệp Cổng Giảng viên & Quản trị viên */}
           <div className="lg:col-span-6 space-y-5">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#4C1D95] text-sm font-semibold shadow-2xs">
-              <FlaskConical className="w-4 h-4 text-[#6D28D9]" />
-              <span>Đề tài NCKH sinh viên</span>
+              <Building2 className="w-4 h-4 text-[#6D28D9]" />
+              <span>Cổng Điều hành Giảng viên &amp; Quản trị viên</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl xl:text-[68px] font-black tracking-tight leading-none m-0 bg-gradient-to-r from-[#4C1D95] via-[#6D28D9] to-[#7C3AED] bg-clip-text text-transparent">
               UTH-TrustID
             </h1>
 
-            <p className="text-base sm:text-[17px] text-slate-700 leading-[1.68] font-medium m-0 max-w-[520px]">
-              Nghiên cứu, thiết kế và phát triển hệ thống định danh số phi tập trung và xác thực hiện diện phòng học, ứng dụng W3C DID, WebAuthn và Merkle Tree tại Trường Đại học Giao thông Vận tải TP.HCM (UTH).
+            <p className="text-base sm:text-[17px] text-slate-700 leading-[1.68] font-medium m-0 max-w-[530px]">
+              Hệ thống quản trị định danh số phi tập trung và điều hành xác thực hiện diện phòng học dành riêng cho <strong className="text-[#1E1B4B]">Giảng viên</strong> và <strong className="text-[#1E1B4B]">Quản trị viên</strong>, ứng dụng W3C DID, WebAuthn và Merkle Tree tại Trường Đại học Giao thông Vận tải TP.HCM (UTH).
             </p>
 
-            {/* Cụm 2 nút CTA: Khám phá hệ thống & Xem video giới thiệu */}
+            {/* Cụm 2 nút CTA */}
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <button
                 type="button"
@@ -401,11 +400,11 @@ export default function LandingPage({ onOpenLogin }) {
                 <span className="w-6 h-6 rounded-full bg-[#6D28D9] text-white flex items-center justify-center shrink-0">
                   <Play className="w-3 h-3 fill-current ml-0.5" />
                 </span>
-                <span>Xem video giới thiệu</span>
+                <span>Xem quy trình vận hành</span>
               </button>
             </div>
 
-            {/* Hàng 3 nhãn niềm tin: An toàn | Minh bạch | Phi tập trung */}
+            {/* Hàng 3 nhãn niềm tin */}
             <div className="flex flex-wrap items-center gap-4 sm:gap-5 pt-3 text-sm font-bold text-[#1E1B4B]">
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck className="w-4.5 h-4.5 text-[#6D28D9]" />
@@ -424,9 +423,9 @@ export default function LandingPage({ onOpenLogin }) {
             </div>
           </div>
 
-          {/* Cột phải (6 cột): Khiên 3D Tím Pha Lê đặt trên Bệ Đế Tròn trước tòa nhà UTH */}
-          <div className="lg:col-span-6 flex flex-col items-center lg:items-start justify-end lg:min-h-[340px] lg:pl-2">
-            {/* Trên điện thoại / tablet hiển thị ảnh tòa nhà UTH bo góc gọn đẹp */}
+          {/* Cột phải (6 cột): ĐƯA LẠI KHIÊN 3D CŨ CÓ 2 VÒNG QUỸ ĐẠO XOAY 360° + BỆ ĐẾ HOLOGRAM */}
+          <div className="lg:col-span-6 flex flex-col items-center lg:items-start justify-center lg:pl-4">
+            {/* Trên màn hình nhỏ hiển thị thêm ảnh trường UTH gọn đẹp */}
             <div className="lg:hidden w-full rounded-2xl overflow-hidden border border-purple-200 shadow-lg mb-4">
               <img
                 src="/uth-campus-banner.jpg"
@@ -435,69 +434,173 @@ export default function LandingPage({ onOpenLogin }) {
               />
             </div>
 
-            {/* Khiên Bảo mật 3D Tím Lavender + Đế tròn nổi bật (thuần GPU transform, 0 lag) */}
             <div
-              onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
-              title="Bấm để mở Cổng Đăng nhập UTH-TrustID"
-              className="relative flex flex-col items-center cursor-pointer select-none mt-auto"
+              className="relative w-[300px] h-[300px] sm:w-[350px] sm:h-[350px] flex items-center justify-center select-none"
               style={{ contain: 'layout paint' }}
             >
+              {/* Quầng sáng dịu tôn Khiên nổi bật trước nền trường UTH */}
               <div
-                className="relative z-10 will-change-transform"
-                style={{ animation: 'shieldLightFloat 4.8s ease-in-out infinite' }}
+                className="pointer-events-none absolute w-[290px] h-[290px] sm:w-[330px] sm:h-[330px] rounded-full"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(255,255,255,0.82) 0%, rgba(237,233,254,0.68) 42%, rgba(168,85,247,0.16) 66%, transparent 78%)'
+                }}
+              />
+
+              {/* Vòng quỹ đạo xoay tròn ngoài (Clockwise 360°) */}
+              <div
+                className="pointer-events-none absolute w-[285px] h-[285px] sm:w-[335px] sm:h-[335px] rounded-full will-change-transform"
+                style={{ animation: 'orbitSpinClockwise 24s linear infinite' }}
               >
-                <svg className="w-36 h-40 sm:w-44 sm:h-48 overflow-visible" viewBox="0 0 180 205" fill="none">
+                <svg className="w-full h-full" viewBox="0 0 400 400" fill="none">
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="186"
+                    stroke="url(#outerOrbitGrad)"
+                    strokeWidth="2.4"
+                    strokeDasharray="16 10 4 10"
+                  />
+                  <circle cx="200" cy="14" r="10" fill="#7C3AED" opacity="0.25" />
+                  <circle cx="200" cy="14" r="4.8" fill="#6D28D9" />
+                  <circle cx="386" cy="200" r="10" fill="#0284C7" opacity="0.25" />
+                  <circle cx="386" cy="200" r="4.8" fill="#0EA5E9" />
+                  <circle cx="200" cy="386" r="9" fill="#9333EA" opacity="0.25" />
+                  <circle cx="200" cy="386" r="4.5" fill="#7C3AED" />
+                  <circle cx="14" cy="200" r="10" fill="#0284C7" opacity="0.25" />
+                  <circle cx="14" cy="200" r="4.8" fill="#0EA5E9" />
                   <defs>
-                    <linearGradient id="lightShieldBody" x1="15%" y1="5%" x2="88%" y2="95%">
-                      <stop offset="0%" stopColor="#C4B5FD" />
-                      <stop offset="45%" stopColor="#8B5CF6" />
-                      <stop offset="100%" stopColor="#5B21B6" />
-                    </linearGradient>
-                    <linearGradient id="lightShieldRim" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FFFFFF" />
-                      <stop offset="55%" stopColor="#DDD6FE" />
-                      <stop offset="100%" stopColor="#A78BFA" />
-                    </linearGradient>
-                    <linearGradient id="lightShieldGloss" x1="0%" y1="0%" x2="80%" y2="85%">
-                      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.6" />
-                      <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.12" />
-                      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+                    <linearGradient id="outerOrbitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.95" />
+                      <stop offset="50%" stopColor="#0EA5E9" stopOpacity="0.85" />
+                      <stop offset="100%" stopColor="#6D28D9" stopOpacity="0.35" />
                     </linearGradient>
                   </defs>
-                  {/* Độ dày 3D cạnh khiên */}
-                  <path
-                    d="M90 12 L158 38 V98 C158 144 128 176 90 192 C52 176 22 144 22 98 V38 L90 12 Z"
-                    fill="#4C1D95"
-                    opacity="0.28"
-                    transform="translate(7, 7)"
-                  />
-                  {/* Thân khiên pha lê tím */}
-                  <path
-                    d="M90 12 L158 38 V98 C158 144 128 176 90 192 C52 176 22 144 22 98 V38 L90 12 Z"
-                    fill="url(#lightShieldBody)"
-                    stroke="url(#lightShieldRim)"
-                    strokeWidth="6"
-                  />
-                  {/* Phản chiếu ánh sáng nửa trên khiên */}
-                  <path
-                    d="M90 22 L148 44 V94 C148 112 141 128 130 142 C108 112 72 95 34 94 V44 L90 22 Z"
-                    fill="url(#lightShieldGloss)"
-                  />
-                  {/* Dấu tích xác thực màu trắng đậm */}
-                  <path
-                    d="M62 103 L82 123 L122 79"
-                    stroke="#FFFFFF"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
                 </svg>
               </div>
 
-              {/* Đế tròn 3D màu trắng – lavender */}
-              <div className="relative -mt-6 flex flex-col items-center">
-                <div className="w-44 sm:w-52 h-11 rounded-full bg-gradient-to-b from-white via-[#EDE9FE] to-[#C4B5FD] border-2 border-white shadow-[0_14px_30px_rgba(91,33,182,0.28)] flex items-center justify-center">
-                  <div className="w-32 sm:w-38 h-5 rounded-full border border-purple-300/80 bg-gradient-to-b from-[#F5F3FF] to-[#DDD6FE]" />
+              {/* Vòng quỹ đạo xoay tròn trong (Counter-Clockwise 360°) */}
+              <div
+                className="pointer-events-none absolute w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] rounded-full will-change-transform"
+                style={{ animation: 'orbitSpinCounter 16s linear infinite' }}
+              >
+                <svg className="w-full h-full" viewBox="0 0 304 304" fill="none">
+                  <circle
+                    cx="152"
+                    cy="152"
+                    r="140"
+                    stroke="url(#innerOrbitGrad)"
+                    strokeWidth="2.4"
+                    strokeDasharray="65 35 20 35"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="152" cy="12" r="4.5" fill="#0EA5E9" />
+                  <circle cx="152" cy="292" r="4.5" fill="#7C3AED" />
+                  <defs>
+                    <linearGradient id="innerOrbitGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.95" />
+                      <stop offset="50%" stopColor="#7C3AED" stopOpacity="0.75" />
+                      <stop offset="100%" stopColor="#0EA5E9" stopOpacity="0.25" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+
+              {/* Khiên Bảo vệ 3D Cũ (Biểu tượng Định danh + Khiên Tích góc dưới phải + Đế Hologram) */}
+              <div className="relative z-20 flex flex-col items-center pt-4">
+                <div
+                  onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
+                  title="Bấm để mở Cổng Đăng nhập Giảng viên & Quản trị viên UTH-TrustID"
+                  className="relative cursor-pointer will-change-transform"
+                  style={{ animation: 'shieldFloatPulse 5s ease-in-out infinite' }}
+                >
+                  {/* Vòng nét đứt quay sát viền Khiên */}
+                  <div
+                    className="pointer-events-none absolute -inset-4 rounded-full border-2 border-dashed border-[#38BDF8]/65 will-change-transform"
+                    style={{ animation: 'orbitSpinClockwise 12s linear infinite' }}
+                  />
+
+                  <svg
+                    className="w-40 h-46 sm:w-44 sm:h-52 overflow-visible"
+                    viewBox="0 0 200 230"
+                    fill="none"
+                  >
+                    <defs>
+                      <linearGradient id="shieldOuterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#F3E8FF" />
+                        <stop offset="35%" stopColor="#A855F7" />
+                        <stop offset="75%" stopColor="#4F46E5" />
+                        <stop offset="100%" stopColor="#38BDF8" />
+                      </linearGradient>
+                      <linearGradient id="shieldInnerGrad" x1="15%" y1="10%" x2="85%" y2="95%">
+                        <stop offset="0%" stopColor="#3B2396" stopOpacity="0.97" />
+                        <stop offset="55%" stopColor="#1E1354" stopOpacity="0.98" />
+                        <stop offset="100%" stopColor="#0F1B44" stopOpacity="0.98" />
+                      </linearGradient>
+                      <linearGradient id="neonRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#38BDF8" />
+                        <stop offset="50%" stopColor="#E879F9" />
+                        <stop offset="100%" stopColor="#38BDF8" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Lớp bóng đổ 3D phía sau Khiên */}
+                    <path
+                      d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
+                      fill="#4C1D95"
+                      opacity="0.34"
+                      transform="translate(7, 7)"
+                    />
+
+                    {/* Khung Khiên 3D chính */}
+                    <path
+                      d="M100 14 L176 46 V112 C176 165 142 202 100 220 C58 202 24 165 24 112 V46 L100 14 Z"
+                      fill="url(#shieldInnerGrad)"
+                      stroke="url(#shieldOuterGrad)"
+                      strokeWidth="5"
+                    />
+
+                    {/* Đường viền Neon bên trong Khiên */}
+                    <path
+                      d="M100 27 L163 54 V110 C163 155 135 186 100 202 C65 186 37 155 37 110 V54 L100 27 Z"
+                      fill="none"
+                      stroke="url(#neonRimGrad)"
+                      strokeWidth="2.5"
+                      opacity="0.95"
+                    />
+
+                    {/* Biểu tượng Định danh ở chính giữa Khiên */}
+                    <circle cx="100" cy="94" r="21" fill="url(#shieldOuterGrad)" opacity="0.96" />
+                    <path
+                      d="M62 156 C62 133 78 122 100 122 C122 122 138 133 138 156"
+                      fill="url(#shieldOuterGrad)"
+                      opacity="0.92"
+                    />
+
+                    {/* Huy hiệu Khiên nhỏ có dấu tích xác thực ở góc dưới bên phải */}
+                    <g transform="translate(122, 134)">
+                      <path
+                        d="M28 4 L52 14 V35 C52 51 41 63 28 69 C15 63 4 51 4 35 V14 L28 4 Z"
+                        fill="#6D28D9"
+                        stroke="#F3E8FF"
+                        strokeWidth="3.2"
+                      />
+                      <path
+                        d="M18 36 L25 43 L39 27"
+                        stroke="#FFFFFF"
+                        strokeWidth="4.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Bệ Đế Hologram tròn cân đối bên dưới Khiên */}
+                <div className="relative -mt-3 flex flex-col items-center">
+                  <div className="w-52 sm:w-56 h-10 rounded-full bg-gradient-to-b from-[#2E1E72] to-[#110B36] border-2 border-[#A78BFA] shadow-[0_12px_28px_rgba(91,33,182,0.38)] flex items-center justify-center">
+                    <div className="w-40 sm:w-44 h-5 rounded-full border border-dashed border-[#38BDF8]/80" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -533,17 +636,15 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* ==================== 4. TỔNG QUAN HỆ THỐNG (LUỒNG 4 BƯỚC NGANG CHUẨN ẢNH MẪU) ==================== */}
+      {/* ==================== 4. TỔNG QUAN QUY TRÌNH ĐIỀU HÀNH (GIẢNG VIÊN & QUẢN TRỊ VIÊN) ==================== */}
       <section className="w-full bg-[#F7F5FE] pb-14">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
           <div className="flex flex-col xl:flex-row xl:items-center gap-6">
-            {/* Tiêu đề bên trái kèm gạch tím */}
             <div className="shrink-0 xl:w-52">
               <h2 className="text-2xl font-extrabold text-[#1E1B4B] m-0">Tổng quan hệ thống</h2>
               <div className="w-12 h-1 rounded-full bg-[#6D28D9] mt-2.5" />
             </div>
 
-            {/* 4 Bước kết nối bằng mũi tên tím */}
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-center">
               {OVERVIEW_STEPS.map((step, idx) => (
                 <div key={step.id} className="flex items-center gap-2.5">
@@ -566,7 +667,7 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* ==================== 5. GIỚI THIỆU ĐỀ TÀI (#landing-section-INTRO) ==================== */}
+      {/* ==================== 5. GIỚI THIỆU HỆ THỐNG (#landing-section-INTRO) ==================== */}
       <section
         id="landing-section-INTRO"
         className="scroll-mt-20 py-16 lg:py-20 bg-white border-t border-purple-100"
@@ -574,13 +675,13 @@ export default function LandingPage({ onOpenLogin }) {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10">
           <div className="max-w-3xl mx-auto text-center space-y-3">
             <span className="inline-block px-3.5 py-1 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
-              Giới thiệu Đề tài
+              Giới thiệu Hệ thống
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
-              Giải quyết triệt để bài toán định danh &amp; chống điểm danh hộ
+              Nền tảng quản trị định danh &amp; điều hành điểm danh UTH
             </h2>
             <p className="text-base text-slate-600 m-0 leading-relaxed">
-              Chuyển đổi từ phương thức điểm danh thủ công và mã QR tĩnh sang mô hình xác thực phi tập trung chuẩn W3C DID ngay trong môi trường giảng đường UTH.
+              Thiết kế tối ưu cho đội ngũ Giảng viên và Quản trị viên nhà trường kiểm soát toàn diện vòng đời định danh DID, phiên điểm danh phòng học và dữ liệu kiểm toán Blockchain.
             </p>
           </div>
 
@@ -612,7 +713,7 @@ export default function LandingPage({ onOpenLogin }) {
               Công nghệ Cốt lõi
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
-              Ba trụ cột mật mã học bảo toàn danh tính
+              Ba trụ cột mật mã học bảo toàn dữ liệu đào tạo
             </h2>
           </div>
 
@@ -646,7 +747,7 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* ==================== 7. KIẾN TRÚC HỆ THỐNG 3 PHÂN HỆ (#landing-section-SYSTEM) ==================== */}
+      {/* ==================== 7. HAI PHÂN HỆ CHÍNH: GIẢNG VIÊN & QUẢN TRỊ VIÊN (#landing-section-SYSTEM) ==================== */}
       <section
         id="landing-section-SYSTEM"
         className="scroll-mt-20 py-16 lg:py-20 bg-white border-t border-purple-100"
@@ -654,21 +755,21 @@ export default function LandingPage({ onOpenLogin }) {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10">
           <div className="max-w-3xl mx-auto text-center space-y-3">
             <span className="inline-block px-3.5 py-1 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
-              Kiến trúc Hệ thống
+              Phân hệ Quản trị &amp; Điều hành
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
-              Mô hình Tam giác Tin cậy: Issuer – Holder – Verifier
+              Hai cổng nghiệp vụ chuyên biệt: Giảng viên &amp; Quản trị viên
             </h2>
             <p className="text-base text-slate-600 m-0 leading-relaxed">
-              Ba phân hệ vận hành tách biệt theo kiến trúc Zero-Trust và liên thông dữ liệu thời gian thực qua WebSocket &amp; Smart Contract.
+              Phân quyền tách bạch theo nguyên tắc Zero-Trust giữa Cổng Điều hành Giảng viên (Verifier) và Cổng Quản trị Hệ thống (Issuer).
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {SYSTEM_MODULES.map((mod) => (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {PORTAL_MODULES.map((mod) => (
               <div
                 key={mod.step}
-                className="p-6 rounded-2xl bg-[#FAF8FF] border border-purple-100 flex flex-col justify-between gap-5"
+                className="p-7 rounded-3xl bg-[#FAF8FF] border border-purple-100 shadow-xs flex flex-col justify-between gap-6"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
@@ -686,17 +787,30 @@ export default function LandingPage({ onOpenLogin }) {
                     <div className="text-xs font-bold text-[#6D28D9] tracking-wider uppercase">
                       {mod.step} • {mod.role}
                     </div>
-                    <h3 className="text-xl font-bold text-[#1E1B4B] mt-1 mb-0">{mod.title}</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold text-[#1E1B4B] mt-1 mb-0">
+                      {mod.title}
+                    </h3>
                   </div>
 
                   <div className="space-y-2.5 pt-1">
                     {mod.points.map((pt, i) => (
-                      <div key={i} className="flex items-start gap-2.5 text-sm text-slate-700 leading-relaxed">
-                        <CheckCircle2 className="w-4 h-4 text-[#6D28D9] shrink-0 mt-1" />
+                      <div key={i} className="flex items-start gap-2.5 text-sm sm:text-[15px] text-slate-700 leading-relaxed">
+                        <CheckCircle2 className="w-4.5 h-4.5 text-[#6D28D9] shrink-0 mt-0.5" />
                         <span>{pt}</span>
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="pt-2 border-t border-purple-100">
+                  <button
+                    type="button"
+                    onClick={() => onOpenLogin && onOpenLogin(mod.loginRole)}
+                    className="px-5 py-2.5 rounded-xl bg-white hover:bg-[#6D28D9] text-[#5B21B6] hover:text-white border border-purple-200 hover:border-[#6D28D9] text-sm font-bold cursor-pointer inline-flex items-center gap-2 transition-colors"
+                  >
+                    <span>{mod.ctaLabel}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -719,7 +833,6 @@ export default function LandingPage({ onOpenLogin }) {
             </h2>
           </div>
 
-          {/* 4 KPI nổi bật */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {RESULT_METRICS.map((m, idx) => (
               <div
@@ -735,7 +848,6 @@ export default function LandingPage({ onOpenLogin }) {
             ))}
           </div>
 
-          {/* 4 Kịch bản tấn công bị chặn */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {DEFENSE_SCENARIOS.map((sc) => (
               <div
@@ -754,7 +866,7 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </section>
 
-      {/* ==================== 9. ĐỘI NGŨ THỰC HIỆN & CTA CUỐI TRANG (#landing-section-TEAM) ==================== */}
+      {/* ==================== 9. ĐƠN VỊ VẬN HÀNH & CTA CUỐI TRANG (#landing-section-TEAM) ==================== */}
       <section
         id="landing-section-TEAM"
         className="scroll-mt-20 py-16 lg:py-20 bg-white border-t border-purple-100"
@@ -762,7 +874,7 @@ export default function LandingPage({ onOpenLogin }) {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 space-y-10">
           <div className="max-w-3xl mx-auto text-center space-y-3">
             <span className="inline-block px-3.5 py-1 rounded-full bg-[#F3EEFF] border border-[#E2D6FE] text-[#6D28D9] text-xs font-bold tracking-wider uppercase">
-              Đội ngũ Thực hiện
+              Đơn vị Chủ trì &amp; Vận hành
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1E1B4B] m-0">
               Trường Đại học Giao thông Vận tải TP.HCM (UTH)
@@ -776,39 +888,39 @@ export default function LandingPage({ onOpenLogin }) {
               </div>
               <div className="text-lg font-bold text-[#1E1B4B]">Khoa Công nghệ Thông tin</div>
               <p className="text-sm text-slate-600 m-0 leading-relaxed">
-                Trường Đại học Giao thông Vận tải TP.HCM (UTH) — Chuyên ngành An toàn Thông tin &amp; Khoa học Dữ liệu.
+                Trường Đại học Giao thông Vận tải TP.HCM (UTH) — Trung tâm triển khai thử nghiệm hạ tầng xác thực số học thuật.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-[#FAF8FF] border border-purple-100 space-y-2">
               <div className="text-xs font-bold text-[#0284C7] uppercase tracking-wider">
-                Giảng viên hướng dẫn
+                Cổng Điều hành Giảng viên
               </div>
               <div className="text-lg font-bold text-[#1E1B4B]">TS. Nguyễn Thị Mai</div>
               <p className="text-sm text-slate-600 m-0 leading-relaxed">
-                Cố vấn chuyên môn kiến trúc bảo mật, mật mã học ứng dụng &amp; đánh giá quy trình xác thực học thuật.
+                Phụ trách chuyên môn điều hành lớp học, giám sát điểm danh QR động, bản đồ GPS Radar và cấp chứng chỉ số môn học.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-[#FAF8FF] border border-purple-100 space-y-2">
               <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
-                Nhóm sinh viên thực hiện
+                Cổng Quản trị Hệ thống
               </div>
-              <div className="text-lg font-bold text-[#1E1B4B]">Nguyễn Đức Hiển &amp; Cộng sự</div>
+              <div className="text-lg font-bold text-[#1E1B4B]">Ban Quản trị UTH-TrustID</div>
               <p className="text-sm text-slate-600 m-0 leading-relaxed">
-                MSSV: 2251120000 • Thiết kế và xây dựng trọn bộ hệ sinh thái Ví DID Sinh viên, Cổng Giảng viên &amp; Quản trị viên.
+                Vận hành hạ tầng W3C DID, chính sách WebAuthn, Merkle Tree Blockchain và giám sát an toàn thông tin SOC 24/7.
               </p>
             </div>
           </div>
 
-          {/* CTA Banner màu tím đồng bộ */}
+          {/* CTA Banner cuối trang */}
           <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-[#4C1D95] via-[#6D28D9] to-[#7C3AED] text-white shadow-xl shadow-purple-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1.5 text-center md:text-left">
               <h3 className="text-2xl font-extrabold m-0">
-                Sẵn sàng trải nghiệm hệ thống UTH-TrustID?
+                Truy cập Cổng Giảng viên &amp; Quản trị viên UTH-TrustID
               </h3>
               <p className="text-sm sm:text-base text-purple-100 m-0">
-                Đăng nhập Cổng Giảng viên / Quản trị viên để mở phiên điểm danh QR động và kiểm thử phòng vệ SOC IDS.
+                Đăng nhập tài khoản cán bộ UTH để mở phiên điểm danh QR động, quản trị DID/VC và giám sát hệ thống.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
@@ -826,7 +938,7 @@ export default function LandingPage({ onOpenLogin }) {
                 onClick={() => onOpenLogin && onOpenLogin('FACULTY')}
                 className="px-6 py-3 rounded-xl bg-white hover:bg-purple-50 text-[#5B21B6] text-sm font-extrabold border-none cursor-pointer inline-flex items-center gap-2 shadow-md transition-transform hover:scale-[1.02]"
               >
-                <span>Khám phá hệ thống</span>
+                <span>Đăng nhập hệ thống</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -840,7 +952,7 @@ export default function LandingPage({ onOpenLogin }) {
           <div className="flex items-center gap-3">
             <img src="/uth-logo.png" alt="UTH" className="h-6 w-auto object-contain block" />
             <span className="text-slate-300">|</span>
-            <span>© 2026 UTH-TrustID • Đại học Giao thông Vận tải TP.HCM</span>
+            <span>© 2026 UTH-TrustID • Cổng Giảng viên &amp; Quản trị viên UTH</span>
           </div>
 
           <button
@@ -854,7 +966,7 @@ export default function LandingPage({ onOpenLogin }) {
         </div>
       </footer>
 
-      {/* ==================== MODAL XEM VIDEO / GIỚI THIỆU TRỰC QUAN HỆ THỐNG ==================== */}
+      {/* ==================== MODAL XEM QUY TRÌNH VẬN HÀNH GIẢNG VIÊN & ADMIN ==================== */}
       {showIntroModal && (
         <div
           onClick={(e) => {
@@ -866,10 +978,10 @@ export default function LandingPage({ onOpenLogin }) {
             <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
                 <span className="inline-block px-3 py-1 rounded-full bg-[#F3EEFF] text-[#6D28D9] text-xs font-bold">
-                  GIỚI THIỆU QUY TRÌNH VẬN HÀNH UTH-TRUSTID
+                  QUY TRÌNH VẬN HÀNH GIẢNG VIÊN &amp; QUẢN TRỊ VIÊN
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-[#1E1B4B] mt-2 mb-0">
-                  Luồng xác thực điểm danh 4 bước Zero-Trust
+                  4 bước kiểm soát xác thực Zero-Trust tại UTH
                 </h3>
               </div>
               <button
@@ -889,7 +1001,7 @@ export default function LandingPage({ onOpenLogin }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/85 via-[#1E1B4B]/20 to-transparent flex items-end p-4">
                 <div className="text-white text-sm font-semibold">
-                  Hệ sinh thái Định danh Số Phi tập trung — Đại học Giao thông Vận tải TP.HCM (UTH)
+                  Cổng Điều hành Giảng viên &amp; Quản trị viên — Đại học Giao thông Vận tải TP.HCM (UTH)
                 </div>
               </div>
             </div>
